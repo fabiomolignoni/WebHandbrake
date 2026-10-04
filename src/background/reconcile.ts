@@ -97,6 +97,14 @@ export async function maintenance() {
       changed = true;
     }
   }
+  // A visit is over after the visit gap: its activity counts as absent (SEM-08) and can go.
+  const gap = store.config.settings.tracking.visitGapMinutes * 60_000;
+  for (const [k, act] of Object.entries(state.activity)) {
+    if (t0 - act.last > gap) {
+      delete state.activity[k];
+      changed = true;
+    }
+  }
   for (const s of state.sessions) {
     if (s.endAt <= t0 && !s.notified) {
       s.notified = true;

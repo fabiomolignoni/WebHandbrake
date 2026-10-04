@@ -209,11 +209,16 @@ async function checkNavigation(tabId: number, url: string, reason: 'navigation' 
   await enforceTab(tab, reason);
 }
 
-export function registerNavigationListeners() {
+export function registerNavigationListeners(onCommitted: (tabId: number, url: string) => void) {
   const nav = api.webNavigation;
   if (!nav) return;
   // Second layer after DNR: committed navigations (ENF-01 fallback, MAT-19 scoped groups).
-  nav.onCommitted.addListener(onTopFrame((d) => void checkNavigation(d.tabId, d.url, 'navigation')));
+  nav.onCommitted.addListener(
+    onTopFrame((d) => {
+      void checkNavigation(d.tabId, d.url, 'navigation');
+      onCommitted(d.tabId, d.url);
+    }),
+  );
   // ENF-03: single page applications.
   nav.onHistoryStateUpdated.addListener(
     onTopFrame((d) => {
@@ -259,7 +264,10 @@ export function registerNavigationListeners() {
   );
 }
 
-export function registerTabListeners(onActivated: (tabId: number) => void) {
+export function registerTabListeners(
+  onActivated: (tabId: number) => void,
+  onRemoved: (tabId: number) => void,
+) {
   api.tabs.onUpdated.addListener((_tabId, info, tab) => {
     if (!info.url) return;
     // Internal pages, local files, reader mode and view-source are not seen by DNR (MAT-09, TIM-06).
@@ -280,6 +288,7 @@ export function registerTabListeners(onActivated: (tabId: number) => void) {
   });
   api.tabs.onRemoved.addListener((tabId) => {
     graceTabs.delete(tabId);
+    onRemoved(tabId);
     const info = interventionTabs.get(tabId);
     interventionTabs.delete(tabId);
     if (info && !info.proceeded && info.groupId) {

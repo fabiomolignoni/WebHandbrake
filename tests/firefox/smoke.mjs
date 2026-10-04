@@ -14,7 +14,7 @@ import puppeteer from 'puppeteer-core';
 
 const bin = process.env.FIREFOX_BIN;
 if (!bin) {
-  console.error('Set FIREFOX_BIN to a Firefox binary (128 or newer).');
+  console.error('Set FIREFOX_BIN to a Firefox binary (140 or newer).');
   process.exit(2);
 }
 const requests = [];

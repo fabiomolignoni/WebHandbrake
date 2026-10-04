@@ -257,6 +257,7 @@ export function compareInterventions(a: Intervention, b: Intervention): Directio
     case 'ask': {
       const n = b as typeof a;
       return combine([
+        cmpNum(a.seconds, n.seconds, true),
         cmpNum(a.maxMinutes, n.maxMinutes, false),
         cmpNum(Math.max(0, ...a.choices), Math.max(0, ...n.choices), false),
         cmpBool(a.requireIntention, n.requireIntention, true),
@@ -277,6 +278,21 @@ export function compareInterventions(a: Intervention, b: Intervention): Directio
 // Policies (first match wins)
 // ---------------------------------------------------------------------------
 
+/**
+ * Whether policy p, applied in place of any of the `later` policies (or of plain tracking when
+ * none applies), is never weaker. Equal severities are compared parameter by parameter: a short
+ * delay placed before a long one is a weakening.
+ */
+function dominates(p: Policy, later: Policy[]): boolean {
+  const s = severityOf(p.intervention);
+  if (s < SEVERITY.track) return false;
+  return later.every((q) => {
+    const sq = severityOf(q.intervention);
+    if (s !== sq) return s > sq;
+    return compareInterventions(q.intervention, p.intervention) !== 'weaken';
+  });
+}
+
 export function comparePolicies(oldList: Policy[], newList: Policy[]): Direction {
   if (deepEqual(oldList, newList)) return 'neutral';
   const oldById = new Map(oldList.map((p) => [p.id, p]));
@@ -291,18 +307,17 @@ export function comparePolicies(oldList: Policy[], newList: Policy[]): Direction
     if (!newIds.has(p.id)) dirs.push(severityOf(p.intervention) <= SEVERITY.track ? 'strengthen' : 'weaken');
   }
   newList.forEach((p, i) => {
-    const laterMax = Math.max(SEVERITY.track, ...newList.slice(i + 1).map((q) => severityOf(q.intervention)));
+    const later = newList.slice(i + 1);
     const old = oldById.get(p.id);
     if (!old) {
-      dirs.push(severityOf(p.intervention) >= laterMax ? 'strengthen' : 'weaken');
+      dirs.push(dominates(p, later) ? 'strengthen' : 'weaken');
       return;
     }
     if (deepEqual(old, p)) return;
     const icmp = compareInterventions(old.intervention, p.intervention);
     const cov = compareConditions(old, p);
     if (cov === 'equal') dirs.push(icmp);
-    else if (cov === 'superset' && icmp !== 'weaken' && severityOf(p.intervention) >= laterMax)
-      dirs.push('strengthen');
+    else if (cov === 'superset' && icmp !== 'weaken' && dominates(p, later)) dirs.push('strengthen');
     else if (cov === 'subset' && severityOf(old.intervention) <= SEVERITY.track && icmp !== 'weaken')
       dirs.push('strengthen');
     else dirs.push('weaken');

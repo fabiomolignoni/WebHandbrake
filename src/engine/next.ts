@@ -5,7 +5,6 @@
 
 import type { CompiledGroup } from './compile';
 import {
-  activeSessions,
   budgetStatus,
   type Decision,
   decide,
@@ -109,9 +108,7 @@ export function nextRestriction(
   current?: Decision,
 ): Restriction | null {
   const d0 = current ?? decide(ctx, url, uctx);
-  if (d0.exempt || !d0.groups.length) {
-    if (d0.exempt) return null;
-  }
+  if (d0.exempt) return null;
   let best: Restriction | null = null;
   const consider = (r: Restriction) => {
     if (!best || r.at < best.at) best = r;
@@ -176,10 +173,6 @@ export function nextRestriction(
       });
       break;
     }
-  }
-  for (const s of activeSessions(ctx.state, ctx.now + 1)) {
-    if (s.startAt > ctx.now)
-      consider({ at: s.startAt, kind: 'session', intervention: { type: 'block' }, groupId: null });
   }
   return best;
 }

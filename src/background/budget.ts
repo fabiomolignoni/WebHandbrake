@@ -1,10 +1,17 @@
 /** LIM-11: give up the remaining time now (a strengthening, always immediate). */
 
 import { policyKey } from '../engine/decide';
-import { periodRange } from '../engine/time';
+import { MINUTE, periodRange } from '../engine/time';
+import type { Period } from '../engine/types';
 import { now } from './clock';
 import { reconcile } from './reconcile';
 import { store } from './store';
+
+/** End of the period that a forfeit covers: a rolling window refills only after its full length. */
+function forfeitEnd(period: Period, t0: number): number {
+  if (period.kind === 'rolling') return t0 + (period.n ?? 60) * MINUTE;
+  return periodRange(period, t0, store.cc.cal).end;
+}
 
 export async function forfeitBudget(groupId: string) {
   await store.ready();
@@ -23,18 +30,8 @@ export async function forfeitBudget(groupId: string) {
       };
       continue;
     }
-    const range = periodRange(b.period, t0, store.cc.cal);
-    const until = b.period.kind === 'rolling' ? t0 + (b.period.n ?? 60) * 60_000 : range.end;
-    store.state.forfeits[policyKey(p.id, null)] = until;
-  }
-  // Per-site budgets: forfeit for every site seen today.
-  for (const p of g.policies) {
-    if (!p.budget?.perSite || p.budget.type === 'session') continue;
-    const range = periodRange(p.budget.period, t0, store.cc.cal);
-    for (const key of Object.keys(store.state.activity)) {
-      const prefix = `s:${g.id}:`;
-      if (key.startsWith(prefix)) store.state.forfeits[policyKey(p.id, key.slice(prefix.length))] = range.end;
-    }
+    // Per-site budgets included: the policy-wide forfeit covers every site.
+    store.state.forfeits[policyKey(p.id, null)] = forfeitEnd(b.period, t0);
   }
   // Passes and pauses for the group end too.
   store.state.grants = store.state.grants.filter(

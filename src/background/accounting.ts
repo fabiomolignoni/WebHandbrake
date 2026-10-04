@@ -274,6 +274,25 @@ async function applyMute(tab: chrome.tabs.Tab | undefined, mute: boolean) {
   }
 }
 
+/**
+ * Gives the sound back when a tab muted by a filter navigates to a page that is not muted: that
+ * page may have no content script to send the tick that would do it.
+ */
+export async function releaseMute(tabId: number, url: string) {
+  if (!mutedByUs.has(tabId)) return;
+  await store.ready();
+  const tab = await api.tabs.get(tabId).catch(() => undefined);
+  const d = decide(ctx(), url, { incognito: Boolean(tab?.incognito) });
+  if (d.intervention.type === 'filter' && d.intervention.mute) return;
+  await applyMute(tab ?? ({ id: tabId } as chrome.tabs.Tab), false);
+}
+
+/** Forgets the per-tab state of a closed tab. */
+export function forgetTab(tabId: number) {
+  mutedByUs.delete(tabId);
+  lastSeverity.delete(tabId);
+}
+
 function overlayLabels(): Record<string, string> {
   const keys = [
     'overlay.hide',

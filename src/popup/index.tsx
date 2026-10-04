@@ -3,7 +3,7 @@
 import { render } from 'preact';
 import { useState } from 'preact/hooks';
 import { t } from '../i18n/i18n';
-import { api, extensionUrl, isAndroid } from '../platform/api';
+import { extensionUrl, isAndroid } from '../platform/api';
 import { formatDuration, formatWhen } from '../shared/format';
 import type { PopupModel, TicketView } from '../shared/models';
 import { call, type Granularity } from '../shared/rpc';
@@ -23,7 +23,7 @@ import {
 import { budgetText, Explain, verdict } from '../ui/explain';
 import { bootPage, useModel, useNow } from '../ui/hooks';
 import { BrakeLogo } from '../ui/icons';
-import { costLabel, PauseDialog, pauseBudgetLabel } from '../ui/pause';
+import { costsLabel, PauseDialog, pauseBudgetLabel } from '../ui/pause';
 import { useSaveFlow } from '../ui/saveflow';
 import { TicketDialog } from '../ui/ticket';
 
@@ -368,7 +368,7 @@ function App() {
           {pause && (
             <p class="tiny muted">
               {pause.available
-                ? [costLabel(pause.cost), pauseBudgetLabel(pause)].filter(Boolean).join(' · ')
+                ? [costsLabel(pause.costs), pauseBudgetLabel(pause)].filter(Boolean).join(' · ')
                 : pause.reason
                   ? t(pause.reason)
                   : ''}
@@ -455,5 +455,3 @@ void bootPage().then((s) => {
   setWeekStart(s.weekStart);
   render(<App />, document.getElementById('app')!);
 });
-
-void api;

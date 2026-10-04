@@ -130,6 +130,25 @@ describe('decisions', () => {
     expect(decide(c, 'https://b.com/').intervention.type).toBe('track');
   });
 
+  it('LIM-11: giving up a per-site budget covers every site, visited or not (regression)', () => {
+    const g = group(
+      'S',
+      ['a.com', 'b.com'],
+      [
+        {
+          budget: { type: 'time', minutes: 10, period: { kind: 'rolling', n: 60 }, perSite: true },
+          intervention: BLOCK,
+        },
+      ],
+    );
+    const state = defaultState();
+    state.forfeits['S-p0'] = at(0, 11);
+    const c = ctx(config([g]), at(0, 10), state);
+    expect(decide(c, 'https://a.com/').intervention.type).toBe('block');
+    expect(decide(c, 'https://b.com/').intervention.type).toBe('block');
+    expect(decide({ ...c, now: at(0, 11) }, 'https://b.com/').intervention.type).toBe('track');
+  });
+
   it('LIM-04: visit budgets allow the current visit', () => {
     const g = group(
       'M',

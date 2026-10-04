@@ -1,6 +1,6 @@
 /** Read models for the dashboard and the popup. */
 
-import { activeSessions, decide, grantActive, isNav } from '../engine/decide';
+import { activeSessions, decide, grantActive, isNav, SEVERITY } from '../engine/decide';
 import { dayKeyOf } from '../engine/time';
 import type { FocusSession } from '../engine/types';
 import { displayHost, parseUrl } from '../engine/url';
@@ -75,7 +75,7 @@ export async function overviewModel(): Promise<Overview> {
     upcoming.push({
       at: g.nextChange.at,
       groupId: g.id,
-      label: isNav({ severity: sevOf(g.nextChange.intervention.type) }) ? 'starts' : 'ends',
+      label: isNav({ severity: SEVERITY[g.nextChange.intervention.type] }) ? 'starts' : 'ends',
       intervention: g.nextChange.intervention,
     });
   }
@@ -105,10 +105,6 @@ export async function overviewModel(): Promise<Overview> {
     laterCount: store.later.length,
     pauses: activePauses(),
   };
-}
-
-function sevOf(type: string): number {
-  return ['allow', 'track', 'remind', 'filter'].includes(type) ? 0 : 4;
 }
 
 export async function configModel(): Promise<ConfigModel> {

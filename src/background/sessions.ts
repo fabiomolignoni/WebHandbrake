@@ -75,10 +75,7 @@ export async function endSession(
   await store.ready();
   const s = store.state.sessions.find((x) => x.id === id);
   if (!s) return { ticket: null, refused: 'session.error.notFound' };
-  const t0 = now();
-  if (s.startAt > t0) {
-    // Not started yet: cancelling a scheduled session costs like any weakening below.
-  }
+  // A scheduled session that has not started yet costs the same to cancel.
   if (s.locked) return { ticket: null, refused: 'session.error.locked' };
   const level = sessionLevel(s);
   if (level === 'locked' || level === 'strict') return { ticket: null, refused: 'session.error.strict' };

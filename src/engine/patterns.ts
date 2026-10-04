@@ -37,7 +37,9 @@ const IPV6_RE = /^\[[0-9a-f:.]+\]$/;
 export function parseTargetLine(line: string): ParsedLine | null {
   let raw = line.trim();
   if (!raw) return null;
-  if (raw.startsWith('#') || raw.startsWith('!') || raw.startsWith('[')) return { comment: true };
+  // "[Adblock Plus 2.0]" headers are comments; "[::1]" is an IPv6 address.
+  if (raw.startsWith('#') || raw.startsWith('!') || (raw.startsWith('[') && !/^\[[0-9a-f:.]+\]/i.test(raw)))
+    return { comment: true };
 
   let note: string | undefined;
   const noteAt = raw.search(/\s#/);
@@ -243,12 +245,14 @@ export function parseTargetList(text: string): {
 } {
   const targets: Omit<Target, 'id'>[] = [];
   const errors: { line: number; text: string; error: string }[] = [];
-  text.split(/\r?\n/).forEach((line, i) => {
+  text.split(/\r?\n/).forEach((raw, i) => {
+    // "+ example.com" is one exception, not a lone "+" followed by a blocking entry.
+    const line = raw.replace(/^(\s*)(\+|@@)\s+/, '$1$2');
     // LeechBlock exports put several sites on one line separated by spaces; hosts-file lines
     // ("0.0.0.0 example.com"), regular expressions and commented lines are kept whole.
     const whole =
       /\s#/.test(line) ||
-      /^\s*[#!]/.test(line) ||
+      /^\s*[#![]/.test(line) ||
       /^\s*(?:0\.0\.0\.0|127\.0\.0\.1|::1?|::)\s/.test(line) ||
       /^\s*\+?\//.test(line);
     const parts = whole ? [line] : line.trim().split(/\s+/);

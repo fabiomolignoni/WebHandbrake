@@ -153,7 +153,8 @@ export function budgetStatus(
   const pk = policyKey(policy.id, budget.perSite ? site : null);
   const act = state.activity[key];
   const inVisit = Boolean(act && now - act.last <= visitGapMs(ctx));
-  const forfeitUntil = state.forfeits[pk] ?? 0;
+  // LIM-11: a forfeit of the whole policy also covers every site of a per-site budget.
+  const forfeitUntil = Math.max(state.forfeits[pk] ?? 0, state.forfeits[policy.id] ?? 0);
   const forfeited = now < forfeitUntil;
   const base = { policyId: policy.id, budget, key, inVisit, forfeited };
   switch (budget.type) {
@@ -190,11 +191,12 @@ export function budgetStatus(
         refillAt = usage.rollingRefill(key, budget.period.n ?? 60, budget.count, 1, now);
       }
       if (tooLong && act) refillAt = Math.min(refillAt ?? Infinity, act.last + visitGapMs(ctx));
+      if (forfeited) refillAt = Math.max(refillAt ?? 0, forfeitUntil);
       return {
         ...base,
         used,
         limit: budget.count,
-        remaining: Math.max(0, budget.count - used),
+        remaining: forfeited ? 0 : Math.max(0, budget.count - used),
         exhausted,
         periodStart: range.start,
         periodEnd: range.end,
@@ -202,8 +204,11 @@ export function budgetStatus(
       };
     }
     case 'session': {
-      const cd = state.cooldowns[`session:${pk}`];
-      const cooling = Boolean(cd && cd.until > now);
+      // The cool-down of this site, or one started for the whole policy (LIM-11).
+      const cd = [state.cooldowns[`session:${pk}`], state.cooldowns[`session:${policy.id}`]]
+        .filter((x): x is Cooldown => Boolean(x && x.until > now))
+        .sort((a, b) => b.until - a.until)[0];
+      const cooling = Boolean(cd);
       const run = inVisit && act ? act.run : 0;
       const limit = Math.round(budget.maxMinutes * 60);
       const exhausted = cooling || run >= limit || forfeited;
