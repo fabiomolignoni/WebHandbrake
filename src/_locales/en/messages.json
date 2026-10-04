@@ -1,0 +1,26 @@
+{
+  "extName": {
+    "message": "WebHandbrake",
+    "description": "Extension name. Do not translate."
+  },
+  "extDescription": {
+    "message": "A handbrake for the web: limit, slow down or block distracting sites with gentle friction and serious protection. Local-first, no tracking.",
+    "description": "Extension description shown in the browser and in the stores (132 characters at most)."
+  },
+  "cmdOpenPopup": {
+    "message": "Open WebHandbrake",
+    "description": "Keyboard shortcut description"
+  },
+  "cmdStartSession": {
+    "message": "Start a 25-minute focus session",
+    "description": "Keyboard shortcut description"
+  },
+  "cmdBlockSite": {
+    "message": "Block the current site",
+    "description": "Keyboard shortcut description"
+  },
+  "cmdOpenDashboard": {
+    "message": "Open the dashboard",
+    "description": "Keyboard shortcut description"
+  }
+}
