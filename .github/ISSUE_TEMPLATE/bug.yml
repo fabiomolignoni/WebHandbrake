@@ -1,0 +1,36 @@
+name: Bug report
+description: Something does not work as described
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks! Please search existing issues first. Never paste personal browsing data.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, what you saw.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Create a group with …
+        2. Open …
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      placeholder: Firefox 140 on Windows 11 / Firefox for Android 142 / Chrome 130
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Diagnostic report
+      description: Settings › Diagnostics › Copy diagnostic report (addresses are removed by default).
+      render: text
