@@ -56,7 +56,19 @@ async function regexSupported(regex: string): Promise<boolean> {
   return ok;
 }
 
-export async function syncRules(force = false): Promise<void> {
+let syncing: Promise<void> = Promise.resolve();
+
+/**
+ * One update at a time: two interleaved updates would both remove the rules they read and add
+ * the same ids, and the second one would fail.
+ */
+export function syncRules(force = false): Promise<void> {
+  const run = syncing.then(() => doSyncRules(force));
+  syncing = run.catch(() => undefined);
+  return run;
+}
+
+async function doSyncRules(force: boolean): Promise<void> {
   const started = Date.now();
   dnrStatus.hostAccess = await checkHostAccess();
   const result = compileDnr(ctx(), {

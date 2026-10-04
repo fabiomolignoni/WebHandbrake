@@ -108,6 +108,30 @@ describe('policy comparison', () => {
     expect(comparePolicies([p({ budget: budget(30) })], [p({})])).toBe('strengthen');
   });
 
+  it('a policy placed before a stricter one of the same severity is a weakening (regression)', () => {
+    const long = p({ intervention: delayIntervention(60) }, 'p2');
+    // A 1 s delay inserted before a 60 s delay shadows it.
+    expect(comparePolicies([long], [p({ intervention: delayIntervention(1) }), long])).toBe('weaken');
+    // The same delay first changes nothing; a block first is stronger.
+    expect(comparePolicies([long], [p({ intervention: delayIntervention(60) }), long])).toBe('strengthen');
+    expect(comparePolicies([long], [p({ intervention: BLOCK }), long])).toBe('strengthen');
+    // Widening the window of a short delay that precedes a long one is a weakening too.
+    const wide = { mode: 'during' as const, windows: [{ days: [1, 2, 3, 4, 5], start: 480, end: 1080 }] };
+    expect(
+      comparePolicies(
+        [p({ schedule: office, intervention: delayIntervention(1) }), long],
+        [p({ schedule: wide, intervention: delayIntervention(1) }), long],
+      ),
+    ).toBe('weaken');
+  });
+
+  it('a shorter wait before the intention question is a weakening', () => {
+    const ask = (seconds: number) =>
+      p({ intervention: { type: 'ask', seconds, choices: [5], maxMinutes: 15 } });
+    expect(comparePolicies([ask(30)], [ask(0)])).toBe('weaken');
+    expect(comparePolicies([ask(0)], [ask(30)])).toBe('strengthen');
+  });
+
   it('appending is strengthening, removing or reordering is weakening', () => {
     const a = p({ intervention: delayIntervention(10) });
     const b = p({ intervention: BLOCK }, 'p2');

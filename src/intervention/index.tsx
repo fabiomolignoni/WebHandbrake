@@ -15,7 +15,7 @@ import { Banner, Button, Chips, Toasts, toast } from '../ui/components';
 import { Explain } from '../ui/explain';
 import { bootPage, onBackgroundChange, useNow } from '../ui/hooks';
 import { BrakeLogo, Icon } from '../ui/icons';
-import { costLabel, PauseDialog, pauseBudgetLabel } from '../ui/pause';
+import { costsLabel, PauseDialog, pauseBudgetLabel } from '../ui/pause';
 import { CanvasText, TypingInput } from '../ui/ticket';
 
 const blockedUrl = () => decodeHash(location.hash.slice(1));
@@ -67,12 +67,17 @@ async function returnTo(url: string) {
   if (!r.ok && history.length > 1) history.back();
 }
 
+let customSheet: CSSStyleSheet | null = null;
+
+/** The user's custom CSS, replaced (not added again) every time the model is reloaded. */
 function applyCustomCss(css: string) {
-  if (!css) return;
+  if (!css && !customSheet) return;
   try {
-    const sheet = new CSSStyleSheet();
-    sheet.replaceSync(css);
-    document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+    if (!customSheet) {
+      customSheet = new CSSStyleSheet();
+      document.adoptedStyleSheets = [...document.adoptedStyleSheets, customSheet];
+    }
+    customSheet.replaceSync(css);
   } catch {
     // invalid CSS is ignored
   }
@@ -325,7 +330,7 @@ function App() {
                 <button type="button" class="link-btn" onClick={() => setPauseOpen(true)}>
                   {t('iv.takeBreak')}
                 </button>{' '}
-                ({[costLabel(m.pause.cost), pauseBudgetLabel(m.pause)].filter(Boolean).join(' · ')})
+                ({[costsLabel(m.pause.costs), pauseBudgetLabel(m.pause)].filter(Boolean).join(' · ')})
               </>
             ) : (
               m.pause.reason && t(m.pause.reason)
@@ -374,6 +379,7 @@ function PassStep({
   const delayOpts = intervention?.type === 'delay' ? intervention : null;
 
   // INT-02 b: the countdown pauses or restarts when the page loses focus.
+  const waitSeconds = step.type === 'wait' ? step.seconds : (delayOpts?.seconds ?? 0);
   const [readyAt, setReadyAt] = useState<number>(
     step.type === 'wait' || step.type === 'intention' ? step.readyAt : 0,
   );
@@ -388,13 +394,14 @@ function PassStep({
       else if (hiddenAt) {
         const away = Date.now() - hiddenAt;
         hiddenAt = 0;
-        if (delayOpts.onBlur === 'restart') setReadyAt(Date.now() + delayOpts.seconds * 1000);
+        // The wait of this ticket (random or increasing delays make it longer than the base).
+        if (delayOpts.onBlur === 'restart') setReadyAt(Date.now() + waitSeconds * 1000);
         else setReadyAt((r) => r + away);
       }
     };
     document.addEventListener('visibilitychange', onVis);
     return () => document.removeEventListener('visibilitychange', onVis);
-  }, [delayOpts]);
+  }, [delayOpts, waitSeconds]);
 
   const left = Math.max(0, Math.ceil((readyAt - now) / 1000));
   const waiting = (step.type === 'wait' || step.type === 'intention') && left > 0;

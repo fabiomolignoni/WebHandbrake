@@ -50,8 +50,8 @@ export function parseUrl(raw: string): ParsedUrl | null {
   }
   const scheme = u.protocol.replace(/:$/, '').toLowerCase();
   const web = scheme === 'http' || scheme === 'https';
-  let host = u.hostname.toLowerCase().replace(/\.$/, '');
-  if (host.startsWith('[') && host.endsWith(']')) host = host.slice(1, -1);
+  // IPv6 hosts keep their brackets, as in targets ("[::1]") and in URLs rebuilt from the host.
+  const host = u.hostname.toLowerCase().replace(/\.$/, '');
   let path: string;
   if (web || scheme === 'file' || u.host) {
     path = u.pathname.toLowerCase() || '/';

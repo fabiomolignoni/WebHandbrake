@@ -64,6 +64,21 @@ describe('target syntax and normalisation (MAT-02)', () => {
     expect(r.errors[2].error).toBe('targets.error.regexNested');
   });
 
+  it('skips filter list headers whole (regression)', () => {
+    const r = parseTargetList('[Adblock Plus 2.0]\n||example.com^');
+    expect(r.errors).toEqual([]);
+    expect(r.targets).toEqual([{ type: 'domain', value: 'example.com' }]);
+  });
+
+  it('keeps "+ entry" (with a space) an exception, never a blocking entry (regression)', () => {
+    const r = parseTargetList('+ reddit.com/r/rust\n@@ example.com');
+    expect(r.errors).toEqual([]);
+    expect(r.targets).toEqual([
+      { type: 'path', value: 'reddit.com/r/rust', allow: true },
+      { type: 'domain', value: 'example.com', allow: true },
+    ]);
+  });
+
   it('accepts LeechBlock space separated lists', () => {
     const r = parseTargetList('facebook.com +facebook.com/groups twitter.com');
     expect(r.targets.map((x) => x.value)).toEqual(['facebook.com', 'facebook.com/groups', 'twitter.com']);
@@ -106,6 +121,14 @@ describe('matching (MAT-01, MAT-03, MAT-07)', () => {
     expect(matches('example.*', 'https://example.co.uk/')).toBe(true);
     expect(matches('*.example.com', 'https://a.b.example.com/')).toBe(true);
     expect(matches('a.com/**/end', 'https://a.com/x/y/z/end')).toBe(true);
+  });
+
+  it('matches IP addresses, IPv6 included (regression)', () => {
+    expect(matches('192.168.1.10', 'http://192.168.1.10:8080/admin')).toBe(true);
+    expect(matches('[::1]', 'http://[::1]:3000/')).toBe(true);
+    expect(matches('[::1]', 'http://[::2]/')).toBe(false);
+    const index = compileTargets([t('[::1]')]);
+    expect(index.match(parseUrl('http://[::1]/x')!)).toHaveLength(1);
   });
 
   it('matches query parameters', () => {

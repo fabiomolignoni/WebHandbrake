@@ -7,7 +7,7 @@ import { newId } from '../engine/defaults';
 import { dayKeyOf } from '../engine/time';
 import { initI18n, t } from '../i18n/i18n';
 import { api, extensionUrl, quiet, sessionStore } from '../platform/api';
-import { initIdle, setIdleState } from './accounting';
+import { forgetTab, initIdle, releaseMute, setIdleState } from './accounting';
 import { updateBadge } from './badge';
 import { initClockObserver, now } from './clock';
 import { counters } from './diagnostics-state';
@@ -66,13 +66,16 @@ api.alarms.onAlarm.addListener((alarm) => {
 
 api.idle?.onStateChanged?.addListener((s) => setIdleState(s as 'active' | 'idle' | 'locked'));
 
-registerNavigationListeners();
-registerTabListeners((tabId) => {
-  void (async () => {
-    const tab = await quiet(api.tabs.get(tabId));
-    if (tab?.id !== undefined) await updateBadge(tab.id, tab.url, Boolean(tab.incognito));
-  })();
-});
+registerNavigationListeners((tabId, url) => void releaseMute(tabId, url));
+registerTabListeners(
+  (tabId) => {
+    void (async () => {
+      const tab = await quiet(api.tabs.get(tabId));
+      if (tab?.id !== undefined) await updateBadge(tab.id, tab.url, Boolean(tab.incognito));
+    })();
+  },
+  (tabId) => forgetTab(tabId),
+);
 registerPermissionListeners();
 registerMenuClicks();
 registerCommands();

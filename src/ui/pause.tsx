@@ -27,6 +27,11 @@ export function costLabel(c: Cost): string {
   }
 }
 
+/** Every cost to pay, e.g. "Wait 30 s + Type a code". */
+export function costsLabel(costs: Cost[]): string {
+  return costs.length ? costs.map(costLabel).join(' + ') : t('cost.none');
+}
+
 export function pauseBudgetLabel(o: PauseOptions): string | null {
   const parts: string[] = [];
   if (o.remainingCount !== null) parts.push(t('pause.left.count', { count: o.remainingCount }));
@@ -49,17 +54,20 @@ export function PauseDialog({
   const [scope, setScope] = useState<PauseScope>(
     options.scopes.includes('site') ? 'site' : options.scopes[0],
   );
-  const d = options.duration;
-  const [minutes, setMinutes] = useState<number>(
+  // A pause of everything has its own rules (the strictest of every group).
+  const o = scope === 'all' && options.all ? options.all : options;
+  const d = o.duration;
+  const [chosen, setMinutes] = useState<number>(
     d.mode === 'choices' ? (d.choices?.[0] ?? d.minutes) : d.minutes,
   );
+  const minutes = Math.min(chosen, d.minutes);
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [ticket, setTicket] = useState<TicketView | null>(null);
 
   const start = async () => {
     setError(null);
-    if (options.reasonMode === 'required' && !reason.trim()) {
+    if (o.reasonMode === 'required' && !reason.trim()) {
       setError(t('ticket.error.reasonRequired'));
       return;
     }
@@ -69,7 +77,7 @@ export function PauseDialog({
       scope,
       minutes,
       incognito: options.incognito,
-      reason: options.reasonMode === 'none' ? undefined : reason,
+      reason: o.reasonMode === 'none' ? undefined : reason,
     });
     if (r.error) setError(t(r.error));
     else if (r.ticket) setTicket(r.ticket);
@@ -95,7 +103,7 @@ export function PauseDialog({
         : t('pause.scope.group'),
     all: t('pause.scope.all'),
   };
-  const budget = pauseBudgetLabel(options);
+  const budget = pauseBudgetLabel(o);
   return (
     <Dialog
       open
@@ -147,12 +155,12 @@ export function PauseDialog({
               <span class="help">{t('pause.max', { minutes: d.minutes })}</span>
             </div>
           )}
-          {options.metered && <span class="help">{t('pause.metered')}</span>}
+          {o.metered && <span class="help">{t('pause.metered')}</span>}
         </div>
-        {options.reasonMode !== 'none' && (
+        {o.reasonMode !== 'none' && (
           <div class="field">
             <label for="pause-reason">
-              {options.reasonMode === 'required' ? t('pause.reasonRequired') : t('pause.reasonOptional')}
+              {o.reasonMode === 'required' ? t('pause.reasonRequired') : t('pause.reasonOptional')}
             </label>
             <input
               id="pause-reason"
@@ -164,7 +172,7 @@ export function PauseDialog({
           </div>
         )}
         <p class="small">
-          <strong>{t('pause.cost')}:</strong> {costLabel(options.cost)}
+          <strong>{t('pause.cost')}:</strong> {costsLabel(o.costs)}
           {budget && <> · {budget}</>}
         </p>
         {error && <Banner kind="danger">{error}</Banner>}

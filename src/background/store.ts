@@ -281,8 +281,8 @@ export class Store {
       clearTimeout(this.stateTimer);
       this.stateTimer = null;
     }
-    const { activity, ...rest } = this.state;
     this.state.tamper = this.state.tamper.slice(-MAX_TAMPER);
+    const { activity, ...rest } = this.state;
     await api.storage.local.set({ state: rest, activity });
   }
 

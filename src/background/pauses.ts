@@ -1,8 +1,9 @@
 /** Pauses / overrides (BRK-01…BRK-10). */
 
+import { costRank } from '../engine/changes';
 import { activeSessions, decide, grantActive } from '../engine/decide';
 import { periodRange } from '../engine/time';
-import type { Grant, Group, PausePolicy, Period } from '../engine/types';
+import type { Cost, Grant, Group, PausePolicy, Period } from '../engine/types';
 import { pageKey } from '../engine/url';
 import type { PauseOptions, PauseRequest, TicketView } from '../shared/models';
 import { now } from './clock';
@@ -35,17 +36,29 @@ function remaining(limit: PausePolicy['limit'], groupId: string | null, t: numbe
 
 const minNull = (a: number | null, b: number | null) => (a === null ? b : b === null ? a : Math.min(a, b));
 
-/** What pause the user can take now for a URL or a group. */
-export function pauseOptions(url?: string, groupId?: string, incognito: boolean | null = null): PauseOptions {
-  const c = ctx();
-  const settings = store.config.settings;
-  const none = (reason: string): PauseOptions => ({
+/** Distinct costs of the groups, strictest first: a pause covering several groups pays each one. */
+function groupCosts(groups: Group[]): Cost[] {
+  const seen = new Set<string>();
+  let out: Cost[] = [];
+  for (const g of groups) {
+    const key = JSON.stringify(g.pause.cost);
+    if (g.pause.cost.type === 'none' || seen.has(key)) continue;
+    seen.add(key);
+    out.push(g.pause.cost);
+  }
+  // A plain confirmation adds nothing to a real cost.
+  if (out.length > 1) out = out.filter((c) => c.type !== 'confirm');
+  return out.sort((a, b) => costRank(b) - costRank(a));
+}
+
+function unavailable(reason: string, url: string | undefined, incognito: boolean | null): PauseOptions {
+  return {
     available: false,
     reason,
     groups: [],
     scopes: [],
     duration: { mode: 'fixed', minutes: 0 },
-    cost: { type: 'none' },
+    costs: [],
     reasonMode: 'none',
     remainingCount: null,
     remainingMinutes: null,
@@ -53,48 +66,33 @@ export function pauseOptions(url?: string, groupId?: string, incognito: boolean 
     site: null,
     url: url ?? null,
     incognito,
-  });
+  };
+}
 
-  let groups: Group[] = [];
-  let site: string | null = null;
-  if (url) {
-    const d = decide(c, url, { incognito });
-    if (d.session) return none('pause.unavailable.session');
-    groups = d.groups.map((r) => r.group);
-    site = d.groups[0]?.site ?? null;
-    const pausable = d.groups.filter((r) => r.pausable).map((r) => r.group);
-    if (!groups.length) return none('pause.unavailable.noGroup');
-    if (!pausable.length) {
-      const inSession = activeSessions(c.state, c.now).some((s) =>
-        groups.some((g) => s.groups.includes(g.id)),
-      );
-      return none(inSession ? 'pause.unavailable.session' : 'pause.unavailable.notAllowed');
-    }
-    groups = pausable;
-  } else if (groupId) {
-    const g = store.config.groups.find((x) => x.id === groupId);
-    if (!g?.pause.allowed) return none('pause.unavailable.notAllowed');
-    groups = [g];
-  } else {
-    groups = store.config.groups.filter((g) => g.enabled && !g.archived && g.pause.allowed);
-    if (!groups.length) return none('pause.unavailable.notAllowed');
-  }
-  // When several groups apply, the strictest pause rules apply.
-  const main = groups[0];
+/** Options of a pause covering these groups: the strictest rules of all of them apply. */
+function optionsFor(
+  groups: Group[],
+  url: string | undefined,
+  site: string | null,
+  incognito: boolean | null,
+  t: number,
+): PauseOptions {
+  const none = (reason: string) => unavailable(reason, url, incognito);
   let remCount: number | null = null;
   let remMinutes: number | null = null;
   for (const g of groups) {
-    const r = remaining(g.pause.limit, g.id, c.now);
+    const r = remaining(g.pause.limit, g.id, t);
     remCount = minNull(remCount, r.count);
     remMinutes = minNull(remMinutes, r.minutes);
   }
-  const global = remaining(settings.pauseLimit, null, c.now);
+  const global = remaining(store.config.settings.pauseLimit, null, t);
   remCount = minNull(remCount, global.count);
   remMinutes = minNull(remMinutes, global.minutes);
   if (remCount === 0) return { ...none('pause.unavailable.noneLeft'), remainingCount: 0 };
   if (remMinutes !== null && remMinutes <= 0)
     return { ...none('pause.unavailable.noMinutesLeft'), remainingMinutes: 0 };
 
+  const main = groups[0];
   const scopes = main.pause.scopes.filter(
     (s) => groups.every((g) => g.pause.scopes.includes(s)) && (s !== 'page' || url) && (s !== 'site' || site),
   );
@@ -108,8 +106,12 @@ export function pauseOptions(url?: string, groupId?: string, incognito: boolean 
     groups: groups.map((g) => ({ id: g.id, name: g.name })),
     scopes,
     duration,
-    cost: main.pause.cost,
-    reasonMode: groups.some((g) => g.pause.reason === 'required') ? 'required' : main.pause.reason,
+    costs: groupCosts(groups),
+    reasonMode: groups.some((g) => g.pause.reason === 'required')
+      ? 'required'
+      : groups.some((g) => g.pause.reason === 'optional')
+        ? 'optional'
+        : 'none',
     remainingCount: remCount,
     remainingMinutes: remMinutes,
     metered: groups.some((g) => g.pause.metered),
@@ -119,9 +121,62 @@ export function pauseOptions(url?: string, groupId?: string, incognito: boolean 
   };
 }
 
+/** Groups a pause of everything covers (BRK-03 "all"). */
+function pausableGroups(): Group[] {
+  return store.config.groups.filter((g) => g.enabled && !g.archived && g.pause.allowed);
+}
+
+/**
+ * What pause the user can take now for a URL or a group. A pause of everything also covers groups
+ * that are not on the page: its options (`all`) take the rules of every group into account.
+ */
+export function pauseOptions(url?: string, groupId?: string, incognito: boolean | null = null): PauseOptions {
+  const c = ctx();
+  const none = (reason: string) => unavailable(reason, url, incognito);
+
+  let groups: Group[] = [];
+  let site: string | null = null;
+  if (url) {
+    const d = decide(c, url, { incognito });
+    if (d.session) return none('pause.unavailable.session');
+    groups = d.groups.map((r) => r.group);
+    const pausable = d.groups.filter((r) => r.pausable);
+    if (!groups.length) return none('pause.unavailable.noGroup');
+    if (!pausable.length) {
+      const inSession = activeSessions(c.state, c.now).some((s) =>
+        groups.some((g) => s.groups.includes(g.id)),
+      );
+      return none(inSession ? 'pause.unavailable.session' : 'pause.unavailable.notAllowed');
+    }
+    groups = pausable.map((r) => r.group);
+    site = pausable[0].site;
+  } else if (groupId) {
+    const g = store.config.groups.find((x) => x.id === groupId);
+    if (!g?.pause.allowed) return none('pause.unavailable.notAllowed');
+    groups = [g];
+  } else {
+    groups = pausableGroups();
+    if (!groups.length) return none('pause.unavailable.notAllowed');
+    return optionsFor(groups, url, site, incognito, c.now);
+  }
+
+  const opts = optionsFor(groups, url, site, incognito, c.now);
+  if (opts.scopes.includes('all')) {
+    const all = optionsFor(pausableGroups(), undefined, null, incognito, c.now);
+    if (all.available && all.scopes.includes('all')) opts.all = { ...all, scopes: ['all'] };
+    else opts.scopes = opts.scopes.filter((s) => s !== 'all');
+    // Only "all" was possible: tell why it is not (e.g. another group has no pauses left).
+    if (!opts.scopes.length)
+      return all.available ? none('pause.unavailable.notAllowed') : { ...all, url: url ?? null };
+  }
+  return opts;
+}
+
 export async function startPause(req: PauseRequest): Promise<{ ticket: TicketView | null; error?: string }> {
   await store.ready();
-  const opts = pauseOptions(req.url, req.groupId, req.incognito ?? null);
+  const page = pauseOptions(req.url, req.groupId, req.incognito ?? null);
+  // A pause of everything follows the rules of every group it covers.
+  const opts = req.scope === 'all' && page.all ? page.all : page;
   if (!opts.available) return { ticket: null, error: opts.reason ?? 'pause.unavailable.notAllowed' };
   if (!opts.scopes.includes(req.scope)) return { ticket: null, error: 'pause.error.scope' };
   const max = opts.duration.minutes;
@@ -130,7 +185,7 @@ export async function startPause(req: PauseRequest): Promise<{ ticket: TicketVie
   if (!(minutes > 0) || minutes > max) return { ticket: null, error: 'pause.error.duration' };
   const steps: Step[] = [];
   if (opts.reasonMode !== 'none') steps.push({ type: 'reason', required: opts.reasonMode === 'required' });
-  steps.push(...costSteps(opts.cost));
+  for (const cost of opts.costs) steps.push(...costSteps(cost));
   const groups = req.scope === 'all' ? '*' : opts.groups.map((g) => g.id);
   const purpose = {
     kind: 'pause' as const,

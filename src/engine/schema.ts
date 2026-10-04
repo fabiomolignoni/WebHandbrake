@@ -134,14 +134,17 @@ export function normalizeIntervention(raw: unknown): Intervention {
         mute: bool(raw.mute, false),
       };
     case 'ask': {
-      const choices = Array.isArray(raw.choices)
+      const maxMinutes = num(raw.maxMinutes, 15, 1, 1440);
+      const given: number[] = Array.isArray(raw.choices)
         ? raw.choices.filter((c: unknown) => typeof c === 'number' && c > 0 && c <= 1440).slice(0, 6)
-        : [5, 10, 15];
+        : [];
+      // Only durations that can be granted: a choice above the maximum could never be picked.
+      const choices = (given.length ? given : [5, 10, 15]).filter((c) => c <= maxMinutes);
       return {
         type: 'ask',
         seconds: num(raw.seconds, 0, 0, 600),
-        choices: choices.length ? choices : [5, 10, 15],
-        maxMinutes: num(raw.maxMinutes, 15, 1, 1440),
+        choices: choices.length ? choices : [maxMinutes],
+        maxMinutes,
         requireIntention: bool(raw.requireIntention, false),
         ...(typeof raw.cooldownMinutes === 'number' && raw.cooldownMinutes > 0
           ? { cooldownMinutes: num(raw.cooldownMinutes, 0, 1, 1440) }

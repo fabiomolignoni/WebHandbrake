@@ -174,7 +174,8 @@ export interface PauseOptions {
   groups: { id: string; name: string }[];
   scopes: PauseScope[];
   duration: { mode: 'fixed' | 'upTo' | 'choices'; minutes: number; choices?: number[] };
-  cost: Cost;
+  /** Cost of every group covered, all of them to pay (strictest first); empty when free. */
+  costs: Cost[];
   reasonMode: 'none' | 'optional' | 'required';
   remainingCount: number | null;
   remainingMinutes: number | null;
@@ -183,6 +184,8 @@ export interface PauseOptions {
   url: string | null;
   /** Window context the options were computed for (groups limited to private/normal windows). */
   incognito: boolean | null;
+  /** Options of the "all" scope, which also covers the groups that are not on this page. */
+  all?: PauseOptions;
 }
 
 export interface PauseRequest {

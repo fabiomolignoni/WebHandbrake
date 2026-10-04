@@ -117,6 +117,7 @@ export async function interventionModel(
   const key = `${tab?.id ?? ''}|${url}`;
   const last = shownRecently.get(key) ?? 0;
   if (c.now - last > 60_000) {
+    for (const [k, at] of shownRecently) if (c.now - at > 60_000) shownRecently.delete(k);
     shownRecently.set(key, c.now);
     const gid = primary?.group.id ?? 'session';
     store.usage.count(`shown:${gid}`, c.now, store.cc.cal);
