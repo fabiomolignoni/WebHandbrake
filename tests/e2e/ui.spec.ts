@@ -107,13 +107,17 @@ test('a rule is created step by step: sites → when → what happens → review
   await p.getByRole('button', { name: 'Next: when' }).click();
   await p.getByRole('radio', { name: /At certain times/ }).click();
   await p.getByRole('button', { name: 'Next: what happens' }).click();
-  // Friction is recommended for temptations; "only count" needs "every time".
-  await expect(p.getByRole('radio', { name: /Ask what I want to do/ })).toHaveAttribute(
-    'aria-checked',
-    'true',
-  );
-  await expect(p.getByRole('radio', { name: /Only count the time/ })).toBeDisabled();
-  await p.getByRole('radio', { name: /^Block/ }).click();
+  // Nothing is pre-selected (active choice): every intervention is offered, "count only" needs
+  // "every time", and a redirect needs an address.
+  await expect(p.getByRole('button', { name: 'Next: review' })).toBeDisabled();
+  await expect(p.locator('.friction-option')).toHaveCount(9);
+  await expect(p.locator('.friction-option[aria-checked="true"]')).toHaveCount(0);
+  await expect(p.getByRole('radio', { name: 'Count only' })).toBeDisabled();
+  await p.getByRole('radio', { name: 'Redirect' }).click();
+  await expect(p.getByRole('button', { name: 'Next: review' })).toBeDisabled();
+  await p.getByLabel('Address', { exact: true }).fill('https://todo.test/');
+  await expect(p.getByRole('button', { name: 'Next: review' })).toBeEnabled();
+  await p.getByRole('radio', { name: 'Block' }).click();
   await p.getByRole('button', { name: 'Next: review' }).click();
   // The review states the plan: when (the schedule) and what happens.
   await expect(p.locator('.plan-text')).toContainText('Mon–Fri');
@@ -127,6 +131,55 @@ test('a rule is created step by step: sites → when → what happens → review
   expect(created.policies).toHaveLength(1);
   expect(created.policies[0].schedule.mode).toBe('during');
   expect(created.policies[0].intervention.type).toBe('block');
+});
+
+test('first run: welcome → goal → sites → daily time → plan → done', async () => {
+  const p = await h.page('dashboard.html#/welcome');
+  await p.setViewportSize({ width: 1280, height: 900 });
+  await expect(p.getByRole('heading', { name: 'Welcome to WebHandbrake' })).toBeVisible();
+  await p.getByRole('button', { name: 'Set up in about a minute' }).click();
+  // Progress starts endowed ("Installed" is already done) and counts only the steps of the goal.
+  // No goal is pre-selected: we do not know why the extension was installed.
+  await expect(p.locator('.choice[aria-checked="true"]')).toHaveCount(0);
+  await expect(p.getByRole('button', { name: /^Next:/ })).toBeDisabled();
+  await p.getByRole('radio', { name: /Spend less time on some sites/ }).click();
+  await expect(p.getByText('Step 1 of 4')).toBeVisible();
+  await p.getByRole('button', { name: 'Next: Sites' }).click();
+  await expect(p.getByRole('button', { name: 'Next: Daily time' })).toBeDisabled();
+  // The addresses of sensitive lists are not shown; the selection is summed up.
+  await expect(p.getByRole('button', { name: /^Adult/ })).toContainText('not shown');
+  await p.getByRole('button', { name: /^Video/ }).click();
+  await p.getByPlaceholder('Add a site, or paste a list…').fill('clips.test');
+  await p.getByRole('button', { name: 'Add', exact: true }).click();
+  await expect(p.locator('.selection')).toContainText('2 rules');
+  await p.getByRole('button', { name: 'Next: Daily time' }).click();
+  await p.getByRole('radio', { name: '45 min' }).click();
+  await expect(p.getByRole('button', { name: 'Next: Your plan' })).toBeDisabled();
+  await p.getByRole('radio', { name: 'Block' }).click();
+  await p.getByRole('button', { name: 'Next: Your plan' }).click();
+  await expect(p.locator('.plan-text')).toContainText('After 45 min a day on the sites in Video');
+  await p.getByRole('radio', { name: /^Soft/ }).click();
+  await p.getByLabel('Why does this matter to you?').fill('More evenings outside');
+  await p.getByRole('button', { name: 'Turn on my plan' }).click();
+  await expect(p.getByRole('heading', { name: "You're set" })).toBeVisible({ timeout: 5000 });
+  const cfg = ((await h.rpc('config.get')) as any).config;
+  const video = cfg.groups.find((g: any) => g.name === 'Video');
+  expect(video.note).toBe('More evenings outside');
+  expect(video.policies[0].budget).toMatchObject({ type: 'time', minutes: 45, period: { kind: 'day' } });
+  expect(video.policies[0].intervention.type).toBe('block');
+  const mine = cfg.groups.find((g: any) => g.name === 'My sites');
+  expect(mine.targets.map((x: any) => x.value)).toEqual(['clips.test']);
+  expect(cfg.settings.protection.level).toBe('soft');
+  expect(cfg.settings.onboarded).toBe(true);
+});
+
+test('first run: the steps follow the goal ("block" has no details step)', async () => {
+  const p = await h.page('dashboard.html#/welcome');
+  await p.getByRole('button', { name: 'Set up in about a minute' }).click();
+  await p.getByRole('radio', { name: /Block some sites completely/ }).click();
+  await expect(p.getByText('Step 1 of 3')).toBeVisible();
+  await p.getByRole('button', { name: 'Next: Sites' }).click();
+  await expect(p.getByRole('button', { name: 'Next: Your plan' })).toBeVisible();
 });
 
 test('the wizard hands its draft to the full editor', async () => {

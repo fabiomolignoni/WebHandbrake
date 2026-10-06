@@ -1,6 +1,10 @@
 /**
  * Built-in templates (LST-01). Site lists live in this data file so that the community can review
- * and extend them without touching code (MAINT-05). Alternative and mobile domains are included.
+ * and extend them without touching code (MAINT-05).
+ *
+ * Each entry covers a whole platform: `name.*` matches the site in every country (amazon.com,
+ * amazon.it, amazon.co.uk…), and subdomains are always included (m.youtube.com). Alternative
+ * domains of the same service are listed (youtu.be, fb.com).
  */
 
 export interface TemplateDef {
@@ -9,8 +13,8 @@ export interface TemplateDef {
   nameKey: string;
   icon: string;
   color: string;
-  /** Suggested intervention style: friction for temptations, block for clearly unwanted sites. */
-  style: 'ask' | 'block';
+  /** Addresses not shown unless the user asks: the extension may be used by minors. */
+  sensitive?: boolean;
   sites: string[];
 }
 
@@ -19,8 +23,7 @@ export const TEMPLATES: TemplateDef[] = [
     id: 'social',
     nameKey: 'template.social',
     icon: 'users',
-    color: '#5b7bd5',
-    style: 'ask',
+    color: '#4f6bd0',
     sites: [
       'facebook.com',
       'fb.com',
@@ -31,11 +34,12 @@ export const TEMPLATES: TemplateDef[] = [
       'twitter.com',
       'tiktok.com',
       'snapchat.com',
-      'pinterest.com',
+      'pinterest.*',
       'tumblr.com',
       'linkedin.com',
       'bsky.app',
       'mastodon.social',
+      'bereal.com',
       'vk.com',
       'ok.ru',
       'weibo.com',
@@ -46,20 +50,21 @@ export const TEMPLATES: TemplateDef[] = [
     nameKey: 'template.video',
     icon: 'play',
     color: '#c4574f',
-    style: 'ask',
     sites: [
       'youtube.com',
       'youtu.be',
       'twitch.tv',
+      'kick.com',
       'netflix.com',
       'primevideo.com',
       'disneyplus.com',
       'hulu.com',
       'max.com',
+      'peacocktv.com',
+      'paramountplus.com',
+      'crunchyroll.com',
       'vimeo.com',
       'dailymotion.com',
-      'crunchyroll.com',
-      'kick.com',
       'rumble.com',
       'bilibili.com',
       'nebula.tv',
@@ -72,9 +77,8 @@ export const TEMPLATES: TemplateDef[] = [
     nameKey: 'template.news',
     icon: 'newspaper',
     color: '#8a6d3b',
-    style: 'ask',
     sites: [
-      'news.google.com',
+      'news.google.*',
       'news.yahoo.com',
       'msn.com',
       'cnn.com',
@@ -93,7 +97,7 @@ export const TEMPLATES: TemplateDef[] = [
       'ft.com',
       'aljazeera.com',
       'huffpost.com',
-      'politico.com',
+      'politico.*',
       'axios.com',
       'dailymail.co.uk',
       'independent.co.uk',
@@ -109,29 +113,24 @@ export const TEMPLATES: TemplateDef[] = [
     nameKey: 'template.shopping',
     icon: 'cart',
     color: '#b5762b',
-    style: 'ask',
     sites: [
-      'amazon.com',
-      'amazon.co.uk',
-      'amazon.de',
-      'amazon.fr',
-      'amazon.it',
-      'amazon.es',
-      'amazon.ca',
-      'ebay.com',
-      'ebay.co.uk',
-      'ebay.de',
-      'ebay.it',
+      'amazon.*',
+      'ebay.*',
       'etsy.com',
-      'aliexpress.com',
+      'aliexpress.*',
       'temu.com',
-      'shein.com',
-      'walmart.com',
+      'shein.*',
+      'walmart.*',
       'target.com',
-      'bestbuy.com',
-      'zalando.com',
+      'bestbuy.*',
+      'zalando.*',
+      'vinted.*',
+      'allegro.pl',
+      'mercadolibre.*',
+      'rakuten.*',
+      'asos.com',
       'wish.com',
-      'wayfair.com',
+      'wayfair.*',
     ],
   },
   {
@@ -139,7 +138,6 @@ export const TEMPLATES: TemplateDef[] = [
     nameKey: 'template.games',
     icon: 'gamepad',
     color: '#6b8f3c',
-    style: 'ask',
     sites: [
       'steampowered.com',
       'steamcommunity.com',
@@ -148,8 +146,8 @@ export const TEMPLATES: TemplateDef[] = [
       'roblox.com',
       'chess.com',
       'lichess.org',
-      'poki.com',
-      'crazygames.com',
+      'poki.*',
+      'crazygames.*',
       'miniclip.com',
       'kongregate.com',
       'itch.io',
@@ -164,22 +162,25 @@ export const TEMPLATES: TemplateDef[] = [
     nameKey: 'template.gambling',
     icon: 'dice',
     color: '#7a5ba8',
-    style: 'block',
+    sensitive: true,
     sites: [
-      'bet365.com',
-      'williamhill.com',
-      'paddypower.com',
-      'betfair.com',
-      'pokerstars.com',
+      'bet365.*',
+      'williamhill.*',
+      'paddypower.*',
+      'betfair.*',
+      'pokerstars.*',
       'draftkings.com',
       'fanduel.com',
-      'betway.com',
-      '888.com',
-      '888casino.com',
-      'unibet.com',
-      'bwin.com',
-      'stake.com',
-      'ladbrokes.com',
+      'betway.*',
+      '888.*',
+      '888casino.*',
+      '888poker.*',
+      'unibet.*',
+      'bwin.*',
+      'betsson.*',
+      'leovegas.*',
+      'stake.*',
+      'ladbrokes.*',
       'coral.co.uk',
       'skybet.com',
       'betmgm.com',
@@ -195,8 +196,7 @@ export const TEMPLATES: TemplateDef[] = [
     id: 'forums',
     nameKey: 'template.forums',
     icon: 'chat',
-    color: '#3f8f8b',
-    style: 'ask',
+    color: '#2f8fa8',
     sites: [
       'reddit.com',
       'redd.it',
@@ -219,12 +219,12 @@ export const TEMPLATES: TemplateDef[] = [
     nameKey: 'template.adult',
     icon: 'eye-off',
     color: '#8c4a62',
-    style: 'block',
+    sensitive: true,
     sites: [
-      'pornhub.com',
-      'xvideos.com',
-      'xnxx.com',
-      'xhamster.com',
+      'pornhub.*',
+      'xvideos.*',
+      'xnxx.*',
+      'xhamster.*',
       'redtube.com',
       'youporn.com',
       'tube8.com',
@@ -243,3 +243,10 @@ export const TEMPLATES: TemplateDef[] = [
     ],
   },
 ];
+
+/** Sites of the sensitive lists: their addresses are hidden in the interface until asked. */
+export const SENSITIVE_SITES: ReadonlySet<string> = new Set(
+  TEMPLATES.filter((t) => t.sensitive).flatMap((t) => t.sites),
+);
+
+export const isSensitiveSite = (value: string) => SENSITIVE_SITES.has(value);

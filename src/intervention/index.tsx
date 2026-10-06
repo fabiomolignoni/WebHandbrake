@@ -406,9 +406,10 @@ function PassStep({
 }) {
   const [ticket, setTicket] = useState(initial);
   const [value, setValue] = useState('');
-  const [minutes, setMinutes] = useState<number>(() =>
-    initial.step.type === 'intention' ? initial.step.choices[0] : 5,
-  );
+  // The first duration offered: choices above the maximum are not shown.
+  const firstChoice = (st: StepView) =>
+    st.type === 'intention' ? (st.choices.find((c) => c <= st.maxMinutes) ?? st.choices[0]) : 5;
+  const [minutes, setMinutes] = useState<number>(() => firstChoice(initial.step));
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const step: StepView = ticket.step;
@@ -450,8 +451,12 @@ function PassStep({
     try {
       const r = await call('ticket.answer', { id: ticket.id, answer: value, minutes });
       if (r.status === 'done') onPassed();
-      else if (r.status === 'next') setTicket(r.ticket);
-      else {
+      else if (r.status === 'next') {
+        // A new step starts empty: what was typed for the previous one does not carry over.
+        setTicket(r.ticket);
+        setValue('');
+        setMinutes(firstChoice(r.ticket.step));
+      } else {
         setError(t(r.error));
         if (r.ticket) setTicket(r.ticket);
       }

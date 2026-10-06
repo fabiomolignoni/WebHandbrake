@@ -1,7 +1,7 @@
 /** Policy editors: condition (schedule + budget) → intervention (SCH-04, LIM, INT). */
 
 import { useState } from 'preact/hooks';
-import { delayIntervention, frictionIntervention } from '../../engine/defaults';
+import { defaultIntervention } from '../../engine/defaults';
 import type {
   Budget,
   ChallengeKind,
@@ -278,31 +278,6 @@ function GrantEditor({ grant, onChange }: { grant: GrantSpec; onChange: (g: Gran
       </div>
     </div>
   );
-}
-
-export function defaultIntervention(type: InterventionType): Intervention {
-  switch (type) {
-    case 'remind':
-      return { type: 'remind' };
-    case 'filter':
-      return { type: 'filter', filter: 'grayscale', intensity: 100, mute: false };
-    case 'ask':
-      return frictionIntervention();
-    case 'delay':
-      return delayIntervention(30);
-    case 'challenge':
-      return {
-        type: 'challenge',
-        kind: 'random',
-        length: 24,
-        charset: 'alnum',
-        grant: { scope: 'site', mode: 'visit' },
-      };
-    case 'redirect':
-      return { type: 'redirect', url: 'https://' };
-    default:
-      return { type } as Intervention;
-  }
 }
 
 export function InterventionEditor({

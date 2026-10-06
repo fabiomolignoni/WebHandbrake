@@ -9,7 +9,7 @@ import { t } from '../i18n/i18n';
 import { api } from '../platform/api';
 import { timestampSuffix } from '../shared/format';
 import type { ImportPreview, SaveResult } from '../shared/models';
-import { proposeConfig } from './protection';
+import { proposeConfig, unprotected } from './protection';
 import { store } from './store';
 
 export async function exportData(includeStats: boolean, includeSecrets: boolean) {
@@ -72,7 +72,7 @@ export async function previewImport(text: string, mode: 'merge' | 'replace'): Pr
     warnings: translateWarnings(imp.warnings),
     errors,
     units,
-    directions: units.map((u) => classify(u, store.config)),
+    directions: units.map((u) => classify(u, store.config, { unprotected: unprotected(store.config) })),
   };
 }
 

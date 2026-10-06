@@ -1,16 +1,20 @@
 /**
  * Target list editor (MAT-01…MAT-08, MAT-22): paste anything (URLs, lists, uBlock/uBlacklist
  * syntax), see line-by-line errors, exceptions in their own section, sort and de-duplicate,
- * edit everything as text in advanced mode.
+ * edit everything as text in advanced mode. A short guide with examples sits next to the input
+ * (docs/ux-redesign.md §11.7); addresses from the sensitive lists stay hidden until asked.
  */
 
-import { useState } from 'preact/hooks';
+import type { Ref } from 'preact';
+import { useRef, useState } from 'preact/hooks';
+import { isSensitiveSite } from '../../data/templates';
 import { newId } from '../../engine/defaults';
 import { parseTargetList, targetToLine } from '../../engine/patterns';
 import type { Target, TargetType } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { targetTypeLabel } from '../../shared/summary';
 import { Banner, Button, IconButton, Select } from '../../ui/components';
+import { Icon } from '../../ui/icons';
 
 const COMPATIBLE: Record<TargetType, TargetType[]> = {
   domain: ['domain', 'host'],
@@ -28,16 +32,76 @@ function changeType(tg: Target, type: TargetType): Target {
 
 const key = (x: Pick<Target, 'type' | 'value' | 'allow'>) => `${x.type}|${x.value}|${x.allow ? 1 : 0}`;
 
+/**
+ * The short guide: what people want to do, with an example each (worked examples, task-oriented
+ * help). Picking an example puts it in the input, ready to be edited.
+ */
+const GUIDE: [string, string][] = [
+  ['youtube.com', 'targets.guide.site'],
+  ['amazon.*', 'targets.guide.countries'],
+  ['music.youtube.com', 'targets.guide.subdomain'],
+  ['=youtube.com', 'targets.guide.host'],
+  ['reddit.com/r/funny', 'targets.guide.section'],
+  ['example.com/page$', 'targets.guide.page'],
+  ['youtube.com/$', 'targets.guide.homepage'],
+  ['reddit.com/r/*/comments', 'targets.guide.wildcard'],
+  ['+reddit.com/r/rust', 'targets.guide.exception'],
+];
+
+function Guide({ onPick, exceptions }: { onPick: (example: string) => void; exceptions: boolean }) {
+  return (
+    <details class="disclosure guide">
+      <summary>
+        <Icon name="help" />
+        {t('targets.guide.title')}
+      </summary>
+      <div class="body stack stack-sm">
+        <ul class="guide-list plain">
+          {GUIDE.filter(([code]) => exceptions || !code.startsWith('+')).map(([code, key]) => (
+            <li key={code}>
+              <button
+                type="button"
+                class="guide-example"
+                title={t('targets.guide.use')}
+                aria-label={t('targets.guide.useExample', { example: code })}
+                onClick={() => onPick(code)}
+              >
+                {code}
+              </button>
+              <span class="small text-2">{t(key)}</span>
+            </li>
+          ))}
+        </ul>
+        <p class="small text-2">{t('targets.guide.paste')}</p>
+        <p class="small muted">
+          {t('targets.guide.more')}{' '}
+          <a href="#/help" target="_blank" rel="noopener">
+            {t('targets.guide.moreLink')}
+          </a>
+        </p>
+      </div>
+    </details>
+  );
+}
+
 function AddBox({
   onAdd,
   exception,
   placeholder,
+  text: outerText,
+  setText: setOuterText,
+  inputRef,
 }: {
   onAdd: (lines: string) => string[];
   exception: boolean;
   placeholder: string;
+  text?: string;
+  setText?: (text: string) => void;
+  inputRef?: Ref<HTMLInputElement>;
 }) {
-  const [text, setText] = useState('');
+  const [innerText, setInnerText] = useState('');
+  const text = outerText ?? innerText;
+  const setText = setOuterText ?? setInnerText;
   const [errors, setErrors] = useState<string[]>([]);
   const submit = () => {
     if (!text.trim()) return;
@@ -58,6 +122,7 @@ function AddBox({
           />
         ) : (
           <input
+            ref={inputRef}
             class="input mono grow"
             value={text}
             placeholder={placeholder}
@@ -183,8 +248,21 @@ export function TargetsEditor({
   const [textMode, setTextMode] = useState(false);
   const [text, setText] = useState('');
   const [textErrors, setTextErrors] = useState<string[]>([]);
+  const [draft, setDraft] = useState('');
+  const [showSensitive, setShowSensitive] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const blocks = targets.filter((x) => !x.allow);
   const allows = targets.filter((x) => x.allow);
+  const hidden = showSensitive ? [] : blocks.filter((x) => isSensitiveSite(x.value));
+  const shown = hidden.length ? blocks.filter((x) => !isSensitiveSite(x.value)) : blocks;
+  const pick = (example: string) => {
+    setDraft(example);
+    requestAnimationFrame(() => {
+      const el = inputRef.current;
+      el?.focus();
+      el?.select();
+    });
+  };
 
   const addLines = (lines: string, asException: boolean): string[] => {
     const { targets: parsed, errors } = parseTargetList(lines);
@@ -272,10 +350,20 @@ export function TargetsEditor({
   return (
     <div class="stack">
       {hint && <p class="help">{hint}</p>}
-      <AddBox onAdd={(l) => addLines(l, false)} exception={false} placeholder={t('targets.addPlaceholder')} />
+      <AddBox
+        onAdd={(l) => addLines(l, false)}
+        exception={false}
+        placeholder={t('targets.addPlaceholder')}
+        text={draft}
+        setText={setDraft}
+        inputRef={inputRef}
+      />
+      <Guide onPick={pick} exceptions={exceptions} />
       <div class="row between">
         <span class="small muted">
-          {t('targets.count', { sites: blocks.length, exceptions: allows.length })}
+          {exceptions || allows.length
+            ? t('targets.count', { sites: blocks.length, exceptions: allows.length })
+            : t('groups.sites', { count: blocks.length })}
         </span>
         <div class="row">
           <Button size="small" variant="ghost" icon="list" onClick={sort} disabled={targets.length < 2}>
@@ -302,12 +390,23 @@ export function TargetsEditor({
       </div>
       {blocks.length > 0 && (
         <ul class="list compact" aria-label={t('targets.sites')}>
-          {blocks.map((tg) => (
+          {shown.map((tg) => (
             <Row key={tg.id} tg={tg} advanced={advanced} onChange={update} onRemove={() => remove(tg.id)} />
           ))}
+          {hidden.length > 0 && (
+            <li class="target-row hidden-sites">
+              <span class="row nowrap small text-2">
+                <Icon name="eye" />
+                {t('targets.hidden', { count: hidden.length })}
+              </span>
+              <Button size="small" variant="ghost" onClick={() => setShowSensitive(true)}>
+                {t('targets.showHidden')}
+              </Button>
+            </li>
+          )}
         </ul>
       )}
-      {exceptions && (
+      {(exceptions || allows.length > 0) && (
         <div class="stack stack-sm" style={{ marginTop: '8px' }}>
           <h4>{t('targets.exceptions')}</h4>
           <p class="help">{t('targets.exceptionsHelp')}</p>
@@ -324,11 +423,13 @@ export function TargetsEditor({
               ))}
             </ul>
           )}
-          <AddBox
-            onAdd={(l) => addLines(l, true)}
-            exception
-            placeholder={t('targets.addExceptionPlaceholder')}
-          />
+          {exceptions && (
+            <AddBox
+              onAdd={(l) => addLines(l, true)}
+              exception
+              placeholder={t('targets.addExceptionPlaceholder')}
+            />
+          )}
         </div>
       )}
     </div>

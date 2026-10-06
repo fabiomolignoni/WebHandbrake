@@ -32,6 +32,15 @@ import { LockedPreview, levelIcon } from './group-editor';
 
 const LEVELS: ProtectionLevel[] = ['soft', 'balanced', 'strict', 'locked'];
 
+/**
+ * Lengths of the random code asked before loosening a rule, chosen by the time they cost: random
+ * characters are typed at roughly two per second, so about 10 s, 20 s, 40 s and 80 s.
+ */
+const CODE_LENGTHS = [0, 20, 40, 80, 160];
+const codeLengths = (current: number) =>
+  CODE_LENGTHS.includes(current) ? CODE_LENGTHS : [...CODE_LENGTHS, current].sort((a, b) => a - b);
+const typingTime = (n: number) => formatDuration(n / 2);
+
 function PendingItem({ p, onChange }: { p: PendingChange; onChange: () => void }) {
   const now = useNow(30_000);
   const [ticket, setTicket] = useState<TicketView | null>(null);
@@ -565,9 +574,9 @@ export function ProtectionPage() {
                 value={String(p.access.codeLength)}
                 label={t('access.code')}
                 onChange={(v) => void save((c) => (c.settings.protection.access.codeLength = Number(v)))}
-                options={['0', '16', '32', '64', '128'].map((v) => ({
-                  value: v,
-                  label: v === '0' ? t('access.codeNone') : t('access.codeChars', { n: Number(v) }),
+                options={codeLengths(p.access.codeLength).map((n) => ({
+                  value: String(n),
+                  label: n === 0 ? t('access.codeNone') : t('access.codeChars', { n, time: typingTime(n) }),
                 }))}
               />
             )}

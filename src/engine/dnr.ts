@@ -256,32 +256,21 @@ export function compileDnr(ctx: EngineContext, opts: DnrOptions): DnrResult {
     }
   }
   for (const b of regexBuckets.values()) {
-    const exprs = [...new Set(b.res2)].sort();
-    // Merge alternatives to save regex rules, keeping each expression reasonably small.
-    let chunk: string[] = [];
-    let len = 0;
-    const flush = () => {
-      if (!chunk.length) return;
-      const body = chunk.length === 1 ? chunk[0] : `(?:${chunk.join('|')})`;
-      const capture = b.action === 'nav' && opts.hostAccess;
+    // One expression per rule. Browsers cap the memory of each regular expression (Chrome: 2 KB
+    // for RE2) and even two merged addresses exceed it, which would leave all of them to the
+    // slower fallback; the number of regex rules is limited below.
+    const capture = b.action === 'nav' && opts.hostAccess;
+    for (const e of [...new Set(b.res2)].sort()) {
       rules.push({
         priority: b.priority,
         action: actionFor(b.action),
         condition: {
-          regexFilter: capture ? `^(${body})$` : `^${body}$`,
+          regexFilter: capture ? `^(${e})$` : `^${e}$`,
           resourceTypes: [b.res],
           isUrlFilterCaseSensitive: false,
         },
       });
-      chunk = [];
-      len = 0;
-    };
-    for (const e of exprs) {
-      if (len + e.length > 600) flush();
-      chunk.push(e);
-      len += e.length + 1;
     }
-    flush();
   }
 
   // ENF-09: never intervene on redirect destinations.

@@ -6,7 +6,7 @@
     "message": "Random code to type"
   },
   "access.codeChars": {
-    "message": "{n} characters"
+    "message": "{n} characters (about {time} to type)"
   },
   "access.codeHelp": {
     "message": "Before loosening your rules you will have to retype a random code of this length."
@@ -99,11 +99,11 @@
   "backup.reason.emergency": {
     "message": "Emergency exit"
   },
+  "backup.reason.import": {
+    "message": "Before an import"
+  },
   "backup.reason.import-group": {
     "message": "Before importing a rule"
-  },
-  "backup.reason.import-leechblock": {
-    "message": "Before a LeechBlock import"
   },
   "backup.reason.import-list": {
     "message": "Before importing a list"
@@ -116,6 +116,9 @@
   },
   "backup.reason.onboarding": {
     "message": "Setup"
+  },
+  "backup.reason.other": {
+    "message": "Automatic copy"
   },
   "backup.reason.password": {
     "message": "Password change"
@@ -365,6 +368,9 @@
   "common.minutesUnit": {
     "message": "min"
   },
+  "common.newTab": {
+    "message": "(opens in a new tab)"
+  },
   "common.no": {
     "message": "no"
   },
@@ -438,7 +444,7 @@
     "message": "Import a file or a list…"
   },
   "data.importHelp": {
-    "message": "WebHandbrake exports, LeechBlock NG exports (text or JSON), shared rules and plain lists of sites (one per line, hosts files, uBlock Origin, AdGuard and uBlacklist syntax)."
+    "message": "WebHandbrake exports, shared rules and plain lists of sites (one per line, hosts files, uBlock Origin, AdGuard and uBlacklist syntax)."
   },
   "data.includeSecrets": {
     "message": "Include the password hash"
@@ -539,6 +545,9 @@
   "diag.logEnabled": {
     "message": "Keep a log"
   },
+  "diag.openIssue": {
+    "message": "Open an issue on GitHub"
+  },
   "diag.overflow": {
     "message": "{count, plural, one {# entry is} other {# entries are}} enforced without browser filters."
   },
@@ -564,7 +573,7 @@
     "message": "Report a problem"
   },
   "diag.reportHelp": {
-    "message": "Copies a summary you can attach to an issue on GitHub. Addresses are removed unless you include them."
+    "message": "Copy the report, then paste it into a new issue on GitHub. Addresses are removed unless you include them."
   },
   "diag.rules": {
     "message": "Browser blocking filters"
@@ -1163,12 +1172,6 @@
   "help.faq.flash.q": {
     "message": "Why did a page appear for a moment before being blocked?"
   },
-  "help.faq.leechblock.a": {
-    "message": "Yes: export your options from LeechBlock (text or JSON) and import the file in Settings › Data. A report lists anything that could not be converted."
-  },
-  "help.faq.leechblock.q": {
-    "message": "Can I import my LeechBlock NG settings?"
-  },
   "help.faq.locked.a": {
     "message": "Use the emergency exit in Protection. It takes a long wait on purpose, but it always works and needs nobody else."
   },
@@ -1226,6 +1229,12 @@
   "help.interventions.title": {
     "message": "Interventions"
   },
+  "help.issue": {
+    "message": "Report a problem or suggest an idea"
+  },
+  "help.issueHelp": {
+    "message": "On GitHub. A diagnostic report (Settings → Diagnostics) helps to find the cause."
+  },
   "help.license": {
     "message": "Licensed under the GNU General Public License v3.0 or later."
   },
@@ -1271,9 +1280,6 @@
   "help.protection.title": {
     "message": "Protection levels"
   },
-  "help.rerunSetup": {
-    "message": "Run the setup again"
-  },
   "help.rules.p1": {
     "message": "Each rule has one or more conditions with what happens, such as \"Mon–Fri 09:00–17:00 → Block\" or \"Always, after 45 min per day → Wait 30 s\". Conditions are checked from top to bottom and the first true one applies. If none applies, time is only counted."
   },
@@ -1304,6 +1310,9 @@
   "help.shortcutsNote": {
     "message": "Shortcuts can be changed in the browser's extension shortcut settings. They are not available on Android."
   },
+  "help.source": {
+    "message": "Source code"
+  },
   "help.start.p1": {
     "message": "WebHandbrake is a handbrake for the web: it helps you use the sites you choose when and as much as you decided, with as little friction as needed. Everything stays on this device."
   },
@@ -1321,6 +1330,9 @@
   },
   "help.syntax.comment": {
     "message": "Lines starting with # are comments; \"entry  # note\" adds a note."
+  },
+  "help.syntax.countries": {
+    "message": "The site in every country: amazon.com, amazon.it, amazon.co.uk…"
   },
   "help.syntax.domain": {
     "message": "The domain and all its subdomains."
@@ -1427,9 +1439,6 @@
   "import.format": {
     "message": "Detected format: {format}"
   },
-  "import.format.leechblock": {
-    "message": "LeechBlock NG"
-  },
   "import.format.list": {
     "message": "list of sites"
   },
@@ -1444,30 +1453,6 @@
   },
   "import.help": {
     "message": "Choose a file or paste its content. Loosening changes follow your protection level."
-  },
-  "import.lb.keyword": {
-    "message": "{set}: keyword \"{keyword}\" skipped (keywords will come in a future version)."
-  },
-  "import.lb.neverBlocks": {
-    "message": "{set}: no time periods and no time limit, so the rule would never block. Add a condition after importing."
-  },
-  "import.lb.overridePassword": {
-    "message": "The override password could not be imported: set a password in Protection if you want one."
-  },
-  "import.lb.password": {
-    "message": "The options password could not be imported: set a password in Protection if you want one."
-  },
-  "import.lb.passwordPage": {
-    "message": "{set}: the password page was converted into a typing challenge."
-  },
-  "import.lb.referrer": {
-    "message": "{set}: referrer entry \"{site}\" skipped (coming in a future version)."
-  },
-  "import.lb.regex": {
-    "message": "{set}: a regular expression was refused because it could be unsafe ({error})."
-  },
-  "import.lb.unsupported": {
-    "message": "Option not converted: {option}."
   },
   "import.merge": {
     "message": "Add to my rules"
@@ -2500,6 +2485,9 @@
   "popup.dashboard": {
     "message": "Dashboard"
   },
+  "popup.details": {
+    "message": "Details"
+  },
   "popup.endPause": {
     "message": "End the break"
   },
@@ -3309,10 +3297,10 @@
     "message": "Weeks start on"
   },
   "status.free": {
-    "message": "Free"
+    "message": "Allowed"
   },
   "status.freeUntil": {
-    "message": "Free until {when}"
+    "message": "Allowed until {when}"
   },
   "status.noRule": {
     "message": "Nothing applies now"
@@ -3345,10 +3333,10 @@
     "message": "WebHandbrake does not act on this page"
   },
   "status.site.free": {
-    "message": "Free"
+    "message": "Allowed"
   },
   "status.site.freeUntil": {
-    "message": "Free until {when}"
+    "message": "Allowed until {when}"
   },
   "status.site.gentle": {
     "message": "Allowed · {what}"
@@ -3372,7 +3360,7 @@
     "message": "{count, plural, =0 {No visits left} one {# visit left} other {# visits left}}"
   },
   "status.type.allow": {
-    "message": "Free"
+    "message": "Allowed"
   },
   "status.type.ask": {
     "message": "Asks first"
@@ -3399,7 +3387,7 @@
     "message": "Reminder"
   },
   "status.type.track": {
-    "message": "Free"
+    "message": "Time counted"
   },
   "status.until": {
     "message": "{what} until {when}"
@@ -3498,6 +3486,9 @@
   "targets.error.invalid": {
     "message": "Not a valid address."
   },
+  "targets.error.noDot": {
+    "message": "Not a site address: add the ending, for example youtube.com."
+  },
   "targets.error.regexBackref": {
     "message": "Back-references are not allowed in patterns."
   },
@@ -3528,6 +3519,54 @@
   "targets.exceptionsHelp": {
     "message": "Parts of these sites that stay allowed. The most specific entry wins."
   },
+  "targets.guide.countries": {
+    "message": "The same site in every country: amazon.com, amazon.it, amazon.co.uk…"
+  },
+  "targets.guide.exception": {
+    "message": "An exception: + at the start keeps this part allowed while the rest of the site is not."
+  },
+  "targets.guide.homepage": {
+    "message": "Only the home page, for example the feed: videos opened from a link still work."
+  },
+  "targets.guide.host": {
+    "message": "Only this exact address, without its subdomains."
+  },
+  "targets.guide.more": {
+    "message": "Every option is described in"
+  },
+  "targets.guide.moreLink": {
+    "message": "Help (opens in a new tab)"
+  },
+  "targets.guide.page": {
+    "message": "A single page: the $ at the end leaves out the pages under it."
+  },
+  "targets.guide.paste": {
+    "message": "Pasting a list? One address per line. Full links work too, and lists from other blockers or hosts files are converted."
+  },
+  "targets.guide.section": {
+    "message": "One section and everything under it."
+  },
+  "targets.guide.site": {
+    "message": "A whole site, with all its pages and subdomains (m.youtube.com, music.youtube.com…)."
+  },
+  "targets.guide.subdomain": {
+    "message": "Only one part of a site: the rest of youtube.com stays as it is."
+  },
+  "targets.guide.title": {
+    "message": "How to write an address"
+  },
+  "targets.guide.use": {
+    "message": "Use this example"
+  },
+  "targets.guide.useExample": {
+    "message": "Use the example {example}"
+  },
+  "targets.guide.wildcard": {
+    "message": "* stands for any text within one part of the address: here, the comments of every community."
+  },
+  "targets.hidden": {
+    "message": "{count, plural, one {# address from a sensitive list is hidden} other {# addresses from sensitive lists are hidden}}"
+  },
   "targets.lineError": {
     "message": "Line {line} \"{text}\": {error}"
   },
@@ -3536,6 +3575,9 @@
   },
   "targets.remove": {
     "message": "Remove {value}"
+  },
+  "targets.showHidden": {
+    "message": "Show"
   },
   "targets.sites": {
     "message": "Sites"
@@ -3575,12 +3617,6 @@
   },
   "template.video": {
     "message": "Video"
-  },
-  "templateStyle.ask": {
-    "message": "gentle friction"
-  },
-  "templateStyle.block": {
-    "message": "blocked"
   },
   "test.private": {
     "message": "As in a private window"
@@ -3769,7 +3805,7 @@
     "message": "next change {when}"
   },
   "today.summary.restricted": {
-    "message": "{count, plural, =0 {all free right now} one {# restricted right now} other {# restricted right now}}"
+    "message": "{count, plural, =0 {nothing restricted right now} one {# restricted right now} other {# restricted right now}}"
   },
   "today.timeOnLimited": {
     "message": "on limited sites today"
@@ -3954,17 +3990,53 @@
   "welcome.back": {
     "message": "Back"
   },
-  "welcome.create": {
-    "message": "Create"
+  "welcome.begin": {
+    "message": "Set up in about a minute"
   },
   "welcome.customSites": {
-    "message": "Other sites"
+    "message": "Your own sites"
   },
-  "welcome.done": {
-    "message": "All set. WebHandbrake is now active."
+  "welcome.details.friction": {
+    "message": "What should happen when you open them?"
   },
-  "welcome.goal": {
-    "message": "What would you like to do?"
+  "welcome.details.friction.intro": {
+    "message": "From the gentlest to the strongest. Pick one to see what it does; you can change it at any time."
+  },
+  "welcome.details.limit": {
+    "message": "How much time a day?"
+  },
+  "welcome.details.limit.intro": {
+    "message": "The sites are allowed up to this amount each day."
+  },
+  "welcome.details.limit.then": {
+    "message": "When the time is up"
+  },
+  "welcome.details.schedule": {
+    "message": "When do you want to focus?"
+  },
+  "welcome.details.schedule.intro": {
+    "message": "Pick the hours that matter. You can add more later."
+  },
+  "welcome.details.schedule.then": {
+    "message": "During those hours"
+  },
+  "welcome.done.body": {
+    "message": "{count, plural, =0 {WebHandbrake is ready.} one {# rule is active. WebHandbrake will step in as planned.} other {# rules are active. WebHandbrake will step in as planned.}}"
+  },
+  "welcome.done.go": {
+    "message": "Go to Today"
+  },
+  "welcome.done.next": {
+    "message": "Next steps (optional)"
+  },
+  "welcome.done.title": {
+    "message": "You're set"
+  },
+  "welcome.firmness": {
+    "message": "How firm should it be?"
+  },
+  "welcome.firmnessHelp": {
+    "message": "Making rules stricter is always immediate. This is how hard it is to loosen them later. A stricter \"Locked\" level is available in Protection."
   },
   "welcome.goal.block": {
     "message": "Block some sites completely"
@@ -3973,22 +4045,28 @@
     "message": "For sites you never want to see."
   },
   "welcome.goal.friction": {
-    "message": "Pause before opening tempting sites"
+    "message": "Stop opening sites out of habit"
   },
   "welcome.goal.friction.desc": {
-    "message": "A short question every time: often enough to break the habit."
+    "message": "A moment of friction before you go in: often enough to break the habit."
+  },
+  "welcome.goal.intro": {
+    "message": "Pick one. Starting with a single change makes it easier to keep."
   },
   "welcome.goal.limit": {
-    "message": "Limit time on some sites"
+    "message": "Spend less time on some sites"
   },
   "welcome.goal.limit.desc": {
-    "message": "For example 30 minutes of video a day."
+    "message": "Allowed up to a daily amount, then what you choose happens."
   },
   "welcome.goal.schedule": {
-    "message": "Focus during certain hours"
+    "message": "Stay focused at certain hours"
   },
   "welcome.goal.schedule.desc": {
     "message": "For example no social media on weekdays from 9 to 5."
+  },
+  "welcome.goal.title": {
+    "message": "What would you like to change first?"
   },
   "welcome.goal.track": {
     "message": "Just see where my time goes"
@@ -3996,125 +4074,164 @@
   "welcome.goal.track.desc": {
     "message": "Nothing is restricted; you can add rules later."
   },
-  "welcome.intro": {
-    "message": "A handbrake for the web: it helps you use the sites you choose when and as much as you decide. Everything stays on this device. Setup takes about two minutes."
+  "welcome.installed": {
+    "message": "Installed"
   },
-  "welcome.limit": {
-    "message": "How much time a day?"
+  "welcome.lead": {
+    "message": "A gentle handbrake for the sites that pull you in."
   },
-  "welcome.limitIntro": {
-    "message": "After this time each day the sites will be restricted."
+  "welcome.level.balanced": {
+    "message": "Loosening a rule makes you wait {seconds} s first."
   },
-  "welcome.lockedLater": {
-    "message": "A \"Locked\" level, stricter still, is available later in Protection."
+  "welcome.level.soft": {
+    "message": "Loosening a rule asks for a confirmation."
+  },
+  "welcome.level.strict": {
+    "message": "Loosening a rule waits {hours} h, then needs a typed confirmation."
   },
   "welcome.mySites": {
     "message": "My sites"
   },
-  "welcome.next": {
-    "message": "Next"
+  "welcome.nextTo": {
+    "message": "Next: {step}"
   },
-  "welcome.noSites": {
-    "message": "No sites chosen: go back and pick at least one list or site."
+  "welcome.note": {
+    "message": "Why does this matter to you?"
   },
-  "welcome.perDay": {
-    "message": "{minutes} min a day"
+  "welcome.noteHelp": {
+    "message": "Optional. You will see it on the page that stops you: a personal reason helps."
   },
-  "welcome.perm.check": {
-    "message": "Check again"
-  },
-  "welcome.perm.enable": {
-    "message": "Enable"
+  "welcome.perm.body": {
+    "message": "To slow down the sites you chose, WebHandbrake needs to act on them. It reads nothing else and sends nothing anywhere."
   },
   "welcome.perm.grant": {
-    "message": "Allow"
+    "message": "Allow access"
   },
-  "welcome.perm.host": {
-    "message": "Access to all sites"
+  "welcome.perm.title": {
+    "message": "One more thing: access to websites"
   },
-  "welcome.perm.hostHelp": {
-    "message": "Needed to show the WebHandbrake page instead of blocked sites."
+  "welcome.pin.android": {
+    "message": "Open the browser menu, then Extensions: WebHandbrake is listed there."
   },
-  "welcome.perm.incognito": {
-    "message": "Not active in private windows (recommended to allow)"
+  "welcome.pin.chrome": {
+    "message": "Click the puzzle icon at the right of the address bar, then the pin next to WebHandbrake."
   },
-  "welcome.perm.incognitoOk": {
-    "message": "Active in private windows"
+  "welcome.pin.firefox": {
+    "message": "Click the extensions button (puzzle) in the toolbar, then the gear next to WebHandbrake and “Pin to toolbar”."
   },
-  "welcome.perm.notifications": {
-    "message": "Notifications (optional)"
+  "welcome.pin.title": {
+    "message": "Pin WebHandbrake to the toolbar"
   },
-  "welcome.perm.notificationsHelp": {
-    "message": "For the end of focus sessions and changes ready to confirm."
+  "welcome.pin.titleAndroid": {
+    "message": "Find WebHandbrake in the menu"
   },
-  "welcome.permissions": {
-    "message": "Check permissions"
+  "welcome.pin.why": {
+    "message": "One tap to see the status of a site, take a break or start a focus session."
   },
-  "welcome.permissionsIntro": {
-    "message": "WebHandbrake needs access to the sites it protects. Nothing leaves your device."
+  "welcome.plan.intro": {
+    "message": "Check it, then turn it on. Everything can be changed later in Rules and Protection."
   },
-  "welcome.protection": {
-    "message": "How firm should your rules be?"
+  "welcome.plan.rules": {
+    "message": "{count, plural, one {# rule will be created} other {# rules will be created}}"
   },
-  "welcome.protectionIntro": {
-    "message": "Making rules stricter is always immediate. This decides how hard it is to loosen them in a moment of impulse."
+  "welcome.plan.sites": {
+    "message": "the sites in {names}"
   },
-  "welcome.sites": {
+  "welcome.plan.title": {
+    "message": "Your plan"
+  },
+  "welcome.plan.yourSites": {
+    "message": "your sites"
+  },
+  "welcome.preview": {
+    "message": "What you will see"
+  },
+  "welcome.previewEmpty": {
+    "message": "Pick an option to see what it looks like."
+  },
+  "welcome.private.title": {
+    "message": "Also in private windows"
+  },
+  "welcome.resumed": {
+    "message": "You are continuing the setup you started."
+  },
+  "welcome.selection": {
+    "message": "Your selection"
+  },
+  "welcome.selectionTotal": {
+    "message": "{rules, plural, one {# rule} other {# rules}} · {sites, plural, one {# site in total} other {# sites in total}}"
+  },
+  "welcome.sites.intro": {
+    "message": "Pick one or more ready-made lists, or add your own sites. Each list becomes a rule you can change later."
+  },
+  "welcome.sites.title": {
     "message": "Which sites?"
   },
-  "welcome.sitesIntro": {
-    "message": "Choose one or more lists. You can change everything later."
+  "welcome.sitesHidden": {
+    "message": "{count, plural, one {# site · not shown} other {# sites · not shown}}"
+  },
+  "welcome.sitesNone": {
+    "message": "Pick at least one list or add a site to continue."
   },
   "welcome.skip": {
     "message": "Skip setup"
   },
-  "welcome.step": {
-    "message": "Step {n} of {total}"
+  "welcome.start": {
+    "message": "Turn on my plan"
   },
-  "welcome.style": {
-    "message": "How should WebHandbrake step in?"
+  "welcome.startSmall": {
+    "message": "Start with one change. You can add more at any time."
   },
-  "welcome.style.ask": {
-    "message": "Ask what I want to do"
+  "welcome.step.details.friction": {
+    "message": "What happens"
   },
-  "welcome.style.ask.desc": {
-    "message": "A short pause and a question; then you choose how long to stay. Recommended."
+  "welcome.step.details.limit": {
+    "message": "Daily time"
   },
-  "welcome.style.block": {
-    "message": "Block"
+  "welcome.step.details.schedule": {
+    "message": "Hours"
   },
-  "welcome.style.block.desc": {
-    "message": "The page does not open."
+  "welcome.step.goal": {
+    "message": "Your goal"
   },
-  "welcome.style.delay": {
-    "message": "Make me wait 30 seconds"
+  "welcome.step.plan": {
+    "message": "Your plan"
   },
-  "welcome.style.delay.desc": {
-    "message": "Enough for an impulse to pass."
+  "welcome.step.sites": {
+    "message": "Sites"
   },
-  "welcome.styleIntro": {
-    "message": "A little friction is often more sustainable than a wall."
-  },
-  "welcome.summary": {
-    "message": "Ready"
-  },
-  "welcome.summaryLevel": {
-    "message": "Protection level: {level}."
-  },
-  "welcome.summaryNote": {
-    "message": "You can edit everything later in Rules and Protection."
-  },
-  "welcome.templates": {
-    "message": "Lists"
+  "welcome.steps": {
+    "message": "Setup steps"
   },
   "welcome.title": {
     "message": "Welcome to WebHandbrake"
   },
-  "welcome.when": {
-    "message": "When?"
+  "welcome.try.action": {
+    "message": "Try it"
   },
-  "welcome.whenIntro": {
-    "message": "During these times the sites will be restricted."
+  "welcome.try.body": {
+    "message": "Open {site} to see what WebHandbrake shows instead."
+  },
+  "welcome.try.title": {
+    "message": "See it in action"
+  },
+  "welcome.value.firm.text": {
+    "message": "You decide how hard it is to change your mind in a moment of impulse."
+  },
+  "welcome.value.firm.title": {
+    "message": "Firm when you need it"
+  },
+  "welcome.value.gentle.text": {
+    "message": "A question or a short pause before you go in. Block only what you never want to see."
+  },
+  "welcome.value.gentle.title": {
+    "message": "Gentle by default"
+  },
+  "welcome.value.private.text": {
+    "message": "No account, no tracking. Everything stays on this device."
+  },
+  "welcome.value.private.title": {
+    "message": "Private"
   },
   "why.allowed": {
     "message": "Allowed."
@@ -4233,35 +4350,20 @@
   "wizard.fullEditor": {
     "message": "Use the full editor"
   },
-  "wizard.how.ask": {
-    "message": "Ask what I want to do"
-  },
-  "wizard.how.ask.desc": {
-    "message": "A short question before entering, and a time you choose."
-  },
-  "wizard.how.block": {
-    "message": "Block"
-  },
-  "wizard.how.block.desc": {
-    "message": "The sites stay closed. Breaks and the emergency exit remain."
-  },
-  "wizard.how.delay": {
-    "message": "Make me wait"
-  },
-  "wizard.how.delay.desc": {
-    "message": "{seconds} seconds to let the impulse pass, then you can go in."
-  },
   "wizard.how.intro": {
-    "message": "From the gentlest to the strongest. A short pause is often enough to break a habit; blocking suits sites you never want to see."
+    "message": "From the gentlest to the strongest. Pick one to see what it does; you can change it at any time."
+  },
+  "wizard.how.later": {
+    "message": "Its settings use sensible defaults; you can fine-tune them later in the rule."
+  },
+  "wizard.how.redirectDesc": {
+    "message": "Opens another address instead, for example your to-do list."
+  },
+  "wizard.how.redirectHelp": {
+    "message": "For example your to-do list or a page you would rather read. It must start with https://."
   },
   "wizard.how.title": {
     "message": "What should happen?"
-  },
-  "wizard.how.track": {
-    "message": "Only count the time"
-  },
-  "wizard.how.track.desc": {
-    "message": "Nothing is restricted: see where your time goes."
   },
   "wizard.how.trackOnlyAlways": {
     "message": "Available with “Every time”."
@@ -4280,9 +4382,6 @@
   },
   "wizard.open": {
     "message": "Open"
-  },
-  "wizard.recommended": {
-    "message": "Recommended"
   },
   "wizard.resumed": {
     "message": "You are continuing the rule you started earlier."
@@ -4350,8 +4449,23 @@
   "wizard.then.block": {
     "message": "WebHandbrake blocks them."
   },
+  "wizard.then.challenge": {
+    "message": "WebHandbrake asks you to type a random text before going in."
+  },
+  "wizard.then.close": {
+    "message": "WebHandbrake closes the tab."
+  },
   "wizard.then.delay": {
     "message": "WebHandbrake makes you wait {seconds} seconds."
+  },
+  "wizard.then.filter": {
+    "message": "WebHandbrake turns the page gray to make it less attractive."
+  },
+  "wizard.then.redirect": {
+    "message": "WebHandbrake opens {url} instead."
+  },
+  "wizard.then.remind": {
+    "message": "WebHandbrake shows a short reminder of your reason."
   },
   "wizard.then.track": {
     "message": "WebHandbrake only counts the time."
@@ -4369,7 +4483,7 @@
     "message": "After some time each day"
   },
   "wizard.when.daily.desc": {
-    "message": "Free up to a daily amount, then the rule applies."
+    "message": "Allowed up to a daily amount, then what you choose next happens."
   },
   "wizard.when.intro": {
     "message": "Pick the moment that matters most. You can add more conditions later."

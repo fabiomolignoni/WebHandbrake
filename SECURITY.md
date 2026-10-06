@@ -16,7 +16,7 @@ extension, bypass the protection logic enforced by the background (e.g. a cost o
 skipped by editing an extension page), unsafe handling of imported files or regular expressions.
 
 Out of scope: circumventions that need full control of the device and are documented in the
-requirements (Appendix B), such as uninstalling the extension or using another browser.
+requirements (Appendix A), such as uninstalling the extension or using another browser.
 
 ## Practices
 

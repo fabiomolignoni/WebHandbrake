@@ -153,13 +153,39 @@ try {
       'REAL blocked.test/ok/page',
     );
   });
+  await check('sites in every country ("name.*") become browser filters (ENF-01)', async () => {
+    const { config } = await rpc('config.get');
+    const wild = ['shop.*', 'amazon.*', 'ebay.*', 'aliexpress.*', 'bet365.*', 'pokerstars.*', 'poki.*'];
+    config.groups.push({
+      ...config.groups[0],
+      id: 'g-wild',
+      name: 'Wild',
+      targets: wild.map((value, i) => ({ id: `t-wild-${i}`, type: 'domain', value })),
+      policies: [
+        { id: 'p-wild', schedule: { mode: 'always', windows: [] }, intervention: { type: 'block' } },
+      ],
+    });
+    await rpc('config.save', { config });
+    await sleep(800);
+    const d = await rpc('diag.get');
+    assert.equal(d.rules.lastError, null);
+    assert.deepEqual(d.rules.overflow, []);
+    await page.goto('http://www.shop.co.test/item').catch(() => undefined);
+    await sleep(1200);
+    assert.ok((await href()).startsWith(`${origin}/intervention.html#`), await href());
+    assert.ok(!requests.some((r) => r.startsWith('www.shop.co.test')), 'request reached the server');
+  });
   await check('dashboard pages render', async () => {
     for (const route of ['today', 'groups', 'insights', 'protection', 'settings/diagnostics']) {
       await dash.evaluate((r) => {
         location.hash = `#/${r}`;
       }, route);
-      await sleep(400);
-      const h1 = await dash.evaluate(() => document.querySelector('h1')?.textContent ?? '');
+      // The dashboard is a background tab here: Firefox slows its timers, so wait for the page.
+      let h1 = '';
+      for (let i = 0; i < 50 && !h1; i++) {
+        await sleep(100);
+        h1 = await dash.evaluate(() => document.querySelector('h1')?.textContent ?? '');
+      }
       assert.ok(h1.length > 0, `no heading on ${route}`);
     }
   });

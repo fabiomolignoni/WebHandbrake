@@ -18,8 +18,8 @@
 1. [Introduzione](#1-introduzione)
 2. [Metodologia e fonti](#2-metodologia-e-fonti)
 3. [Analisi dello stato dell'arte](#3-analisi-dello-stato-dellarte)
-   - 3.1 [LeechBlock NG: inventario funzionale](#31-leechblock-ng-inventario-funzionale)
-   - 3.2 [LeechBlock NG: problemi noti e richieste non soddisfatte](#32-leechblock-ng-problemi-noti-e-richieste-non-soddisfatte)
+   - 3.1 [Inventario funzionale della categoria](#31-inventario-funzionale-della-categoria)
+   - 3.2 [Problemi noti e richieste non soddisfatte](#32-problemi-noti-e-richieste-non-soddisfatte)
    - 3.3 [Estensioni e app concorrenti](#33-estensioni-e-app-concorrenti)
    - 3.4 [Idee da domini adiacenti](#34-idee-da-domini-adiacenti)
    - 3.5 [Evidenze scientifiche](#35-evidenze-scientifiche)
@@ -35,10 +35,9 @@
 12. [Decisioni aperte](#12-decisioni-aperte)
 13. [Criteri di accettazione esemplari](#13-criteri-di-accettazione-esemplari)
 14. [Tracciabilità delle richieste degli utenti](#14-tracciabilità-delle-richieste-degli-utenti)
-- [Appendice A — Parità con LeechBlock NG](#appendice-a--parità-con-leechblock-ng)
-- [Appendice B — Vettori di elusione e contromisure](#appendice-b--vettori-di-elusione-e-contromisure)
-- [Appendice C — Compatibilità delle API WebExtension](#appendice-c--compatibilità-delle-api-webextension)
-- [Appendice D — Bibliografia e fonti](#appendice-d--bibliografia-e-fonti)
+- [Appendice A — Vettori di elusione e contromisure](#appendice-a--vettori-di-elusione-e-contromisure)
+- [Appendice B — Compatibilità delle API WebExtension](#appendice-b--compatibilità-delle-api-webextension)
+- [Appendice C — Bibliografia e fonti](#appendice-c--bibliografia-e-fonti)
 
 ---
 
@@ -48,8 +47,8 @@
 
 Questo documento raccoglie, motiva e prioritizza i requisiti di WebHandbrake. È basato su:
 
-- un inventario completo delle funzioni di **LeechBlock NG** (il riferimento dichiarato);
-- l'analisi di **issue, discussioni e recensioni** di LeechBlock NG e di estensioni simili, per capire cosa viene chiesto e non è ancora implementato, e quali problemi restano aperti;
+- un inventario delle funzioni offerte dalle **estensioni e app esistenti** della categoria;
+- l'analisi di **issue, discussioni e recensioni** di queste estensioni, per capire cosa viene chiesto e non è ancora implementato, e quali problemi restano aperti;
 - l'analisi della **letteratura scientifica** (HCI, psicologia dell'autocontrollo, economia comportamentale) sugli strumenti di autocontrollo digitale;
 - funzioni di prodotti di **domini adiacenti** che avrebbero senso in un'estensione di blocco;
 - i **vincoli tecnici** reali di Manifest V3 e di Firefox per Android.
@@ -83,14 +82,14 @@ Il documento è pensato come base per la progettazione e lo sviluppo, per la pub
 - **W** (Won't, per ora): esplicitamente escluso dal perimetro corrente.
 
 **Rilascio target.**
-- **R1** = v1.0 (MVP: "LeechBlock fatto meglio" sulle basi).
+- **R1** = v1.0 (MVP).
 - **R2** = v1.x (funzioni differenzianti).
 - **R3** = v2.x (sincronizzazione e funzioni che dipendono da essa).
 - **F** = futuro / da ricercare.
 
-**Riferimenti alle fonti** (dettaglio in [Appendice D](#appendice-d--bibliografia-e-fonti)):
-- `LB#123` = issue GitHub di LeechBlockNG (repo Firefox); `LBC#12` = issue del repo LeechBlockNG-chrome; `LB-D456` = discussione GitHub (Ideas/Q&A) di LeechBlockNG.
-- `LB-doc`, `LB-FAQ`, `LB-vh` = documentazione, FAQ, cronologia versioni di LeechBlock.
+**Riferimenti alle fonti** (dettaglio in [Appendice C](#appendice-c--bibliografia-e-fonti)):
+- `GH` = issue e discussioni pubbliche (GitHub) delle estensioni open source analizzate.
+- `Doc` = documentazione, FAQ ed esempi dei prodotti esistenti.
 - `AMO:<estensione>` = recensioni su addons.mozilla.org.
 - `HN` = commenti su Hacker News.
 - `[Pn]` = paper scientifico; `[Xn]` = fonte da dominio adiacente; `[Tn]` = fonte tecnica.
@@ -99,7 +98,7 @@ Il documento è pensato come base per la progettazione e lo sviluppo, per la pub
 
 | Termine | Definizione |
 |---|---|
-| **Gruppo** | Insieme di siti trattati con le stesse regole (equivalente al *block set* di LeechBlock). Ha nome, colore, nota motivazionale, target, policy e livello di protezione. |
+| **Gruppo** | Insieme di siti trattati con le stesse regole (nell'interfaccia: *regola*). Ha nome, colore, nota motivazionale, target, policy e livello di protezione. |
 | **Target** | Elemento che identifica cosa colpire: dominio, host, percorso, pattern, regex, parola chiave, referrer, categoria. |
 | **Eccezione** | Target in modalità "consenti" all'interno di un gruppo. |
 | **Policy** | Coppia *condizione → intervento* all'interno di un gruppo (es. "Lun–Ven 9–17 → blocco"; "dopo 30 min/giorno → ritardo 30 s"). |
@@ -108,7 +107,7 @@ Il documento è pensato come base per la progettazione e lo sviluppo, per la pub
 | **Intervento** | Ciò che accade quando una policy si applica: promemoria, filtro, domanda d'intenzione, ritardo, sfida, blocco, chiusura, reindirizzamento. |
 | **Frizione** | Costo deliberato (tempo, fatica, riflessione) inserito prima di un'azione. |
 | **Pausa** (*override*) | Sospensione temporanea, limitata e tracciata, di uno o più interventi. |
-| **Sessione focus** | Periodo a tempo durante cui uno o più gruppi (o "tutto tranne una allowlist") sono bloccati. Il *lockdown* di LeechBlock è un caso particolare. |
+| **Sessione focus** | Periodo a tempo durante cui uno o più gruppi (o "tutto tranne una allowlist") sono bloccati. |
 | **Protezione** | Insieme dei meccanismi che rendono più difficile indebolire le proprie regole. |
 | **Rafforzamento / indebolimento** | Modifica che rende le regole più restrittive (es. aggiungere un sito) / meno restrittive (es. rimuoverlo). |
 | **Cooling-off** | Periodo di attesa obbligatorio tra la richiesta di un indebolimento e la sua applicazione, seguito da una conferma esplicita. |
@@ -122,17 +121,16 @@ L'analisi è stata svolta il 2026-10-04 incrociando fonti primarie e secondarie.
 
 | Fonte | Cosa è stato analizzato | Volume |
 |---|---|---|
-| Sito di LeechBlock NG | Documentazione completa delle opzioni, 36 voci FAQ, esempi, cronologia versioni da 0.1 (2017) a 1.7.3 (agosto 2026) | Integrale |
-| GitHub `proginosko/LeechBlockNG` | Issue aperte e chiuse, discussioni *Ideas* e *Q&A*, ordinate per reazioni e commenti | 68 issue aperte, 394 chiuse, 264 discussioni (166 *Ideas*, 94 *Q&A*) |
-| GitHub `proginosko/LeechBlockNG-chrome` | Issue del port Chrome | 101 issue |
-| addons.mozilla.org (API pubblica) | Metadati e recensioni da 1 a 3 stelle di LeechBlock NG, Block Site, BlockSite, Impulse Blocker, Freedom, one sec, News Feed Eradicator, StayFree, Time Tracker, Forest, SocialFocus, uBlacklist, DF YouTube, Unhook | 14 estensioni, circa 300 recensioni testuali |
+| Documentazione dei prodotti esistenti | Opzioni, FAQ ed esempi delle estensioni analizzate | Integrale per le funzioni rilevanti |
+| Issue e discussioni pubbliche (GitHub) | Issue aperte e chiuse e discussioni *Ideas* e *Q&A* delle principali estensioni open source della categoria, ordinate per reazioni e commenti | oltre 800 elementi |
+| addons.mozilla.org (API pubblica) | Metadati e recensioni da 1 a 3 stelle di Block Site, BlockSite, Impulse Blocker, Freedom, one sec, News Feed Eradicator, StayFree, Time Tracker, Forest, SocialFocus, uBlacklist, DF YouTube, Unhook | 13 estensioni, circa 300 recensioni testuali |
 | Store e siti dei concorrenti | Cold Turkey, StayFocusd, BlockSite, Freedom, Intention, ScreenZen, Dopanope, Mindful, HabitLab, Time Tracker | 12 prodotti |
-| Hacker News (API Algolia) | Commenti su LeechBlock, blocker, Cold Turkey, StayFocusd, frizione | 1.445 commenti raccolti, 485 pertinenti |
+| Hacker News (API Algolia) | Commenti su blocker, Cold Turkey, StayFocusd, frizione | 1.445 commenti raccolti, 485 pertinenti |
 | Letteratura scientifica | Review sistematiche, meta-analisi, studi sul campo e controllati | circa 30 paper (vedi [§3.5](#35-evidenze-scientifiche)) |
 | Documentazione tecnica | MDN browser-compat-data 8.1.4 (2026-10-01), documentazione Chrome su DNR e ciclo di vita dei service worker | Integrale per le API rilevanti |
 
 **Limiti dell'analisi.**
-- Le recensioni del Chrome Web Store non sono accessibili in modo strutturato; sono state usate solo in minima parte. Il quadro "Chrome" deriva soprattutto dal repo LeechBlockNG-chrome e da HN.
+- Le recensioni del Chrome Web Store non sono accessibili in modo strutturato; sono state usate solo in minima parte. Il quadro "Chrome" deriva soprattutto dalle issue dei port per Chrome delle estensioni analizzate e da HN.
 - Reddit non è interrogabile da questo ambiente; HN e le discussioni GitHub ne coprono in parte i temi.
 - Le evidenze scientifiche provengono soprattutto da studi su smartphone. La trasferibilità al browser desktop è plausibile ma non sempre dimostrata. Dove serve, lo segnaliamo.
 
@@ -140,93 +138,91 @@ L'analisi è stata svolta il 2026-10-04 incrociando fonti primarie e secondarie.
 
 ## 3. Analisi dello stato dell'arte
 
-### 3.1 LeechBlock NG: inventario funzionale
+### 3.1 Inventario funzionale della categoria
 
-LeechBlock NG (licenza MPL-2.0, circa 113.600 utenti giornalieri su AMO con valutazione 4,83/5 su 2.039 voti, oltre 100.000 utenti sul Chrome Web Store, 1.072 stelle su GitHub) è lo standard di fatto tra le estensioni open source. Il suo punto di forza è la flessibilità; i punti deboli sono l'usabilità e la robustezza.
+Le estensioni di blocco più diffuse, open source e commerciali, offrono un insieme di funzioni ormai consolidato. La tabella riassume ciò che un utente si aspetta di trovare; i limiti più ricorrenti sono descritti in §3.2.
 
-| Area | Funzioni presenti in LeechBlock NG (v1.7.3) |
+| Area | Funzioni comuni nella categoria |
 |---|---|
-| **Organizzazione** | Fino a 30 *block set* (6 di default), con nome personalizzato, riordinabili ("Move Set"), disattivabili "per debug". |
-| **Cosa bloccare** | Domini (con o senza `www`), percorsi e pagine specifiche; wildcard `*` (dentro un segmento), `**` (anche attraverso `/`), `*+` (uno o più caratteri); eccezioni con prefisso `+`; referrer con `>`; parole chiave con `~` (nel testo o solo nel titolo; `_` indica uno spazio); commenti con `#`; `FILE` per i file locali; regex per URL da bloccare, URL da consentire e parole chiave, con pulsante "genera dalla lista"; opzione "ignora il frammento #"; caricamento della lista da un URL remoto (con `$S` e `$T`); opzione "blocca tutti i sottodomini"; ordinamento alfabetico opzionale. |
-| **Quando** | Fasce orarie `HHMM-HHMM` (solo entro la stessa giornata), pulsante "tutto il giorno"; limite di tempo per periodo (da 5 minuti a 90 giorni, anche con decimali); combinazione `OR`/`AND` tra fasce e limite; giorni della settimana; offset del periodo del limite (in ore); recupero del tempo non usato (*rollover*, solo dal periodo precedente); conteggio solo su tab attiva o solo con audio; tempo minimo di blocco (1.7.2). |
-| **Come bloccare** | Quattro pagine predefinite (default, ritardo, password, vuota) o un URL personalizzato; messaggio personalizzato; blocco solo in finestre private o normali; solo su tab attive o inattive; filtro al posto del blocco (scala di grigi, sfocatura, dissolvenza, inversione, seppia, CSS personalizzato, "nessuno") con silenziamento della tab; chiusura della tab; blocco immediato al verificarsi delle condizioni (altrimenti solo alla navigazione successiva); visualizzazione della parola chiave trovata; ritardo di N secondi con caricamento automatico opzionale e annullamento se la pagina perde il focus; ritardo solo sulla prima pagina del sito o del set; accesso limitato a N minuti dopo il ritardo; ricaricamento periodico della pagina bloccata; aggiunta della pagina bloccata alla cronologia; attesa di N secondi dopo il caricamento prima di valutare le condizioni. |
-| **Lockdown** | Blocco immediato per una durata scelta, su set selezionati; annullabile dalle opzioni avanzate. |
-| **Override** | Sospensione temporanea per N minuti (fissi o scelti al momento); massimo N override per ora, giorno o settimana; requisito di sblocco (password di accesso, codice casuale di 32/64/128 caratteri, codice predefinito, password separata delegabile a terzi); per-set "consenti override" e "consenti durante il lockdown"; annullamento; messaggio di conferma. |
-| **Protezione** | Password o codice casuale per accedere alle opzioni (codice visualizzabile come immagine); fasce orarie in cui le opzioni sono inaccessibili; blocco delle opzioni del set o di quelle generali mentre il set è attivo; blocco di `about:addons`, `about:support`, `about:profiles`, `about:debugging` (Firefox), della pagina delle estensioni e delle impostazioni (Chrome/Edge); supporto a *managed storage* (1.7.3, solo Firefox); nelle FAQ, istruzioni per rendere l'estensione non rimovibile tramite policy di sistema (registro di Windows), disattivare la modalità provvisoria, nascondere l'add-on con `userContent.css`, impedire la modifica dell'orologio di sistema. |
-| **Feedback** | Timer sovrapposto alla pagina (dimensione e posizione configurabili, nascondibile con doppio clic), badge sull'icona (sotto i 10 minuti), messaggio di avviso N secondi prima del blocco, pagina statistiche (tempo per set, fine del lockdown). |
-| **Menu della barra** | Opzioni, Lockdown, Override, Statistiche, Aggiungi siti, Annulla override, Azzera rollover, Scarta il tempo rimanente, Supporto; sottomenu contestuale; scorciatoie da tastiera (1.6.7). |
-| **Dati** | Export/import in testo e JSON (con timestamp nel nome, password opzionali), sync storage sperimentale, backup automatico in sync storage. |
-| **Varie** | Temi (default, chiaro, scuro, "Spruce"), CSS personalizzato per le pagine di blocco, formato orario 12/24 h, offset dell'orologio, "ignora salti di tempo oltre N secondi", "finestre sempre a fuoco", "usa il focus del documento" (Android), intervalli di salvataggio ed elaborazione delle tab, "elabora solo le tab attive", modalità diagnostica, localizzazioni (IT, DE, ES, PT-BR, VI, HE…). |
+| **Organizzazione** | Più insiemi di siti, ciascuno con nome e regole proprie, riordinabili e disattivabili. |
+| **Cosa bloccare** | Domini con o senza sottodomini, percorsi e pagine; wildcard; eccezioni; parole chiave nell'URL o nel titolo; commenti nelle liste; file locali; espressioni regolari nelle varianti avanzate; caricamento di liste da un URL. |
+| **Quando** | Fasce orarie e giorni della settimana; limiti di tempo per periodo; combinazione di fasce e limiti; conteggio solo sulla tab attiva o con audio; recupero del tempo non usato. |
+| **Come bloccare** | Pagina di blocco con messaggio personalizzabile, pagina di attesa con countdown, reindirizzamento, chiusura della tab, filtri visivi (scala di grigi, sfocatura) al posto del blocco, blocco limitato alle finestre private o normali. |
+| **Sessioni** | Blocco immediato per una durata scelta, spesso non annullabile, con o senza allowlist. |
+| **Pause** | Sospensione temporanea con durata e numero limitati, protetta da password o da un testo da digitare. |
+| **Protezione** | Password o testo casuale per accedere alle impostazioni; fasce in cui le impostazioni sono bloccate; blocco delle pagine di gestione delle estensioni; prevenzione della disinstallazione nelle app desktop. |
+| **Feedback** | Timer sovrapposto alla pagina, badge sull'icona, avviso prima del blocco, statistiche di base. |
+| **Dati e varie** | Esportazione e importazione, sincronizzazione nelle versioni commerciali, temi, CSS personalizzato per le pagine di blocco, menu contestuale, scorciatoie da tastiera. |
 
-**Punti di forza da preservare.** Granularità a livello di pagina e percorso; il ritardo (citato più volte su HN come la funzione più efficace: *"that small extra friction is enough to break the habit"*); la combinazione di fasce e limiti; override limitati con costo; blocco delle pagine interne del browser; nessuna raccolta dati; manutenzione costante da quasi dieci anni.
+**Punti di forza da preservare.** Granularità a livello di pagina e percorso; il ritardo (citato più volte su HN come la funzione più efficace: *"that small extra friction is enough to break the habit"*); la combinazione di fasce e limiti; pause limitate e con un costo; blocco delle pagine interne del browser; nessuna raccolta dati nelle estensioni open source.
 
-### 3.2 LeechBlock NG: problemi noti e richieste non soddisfatte
+### 3.2 Problemi noti e richieste non soddisfatte
 
 #### 3.2.1 Problemi ricorrenti
 
 | Tema | Evidenze | Implicazione per WebHandbrake |
 |---|---|---|
-| **Affidabilità: impostazioni perse o blocco che smette di funzionare** | LB#63, LB#75, LB#26, LB#262 (34 commenti), LB#531 (Android rotto da un'API non supportata, 15 reazioni), AMO: *"periodically loses all preferences"*, *"stops working every few weeks"* | Snapshot automatici, migrazioni di schema, verifica di integrità, rilevamento delle funzionalità con degrado controllato, test automatici anche su Android. |
-| **Prestazioni** | LB#268, LB#53, LB#42, LB#124, LB#149; AMO 2026: *"uses a TON of resources… CPU over 100%"*, *"10% CPU on idle"* | Architettura a eventi; nessun polling al secondo su tutte le tab. |
-| **Conteggio del tempo inaccurato** | Conteggio durante la sospensione (LB#122, LBC#18, LBC#19, LBC#66); app minimizzata su Android (LB#81, LB#495, LB#418); più finestre aperte (LBC#51); timer azzerati dopo il riavvio (LB#292); cambio di fuso orario (LBC#104); pagine di errore (LB#91); modalità lettura (LB#82) | Motore di misurazione con idle detection, gestione dei salti di orologio, unicità del conteggio per gruppo e persistenza robusta. |
-| **Semantica difficile da capire** | FAQ "Why is nothing being blocked?" (protocollo nell'URL, nessun giorno selezionato, `AND` senza entrambe le condizioni); fasce notturne non supportate (FAQ, LB#654, LB#139); AMO: *"time block is not optional"*, *"UX is confusing"*, *"couldn't find how to block indefinitely"*; molte Q&A del tipo "perché non viene bloccato?" (LB-D588, LB-D616, LB-D652) | Modello a policy esplicite, riepilogo in linguaggio naturale, validazione in tempo reale, strumento "Prova un URL". |
-| **Interazioni tra set** | Tempo di sblocco errato con più set (LB#330), set che si annullano (LB#173, LB#664), un'eccezione in un set sopprime i timer degli altri (LB-D710), aggiramento riordinando i set (LB#252) | Regola deterministica "vince l'intervento più restrittivo"; le eccezioni valgono solo nel proprio gruppo. |
-| **Perdita di stato e lavoro** | Testo dei commenti perso al blocco (LB-D348, LB-D352, LB-D771); tab bloccate non ripristinate con la sessione (LB#87); richiesta di ripristino in massa (LB#774); posizione del video persa (LB-D425, LB-D711) | Periodo di grazia per i form, URL originale preservato, ripristino in blocco, ripresa del video. |
-| **Mobile** | Pagina opzioni poco adatta al mobile (HN 2023, LB#104), riquadro del codice fuori schermo (LB#269), statistiche illeggibili (LB#656), timer assente nelle web app installate (LB#265), `about:addons` non bloccabile su Android (LB#736) | UI *mobile-first*; limiti di piattaforma documentati in modo trasparente. |
-| **Vie di fuga** | Navigazione privata (recensioni AMO e Chrome Web Store), altri browser e profili (HN: *"too easy to get around"*), modalità provvisoria, modifica dell'orologio, devtools sulla pagina delle opzioni (LB-D364), codice casuale copiabile dal sorgente (LB-D395, LB-D765), incolla nel campo del codice (LB-D467, LB-D730, LB-D780), proxy e incorporamenti (LB-D402: video YouTube tramite Bing), tasto Indietro (LB#339, LB#43) | Centro protezione, procedura guidata per le policy, rendering del codice su canvas, blocco dei sub-frame, ricontrollo al ripristino dalla bfcache. Vedi [Appendice B](#appendice-b--vettori-di-elusione-e-contromisure). |
-| **Blocchi irreversibili per errore** | Opzioni bloccate "per sempre" (LB#306, LB-D410); l'unica soluzione è scrivere allo sviluppatore (FAQ *reset-password*, *options-disabled*) | Uscita d'emergenza integrata, ad alta frizione ma sempre disponibile. |
-| **Sicurezza** | ReDoS da regex importate (LB#778), jQuery vulnerabile (1.3.1), permesso `history` obbligatorio poi reso facoltativo (LB-D480, LBC#64) | Validazione delle regex, dipendenze minime, permessi facoltativi richiesti al momento del bisogno. |
+| **Affidabilità: impostazioni perse o blocco che smette di funzionare** | GH (34 commenti), GH (Android rotto da un'API non supportata, 15 reazioni), AMO: *"periodically loses all preferences"*, *"stops working every few weeks"* | Snapshot automatici, migrazioni di schema, verifica di integrità, rilevamento delle funzionalità con degrado controllato, test automatici anche su Android. |
+| **Prestazioni** | GH; AMO 2026: *"uses a TON of resources… CPU over 100%"*, *"10% CPU on idle"* | Architettura a eventi; nessun polling al secondo su tutte le tab. |
+| **Conteggio del tempo inaccurato** | Conteggio durante la sospensione; app minimizzata su Android; più finestre aperte; timer azzerati dopo il riavvio; cambio di fuso orario; pagine di errore; modalità lettura | Motore di misurazione con idle detection, gestione dei salti di orologio, unicità del conteggio per gruppo e persistenza robusta. |
+| **Semantica difficile da capire** | FAQ "Why is nothing being blocked?" (protocollo nell'URL, nessun giorno selezionato, `AND` senza entrambe le condizioni); fasce notturne non supportate (FAQ, GH); AMO: *"time block is not optional"*, *"UX is confusing"*, *"couldn't find how to block indefinitely"*; molte Q&A del tipo "perché non viene bloccato?" | Modello a policy esplicite, riepilogo in linguaggio naturale, validazione in tempo reale, strumento "Prova un URL". |
+| **Interazioni tra gruppi** | Tempo di sblocco errato con più gruppi, gruppi che si annullano, un'eccezione in un gruppo sopprime i timer degli altri, aggiramento riordinando i gruppi | Regola deterministica "vince l'intervento più restrittivo"; le eccezioni valgono solo nel proprio gruppo. |
+| **Perdita di stato e lavoro** | Testo dei commenti perso al blocco; tab bloccate non ripristinate con la sessione; richiesta di ripristino in massa; posizione del video persa | Periodo di grazia per i form, URL originale preservato, ripristino in blocco, ripresa del video. |
+| **Mobile** | Pagina opzioni poco adatta al mobile (HN 2023, GH), riquadro del codice fuori schermo, statistiche illeggibili, timer assente nelle web app installate, `about:addons` non bloccabile su Android | UI *mobile-first*; limiti di piattaforma documentati in modo trasparente. |
+| **Vie di fuga** | Navigazione privata (recensioni AMO e Chrome Web Store), altri browser e profili (HN: *"too easy to get around"*), modalità provvisoria, modifica dell'orologio, devtools sulla pagina delle opzioni, codice casuale copiabile dal sorgente, incolla nel campo del codice, proxy e incorporamenti (GH: video YouTube tramite Bing), tasto Indietro | Centro protezione, procedura guidata per le policy, rendering del codice su canvas, blocco dei sub-frame, ricontrollo al ripristino dalla bfcache. Vedi [Appendice A](#appendice-a--vettori-di-elusione-e-contromisure). |
+| **Blocchi irreversibili per errore** | Opzioni bloccate "per sempre"; l'unica soluzione è scrivere allo sviluppatore (FAQ *reset-password*, *options-disabled*) | Uscita d'emergenza integrata, ad alta frizione ma sempre disponibile. |
+| **Sicurezza** | ReDoS da regex importate, jQuery vulnerabile (1.3.1), permesso `history` obbligatorio poi reso facoltativo | Validazione delle regex, dipendenze minime, permessi facoltativi richiesti al momento del bisogno. |
 
 #### 3.2.2 Richieste più votate non (completamente) implementate
 
 Le richieste sono raggruppate per tema. Tra parentesi: voti o reazioni della discussione principale.
 
 1. **Override più intelligenti**
-   - Limite espresso in *tempo* invece che in numero (LB-D594, 6).
-   - Override per singolo URL, pagina o set (LB-D526, LB-D687, LB-D367).
-   - Durata "fino a X minuti" (LB-D743, LB-D667).
-   - Durata e numero di override per set (LB-D586, LB-D742, LB-D706).
-   - Override mensili (LB-D511).
-   - Override consumato come un budget e non a orologio (LB-D466).
-   - Il lockdown disattiva gli override (LB-D613).
-   - Costo crescente (LB-D450).
-2. **Motivo dell'override e registro** del tempo usato (LB-D433, 6).
-3. **Limiti per numero di visite o accessi** (LB#34, LB-D610, LB-D431, LB-D740) e **cooldown** dopo un uso continuativo (LB-D366).
-4. **Blocco di contenuti incorporati e risorse** (iframe, video, immagini; LB-D402, 8; LB#756) e **pagina caricata senza immagini e video** (LB-D489, 6).
-5. **Rollover cumulativo** con reset configurabile (LB-D567, LB-D615).
-6. **Note libere per set**, per ricordare il perché (LB-D491).
-7. **Limitare apertura e durata della pagina delle opzioni** (LB-D583) e **ritardo per modificare le impostazioni** (LB-D751, LB-D585).
-8. **Sfide alternative al codice casuale** (matematica, puzzle; LB-D371), lunghezza e caratteri configurabili (LB-D548, LB-D500), divieto di incollare.
-9. **Password o protezione separata per set** (LB-D454, LB-D644).
-10. **Sblocco in date specifiche** e ricorrenze mensili (LB-D506, LB-D551).
-11. **Statistiche più dettagliate**: giorno, settimana, mese, anno, storico (LB-D465).
+   - Limite espresso in *tempo* invece che in numero (6).
+   - Override per singolo URL, pagina o gruppo.
+   - Durata "fino a X minuti".
+   - Durata e numero di override per gruppo.
+   - Override mensili.
+   - Override consumato come un budget e non a orologio.
+   - Il lockdown disattiva gli override.
+   - Costo crescente.
+2. **Motivo dell'override e registro** del tempo usato (6).
+3. **Limiti per numero di visite o accessi** e **cooldown** dopo un uso continuativo.
+4. **Blocco di contenuti incorporati e risorse** (iframe, video, immagini; 8) e **pagina caricata senza immagini e video** (6).
+5. **Rollover cumulativo** con reset configurabile.
+6. **Note libere per gruppo**, per ricordare il perché.
+7. **Limitare apertura e durata della pagina delle opzioni** e **ritardo per modificare le impostazioni**.
+8. **Sfide alternative al codice casuale** (matematica, puzzle), lunghezza e caratteri configurabili, divieto di incollare.
+9. **Password o protezione separata per gruppo**.
+10. **Sblocco in date specifiche** e ricorrenze mensili.
+11. **Statistiche più dettagliate**: giorno, settimana, mese, anno, storico.
 12. **Ritardo più efficace**:
-    - Countdown nascosto (LB-D397, LB-D518; ispirato a Dopanope).
-    - Durata casuale (LB-D398).
-    - Ritardo che si ripresenta dopo X minuti (LB-D399).
-    - Nessun ritardo navigando tra siti dello stesso set (LB-D358, LB-D365).
-    - Filtro temporaneo al posto della pagina di ritardo (LB-D473).
-    - Pulsante invece del reindirizzamento automatico (LB-D507).
-13. **Non perdere il lavoro**: ritardare il blocco mentre si scrive (LB-D348, LB-D352).
-14. **Ripresa del video** dal punto in cui si era (LB-D425, LB-D711).
-15. **Sessione focus in modalità allowlist** (LB-D622), **lockdown ritardato o programmato** (LB-D510, LB-D413), **notifica a fine lockdown** (LB-D355).
-16. **Durata della sessione scelta dall'utente** all'ingresso (LB-D739).
-17. **Tempo "dedicato" per sbloccare**, cioè guadagnare minuti facendo attività utili (LB-D627).
-18. **Liste di categorie pubbliche** (LB-D768) e **compatibilità della sintassi** con uBlock Origin, uBlacklist e AdGuard (LB-D660).
-19. **Gestione per molti set** (oltre 30; LB-D709), **sotto-set e liste condivise** (LB-D523).
-20. **Integrazioni e API** per attivare il lockdown da programmi esterni (LB-D690, LB#246, LB-D760, LB-D759).
+    - Countdown nascosto (ispirato a Dopanope).
+    - Durata casuale.
+    - Ritardo che si ripresenta dopo X minuti.
+    - Nessun ritardo navigando tra siti dello stesso gruppo.
+    - Filtro temporaneo al posto della pagina di ritardo.
+    - Pulsante invece del reindirizzamento automatico.
+13. **Non perdere il lavoro**: ritardare il blocco mentre si scrive.
+14. **Ripresa del video** dal punto in cui si era.
+15. **Sessione focus in modalità allowlist**, **lockdown ritardato o programmato**, **notifica a fine lockdown**.
+16. **Durata della sessione scelta dall'utente** all'ingresso.
+17. **Tempo "dedicato" per sbloccare**, cioè guadagnare minuti facendo attività utili.
+18. **Liste di categorie pubbliche** e **compatibilità della sintassi** con uBlock Origin, uBlacklist e AdGuard.
+19. **Gestione di molti gruppi**, **sotto-gruppi e liste condivise**.
+20. **Integrazioni e API** per attivare il lockdown da programmi esterni.
 21. **Varie**:
-    - Settimana che inizia di lunedì (LB-D602).
-    - Lingua scelta indipendentemente da quella del browser (LB-D782).
-    - Intensità dei filtri (LB-D645).
-    - Silenziare la tab senza filtro (LB-D679).
-    - Timer mostrato solo vicino alla scadenza (LB-D550).
-    - Badge senza la soglia dei 10 minuti (LB-D369).
-    - Cancellare dalla cronologia le visite ai siti bloccati (LB-D699).
-    - Nascondere l'URL nella pagina di blocco (LB-D452).
-    - Eccezioni alle parole chiave (LB-D779).
-    - Blocco basato sulla posizione (LB#157).
-    - Sincronizzazione (LB#19, 14 reazioni; LB#623; LB#100).
+    - Settimana che inizia di lunedì.
+    - Lingua scelta indipendentemente da quella del browser.
+    - Intensità dei filtri.
+    - Silenziare la tab senza filtro.
+    - Timer mostrato solo vicino alla scadenza.
+    - Badge senza la soglia dei 10 minuti.
+    - Cancellare dalla cronologia le visite ai siti bloccati.
+    - Nascondere l'URL nella pagina di blocco.
+    - Eccezioni alle parole chiave.
+    - Blocco basato sulla posizione.
+    - Sincronizzazione (GH, 14 reazioni).
 
 > **Osservazione.** Tra le idee più votate dominano due temi: **override più granulari e più costosi** e **più precisione** (pagina, elemento, contenuto incorporato, numero di visite). Questo è coerente con la letteratura: servono frizione proporzionata e flessibilità contestuale ([§3.5](#35-evidenze-scientifiche)).
 
@@ -257,28 +253,28 @@ Le richieste sono raggruppate per tema. Tra parentesi: voti o reazioni della dis
 
 Legenda: ✅ presente · ◐ parziale o limitato · ✖ assente · 🎯 obiettivo di WebHandbrake (rilascio).
 
-| Funzione | LeechBlock | StayFocusd | BlockSite | Cold Turkey | Freedom | one sec | Intention | **WebHandbrake** |
-|---|---|---|---|---|---|---|---|---|
-| Blocco per percorso o pagina | ✅ | ✅ | ◐ | ✅ | ◐ | ✖ | ✅ | 🎯 R1 |
-| Regex / wildcard avanzati | ✅ | ✖ | ✖ | ◐ | ✖ | ✖ | ✖ | 🎯 R1 |
-| Fasce notturne (oltre la mezzanotte) | ✖ | ? | ◐ | ✅ | ✅ | — | — | 🎯 R1 |
-| Limite di tempo | ✅ | ✅ | ◐ | ✅ | ✖ | ◐ | ◐ | 🎯 R1 |
-| Limite di visite o sessioni | ✖ | ✖ | ✖ | ✅ | ✖ | ◐ | ◐ | 🎯 R1 |
-| Ritardo / frizione | ✅ | ✖ | ✖ | ◐ | ✖ | ✅ | ◐ | 🎯 R1 (varianti) |
-| Domanda d'intenzione | ✖ | ✖ | ✖ | ✖ | ✖ | ◐ | ✅ (LLM) | 🎯 R1 (locale) |
-| Filtri (scala di grigi, ecc.) | ✅ | ✖ | ✖ | ✖ | ✖ | ✖ | ✖ | 🎯 R1 |
-| Rimozione di elementi (feed) | ✖ | ◐ (YouTube) | ✖ | ✖ | ✖ | ✖ | ◐ | 🎯 R2 |
-| Override per pagina | ✖ | ✖ | ✖ | ✖ | ✖ | ✖ | ✅ | 🎯 R1 |
-| Override con budget e motivo | ◐ | ✖ | ✖ | ✅ | ✖ | ✖ | ✅ | 🎯 R1 |
-| Sessione con allowlist | ✖ | ✅ | ✅ | ✅ | ✅ | ✖ | ✖ | 🎯 R1 |
-| Ritardo / cooling-off per indebolire | ✖ | ✖ | ✖ | ✅ | ✖ | ✖ | ◐ | 🎯 R1 |
-| Rafforzare sempre consentito | ✖ | ✖ | ✖ | ✅ (estendere) | ✖ | ✖ | ✖ | 🎯 R1 |
-| Blocco dei contenuti incorporati | ✖ | ✖ | ✖ | ✅ | ✖ | ✖ | ✖ | 🎯 R1 |
-| "Salva per dopo" | ✖ | ✖ | ✖ | ✖ | ✖ | ✖ | ✖ | 🎯 R1 |
-| Statistiche locali | ◐ | ✅ | ✅ (cloud) | ✅ | ✅ (cloud) | ✅ | ◐ | 🎯 R1 |
-| Nessuna raccolta dati | ✅ | ? | ✖ | ✅ | ✖ | ✅ | ◐ (LLM) | 🎯 R1 |
-| Android | ✅ (con limiti) | ✖ | ✅ (app) | ✖ | ✅ (app) | ✅ (app) | ✅ (app) | 🎯 R1 |
-| Open source | ✅ | ✖ | ✖ | ✖ | ✖ | ✖ | ✅ | 🎯 |
+| Funzione | StayFocusd | BlockSite | Cold Turkey | Freedom | one sec | Intention | **WebHandbrake** |
+|---|---|---|---|---|---|---|---|
+| Blocco per percorso o pagina | ✅ | ◐ | ✅ | ◐ | ✖ | ✅ | 🎯 R1 |
+| Regex / wildcard avanzati | ✖ | ✖ | ◐ | ✖ | ✖ | ✖ | 🎯 R1 |
+| Fasce notturne (oltre la mezzanotte) | ? | ◐ | ✅ | ✅ | — | — | 🎯 R1 |
+| Limite di tempo | ✅ | ◐ | ✅ | ✖ | ◐ | ◐ | 🎯 R1 |
+| Limite di visite o sessioni | ✖ | ✖ | ✅ | ✖ | ◐ | ◐ | 🎯 R1 |
+| Ritardo / frizione | ✖ | ✖ | ◐ | ✖ | ✅ | ◐ | 🎯 R1 (varianti) |
+| Domanda d'intenzione | ✖ | ✖ | ✖ | ✖ | ◐ | ✅ (LLM) | 🎯 R1 (locale) |
+| Filtri (scala di grigi, ecc.) | ✖ | ✖ | ✖ | ✖ | ✖ | ✖ | 🎯 R1 |
+| Rimozione di elementi (feed) | ◐ (YouTube) | ✖ | ✖ | ✖ | ✖ | ◐ | 🎯 R2 |
+| Override per pagina | ✖ | ✖ | ✖ | ✖ | ✖ | ✅ | 🎯 R1 |
+| Override con budget e motivo | ✖ | ✖ | ✅ | ✖ | ✖ | ✅ | 🎯 R1 |
+| Sessione con allowlist | ✅ | ✅ | ✅ | ✅ | ✖ | ✖ | 🎯 R1 |
+| Ritardo / cooling-off per indebolire | ✖ | ✖ | ✅ | ✖ | ✖ | ◐ | 🎯 R1 |
+| Rafforzare sempre consentito | ✖ | ✖ | ✅ (estendere) | ✖ | ✖ | ✖ | 🎯 R1 |
+| Blocco dei contenuti incorporati | ✖ | ✖ | ✅ | ✖ | ✖ | ✖ | 🎯 R1 |
+| "Salva per dopo" | ✖ | ✖ | ✖ | ✖ | ✖ | ✖ | 🎯 R1 |
+| Statistiche locali | ✅ | ✅ (cloud) | ✅ | ✅ (cloud) | ✅ | ◐ | 🎯 R1 |
+| Nessuna raccolta dati | ? | ✖ | ✅ | ✖ | ✅ | ◐ (LLM) | 🎯 R1 |
+| Android | ✖ | ✅ (app) | ✖ | ✅ (app) | ✅ (app) | ✅ (app) | 🎯 R1 |
+| Open source | ✖ | ✖ | ✖ | ✖ | ✖ | ✅ | 🎯 |
 
 #### 3.3.3 Lezioni trasversali dalle recensioni negative
 
@@ -287,7 +283,7 @@ Legenda: ✅ presente · ◐ parziale o limitato · ✖ assente · 🎯 obiettiv
 3. **Non distruggere le tab** né il lavoro dell'utente (Block Site di Ray, BlockSite).
 4. **La privacy è un fattore di scelta**: gli utenti notano e puniscono raccolta dati, permessi eccessivi e codice chiuso (BlockSite, StayFree, Unhook, SocialFocus, Impulse Blocker).
 5. **Le funzioni dipendenti dal markup dei siti si rompono** (Unhook, NFE, SocialFocus, uBlacklist). Servono regole aggiornabili come dati, non come codice, e una manutenzione comunitaria.
-6. **UX confusa = abbandono** (LeechBlock, Block Site). Template, valori predefiniti sensati, linguaggio naturale.
+6. **UX confusa = abbandono** (Block Site e altri). Template, valori predefiniti sensati, linguaggio naturale.
 7. **Paywall, account obbligatori e popup di upsell** generano recensioni da una stella (BlockSite, Freedom).
 8. **Il tono conta**: pagine che sembrano un sito hackerato (*"Restricted Access"*) o che colpevolizzano (one sec 2024) vengono rifiutate.
 
@@ -301,12 +297,12 @@ Legenda: ✅ presente · ◐ parziale o limitato · ✖ assente · 🎯 obiettiv
 | **Ad blocker** (uBlock Origin, AdGuard) [X3] | Liste di filtri in abbonamento; *element picker*; *logger* che spiega quale regola ha agito; disciplina sulle prestazioni. | Abbonamenti a liste (LST-02), selettore di elementi (ELM-03), "Perché è bloccato?" (MAT-16, DIA-01), obiettivi di performance (PERF-*). |
 | **Filtri dei risultati di ricerca** (uBlacklist) | Nasconde i siti indesiderati dalle SERP. | SRC-01. |
 | **Feed eradicator** (News Feed Eradicator, Unhook) | Sostituisce il feed con contenuti scelti dall'utente. | ELM-04: feed sostituito da obiettivi, citazioni o lista "Più tardi". |
-| **Read-later** (ex Pocket, Instapaper) | Salvare per leggere in un momento migliore. | **"Salva per dopo"** dalla pagina di blocco (INT-12): riduce la FOMO [P10] e non perde il link (LB-D350). |
+| **Read-later** (ex Pocket, Instapaper) | Salvare per leggere in un momento migliore. | **"Salva per dopo"** dalla pagina di blocco (INT-12): riduce la FOMO [P10] e non perde il link. |
 | **Gestori di email** (Inbox When Ready, snooze) | Mostrare la posta solo in finestre scelte (*batching*). | Finestre d'uso consentite ("news solo 12:30–12:50") come policy inversa (SCH-03). |
 | **Gestori di tab** (OneTab, Tab Wrangler, tab limiter) | Chiusura delle tab inattive, limite al numero di tab. | Possibile estensione futura (C-F): limite di tab aperte per gruppo. |
 | **Time tracker** (ActivityWatch, RescueTime, Time Tracker) | Tracciamento locale, categorie produttive/distraenti, "siti virtuali". | STA-08; framing sul tempo distratto [P30]. |
 | **Pomodoro** (Marinara, Tomato Clock) | Cicli lavoro/pausa configurabili, cronologia. | FOC-06 (BlockSite fissa 25 minuti: serve configurabilità). |
-| **App di apprendimento** (Duolingo, Anki) | *Streak freeze*; esercizi brevi. | Streak indulgenti (MOT-03); micro-attività durante il ritardo (INT-10, LB-D604). |
+| **App di apprendimento** (Duolingo, Anki) | *Streak freeze*; esercizi brevi. | Streak indulgenti (MOT-03); micro-attività durante il ritardo (INT-10, GH). |
 | **Token fisici** (Brick, talysman, HN 2026) | Lo sblocco richiede un oggetto fisico lontano. | Sblocco con chiave di sicurezza WebAuthn conservata altrove (PRO-07, da verificare). |
 | **Controllo parentale e accountability** (Covenant Eyes, BlockerX) | Un partner approva le richieste di tempo extra. | **Partner offline via TOTP**: il partner ha il segreto sul proprio authenticator e detta il codice. Nessun server (PRO-06). |
 | **Calendario** (Focus Time di Google Calendar, Clockwise) | Blocchi di concentrazione pianificati in calendario. | Import di un file ICS locale per attivare i gruppi (SCH-09, futuro). |
@@ -367,11 +363,11 @@ Legenda: ✅ presente · ◐ parziale o limitato · ✖ assente · 🎯 obiettiv
 | **Manifest V3 su Chrome** | Background come *service worker*: terminato dopo **30 s di inattività**, 5 minuti massimo per evento; `chrome.alarms` con periodo minimo di **30 s** (Chrome 120+) [T3]. | Stato persistito sempre in storage; riconciliazione idempotente all'avvio; niente timer in memoria come fonte di verità. |
 | **declarativeNetRequest** [T2] | Regole dinamiche: **30.000** "sicure" (block/allow/upgrade), di cui **5.000** "non sicure" (redirect, modifyHeaders); regole di sessione: 5.000; **1.000 regole regex**; le regole di sessione supportano `tabIds`; il redirect a una pagina dell'estensione richiede risorse *web accessible* e permessi sull'host. Le regole dinamiche **persistono tra i riavvii**. | Compilare i target in regole DNR (redirect del `main_frame`, blocco dei `sub_frame`); usare regole di sessione per i pass per singola tab; ripiegare sul blocco di rete se i permessi host vengono revocati; strategia di fallback oltre i limiti. |
 | **Firefox (desktop e Android)** | Supporta MV3 (background come *event page* non persistente) e mantiene `webRequest` bloccante; DNR disponibile da Firefox 113. | Base di codice MV3 comune, con adattatori per piattaforma. |
-| **Firefox per Android** [T1] | **Non supportati:** `commands` (scorciatoie), `menus` (menu contestuale), `windows` (incluso `onFocusChanged`), `history`, `sessions`, `tabs.discard`/`hide`, `sidebarAction`, `storage.managed`; `storage.sync` **non sincronizza**; `tabs.query` può restituire solo un sottoinsieme di tab. **Supportati:** DNR, `webRequest`, `webNavigation`, `tabs`, `alarms`, `idle`, `notifications`, `scripting`, `action` (con badge), `permissions.request` (dalla 120), `storage.session`. | Rilevamento delle funzionalità obbligatorio (vedi LB#531); misura del tempo attivo basata sulla `visibilitychange` della pagina; UI touch; nessuna funzione essenziale dipendente da API assenti. |
+| **Firefox per Android** [T1] | **Non supportati:** `commands` (scorciatoie), `menus` (menu contestuale), `windows` (incluso `onFocusChanged`), `history`, `sessions`, `tabs.discard`/`hide`, `sidebarAction`, `storage.managed`; `storage.sync` **non sincronizza**; `tabs.query` può restituire solo un sottoinsieme di tab. **Supportati:** DNR, `webRequest`, `webNavigation`, `tabs`, `alarms`, `idle`, `notifications`, `scripting`, `action` (con badge), `permissions.request` (dalla 120), `storage.session`. | Rilevamento delle funzionalità obbligatorio (vedi GH); misura del tempo attivo basata sulla `visibilitychange` della pagina; UI touch; nessuna funzione essenziale dipendente da API assenti. |
 | **Permessi host** | Bloccare siti arbitrari richiede l'accesso a tutti i siti (avviso "leggere e modificare tutti i dati"). In Firefox MV3 e in Chrome l'utente può revocare l'accesso per singolo sito. | Verifica dei permessi all'avvio e quando cambiano (`permissions.onRemoved`); avviso; fallback a regole DNR di blocco, che non richiedono permessi host. |
 | **Navigazione privata** | L'estensione è disattivata in incognito o nelle finestre private finché l'utente non la abilita; `extension.isAllowedIncognitoAccess()` permette di verificarlo. | Verifica in onboarding e nel centro protezione (PRO-09). |
 | **Disinstallazione e disattivazione** | Un'estensione non può impedirle (policy degli store). Si possono solo bloccare le pagine di gestione mentre i blocchi sono attivi, oppure usare le **policy enterprise** del sistema operativo (installazione forzata, disattivazione di navigazione privata, ospite, devtools, modalità provvisoria). | Procedura guidata per le policy (PRO-10); trasparenza sui limiti. |
-| **Pagine interne** | `about:*` e `chrome://*` non sono intercettabili via DNR; si possono rilevare con `tabs.onUpdated` e reindirizzare la tab, con limiti (per esempio su Android, LB#736). | Best effort documentato. |
+| **Pagine interne** | `about:*` e `chrome://*` non sono intercettabili via DNR; si possono rilevare con `tabs.onUpdated` e reindirizzare la tab, con limiti (per esempio su Android, GH). | Best effort documentato. |
 | **Policy degli store** | Nessun codice remoto (MV3); AMO richiede sorgenti leggibili e build riproducibile; Chrome Web Store richiede uno scopo unico e una disclosure sulla privacy. | Le liste remote sono solo dati; pipeline di build riproducibile. |
 
 ---
@@ -418,10 +414,10 @@ Il nome indica la filosofia: un **freno a mano** non è un muro. Si può tirare 
 
 | Persona | Contesto | Bisogni | Frustrazioni attuali |
 |---|---|---|---|
-| **Giulia, 29 anni, sviluppatrice in remoto con ADHD** | Firefox desktop + Firefox Android; usa Reddit e YouTube *anche* per lavoro. | Frizione breve sui siti tentazione; accesso a singoli thread o video utili senza sbloccare tutto il sito; non perdere ciò che sta scrivendo. | Gli override di LeechBlock sbloccano l'intero set; disattiva l'estensione e poi "dimentica" di riattivarla. |
+| **Giulia, 29 anni, sviluppatrice in remoto con ADHD** | Firefox desktop + Firefox Android; usa Reddit e YouTube *anche* per lavoro. | Frizione breve sui siti tentazione; accesso a singoli thread o video utili senza sbloccare tutto il sito; non perdere ciò che sta scrivendo. | Le pause degli strumenti che ha provato sbloccano l'intero gruppo di siti; disattiva l'estensione e poi "dimentica" di riattivarla. |
 | **Marco, 21 anni, studente universitario** | Chrome, sessione d'esame. | Lockdown seri nei periodi di studio, fine settimana più liberi; non riuscire ad aggirarlo in incognito. | Bypass in incognito e da altri profili; blocchi che non si riattivano dopo la pausa. |
 | **Sara, 46 anni, giornalista freelance** | Firefox desktop; deve informarsi ma soffre di doomscrolling. | Finestre brevi per le news; feed rimossi; promemoria del tempo continuativo; salvare articoli "per dopo". | Blocco totale = FOMO e perdita di link; i promemoria degli obiettivi la infastidiscono. |
-| **Luca, 37 anni, power user ed ex utente di LeechBlock** | Linux, centinaia di tab, regole con regex. | Migrare la configurazione; prestazioni con molte tab; strumenti di diagnosi; hardening via policy. | CPU alta con molte tab; regole che si sovrappongono in modo imprevedibile; nessun "perché?". |
+| **Luca, 37 anni, power user che ha già provato altri blocker** | Linux, centinaia di tab, regole con regex. | Portare con sé le sue liste di siti; prestazioni con molte tab; strumenti di diagnosi; hardening via policy. | CPU alta con molte tab; regole che si sovrappongono in modo imprevedibile; nessun "perché?". |
 | **Elena, 54 anni, utente poco tecnica** | Telefono Android con Firefox, tablet. | Ridurre YouTube la sera con poche scelte chiare; niente gergo. | Interfacce confuse, opzioni incomprensibili, campi orari `HHMM`. |
 | **Paolo, 40 anni, partner di accountability** | Amico di Marco, nessun accesso al suo PC. | Custodire lo sblocco senza installare nulla di speciale. | Doversi fidare di servizi terzi. |
 
@@ -436,7 +432,7 @@ Il nome indica la filosofia: un **freno a mano** non è un muro. Si può tirare 
 | US-05 | Marco | essere avvisato se l'estensione non è attiva in incognito | chiuda quella via di fuga. |
 | US-06 | Sara | consentire le news solo 12:30–12:50 e 19:00–19:30 | concentri il consumo in finestre scelte. |
 | US-07 | Sara | salvare per dopo un articolo bloccato e ritrovarlo quando la finestra si apre | non perda informazioni importanti. |
-| US-08 | Luca | importare la mia configurazione di LeechBlock NG | non debba ricostruire 15 set a mano. |
+| US-08 | Luca | importare le mie liste di siti (anche in formato hosts o uBlock) | non debba ricostruirle a mano. |
 | US-09 | Luca | sapere esattamente quale regola sta agendo su un URL e quando cambierà | possa correggere le sovrapposizioni. |
 | US-10 | utente | che rimuovere un sito dal blocco richieda 24 ore e una conferma successiva, mentre aggiungerlo sia immediato | i miei momenti di debolezza non disfino le decisioni lucide. |
 | US-11 | Elena | limitare YouTube a 45 minuti la sera con una schermata chiara quando il tempo finisce | dorma meglio. |
@@ -477,11 +473,11 @@ Registro eventi locale ── tentativi, pause, motivi, manomissioni (ring buffe
 |---|---|---|---|
 | SEM-01 | Gli interventi hanno una **gravità ordinata**: `consenti < traccia < ricorda < filtra < chiedi < attendi < sfida < blocca < chiudi`. Il reindirizzamento ha la stessa gravità del blocco. | M | R1 |
 | SEM-02 | **Dentro un gruppo**: si scartano gli URL che corrispondono a un'eccezione *più specifica* del target che li include; poi si valutano le policy nell'ordine definito dall'utente e **vince la prima la cui condizione è vera** (come in un firewall). L'interfaccia mostra l'ordine e un riepilogo in linguaggio naturale. | M | R1 |
-| SEM-03 | **Tra gruppi diversi**: si applica l'intervento **più grave** tra tutti i gruppi che corrispondono. L'ordine dei gruppi non influisce mai sulla severità (chiude LB#252). | M | R1 |
-| SEM-04 | Un'eccezione vale **solo nel proprio gruppo** e non sospende conteggi o timer di altri gruppi (LB-D710). | M | R1 |
+| SEM-03 | **Tra gruppi diversi**: si applica l'intervento **più grave** tra tutti i gruppi che corrispondono. L'ordine dei gruppi non influisce mai sulla severità (problema segnalato in GH). | M | R1 |
+| SEM-04 | Un'eccezione vale **solo nel proprio gruppo** e non sospende conteggi o timer di altri gruppi. | M | R1 |
 | SEM-05 | L'**allowlist globale** "Sempre consentiti" prevale su tutti i gruppi e sulle sessioni (strumenti di lavoro, sito della banca…). Aggiungere voci è un indebolimento soggetto a protezione. | S | R1 |
-| SEM-06 | **Specificità** delle corrispondenze, confrontata in quest'ordine: (1) numero di etichette dell'host che corrispondono in modo letterale (`m.youtube.com` > `youtube.com` > `*.com`); (2) numero di segmenti di percorso letterali, esclusi i caratteri jolly (`/r/*/comments/*` = 2); (3) a parità, l'URL esatto prevale sul prefisso e il prefisso sul pattern. Le regex hanno specificità minima, salvo diversa indicazione dell'utente. **A parità di specificità vince il blocco.** Questo permette le "eccezioni delle eccezioni" (LB-D688): con `reddit.com` bloccato, `+reddit.com/r/*/comments/*` consentito e `reddit.com/r/funny/*` bloccato, `reddit.com/r/rust/comments/1` è consentito, mentre `reddit.com/r/funny/comments/1` è bloccato (parità 2–2, vince il blocco). "Prova un URL" mostra quale voce ha prevalso. | M | R1 |
-| SEM-07 | Il **tempo di sblocco** mostrato è calcolato sull'insieme di tutte le policy e di tutti i gruppi applicabili (corregge LB#330). | M | R1 |
+| SEM-06 | **Specificità** delle corrispondenze, confrontata in quest'ordine: (1) numero di etichette dell'host che corrispondono in modo letterale (`m.youtube.com` > `youtube.com` > `*.com`); (2) numero di segmenti di percorso letterali, esclusi i caratteri jolly (`/r/*/comments/*` = 2); (3) a parità, l'URL esatto prevale sul prefisso e il prefisso sul pattern. Le regex hanno specificità minima, salvo diversa indicazione dell'utente. **A parità di specificità vince il blocco.** Questo permette le "eccezioni delle eccezioni": con `reddit.com` bloccato, `+reddit.com/r/*/comments/*` consentito e `reddit.com/r/funny/*` bloccato, `reddit.com/r/rust/comments/1` è consentito, mentre `reddit.com/r/funny/comments/1` è bloccato (parità 2–2, vince il blocco). "Prova un URL" mostra quale voce ha prevalso. | M | R1 |
+| SEM-07 | Il **tempo di sblocco** mostrato è calcolato sull'insieme di tutte le policy e di tutti i gruppi applicabili (problema segnalato in GH). | M | R1 |
 | SEM-08 | Una **visita** inizia quando il tempo attivo su un gruppo riprende dopo almeno N minuti (default 5, configurabile) senza tempo attivo su quel gruppo. | M | R1 |
 | SEM-09 | I **giorni** del calendario iniziano a un'ora configurabile (default 00:00; es. 04:00 per i nottambuli). Fasce e budget giornalieri usano questa definizione. | S | R1 |
 
@@ -489,93 +485,93 @@ Registro eventi locale ── tentativi, pause, motivi, manomissioni (ring buffe
 
 | ID | Requisito | Pri | Rel | Fonte |
 |---|---|---|---|---|
-| MAT-01 | Aggiungere target per **dominio**, inclusi i sottodomini per default, con l'opzione "solo questo host". | M | R1 | LB#35; AMO:impulse-blocker |
-| MAT-02 | **Normalizzare l'input**: accettare URL completi incollati (rimuovere protocollo, `www`, slash finale), IDN/punycode, host senza distinzione di maiuscole; segnalare gli errori riga per riga. | M | R1 | LB-FAQ *nothing-blocked* |
-| MAT-03 | Target per **percorso o prefisso**, per **pagina esatta** e "**solo homepage**". | M | R1 | LB-D455, LB-D512, LB-D575; esempio 7 di LB |
-| MAT-04 | **Eccezioni** a qualunque granularità, con precedenza per specificità (SEM-06). | M | R1 | LB-D688, LB-D484, LB-D713, LB-D607 |
-| MAT-05 | **Wildcard** (`*` in un segmento, `**` su più segmenti) e **import della sintassi** di uBlock Origin, AdGuard e uBlacklist (`\|\|example.com^`, `*://*.example.com/*`). | S | R1 | LB-D660, LB#655 |
-| MAT-06 | Target **regex** (modalità avanzata) con validazione, limite di complessità e protezione dal ReDoS; compilazione in regole DNR compatibili con RE2 quando possibile. | S | R1 | LB#9, LB#300, LB#778, LBC#102 |
-| MAT-07 | Corrispondenza su **parametri di query** (es. `youtube.com/watch?list=…`) e, facoltativamente, sul **frammento** (default: ignorato). | S | R1 | LB-D409, LB-D561 |
-| MAT-08 | **Commenti** nelle liste (`#`) e nota libera per riga. | M | R1 | LB-FAQ *comments* |
-| MAT-09 | **File locali** (`file://`) e pagine interne del browser come target. | S | R1 | LB-FAQ *local-files*; LBC#41 |
-| MAT-10 | **Condizione sull'origine della navigazione**: trattare diversamente l'URL digitato o il segnalibro rispetto al link seguito da un'altra pagina (es. "consenti Reddit se arrivo da un motore di ricerca"), usando il `transitionType` di `webNavigation` e, in subordine, il referrer. | S | R2 | LB-D598, LB#441, LB-FAQ *referrers* |
-| MAT-11 | **Parole chiave nell'URL o nella query di ricerca** dei principali motori di ricerca. | S | R2 | BlockSite, Cold Turkey, LB-D641 |
-| MAT-12 | **Parole chiave nel titolo o nel contenuto** (permesso facoltativo, elaborazione solo locale): modalità blocca o consenti, wildcard o regex, **eccezioni alle parole chiave**, ambito (titolo, intestazioni, corpo), ricontrollo sui contenuti dinamici e sulle SPA. | C | R2 | LB-FAQ *keywords*, LB-D779, LB-D459, LB#628, LB#339 |
-| MAT-13 | Blocco dei **contenuti incorporati** dei siti target in altre pagine (iframe, embed video), opzionale per gruppo. | S | R1 | LB-D402, LB#756; Cold Turkey |
-| MAT-14 | Copertura di **mirror, proxy e frontend alternativi** tramite liste curate (Google Translate proxy, archivi, cache, frontend alternativi di YouTube, X e Reddit, sottodomini mobili, domini brevi come `youtu.be`). | C | R2 | LB-D402, LB-FAQ *google-cache* |
-| MAT-15 | Helper per **canali e playlist YouTube** (consenti o blocca per canale, playlist, ricerca). | C | R2 | Cold Turkey; LB#653, LB-D409, LB-D626 |
-| MAT-16 | Strumento **"Prova un URL" / "Perché?"**: per un URL (o la tab corrente) mostra i gruppi e le policy che corrispondono, l'intervento attuale, il motivo, il budget residuo e il prossimo cambiamento previsto. | M | R1 | LB#205, LB-D588, LB#587; logger di uBO |
-| MAT-17 | **Aggiungere la pagina corrente** dal popup o dal menu contestuale, scegliendo la granularità (dominio, host, percorso, pagina) e il gruppo; la modifica è persistente. | M | R1 | LB "Add Site/Page"; LB-D720 |
-| MAT-18 | **Liste condivise** riutilizzabili da più gruppi (es. la stessa lista "Social" con regole diverse in settimana e nel weekend). | S | R1 | LB-D523; esempio 6 di LB |
-| MAT-19 | Ambito per gruppo: **finestre normali, private o entrambe**. | S | R1 | LB-D357; opzione di LB |
+| MAT-01 | Aggiungere target per **dominio**, inclusi i sottodomini per default, con l'opzione "solo questo host". | M | R1 | GH; AMO:impulse-blocker |
+| MAT-02 | **Normalizzare l'input**: accettare URL completi incollati (rimuovere protocollo, `www`, slash finale), IDN/punycode, host senza distinzione di maiuscole; segnalare gli errori riga per riga. | M | R1 | Doc |
+| MAT-03 | Target per **percorso o prefisso**, per **pagina esatta** e "**solo homepage**". | M | R1 | GH; Doc |
+| MAT-04 | **Eccezioni** a qualunque granularità, con precedenza per specificità (SEM-06). | M | R1 | GH |
+| MAT-05 | **Wildcard** (`*` in un segmento, `**` su più segmenti) e **import della sintassi** di uBlock Origin, AdGuard e uBlacklist (`\|\|example.com^`, `*://*.example.com/*`). | S | R1 | GH |
+| MAT-06 | Target **regex** (modalità avanzata) con validazione, limite di complessità e protezione dal ReDoS; compilazione in regole DNR compatibili con RE2 quando possibile. | S | R1 | GH |
+| MAT-07 | Corrispondenza su **parametri di query** (es. `youtube.com/watch?list=…`) e, facoltativamente, sul **frammento** (default: ignorato). | S | R1 | GH |
+| MAT-08 | **Commenti** nelle liste (`#`) e nota libera per riga. | M | R1 | Doc |
+| MAT-09 | **File locali** (`file://`) e pagine interne del browser come target. | S | R1 | Doc; GH |
+| MAT-10 | **Condizione sull'origine della navigazione**: trattare diversamente l'URL digitato o il segnalibro rispetto al link seguito da un'altra pagina (es. "consenti Reddit se arrivo da un motore di ricerca"), usando il `transitionType` di `webNavigation` e, in subordine, il referrer. | S | R2 | GH, Doc |
+| MAT-11 | **Parole chiave nell'URL o nella query di ricerca** dei principali motori di ricerca. | S | R2 | BlockSite, Cold Turkey, GH |
+| MAT-12 | **Parole chiave nel titolo o nel contenuto** (permesso facoltativo, elaborazione solo locale): modalità blocca o consenti, wildcard o regex, **eccezioni alle parole chiave**, ambito (titolo, intestazioni, corpo), ricontrollo sui contenuti dinamici e sulle SPA. | C | R2 | Doc, GH |
+| MAT-13 | Blocco dei **contenuti incorporati** dei siti target in altre pagine (iframe, embed video), opzionale per gruppo. | S | R1 | GH; Cold Turkey |
+| MAT-14 | Copertura di **mirror, proxy e frontend alternativi** tramite liste curate (Google Translate proxy, archivi, cache, frontend alternativi di YouTube, X e Reddit, sottodomini mobili, domini brevi come `youtu.be`). | C | R2 | GH, Doc |
+| MAT-15 | Helper per **canali e playlist YouTube** (consenti o blocca per canale, playlist, ricerca). | C | R2 | Cold Turkey; GH |
+| MAT-16 | Strumento **"Prova un URL" / "Perché?"**: per un URL (o la tab corrente) mostra i gruppi e le policy che corrispondono, l'intervento attuale, il motivo, il budget residuo e il prossimo cambiamento previsto. | M | R1 | GH; logger di uBO |
+| MAT-17 | **Aggiungere la pagina corrente** dal popup o dal menu contestuale, scegliendo la granularità (dominio, host, percorso, pagina) e il gruppo; la modifica è persistente. | M | R1 | GH; Doc |
+| MAT-18 | **Liste condivise** riutilizzabili da più gruppi (es. la stessa lista "Social" con regole diverse in settimana e nel weekend). | S | R1 | GH; Doc |
+| MAT-19 | Ambito per gruppo: **finestre normali, private o entrambe**. | S | R1 | GH; Doc |
 | MAT-20 | Ambito per **container** di Firefox (es. solo nel container "Personale"). | C | R2 | Idea da Firefox Multi-Account Containers |
-| MAT-21 | Target da **categorie** basate su liste pubbliche (social, giochi, news, shopping…) tramite abbonamenti (LST-02). | C | R3 | LB-D768; Freedom, BlockSite |
-| MAT-22 | Ordinamento, deduplicazione, incolla in blocco, conteggio delle voci; nessun limite artificiale al numero di gruppi o di voci. | S | R1 | LB-D709; AMO:block-website (500 voci) |
+| MAT-21 | Target da **categorie** basate su liste pubbliche (social, giochi, news, shopping…) tramite abbonamenti (LST-02). | C | R3 | GH; Freedom, BlockSite |
+| MAT-22 | Ordinamento, deduplicazione, incolla in blocco, conteggio delle voci; nessun limite artificiale al numero di gruppi o di voci. | S | R1 | GH; AMO:block-website (500 voci) |
 
 ### 6.4 Pianificazione e condizioni (SCH)
 
 | ID | Requisito | Pri | Rel | Fonte |
 |---|---|---|---|---|
-| SCH-01 | Pianificazione settimanale con **più finestre per giorno, diverse per ogni giorno**, incluse le **finestre a cavallo della mezzanotte** (la finestra appartiene al giorno di inizio). | M | R1 | LB-FAQ *overnight*, LB#654, LB#139, LB-D569 |
+| SCH-01 | Pianificazione settimanale con **più finestre per giorno, diverse per ogni giorno**, incluse le **finestre a cavallo della mezzanotte** (la finestra appartiene al giorno di inizio). | M | R1 | Doc, GH |
 | SCH-02 | **Editor visuale** a griglia settimanale (trascinamento, anche touch) più inserimento testuale per gli utenti avanzati; preset ("orario d'ufficio", "sere", "tutto il giorno", "feriali"). | M | R1 | Cold Turkey; AMO:block-website (UX) |
-| SCH-03 | Modalità di condizione: **attivo durante le finestre**, **attivo fuori dalle finestre** (cioè "consentito solo in queste finestre") e **sempre**. | M | R1 | LB-D554, LB-D685 |
-| SCH-04 | **Policy multiple per gruppo** (finestre e budget combinati) al posto di `OR`/`AND`, con riepilogo in linguaggio naturale aggiornato in tempo reale. | M | R1 | LB-FAQ *difference-or-and*; esempi 4–6 di LB |
-| SCH-05 | **Eccezioni di calendario**: date singole, intervalli (ferie, esami), ricorrenze mensili (es. "il 15 di ogni mese, 19–21"). | S | R2 | LB-D506, LB-D551, LB-D511 |
-| SCH-06 | **Fuso orario e ora legale** gestiti correttamente; inizio della settimana configurabile; ora di inizio del giorno configurabile (SEM-09). | M | R1 | LB-D602, LB#67, LB#70, LBC#104 |
-| SCH-07 | **Resilienza alla manomissione dell'orologio**: rilevare i salti dell'orologio di sistema confrontando orologio monotono e orologio di sistema; facoltativamente, confrontare con l'intestazione `Date` delle risposte HTTP già ricevute nella navigazione (nessuna richiesta aggiuntiva); in caso di salto all'indietro, comportamento conservativo e registrazione. | S | R1 | LB-FAQ *system-clock*; Cold Turkey |
-| SCH-08 | **Sessioni e lockdown programmati** e ricorrenti (es. ogni giorno feriale alle 9). | S | R2 | LB-D413; Cold Turkey *autostart*; Freedom |
-| SCH-09 | **Condizioni di contesto**: file ICS di calendario importato localmente, rete o posizione. | C | F | LB#157; P25 |
+| SCH-03 | Modalità di condizione: **attivo durante le finestre**, **attivo fuori dalle finestre** (cioè "consentito solo in queste finestre") e **sempre**. | M | R1 | GH |
+| SCH-04 | **Policy multiple per gruppo** (finestre e budget combinati) al posto di `OR`/`AND`, con riepilogo in linguaggio naturale aggiornato in tempo reale. | M | R1 | Doc |
+| SCH-05 | **Eccezioni di calendario**: date singole, intervalli (ferie, esami), ricorrenze mensili (es. "il 15 di ogni mese, 19–21"). | S | R2 | GH |
+| SCH-06 | **Fuso orario e ora legale** gestiti correttamente; inizio della settimana configurabile; ora di inizio del giorno configurabile (SEM-09). | M | R1 | GH |
+| SCH-07 | **Resilienza alla manomissione dell'orologio**: rilevare i salti dell'orologio di sistema confrontando orologio monotono e orologio di sistema; facoltativamente, confrontare con l'intestazione `Date` delle risposte HTTP già ricevute nella navigazione (nessuna richiesta aggiuntiva); in caso di salto all'indietro, comportamento conservativo e registrazione. | S | R1 | Doc; Cold Turkey |
+| SCH-08 | **Sessioni e lockdown programmati** e ricorrenti (es. ogni giorno feriale alle 9). | S | R2 | GH; Cold Turkey *autostart*; Freedom |
+| SCH-09 | **Condizioni di contesto**: file ICS di calendario importato localmente, rete o posizione. | C | F | GH; P25 |
 
 ### 6.5 Limiti e budget (LIM)
 
 | ID | Requisito | Pri | Rel | Fonte |
 |---|---|---|---|---|
-| LIM-01 | **Budget di tempo** per periodo: ora, giorno, settimana, mese e periodi personalizzati (da 5 minuti a 90 giorni), con minuti decimali. | M | R1 | LB-doc |
-| LIM-02 | Budget su **finestra mobile** (es. 30 minuti in qualsiasi intervallo di 4 ore), in alternativa ai periodi allineati con offset. | S | R1 | Cold Turkey; LB-FAQ *time-limit-offset* |
-| LIM-03 | Budget **condiviso dal gruppo** oppure **per singolo sito** all'interno del gruppo. | M | R1 | LB-D606, LB-D632 |
-| LIM-04 | **Budget di visite**: N visite per periodo (visita definita in SEM-08), con o senza limite di durata per visita. | M | R1 | LB#34, LB-D610, LB-D431, LB-D740; Cold Turkey; ScreenZen |
-| LIM-05 | **Durata massima di sessione + cooldown obbligatorio** (es. massimo 10 minuti continuativi, poi 60 minuti di stop). | S | R1 | LB-D366, LB-D739 |
-| LIM-06 | **Durata scelta all'ingresso** ("quanto vuoi restare?", da 1 a N minuti), poi blocco automatico, eventualmente seguito da cooldown. | S | R1 | LB-D739; Regain, Mindful Browsing |
-| LIM-07 | **Rollover** del tempo non usato con tetto massimo, accumulo opzionale e data di azzeramento; scelta dell'ordine di consumo. | S | R2 | LB-D567, LB-D615, LB-D428, LB-D363 |
-| LIM-08 | **Tempo guadagnato**: il tempo trascorso su siti "produttivi" o in sessioni focus genera minuti di budget su un gruppo (con tetto). | C | R2 | Cold Turkey *Reward*; LB-D627 |
-| LIM-09 | **Escalation a budget esaurito**: esaurire il budget attiva un'altra policy (es. dopo 30 minuti al giorno, ritardo di 60 s invece del blocco), con transizioni configurabili. | M | R1 | HN (uso reale di LeechBlock); P1 |
-| LIM-10 | **Visibilità del budget residuo** nel popup, nel badge e nel timer sovrapposto (soglia configurabile). | M | R1 | LB-D550, LB-D369 |
-| LIM-11 | **Rinunciare subito** al tempo residuo o terminare la sessione in corso (azione di rafforzamento, sempre istantanea). | S | R1 | LB "Discard Remaining Time" |
-| LIM-12 | **Tempo minimo di blocco** dopo il raggiungimento del limite. | C | R2 | LB-vh 1.7.2 |
+| LIM-01 | **Budget di tempo** per periodo: ora, giorno, settimana, mese e periodi personalizzati (da 5 minuti a 90 giorni), con minuti decimali. | M | R1 | Doc |
+| LIM-02 | Budget su **finestra mobile** (es. 30 minuti in qualsiasi intervallo di 4 ore), in alternativa ai periodi allineati con offset. | S | R1 | Cold Turkey; Doc |
+| LIM-03 | Budget **condiviso dal gruppo** oppure **per singolo sito** all'interno del gruppo. | M | R1 | GH |
+| LIM-04 | **Budget di visite**: N visite per periodo (visita definita in SEM-08), con o senza limite di durata per visita. | M | R1 | GH; Cold Turkey; ScreenZen |
+| LIM-05 | **Durata massima di sessione + cooldown obbligatorio** (es. massimo 10 minuti continuativi, poi 60 minuti di stop). | S | R1 | GH |
+| LIM-06 | **Durata scelta all'ingresso** ("quanto vuoi restare?", da 1 a N minuti), poi blocco automatico, eventualmente seguito da cooldown. | S | R1 | GH; Regain, Mindful Browsing |
+| LIM-07 | **Rollover** del tempo non usato con tetto massimo, accumulo opzionale e data di azzeramento; scelta dell'ordine di consumo. | S | R2 | GH |
+| LIM-08 | **Tempo guadagnato**: il tempo trascorso su siti "produttivi" o in sessioni focus genera minuti di budget su un gruppo (con tetto). | C | R2 | Cold Turkey *Reward*; GH |
+| LIM-09 | **Escalation a budget esaurito**: esaurire il budget attiva un'altra policy (es. dopo 30 minuti al giorno, ritardo di 60 s invece del blocco), con transizioni configurabili. | M | R1 | HN (uso reale); P1 |
+| LIM-10 | **Visibilità del budget residuo** nel popup, nel badge e nel timer sovrapposto (soglia configurabile). | M | R1 | GH |
+| LIM-11 | **Rinunciare subito** al tempo residuo o terminare la sessione in corso (azione di rafforzamento, sempre istantanea). | S | R1 | Doc |
+| LIM-12 | **Tempo minimo di blocco** dopo il raggiungimento del limite. | C | R2 | Doc |
 
 ### 6.6 Misurazione del tempo (TIM)
 
 | ID | Requisito | Pri | Rel | Fonte |
 |---|---|---|---|---|
-| TIM-01 | Contare il tempo solo quando la tab è **attiva**, la finestra **ha il focus** e l'utente **non è inattivo** (default); opzioni: contare le tab inattive, contare le tab che riproducono **audio o video** (anche in Picture-in-Picture). | M | R1 | LB-doc, LB-D356 |
-| TIM-02 | **Rilevamento dell'inattività**: sospendere il conteggio dopo N secondi senza input (default 120 s, configurabile; disattivabile per i siti di lettura), tranne durante la riproduzione di media; nessun conteggio con schermo bloccato o dispositivo sospeso; salti temporali ignorati. | M | R1 | LB#122, LBC#18, LBC#19, LBC#66; AMO:stayfree |
-| TIM-03 | **Niente doppio conteggio**: ogni gruppo accumula al massimo 1 secondo per ogni secondo reale, a prescindere dal numero di finestre o tab. | M | R1 | LBC#51 |
-| TIM-04 | **Android**: contare solo con l'app in primo piano e la pagina visibile (`visibilitychange`), dato che l'API `windows` manca. | M | R1 | LB#81, LB#495, LB#418 |
-| TIM-05 | **Persistenza robusta** dei contatori al riavvio, ai crash e alla terminazione del service worker o della event page: perdita massima di 15 s. | M | R1 | LB#292 |
-| TIM-06 | Escludere pagine di errore, tab non caricate o scaricate dalla memoria; gestire la modalità lettura e `view-source:`. | S | R1 | LB#91, LB#82 |
-| TIM-07 | Il tempo su un'eccezione non viene contato nel budget del gruppo. | M | R1 | LB-D710, LB#628 |
-| TIM-08 | Opzione "conta solo mentre interagisco" (scroll, click, tasti). | C | R2 | LB-D764 |
+| TIM-01 | Contare il tempo solo quando la tab è **attiva**, la finestra **ha il focus** e l'utente **non è inattivo** (default); opzioni: contare le tab inattive, contare le tab che riproducono **audio o video** (anche in Picture-in-Picture). | M | R1 | Doc, GH |
+| TIM-02 | **Rilevamento dell'inattività**: sospendere il conteggio dopo N secondi senza input (default 120 s, configurabile; disattivabile per i siti di lettura), tranne durante la riproduzione di media; nessun conteggio con schermo bloccato o dispositivo sospeso; salti temporali ignorati. | M | R1 | GH; AMO:stayfree |
+| TIM-03 | **Niente doppio conteggio**: ogni gruppo accumula al massimo 1 secondo per ogni secondo reale, a prescindere dal numero di finestre o tab. | M | R1 | GH |
+| TIM-04 | **Android**: contare solo con l'app in primo piano e la pagina visibile (`visibilitychange`), dato che l'API `windows` manca. | M | R1 | GH |
+| TIM-05 | **Persistenza robusta** dei contatori al riavvio, ai crash e alla terminazione del service worker o della event page: perdita massima di 15 s. | M | R1 | GH |
+| TIM-06 | Escludere pagine di errore, tab non caricate o scaricate dalla memoria; gestire la modalità lettura e `view-source:`. | S | R1 | GH |
+| TIM-07 | Il tempo su un'eccezione non viene contato nel budget del gruppo. | M | R1 | GH |
+| TIM-08 | Opzione "conta solo mentre interagisco" (scroll, click, tasti). | C | R2 | GH |
 
 ### 6.7 Interventi (INT)
 
 | ID | Requisito | Pri | Rel | Fonte |
 |---|---|---|---|---|
-| INT-01 | **Pagina di blocco** dal design calmo e non colpevolizzante. Mostra: cosa è bloccato (con opzione per nascondere l'URL), il gruppo, la **nota "perché"** dell'utente, fino a quando, il budget residuo e la parola chiave trovata (se c'è). Gerarchia delle azioni: **primaria "Chiudi tab" o "Torna indietro"**, secondaria "Salva per dopo", terziaria "Fai una pausa" (solo se consentita e con il suo costo). | M | R1 | P3; LB-D452, LB-D491, LB-D470; AMO:block-website ("Restricted Access") |
-| INT-02 | **Pagina di ritardo** (countdown di N secondi, poi accesso). Varianti configurabili: (a) prosecuzione automatica o tramite pulsante; (b) countdown annullato o messo in pausa se la pagina perde il focus; (c) **countdown nascosto**; (d) **durata casuale** in un intervallo; (e) **ritardo crescente** a ogni visita del periodo; (f) applicato solo alla prima pagina del sito o del gruppo per X minuti; (g) accesso limitato a N minuti dopo il ritardo, poi il ritardo si ripresenta. | M | R1 | LB-doc; LB-D397, LB-D518, LB-D398, LB-D399, LB-D358, LB-D365, LB-D507, LB-D496; ScreenZen; Dopanope |
+| INT-01 | **Pagina di blocco** dal design calmo e non colpevolizzante. Mostra: cosa è bloccato (con opzione per nascondere l'URL), il gruppo, la **nota "perché"** dell'utente, fino a quando, il budget residuo e la parola chiave trovata (se c'è). Gerarchia delle azioni: **primaria "Chiudi tab" o "Torna indietro"**, secondaria "Salva per dopo", terziaria "Fai una pausa" (solo se consentita e con il suo costo). | M | R1 | P3; GH; AMO:block-website ("Restricted Access") |
+| INT-02 | **Pagina di ritardo** (countdown di N secondi, poi accesso). Varianti configurabili: (a) prosecuzione automatica o tramite pulsante; (b) countdown annullato o messo in pausa se la pagina perde il focus; (c) **countdown nascosto**; (d) **durata casuale** in un intervallo; (e) **ritardo crescente** a ogni visita del periodo; (f) applicato solo alla prima pagina del sito o del gruppo per X minuti; (g) accesso limitato a N minuti dopo il ritardo, poi il ritardo si ripresenta. | M | R1 | Doc; GH; ScreenZen; Dopanope |
 | INT-03 | **Domanda d'intenzione**: "Cosa vuoi fare?" (testo libero o suggerimenti rapidi) e durata scelta (es. 5, 10, 15 minuti, entro un massimo). L'accesso vale per il tempo scelto; l'intenzione viene registrata localmente e mostrata come promemoria discreto durante la visita. | M | R1 | P13, P21; Intention, With Intention |
-| INT-04 | **Sfida per proseguire**: (a) testo casuale di lunghezza e set di caratteri configurabili; (b) **frase d'impegno o di auto-affermazione** scelta dall'utente; (c) piccolo calcolo. Incolla disabilitato, input accettato solo da eventi `isTrusted`, testo da copiare **disegnato su canvas** (non presente nel DOM), con alternativa accessibile documentata. | S | R1 | P16; LB-D548, LB-D500, LB-D467, LB-D730, LB-D780, LB-D395, LB-D765, LB-D371 |
-| INT-05 | **Filtri al posto del blocco**: scala di grigi (con **intensità** regolabile), sfocatura, dissolvenza, inversione, seppia, filtro CSS personalizzato; **silenziamento della tab** con o senza filtro. Utilizzabili anche come fase morbida (es. scala di grigi dopo 20 minuti). | S | R1 | P17, P18; LB-D645, LB-D679, LB-D473 |
-| INT-06 | **Chiudi tab** o **reindirizza** a un URL scelto (sito produttivo, lista delle cose da fare). | M | R1 | LB-doc; LB-D448; P1, P21 (Timewarp) |
-| INT-07 | **Pagina di blocco personalizzabile**: messaggio su più righe, CSS personalizzato (senza risorse remote), oppure URL esterno con parametri (`{url}`, `{group}`, `{until}`) ed esclusione automatica dal blocco. | S | R1 | LB-doc; LB-D378, LB-D745, LB-FAQ *custom-blocking-page* |
+| INT-04 | **Sfida per proseguire**: (a) testo casuale di lunghezza e set di caratteri configurabili; (b) **frase d'impegno o di auto-affermazione** scelta dall'utente; (c) piccolo calcolo. Incolla disabilitato, input accettato solo da eventi `isTrusted`, testo da copiare **disegnato su canvas** (non presente nel DOM), con alternativa accessibile documentata. | S | R1 | P16; GH |
+| INT-05 | **Filtri al posto del blocco**: scala di grigi (con **intensità** regolabile), sfocatura, dissolvenza, inversione, seppia, filtro CSS personalizzato; **silenziamento della tab** con o senza filtro. Utilizzabili anche come fase morbida (es. scala di grigi dopo 20 minuti). | S | R1 | P17, P18; GH |
+| INT-06 | **Chiudi tab** o **reindirizza** a un URL scelto (sito produttivo, lista delle cose da fare). | M | R1 | Doc; GH; P1, P21 (Timewarp) |
+| INT-07 | **Pagina di blocco personalizzabile**: messaggio su più righe, CSS personalizzato (senza risorse remote), oppure URL esterno con parametri (`{url}`, `{group}`, `{until}`) ed esclusione automatica dal blocco. | S | R1 | Doc; GH, Doc |
 | INT-08 | **Pausa di respiro**: breve animazione guidata di respirazione prima di proseguire. | S | R2 | one sec |
-| INT-09 | **Alternative suggerite**: lista personale ("fai due passi", "apri Anki", "leggi il libro") mostrata negli interventi, con apertura in un clic dei link produttivi. | S | R1 | P1 (abitudini), P21; LB-D604 |
-| INT-10 | **Micro-attività durante il ritardo**: lista delle cose da fare locale, link a Anki, una carta da un mazzo locale. | C | R2 | LB-D604 |
+| INT-09 | **Alternative suggerite**: lista personale ("fai due passi", "apri Anki", "leggi il libro") mostrata negli interventi, con apertura in un clic dei link produttivi. | S | R1 | P1 (abitudini), P21; GH |
+| INT-10 | **Micro-attività durante il ritardo**: lista delle cose da fare locale, link a Anki, una carta da un mazzo locale. | C | R2 | GH |
 | INT-11 | **Rotazione degli interventi** (opt-in) tra varianti equivalenti, con spiegazione *just-in-time*. | S | R2 | P5 |
-| INT-12 | **"Salva per dopo"**: aggiunge l'URL a una lista locale "Più tardi", accessibile dal popup e dalla dashboard; avviso facoltativo all'apertura della finestra consentita; riapertura in blocco. | S | R1 | P10 (FOMO); LB-D350, LB#774 |
-| INT-13 | **Periodo di grazia per il lavoro in corso**: se il blocco scatta su una pagina con input in corso o non salvato, mostrare un countdown non rinviabile di N secondi (default 45) per finire o copiare il testo, con pulsante "copia la bozza". | S | R1 | LB-D348, LB-D352, LB-D771 |
-| INT-14 | **Pass per singola pagina**: accesso a un URL specifico per N minuti senza sbloccare il resto del sito; uscire dalla pagina riattiva l'intervento. | S | R1 | LB-D526, LB-D687; Intention |
-| INT-15 | **Ripresa dei media**: al blocco, memorizzare la posizione dei video HTML5 (YouTube e generici) e ripristinarla al ritorno. | S | R2 | LB-D425, LB-D711 |
-| INT-16 | **Modalità solo testo**: caricare la pagina bloccando immagini e video del sito. | C | R2 | LB-D489 |
+| INT-12 | **"Salva per dopo"**: aggiunge l'URL a una lista locale "Più tardi", accessibile dal popup e dalla dashboard; avviso facoltativo all'apertura della finestra consentita; riapertura in blocco. | S | R1 | P10 (FOMO); GH |
+| INT-13 | **Periodo di grazia per il lavoro in corso**: se il blocco scatta su una pagina con input in corso o non salvato, mostrare un countdown non rinviabile di N secondi (default 45) per finire o copiare il testo, con pulsante "copia la bozza". | S | R1 | GH |
+| INT-14 | **Pass per singola pagina**: accesso a un URL specifico per N minuti senza sbloccare il resto del sito; uscire dalla pagina riattiva l'intervento. | S | R1 | GH; Intention |
+| INT-15 | **Ripresa dei media**: al blocco, memorizzare la posizione dei video HTML5 (YouTube e generici) e ripristinarla al ritorno. | S | R2 | GH |
+| INT-16 | **Modalità solo testo**: caricare la pagina bloccando immagini e video del sito. | C | R2 | GH |
 | INT-17 | **Coach con modello linguistico** opzionale (chiave dell'utente o modello sul dispositivo), con disclosure chiara sulla privacy. Solo ricerca. | C | F | Intention |
 
 ### 6.8 Applicazione dei blocchi e gestione delle tab (ENF)
@@ -583,73 +579,73 @@ Registro eventi locale ── tentativi, pause, motivi, manomissioni (ring buffe
 | ID | Requisito | Pri | Rel | Fonte |
 |---|---|---|---|---|
 | ENF-01 | **Blocco prima della navigazione**: le richieste `main_frame` verso target bloccati sono intercettate prima di raggiungere la rete (redirect DNR alla pagina dell'estensione). Nessun flash della pagina, nessun cookie impostato. | M | R1 | AMO:block-website, AMO:blocksite ("loads the page before blocking", cookie, richiesta al router); P20 |
-| ENF-02 | **Applicazione immediata al cambio di stato** (inizio di una finestra, budget esaurito, fine di una pausa): tutte le tab aperte che corrispondono vengono gestite entro 1 s. Per gruppo si può scegliere: tutte le tab, solo la tab attiva, solo le tab inattive. | M | R1 | AMO:impulse-blocker; LB#662, LB-D643, LB-D650 |
-| ENF-03 | **Navigazione SPA**: rilevare `pushState`, `replaceState` e cambi di hash (es. `youtube.com/shorts`) senza reagire alle semplici ancore sulla stessa pagina. | M | R1 | LB#717 |
-| ENF-04 | **Conservare l'URL originale e lo stato della tab**; pulsante "Riapri" quando il blocco termina; riapertura automatica facoltativa; **ripristino in blocco** di tutte le tab bloccate. | M | R1 | LB#87, LB#774; AMO:block-website ("destroys tabs") |
-| ENF-05 | Le tab bloccate **sopravvivono al ripristino della sessione** e alle tab fissate. | S | R1 | LB#87, LB#201 |
-| ENF-06 | **Cronologia**: le pagine dell'estensione non sporcano la cronologia; opzioni per aggiungere l'URL bloccato alla cronologia oppure per **cancellare le visite ai siti bloccati** (riduce l'autocompletamento tentatore). Il permesso `history` viene chiesto solo se l'opzione è attiva (non disponibile su Android). | S | R2 | LB-doc; LB-D699, LB-D480 |
-| ENF-07 | Il blocco non dipende da script della pagina e non può essere impedito da `beforeunload` o `onunload`. | M | R1 | LB#386 |
-| ENF-08 | **Blocco attivo dall'avvio del browser**, prima della prima navigazione (regole DNR persistenti). | M | R1 | LB-D568 |
-| ENF-09 | **Nessun loop**: la pagina di blocco e gli URL personalizzati sono esclusi automaticamente; protezione dal doppio ritardo o reindirizzamento e dalle collisioni con altri blocker. | M | R1 | LB-FAQ *custom-blocking-page*, LB#490, LB#123, LBC#14, LBC#28 |
-| ENF-10 | **Ricontrollo al ripristino dalla bfcache** e sul tasto Indietro. | M | R1 | LB#339, LB#43 |
-| ENF-11 | **Uscita elegante dallo schermo intero** prima di applicare un blocco o un filtro. | S | R1 | LB#47, LB#189, LB#261 |
+| ENF-02 | **Applicazione immediata al cambio di stato** (inizio di una finestra, budget esaurito, fine di una pausa): tutte le tab aperte che corrispondono vengono gestite entro 1 s. Per gruppo si può scegliere: tutte le tab, solo la tab attiva, solo le tab inattive. | M | R1 | AMO:impulse-blocker; GH |
+| ENF-03 | **Navigazione SPA**: rilevare `pushState`, `replaceState` e cambi di hash (es. `youtube.com/shorts`) senza reagire alle semplici ancore sulla stessa pagina. | M | R1 | GH |
+| ENF-04 | **Conservare l'URL originale e lo stato della tab**; pulsante "Riapri" quando il blocco termina; riapertura automatica facoltativa; **ripristino in blocco** di tutte le tab bloccate. | M | R1 | GH; AMO:block-website ("destroys tabs") |
+| ENF-05 | Le tab bloccate **sopravvivono al ripristino della sessione** e alle tab fissate. | S | R1 | GH |
+| ENF-06 | **Cronologia**: le pagine dell'estensione non sporcano la cronologia; opzioni per aggiungere l'URL bloccato alla cronologia oppure per **cancellare le visite ai siti bloccati** (riduce l'autocompletamento tentatore). Il permesso `history` viene chiesto solo se l'opzione è attiva (non disponibile su Android). | S | R2 | Doc; GH |
+| ENF-07 | Il blocco non dipende da script della pagina e non può essere impedito da `beforeunload` o `onunload`. | M | R1 | GH |
+| ENF-08 | **Blocco attivo dall'avvio del browser**, prima della prima navigazione (regole DNR persistenti). | M | R1 | GH |
+| ENF-09 | **Nessun loop**: la pagina di blocco e gli URL personalizzati sono esclusi automaticamente; protezione dal doppio ritardo o reindirizzamento e dalle collisioni con altri blocker. | M | R1 | Doc, GH |
+| ENF-10 | **Ricontrollo al ripristino dalla bfcache** e sul tasto Indietro. | M | R1 | GH |
+| ENF-11 | **Uscita elegante dallo schermo intero** prima di applicare un blocco o un filtro. | S | R1 | GH |
 | ENF-12 | **Fallback senza permessi host**: se l'utente revoca l'accesso ai siti, l'estensione ripiega su regole DNR di sola **rete bloccata** (che non richiedono permessi host, dove supportato) e avvisa. | S | R1 | [T2] |
-| ENF-13 | **Web app installate e widget**: best effort, con limiti documentati. | C | R2 | LB#265, LB#446 |
+| ENF-13 | **Web app installate e widget**: best effort, con limiti documentati. | C | R2 | GH |
 
 ### 6.9 Pause e override (BRK)
 
 | ID | Requisito | Pri | Rel | Fonte |
 |---|---|---|---|---|
-| BRK-01 | **Politica delle pause per gruppo**: consentite sì o no; consentite anche durante il lockdown sì o no. | M | R1 | LB-doc; LB-D367, LB-D586, LB-D706, LB-D613 |
-| BRK-02 | **Ambito della pausa**: questa pagina, questo sito, questo gruppo, tutti i gruppi che le consentono. | M | R1 | LB-D526, LB-D687 |
-| BRK-03 | **Durata**: fissa, oppure scelta dall'utente **fino a un massimo**, oppure da un elenco predefinito (es. 5, 10, 20 minuti). | M | R1 | LB-D743, LB-D667, LB-D520 |
-| BRK-04 | **Budget delle pause** per gruppo e globale: numero e/o **minuti totali** per ora, giorno, settimana, mese o periodo personalizzato. | M | R1 | LB-D594, LB-D511, LB-D742, LB-D741 |
-| BRK-05 | **Costo della pausa** per gruppo: nessuno, conferma, ritardo, sfida (INT-04), password, codice del partner (PRO-06). | M | R1 | LB-doc |
-| BRK-06 | **Motivo** della pausa (facoltativo o obbligatorio) registrato con data, ora e tempo effettivamente usato. | S | R1 | LB-D433 |
-| BRK-07 | La pausa **scade da sola** con riapplicazione immediata a tutte le tab coinvolte; avviso prima della scadenza. | M | R1 | LB#662, LB-D556; AMO:impulse-blocker |
-| BRK-08 | Modalità **"pausa a consumo"**: i minuti di pausa si consumano solo mentre si è effettivamente sul sito. | S | R1 | LB-D466, LBC#74 |
-| BRK-09 | **Annullare la pausa** in anticipo (rafforzamento, istantaneo). | M | R1 | LB "Cancel Override" |
-| BRK-10 | Pausa **visibile**: countdown nel badge e nel timer sovrapposto. | S | R1 | LB-D777, LB#601 |
-| BRK-11 | **Costo crescente**: ogni pausa aggiuntiva nello stesso periodo costa di più (ritardo più lungo, testo più lungo). | S | R2 | Intention; HN; LB-D450 |
+| BRK-01 | **Politica delle pause per gruppo**: consentite sì o no; consentite anche durante il lockdown sì o no. | M | R1 | Doc; GH |
+| BRK-02 | **Ambito della pausa**: questa pagina, questo sito, questo gruppo, tutti i gruppi che le consentono. | M | R1 | GH |
+| BRK-03 | **Durata**: fissa, oppure scelta dall'utente **fino a un massimo**, oppure da un elenco predefinito (es. 5, 10, 20 minuti). | M | R1 | GH |
+| BRK-04 | **Budget delle pause** per gruppo e globale: numero e/o **minuti totali** per ora, giorno, settimana, mese o periodo personalizzato. | M | R1 | GH |
+| BRK-05 | **Costo della pausa** per gruppo: nessuno, conferma, ritardo, sfida (INT-04), password, codice del partner (PRO-06). | M | R1 | Doc |
+| BRK-06 | **Motivo** della pausa (facoltativo o obbligatorio) registrato con data, ora e tempo effettivamente usato. | S | R1 | GH |
+| BRK-07 | La pausa **scade da sola** con riapplicazione immediata a tutte le tab coinvolte; avviso prima della scadenza. | M | R1 | GH; AMO:impulse-blocker |
+| BRK-08 | Modalità **"pausa a consumo"**: i minuti di pausa si consumano solo mentre si è effettivamente sul sito. | S | R1 | GH |
+| BRK-09 | **Annullare la pausa** in anticipo (rafforzamento, istantaneo). | M | R1 | Doc |
+| BRK-10 | Pausa **visibile**: countdown nel badge e nel timer sovrapposto. | S | R1 | GH |
+| BRK-11 | **Costo crescente**: ogni pausa aggiuntiva nello stesso periodo costa di più (ritardo più lungo, testo più lungo). | S | R2 | Intention; HN; GH |
 | BRK-12 | **"Ancora un minuto"**: una micro-pausa singola di 1 minuto per chiudere ciò che si sta facendo, una volta per periodo e per gruppo. | C | R2 | iOS Screen Time |
 
 ### 6.10 Sessioni focus, lockdown e Pomodoro (FOC)
 
 | ID | Requisito | Pri | Rel | Fonte |
 |---|---|---|---|---|
-| FOC-01 | **Sessione rapida** dal popup in al massimo 2 tocchi: blocca i gruppi scelti per X minuti o fino a un'ora precisa. | M | R1 | LB lockdown; Freedom |
-| FOC-02 | **Modalità allowlist**: durante la sessione è consentito solo un elenco di siti. | M | R1 | LB-D622; StayFocusd Nuclear; Freedom; Cold Turkey |
+| FOC-01 | **Sessione rapida** dal popup in al massimo 2 tocchi: blocca i gruppi scelti per X minuti o fino a un'ora precisa. | M | R1 | Doc; Freedom |
+| FOC-02 | **Modalità allowlist**: durante la sessione è consentito solo un elenco di siti. | M | R1 | GH; StayFocusd Nuclear; Freedom; Cold Turkey |
 | FOC-03 | **Sessione non interrompibile** (opzionale), con consenso esplicito, anteprima delle conseguenze e uscita solo tramite la procedura d'emergenza (PRO-15). | M | R1 | StayFocusd; Freedom *Locked Mode*; Cold Turkey |
-| FOC-04 | **Inizio ritardato** ("tra 10 minuti"). Le sessioni programmate e ricorrenti sono coperte da SCH-08 (R2). | S | R1 | LB-D510, LB-D413 |
+| FOC-04 | **Inizio ritardato** ("tra 10 minuti"). Le sessioni programmate e ricorrenti sono coperte da SCH-08 (R2). | S | R1 | GH |
 | FOC-05 | **Estendere** una sessione in corso è sempre possibile e istantaneo; accorciarla è un indebolimento. | S | R1 | Cold Turkey |
-| FOC-06 | **Cicli Pomodoro** con durate di lavoro e pausa configurabili, pause lunghe, avvio automatico, notifiche e suoni facoltativi; i gruppi sono bloccati nelle fasi di lavoro. | S | R2 | LB-D497; AMO:blocksite (25 minuti fissi) |
-| FOC-07 | **Notifica di fine sessione** e riepilogo (tempo, tentativi fermati). | S | R1 | LB-D355 |
+| FOC-06 | **Cicli Pomodoro** con durate di lavoro e pausa configurabili, pause lunghe, avvio automatico, notifiche e suoni facoltativi; i gruppi sono bloccati nelle fasi di lavoro. | S | R2 | GH; AMO:blocksite (25 minuti fissi) |
+| FOC-07 | **Notifica di fine sessione** e riepilogo (tempo, tentativi fermati). | S | R1 | GH |
 | FOC-08 | **Note di sessione** (cosa ho fatto). | C | R2 | Freedom |
-| FOC-09 | Il lockdown può **disattivare le pause** dei gruppi coinvolti (configurabile). | S | R1 | LB-D613 |
+| FOC-09 | Il lockdown può **disattivare le pause** dei gruppi coinvolti (configurabile). | S | R1 | GH |
 | FOC-10 | **Promemoria di pausa fisica** durante le sessioni lunghe (es. ogni 90 minuti). | C | R2 | P9 |
 
 ### 6.11 Protezione e anti-elusione (PRO)
 
 | ID | Requisito | Pri | Rel | Fonte |
 |---|---|---|---|---|
-| PRO-01 | **Livelli di protezione predefiniti**, spiegati con le loro conseguenze, impostabili globalmente e per gruppo: **Morbido** (conferma), **Equilibrato** (ritardo o domanda per indebolire, pause limitate), **Rigido** (cooling-off e sfida, impostazioni bloccate durante le finestre attive), **Blindato** (nessun indebolimento fino alla scadenza; solo uscita d'emergenza). | M | R1 | P8, P9; LB-doc |
-| PRO-02 | **Asimmetria**: le modifiche che rafforzano (aggiungere siti, estendere finestre, ridurre budget, avviare o estendere sessioni) sono **sempre istantanee**, anche a impostazioni bloccate; quelle che indeboliscono seguono la protezione. Il sistema classifica automaticamente ogni modifica. | M | R1 | P7; X1; LB#51, LB-D349, LB-D725, LB-D724 |
-| PRO-03 | **Cooling-off**: un indebolimento viene messo in coda per un tempo configurabile (da 1 ora a 7 giorni), resta visibile nell'elenco "Modifiche in sospeso", è annullabile e **richiede una conferma esplicita dopo l'attesa**; se non viene confermato entro una scadenza, decade. | M | R1 | X1 (RTS 12); P7; LB-D751, LB-D585; HN (K9: una settimana) |
-| PRO-04 | **Impostazioni bloccate** durante le finestre attive (per gruppo e globali), con stato "bloccato" visibile e motivazione. | M | R1 | LB-doc |
-| PRO-05 | **Requisiti di accesso alle impostazioni**: password (con hash), codice casuale configurabile (INT-04), fasce orarie, combinazione di più requisiti; la verifica avviene nel background, non solo nella UI. | M | R1 | LB-doc; LB-D649 |
-| PRO-06 | **Partner offline via TOTP**: un partner scansiona un QR con una qualsiasi app authenticator; per indebolire o fare una pausa serve il codice a 6 cifre del partner. Nessun server. Il segreto non viene mai più mostrato dopo la configurazione. | S | R2 | LB (password delegabile); BlockerX, Covenant Eyes (in versione offline) |
+| PRO-01 | **Livelli di protezione predefiniti**, spiegati con le loro conseguenze, impostabili globalmente e per gruppo: **Morbido** (conferma), **Equilibrato** (ritardo o domanda per indebolire, pause limitate), **Rigido** (cooling-off e sfida, impostazioni bloccate durante le finestre attive), **Blindato** (nessun indebolimento fino alla scadenza; solo uscita d'emergenza). | M | R1 | P8, P9; Doc |
+| PRO-02 | **Asimmetria**: le modifiche che rafforzano (aggiungere siti, estendere finestre, ridurre budget, avviare o estendere sessioni) sono **sempre istantanee**, anche a impostazioni bloccate; quelle che indeboliscono seguono la protezione. Il sistema classifica automaticamente ogni modifica. | M | R1 | P7; X1; GH |
+| PRO-03 | **Cooling-off**: un indebolimento viene messo in coda per un tempo configurabile (da 1 ora a 7 giorni), resta visibile nell'elenco "Modifiche in sospeso", è annullabile e **richiede una conferma esplicita dopo l'attesa**; se non viene confermato entro una scadenza, decade. | M | R1 | X1 (RTS 12); P7; GH; HN (K9: una settimana) |
+| PRO-04 | **Impostazioni bloccate** durante le finestre attive (per gruppo e globali), con stato "bloccato" visibile e motivazione. | M | R1 | Doc |
+| PRO-05 | **Requisiti di accesso alle impostazioni**: password (con hash), codice casuale configurabile (INT-04), fasce orarie, combinazione di più requisiti; la verifica avviene nel background, non solo nella UI. | M | R1 | Doc; GH |
+| PRO-06 | **Partner offline via TOTP**: un partner scansiona un QR con una qualsiasi app authenticator; per indebolire o fare una pausa serve il codice a 6 cifre del partner. Nessun server. Il segreto non viene mai più mostrato dopo la configurazione. | S | R2 | Doc (password delegabile); BlockerX, Covenant Eyes (in versione offline) |
 | PRO-07 | **Sblocco con chiave di sicurezza** (WebAuthn/FIDO2) conservata altrove. Da verificare la fattibilità nelle pagine dell'estensione. | C | F | Brick, talysman (HN 2026) |
-| PRO-08 | **Blocco delle pagine interne** che permettono di eludere i blocchi mentre una protezione è attiva: Firefox (`about:addons`, `about:debugging`, `about:config`, `about:support`, `about:profiles`), Chrome ed Edge (pagina estensioni, impostazioni, `chrome://flags`). Opzione per estendere le pause anche a queste pagine. Limiti documentati (Android, pagine aperte da riga di comando). | M | R1 | LB-doc; LB#736, LB#273 |
-| PRO-09 | **Navigazione privata**: verificare `isAllowedIncognitoAccess()`; guida in onboarding e avviso permanente nel centro protezione se l'accesso manca. | M | R1 | AMO:leechblock-ng; recensioni Chrome Web Store |
-| PRO-10 | **Procedura guidata di hardening**: genera i file di policy per Windows (`.reg`), macOS (`.mobileconfig`) e Linux (`policies.json` o JSON di Chrome) per: installazione forzata o bloccata dell'estensione; configurazione precaricata via managed storage; disattivazione di navigazione privata, modalità ospite, nuovi profili, modalità provvisoria e devtools. Con avvertenze esplicite e istruzioni di rimozione. | S | R2 | LB-FAQ (registro); LB-D368, LB-D614 |
-| PRO-11 | **Managed storage**: lettura della configurazione all'avvio; le regole gestite sono in sola lettura nella UI (Firefox desktop e Chrome; non disponibile su Firefox Android). | S | R2 | LB-vh 1.7.3; Block Site (Ray) |
-| PRO-12 | **Import e reset protetti**: importare una configurazione o fare un reset che **indebolisce** le protezioni attive equivale a un indebolimento (soggetto a cooling-off). | M | R1 | Lacuna di LeechBlock |
-| PRO-13 | **Rilevamento e registro delle manomissioni**: salti dell'orologio, riavvii con stato perso, permessi host revocati, accesso privato rimosso, estensione rimasta disattivata (rilevato alla riattivazione). Visibile nel centro protezione e allo sblocco successivo. | S | R1 | LB-FAQ *system-clock* |
-| PRO-14 | **Resistenza ai devtools**: lo stato bloccato è imposto dal background; modificare il DOM delle pagine di opzione non sblocca nulla. | M | R1 | LB-D364; AMO:blocksite (password aggirata rimuovendo un nodo HTML) |
-| PRO-15 | **Uscita d'emergenza** sempre disponibile, ad alta frizione: richiesta → attesa lunga (default 24 ore, configurabile tra 4 ore e 7 giorni) → frase da digitare → registro. È annullabile durante l'attesa e non richiede di contattare nessuno. | M | R1 | LB#306, LB-D410, LB-FAQ *reset-password*; X2 |
-| PRO-16 | **Protezione per gruppo** (password o livello diverso per ciascun gruppo). | S | R1 | LB-D454, LB-D644 |
-| PRO-17 | **Limiti di accesso alle impostazioni**: massimo N aperture al giorno, massimo X minuti per apertura. | C | R2 | LB-D583 |
-| PRO-18 | **Centro protezione**: checklist dei vettori di elusione noti con stato e rimedio (finestre private, permessi host, profili, modalità provvisoria, orologio, policy). | M | R1 | [Appendice B](#appendice-b--vettori-di-elusione-e-contromisure) |
+| PRO-08 | **Blocco delle pagine interne** che permettono di eludere i blocchi mentre una protezione è attiva: Firefox (`about:addons`, `about:debugging`, `about:config`, `about:support`, `about:profiles`), Chrome ed Edge (pagina estensioni, impostazioni, `chrome://flags`). Opzione per estendere le pause anche a queste pagine. Limiti documentati (Android, pagine aperte da riga di comando). | M | R1 | Doc; GH |
+| PRO-09 | **Navigazione privata**: verificare `isAllowedIncognitoAccess()`; guida in onboarding e avviso permanente nel centro protezione se l'accesso manca. | M | R1 | Recensioni AMO e Chrome Web Store |
+| PRO-10 | **Procedura guidata di hardening**: genera i file di policy per Windows (`.reg`), macOS (`.mobileconfig`) e Linux (`policies.json` o JSON di Chrome) per: installazione forzata o bloccata dell'estensione; configurazione precaricata via managed storage; disattivazione di navigazione privata, modalità ospite, nuovi profili, modalità provvisoria e devtools. Con avvertenze esplicite e istruzioni di rimozione. | S | R2 | Doc (registro); GH |
+| PRO-11 | **Managed storage**: lettura della configurazione all'avvio; le regole gestite sono in sola lettura nella UI (Firefox desktop e Chrome; non disponibile su Firefox Android). | S | R2 | Doc; Block Site (Ray) |
+| PRO-12 | **Import e reset protetti**: importare una configurazione o fare un reset che **indebolisce** le protezioni attive equivale a un indebolimento (soggetto a cooling-off). | M | R1 | Lacuna degli strumenti esistenti |
+| PRO-13 | **Rilevamento e registro delle manomissioni**: salti dell'orologio, riavvii con stato perso, permessi host revocati, accesso privato rimosso, estensione rimasta disattivata (rilevato alla riattivazione). Visibile nel centro protezione e allo sblocco successivo. | S | R1 | Doc |
+| PRO-14 | **Resistenza ai devtools**: lo stato bloccato è imposto dal background; modificare il DOM delle pagine di opzione non sblocca nulla. | M | R1 | GH; AMO:blocksite (password aggirata rimuovendo un nodo HTML) |
+| PRO-15 | **Uscita d'emergenza** sempre disponibile, ad alta frizione: richiesta → attesa lunga (default 24 ore, configurabile tra 4 ore e 7 giorni) → frase da digitare → registro. È annullabile durante l'attesa e non richiede di contattare nessuno. | M | R1 | GH, Doc; X2 |
+| PRO-16 | **Protezione per gruppo** (password o livello diverso per ciascun gruppo). | S | R1 | GH |
+| PRO-17 | **Limiti di accesso alle impostazioni**: massimo N aperture al giorno, massimo X minuti per apertura. | C | R2 | GH |
+| PRO-18 | **Centro protezione**: checklist dei vettori di elusione noti con stato e rimedio (finestre private, permessi host, profili, modalità provvisoria, orologio, policy). | M | R1 | [Appendice A](#appendice-a--vettori-di-elusione-e-contromisure) |
 | PRO-19 | **Nessun dark pattern**: niente blocco ingannevole della disinstallazione né messaggi colpevolizzanti; l'URL di disinstallazione (`setUninstallURL`) è disattivato per default e, se attivo, punta a una pagina statica del progetto senza parametri di tracciamento. | M | R1 | ETH-01 |
 
 ### 6.12 Rimozione degli elementi che distraggono (ELM)
@@ -662,7 +658,7 @@ Registro eventi locale ── tentativi, pause, motivi, manomissioni (ring buffe
 | ELM-04 | **Sostituire il feed** con contenuti dell'utente: obiettivo, citazione, cose da fare, lista "Più tardi". | C | R2 | News Feed Eradicator |
 | ELM-05 | **Feed su richiesta**: mostrare il contenuto nascosto dopo un clic e un breve ritardo, oppure limitarlo ai primi N elementi o a un budget di scroll. | C | R2 | P10, P23, P24 |
 | ELM-06 | **Nascondere le metriche** (like, visualizzazioni, karma). | C | R2 | HN (karma nascosto); demetricator |
-| ELM-07 | **Shorts e Reels** riprodotti nel player normale o con scroll infinito disattivato. | S | R2 | LB-D747; youtube-shorts-block |
+| ELM-07 | **Shorts e Reels** riprodotti nel player normale o con scroll infinito disattivato. | S | R2 | GH; youtube-shorts-block |
 | ELM-08 | Le rimozioni possono dipendere da finestre e gruppi (es. raccomandazioni nascoste solo in orario di lavoro). | S | R2 | — |
 
 ### 6.13 Motori di ricerca (SRC)
@@ -676,8 +672,8 @@ Registro eventi locale ── tentativi, pause, motivi, manomissioni (ring buffe
 
 | ID | Requisito | Pri | Rel | Fonte |
 |---|---|---|---|---|
-| STA-01 | **Tracciamento locale** di tempo e visite per i siti dei gruppi (per default) e, facoltativamente, di tutti i siti (opt-in esplicito); conservazione configurabile. | M | R1 | LB-doc; LB-D465 |
-| STA-02 | **Dashboard Insights**: oggi, settimana, mese, anno; per gruppo e per sito; andamento e confronto con il periodo precedente; leggibile su mobile. | M | R1 | LB-D465, LB#656 |
+| STA-01 | **Tracciamento locale** di tempo e visite per i siti dei gruppi (per default) e, facoltativamente, di tutti i siti (opt-in esplicito); conservazione configurabile. | M | R1 | Doc; GH |
+| STA-02 | **Dashboard Insights**: oggi, settimana, mese, anno; per gruppo e per sito; andamento e confronto con il periodo precedente; leggibile su mobile. | M | R1 | GH |
 | STA-03 | **Metriche dei tentativi**: accessi fermati, ritardi completati o abbandonati (*impulsi superati*), pause con motivo, sessioni focus. | M | R1 | P1, P3 |
 | STA-04 | **Framing sul tempo distratto** e linguaggio neutro e non giudicante. | S | R1 | P30, P27 |
 | STA-05 | **Riepilogo settimanale** locale con domande di riflessione ("è il tempo che volevi?") e suggerimenti di aggiustamento in un clic (stringere o allentare, con le regole di protezione). | S | R2 | P2, P12 |
@@ -690,7 +686,7 @@ Registro eventi locale ── tentativi, pause, motivi, manomissioni (ring buffe
 
 | ID | Requisito | Pri | Rel | Fonte |
 |---|---|---|---|---|
-| MOT-01 | **Nota "perché"** per gruppo, mostrata negli interventi e nell'editor, con frequenza sobria (P10: i promemoria possono infastidire). | S | R1 | LB-D491, LB-D470; P10 |
+| MOT-01 | **Nota "perché"** per gruppo, mostrata negli interventi e nell'editor, con frequenza sobria (P10: i promemoria possono infastidire). | S | R1 | GH; P10 |
 | MOT-02 | **Piani "se… allora…"** guidati nell'onboarding ("quando sento l'impulso di aprire X, farò Y"), collegati alle alternative di INT-09. | C | R2 | P21 |
 | MOT-03 | **Streak indulgenti** (opt-in): giorni in cui le regole sono state rispettate, con uno sgarro a settimana assorbito; mai punitivi. | C | R2 | Intention; Duolingo; P27 |
 | MOT-04 | **Gamification** (albero o animale virtuale). | W | — | Forest: fuori perimetro v1 |
@@ -699,10 +695,10 @@ Registro eventi locale ── tentativi, pause, motivi, manomissioni (ring buffe
 
 | ID | Requisito | Pri | Rel | Fonte |
 |---|---|---|---|---|
-| NOT-01 | **Timer sovrapposto**: trascinabile; dimensione, posizione e opacità configurabili; mostrato solo sotto una soglia (default 5 minuti); attivabile per gruppo; nascondibile per la visita; non mostrato per i blocchi permanenti; accessibile ai lettori di schermo. | M | R1 | LB-D550, LB-D685; AMO:leechblock-ng (timer fastidioso) |
-| NOT-02 | **Badge** sull'icona con il tempo residuo (soglia configurabile, senza il limite fisso dei 10 minuti) e tooltip. | M | R1 | LB-D369 |
-| NOT-03 | **Avviso prima del blocco** (N secondi o minuti prima) in pagina e/o come notifica di sistema. | M | R1 | LB-doc |
-| NOT-04 | **Notifiche di sistema** facoltative (permesso richiesto al momento del bisogno): fine sessione o lockdown, modifica in sospeso pronta da confermare, riepilogo settimanale. | S | R1 | LB-D355 |
+| NOT-01 | **Timer sovrapposto**: trascinabile; dimensione, posizione e opacità configurabili; mostrato solo sotto una soglia (default 5 minuti); attivabile per gruppo; nascondibile per la visita; non mostrato per i blocchi permanenti; accessibile ai lettori di schermo. | M | R1 | GH; AMO (timer fastidioso) |
+| NOT-02 | **Badge** sull'icona con il tempo residuo (soglia configurabile, senza il limite fisso dei 10 minuti) e tooltip. | M | R1 | GH |
+| NOT-03 | **Avviso prima del blocco** (N secondi o minuti prima) in pagina e/o come notifica di sistema. | M | R1 | Doc |
+| NOT-04 | **Notifiche di sistema** facoltative (permesso richiesto al momento del bisogno): fine sessione o lockdown, modifica in sospeso pronta da confermare, riepilogo settimanale. | S | R1 | GH |
 | NOT-05 | **Reality check** opt-in: promemoria periodico in pagina del tempo continuativo passato su un gruppo. | S | R2 | X1; P12 (Chirp); app Farhan |
 | NOT-06 | Rispetto di `prefers-reduced-motion`; nessun suono per default; suono facoltativo a fine pausa. | S | R1 | A11Y |
 
@@ -711,7 +707,7 @@ Registro eventi locale ── tentativi, pause, motivi, manomissioni (ring buffe
 | ID | Requisito | Pri | Rel | Fonte |
 |---|---|---|---|---|
 | LST-01 | **Template integrati** e modificabili: Social, Video, News, Shopping, Giochi, Scommesse, Forum, Adulti (base), con domini alternativi e mobili già inclusi. | M | R1 | Freedom, BlockSite, Cold Turkey |
-| LST-02 | **Abbonamenti a liste esterne** (HTTPS, opt-in): intervallo di aggiornamento, data dell'ultimo aggiornamento, anteprima delle differenze; formati supportati: lista di domini, file hosts, uBlacklist, AdGuard; nessuna telemetria. Sostituisce "Load list of sites from URL" di LeechBlock. | S | R2 | LB-FAQ *load-from-url*; LB-D768; uBlacklist |
+| LST-02 | **Abbonamenti a liste esterne** (HTTPS, opt-in): intervallo di aggiornamento, data dell'ultimo aggiornamento, anteprima delle differenze; formati supportati: lista di domini, file hosts, uBlacklist, AdGuard; nessuna telemetria. | S | R2 | Doc; GH; uBlacklist |
 | LST-03 | **Condividere un gruppo** come file o testo da incollare. | S | R1 | — |
 | LST-04 | **Repository comunitario** di template e regole di rimozione su GitHub. | C | R2 | — |
 
@@ -719,23 +715,23 @@ Registro eventi locale ── tentativi, pause, motivi, manomissioni (ring buffe
 
 | ID | Requisito | Pri | Rel | Fonte |
 |---|---|---|---|---|
-| DAT-01 | **Export e import** della configurazione completa in JSON con schema versionato; scelta se includere statistiche e segreti (solo hash). | M | R1 | LB-doc |
-| DAT-02 | **Import da LeechBlock NG** (export in testo e JSON) con conversione nel modello a gruppi e policy e report di ciò che non è mappabile. Import anche da liste semplici, Block Site (Ray) e uBlacklist. | M | R1 | Percorso di migrazione; Time Tracker (import) |
-| DAT-03 | **Backup locali automatici**: snapshot a rotazione prima di ogni modifica (ultimi 20) più uno al giorno per 30 giorni; verifica di integrità all'avvio; ripristino guidato in caso di corruzione. | M | R1 | LB#63, LB#75, LB#26; AMO (impostazioni perse) |
-| DAT-04 | Nome del file di export con **data e ora**. | S | R1 | LB-D625 |
-| DAT-05 | Export e import **funzionanti su Android** (download e selettore di file). | M | R1 | LB-vh; HN |
-| DAT-06 | **Reset** di fabbrica soggetto alle regole di protezione (PRO-12). | M | R1 | LB-FAQ *start-over* |
+| DAT-01 | **Export e import** della configurazione completa in JSON con schema versionato; scelta se includere statistiche e segreti (solo hash). | M | R1 | Doc |
+| DAT-02 | **Import di liste di siti**: domini, file hosts, sintassi uBlock Origin / AdGuard e uBlacklist, con report delle righe non riconosciute. | M | R1 | Percorso di migrazione; Time Tracker (import) |
+| DAT-03 | **Backup locali automatici**: snapshot a rotazione prima di ogni modifica (ultimi 20) più uno al giorno per 30 giorni; verifica di integrità all'avvio; ripristino guidato in caso di corruzione. | M | R1 | GH; AMO (impostazioni perse) |
+| DAT-04 | Nome del file di export con **data e ora**. | S | R1 | GH |
+| DAT-05 | Export e import **funzionanti su Android** (download e selettore di file). | M | R1 | Doc; HN |
+| DAT-06 | **Reset** di fabbrica soggetto alle regole di protezione (PRO-12). | M | R1 | Doc |
 | DAT-07 | **Migrazioni di schema** automatiche con rollback in caso di errore; i campi sconosciuti non vengono mai eliminati. | M | R1 | REL |
 | DAT-08 | **Backup verso destinazioni scelte dall'utente** (file system, WebDAV). | C | R3 | Time Tracker |
-| DAT-09 | **Sincronizzazione** cifrata end-to-end tra dispositivi. Il modello dati deve prevederla fin dalla v1: ID stabili, versioni e timestamp per entità, tombstone per le cancellazioni. | W (v1) | R3 | LB#19, LB#623, LB#100; HN |
+| DAT-09 | **Sincronizzazione** cifrata end-to-end tra dispositivi. Il modello dati deve prevederla fin dalla v1: ID stabili, versioni e timestamp per entità, tombstone per le cancellazioni. | W (v1) | R3 | GH; HN |
 
 ### 6.19 Automazione e integrazioni locali (API)
 
 | ID | Requisito | Pri | Rel | Fonte |
 |---|---|---|---|---|
-| API-01 | **Scorciatoie da tastiera** (desktop): apri il popup, avvia una sessione, blocca il sito corrente, apri la dashboard. Abilitate solo se l'API `commands` esiste (su Android non esiste). | S | R1 | LB-vh 1.6.7; LB#531 |
-| API-02 | **Menu contestuale** (desktop): blocca questo sito, pagina o link; avvia una sessione. | S | R1 | LB-doc |
-| API-03 | **Interfaccia di automazione locale**: messaggi da estensioni in allowlist (`onMessageExternal`) e link profondi a pagine dell'estensione con parametri. Senza autenticazione sono ammesse **solo azioni di rafforzamento** (es. avviare una sessione). | C | R2 | LB-D690, LB#246, LB-D760, LB-D759 |
+| API-01 | **Scorciatoie da tastiera** (desktop): apri il popup, avvia una sessione, blocca il sito corrente, apri la dashboard. Abilitate solo se l'API `commands` esiste (su Android non esiste). | S | R1 | Doc; GH |
+| API-02 | **Menu contestuale** (desktop): blocca questo sito, pagina o link; avvia una sessione. | S | R1 | Doc |
+| API-03 | **Interfaccia di automazione locale**: messaggi da estensioni in allowlist (`onMessageExternal`) e link profondi a pagine dell'estensione con parametri. Senza autenticazione sono ammesse **solo azioni di rafforzamento** (es. avviare una sessione). | C | R2 | GH |
 | API-04 | **Companion nativo** facoltativo (native messaging) per estendere i blocchi ad altri browser o app. | C | F | HN; Cold Turkey |
 
 ### 6.20 Onboarding e aiuto (ONB)
@@ -743,30 +739,30 @@ Registro eventi locale ── tentativi, pause, motivi, manomissioni (ring buffe
 | ID | Requisito | Pri | Rel | Fonte |
 |---|---|---|---|---|
 | ONB-01 | **Procedura di primo avvio** (al massimo 2 minuti, saltabile): obiettivo → template → finestre o limite → stile d'intervento → livello di protezione → verifica permessi → riepilogo. | M | R1 | AMO (UX confusa) |
-| ONB-02 | **Verifica e guida dei permessi**: accesso a tutti i siti, finestre private, notifiche; istruzioni specifiche per browser e piattaforma. | M | R1 | LB-doc (Quick Start) |
-| ONB-03 | **Aiuto contestuale** ed esempi accanto a ogni campo; riepilogo in linguaggio naturale sempre visibile nell'editor. | M | R1 | LB-FAQ |
-| ONB-04 | **Validazione** che impedisce le configurazioni "che non bloccano nulla" (nessun target, nessun giorno, nessuna condizione, policy irraggiungibili) con messaggi chiari. | M | R1 | LB-FAQ *nothing-blocked* |
-| ONB-05 | **Modalità semplice e avanzata**. | S | R1 | LB-vh 1.6.4 |
-| ONB-06 | **Documentazione offline** inclusa nell'estensione e opzione per consentire sempre il sito della documentazione. | S | R1 | LB-doc |
+| ONB-02 | **Verifica e guida dei permessi**: accesso a tutti i siti, finestre private, notifiche; istruzioni specifiche per browser e piattaforma. | M | R1 | Doc (Quick Start) |
+| ONB-03 | **Aiuto contestuale** ed esempi accanto a ogni campo; riepilogo in linguaggio naturale sempre visibile nell'editor. | M | R1 | Doc |
+| ONB-04 | **Validazione** che impedisce le configurazioni "che non bloccano nulla" (nessun target, nessun giorno, nessuna condizione, policy irraggiungibili) con messaggi chiari. | M | R1 | Doc |
+| ONB-05 | **Modalità semplice e avanzata**. | S | R1 | Doc |
+| ONB-06 | **Documentazione offline** inclusa nell'estensione e opzione per consentire sempre il sito della documentazione. | S | R1 | Doc |
 | ONB-07 | **Spiegazione just-in-time** prima di attivare funzioni severe (sessione non interrompibile, livello Blindato), con anteprima di cosa sarà impossibile fare. | M | R1 | P5 |
 
 ### 6.21 Diagnostica (DIA)
 
 | ID | Requisito | Pri | Rel | Fonte |
 |---|---|---|---|---|
-| DIA-01 | **Pagina di diagnostica**: regole compilate (numero di regole DNR rispetto ai limiti), stato dei permessi, registro locale delle decisioni recenti (buffer circolare, disattivabile), contatori di prestazione. | M | R1 | LB (modalità diagnostica) |
+| DIA-01 | **Pagina di diagnostica**: regole compilate (numero di regole DNR rispetto ai limiti), stato dei permessi, registro locale delle decisioni recenti (buffer circolare, disattivabile), contatori di prestazione. | M | R1 | Doc (modalità diagnostica) |
 | DIA-02 | **"Copia report diagnostico"** con dati redatti (nessun URL, salvo scelta dell'utente) da allegare alle issue GitHub. | S | R1 | — |
-| DIA-03 | **Autotest**: verifica che il blocco funzioni aprendo una pagina di prova coperta da una regola di test. | S | R1 | LB-FAQ *nothing-blocked* |
+| DIA-03 | **Autotest**: verifica che il blocco funzioni aprendo una pagina di prova coperta da una regola di test. | S | R1 | Doc |
 
 ### 6.22 Impostazioni generali (SET)
 
 | ID | Requisito | Pri | Rel | Fonte |
 |---|---|---|---|---|
-| SET-01 | **Tema** chiaro, scuro o di sistema, alto contrasto, colore d'accento. | M | R1 | LB-doc |
-| SET-02 | **Lingua** scelta indipendentemente da quella del browser. | M | R1 | LB-D782 |
-| SET-03 | Formato orario 12/24 h, inizio della settimana, ora di inizio del giorno, formato della data. | M | R1 | LB-doc; LB-D602 |
-| SET-04 | **Gestione dei gruppi**: numero illimitato, riordino per trascinamento, duplicazione, archiviazione o disattivazione, colore e icona, ricerca e filtro. | M | R1 | LB-D709 |
-| SET-05 | Attivazione e disattivazione di menu contestuale, badge e timer. | S | R1 | LB-doc |
+| SET-01 | **Tema** chiaro, scuro o di sistema, alto contrasto, colore d'accento. | M | R1 | Doc |
+| SET-02 | **Lingua** scelta indipendentemente da quella del browser. | M | R1 | GH |
+| SET-03 | Formato orario 12/24 h, inizio della settimana, ora di inizio del giorno, formato della data. | M | R1 | Doc; GH |
+| SET-04 | **Gestione dei gruppi**: numero illimitato, riordino per trascinamento, duplicazione, archiviazione o disattivazione, colore e icona, ricerca e filtro. | M | R1 | GH |
+| SET-05 | Attivazione e disattivazione di menu contestuale, badge e timer. | S | R1 | Doc |
 
 ---
 
@@ -790,7 +786,7 @@ Registro eventi locale ── tentativi, pause, motivi, manomissioni (ring buffe
 |---|---|---|
 | SEC-01 | Password salvate solo come hash con sale, tramite WebCrypto (PBKDF2-SHA256 con almeno 600.000 iterazioni, in linea con le raccomandazioni OWASP) o Argon2id (WASM); confronto a tempo costante; nessun segreto in chiaro negli export per default. | M |
 | SEC-02 | CSP rigorosa per tutte le pagine dell'estensione (niente `eval`, niente script inline, niente risorse remote, incluso `url()` nel CSS personalizzato). | M |
-| SEC-03 | **Sicurezza delle regex**: validazione, limiti di lunghezza e complessità, rifiuto dei pattern a rischio di backtracking catastrofico; preferenza per la valutazione via DNR (RE2) o con un motore a tempo lineare (LB#778). | M |
+| SEC-03 | **Sicurezza delle regex**: validazione, limiti di lunghezza e complessità, rifiuto dei pattern a rischio di backtracking catastrofico; preferenza per la valutazione via DNR (RE2) o con un motore a tempo lineare. | M |
 | SEC-04 | Validazione di schema e dimensione dei file importati; nessuna interpretazione di HTML importato. | M |
 | SEC-05 | Messaggistica interna con verifica del mittente; messaggi esterni solo da un'allowlist e solo per azioni di rafforzamento. | M |
 | SEC-06 | Dipendenze minime, lockfile, audit automatico (Dependabot o Renovate), SBOM nelle release, policy di disclosure delle vulnerabilità (`SECURITY.md`). | S |
@@ -811,7 +807,7 @@ Registro eventi locale ── tentativi, pause, motivi, manomissioni (ring buffe
 | ID | Requisito | Pri |
 |---|---|---|
 | REL-01 | La fonte di verità è lo storage persistente. All'avvio e al risveglio del background la riconciliazione è idempotente: le regole DNR vengono ricalcolate dalla configurazione e confrontate con quelle installate. | M |
-| REL-02 | **Rilevamento delle funzionalità** e degrado controllato: nessun crash se un'API manca (LB#531). | M |
+| REL-02 | **Rilevamento delle funzionalità** e degrado controllato: nessun crash se un'API manca. | M |
 | REL-03 | **Test automatici**: unità (motore delle regole, contabilità del tempo con orologio simulato, classificatore rafforzamento/indebolimento), integrazione (Playwright o `web-ext` su Firefox e Chrome), smoke test su Firefox per Android a ogni release. | M |
 | REL-04 | **Nessun fallimento silenzioso**: se l'applicazione dei blocchi è compromessa (permessi revocati, limiti DNR superati, errori), l'utente viene avvisato in modo visibile. | M |
 | REL-05 | Gli aggiornamenti preservano sempre i dati (DAT-07); canale beta pubblico prima delle release stabili. | S |
@@ -820,10 +816,10 @@ Registro eventi locale ── tentativi, pause, motivi, manomissioni (ring buffe
 
 | ID | Requisito | Pri |
 |---|---|---|
-| COMP-01 | **Target ufficiali**: Firefox desktop (release corrente ed ESR corrente), Firefox per Android (release corrente), Chrome stabile (versione minima 121, per i limiti DNR attuali), Edge stabile. **Best effort**: Brave, Vivaldi, Opera. **Non target**: Safari, Tor Browser (LB#280), Chromium mobile. | M |
+| COMP-01 | **Target ufficiali**: Firefox desktop (release corrente ed ESR corrente), Firefox per Android (release corrente), Chrome stabile (versione minima 121, per i limiti DNR attuali), Edge stabile. **Best effort**: Brave, Vivaldi, Opera. **Non target**: Safari, Tor Browser, Chromium mobile. | M |
 | COMP-02 | **Un'unica base di codice MV3** con adattatori per piattaforma (service worker su Chrome, event page su Firefox). | M |
 | COMP-03 | Su **Android**: UI touch e responsive; nessuna dipendenza da `commands`, `menus`, `windows`, `history`, `sessions`, `storage.managed`. | M |
-| COMP-04 | Convivenza con altri blocker e ad blocker (uBO, AdGuard) senza loop né conflitti di redirect (LBC#28). | S |
+| COMP-04 | Convivenza con altri blocker e ad blocker (uBO, AdGuard) senza loop né conflitti di redirect. | S |
 
 ### 7.6 Accessibilità (A11Y)
 
@@ -840,9 +836,9 @@ Registro eventi locale ── tentativi, pause, motivi, manomissioni (ring buffe
 | ID | Requisito | Pri |
 |---|---|---|
 | I18N-01 | Tutte le stringhe esternalizzate, con plurali ICU e contesto per i traduttori. | M |
-| I18N-02 | Supporto RTL (LeechBlock ha già una comunità che traduce in ebraico). | S |
-| I18N-03 | **Inglese come lingua principale** (lingua sorgente di UI, documentazione, repository e schede degli store); italiano come prima traduzione al lancio; altre lingue dalla comunità tramite piattaforma (Weblate o Crowdin) (LB#422, LB#204). | M |
-| I18N-04 | Formati di data e ora localizzati; parole chiave Unicode e lingue senza spazi gestite correttamente (LB#180, LB-D596). | S |
+| I18N-02 | Supporto RTL (lingue scritte da destra a sinistra, come ebraico e arabo). | S |
+| I18N-03 | **Inglese come lingua principale** (lingua sorgente di UI, documentazione, repository e schede degli store); italiano come prima traduzione al lancio; altre lingue dalla comunità tramite piattaforma (Weblate o Crowdin). | M |
+| I18N-04 | Formati di data e ora localizzati; parole chiave Unicode e lingue senza spazi gestite correttamente. | S |
 
 ### 7.8 Usabilità (USAB)
 
@@ -860,7 +856,7 @@ Registro eventi locale ── tentativi, pause, motivi, manomissioni (ring buffe
 | MAINT-01 | TypeScript; **motore delle regole puro**, indipendente dal browser e testabile; adattatori di piattaforma separati; lint, formattazione e CI su ogni pull request. | M |
 | MAINT-02 | Decisioni architetturali documentate (ADR) e documentazione per sviluppatori. | S |
 | MAINT-03 | Pubblicazione su AMO (con compatibilità Android), Chrome Web Store ed Edge Add-ons; sorgenti e istruzioni di build riproducibile per la revisione AMO. | M |
-| MAINT-04 | **Licenza** copyleft (raccomandata GPL-3.0-or-later, vedi [§12](#12-decisioni-aperte)); `CONTRIBUTING`, codice di condotta, template per issue e PR, etichette, gestione dei duplicati (LB-D545), Discussions per le idee, roadmap pubblica. | M |
+| MAINT-04 | **Licenza** copyleft (raccomandata GPL-3.0-or-later, vedi [§12](#12-decisioni-aperte)); `CONTRIBUTING`, codice di condotta, template per issue e PR, etichette, gestione dei duplicati, Discussions per le idee, roadmap pubblica. | M |
 | MAINT-05 | Le regole di siti specifici (ELM, mirror, template) vivono in file di dati separati, revisionabili dalla comunità senza toccare il codice. | S |
 
 ### 7.10 Etica (ETH)
@@ -941,7 +937,7 @@ Dashboard
 │   ├── Aspetto e lingua
 │   ├── Timer, badge, notifiche
 │   ├── Misurazione del tempo (inattività, audio, …)
-│   ├── Dati (backup, import/export, migrazione da LeechBlock, reset)
+│   ├── Dati (backup, import/export, import di liste, reset)
 │   ├── Privacy (cosa conserviamo, connessioni di rete)
 │   └── Diagnostica
 └── Aiuto (guida offline, FAQ, informazioni, licenza)
@@ -1181,9 +1177,9 @@ Tono: seconda persona, frasi brevi, verbi attivi, nessun gergo nella modalità s
 
 ## 9. Roadmap e perimetro dei rilasci
 
-### 9.1 R1 — v1.0 "LeechBlock fatto meglio" (MVP)
+### 9.1 R1 — v1.0 (MVP)
 
-**Obiettivo:** parità con le funzioni di LeechBlock usate più spesso, risolvendo i suoi problemi principali (affidabilità, prestazioni, UX, mobile, override troppo grossolani) e introducendo i differenziatori a basso costo e alto impatto.
+**Obiettivo:** le funzioni più usate della categoria, risolvendo i problemi ricorrenti degli strumenti esistenti (affidabilità, prestazioni, UX, mobile, pause troppo grossolane) e introducendo i differenziatori a basso costo e alto impatto.
 
 | Area | Inclusi in R1 |
 |---|---|
@@ -1203,7 +1199,7 @@ Tono: seconda persona, frasi brevi, verbi attivi, nessun gergo nella modalità s
 | Altro | API-01, API-02, ONB-01…07, DIA-01…03, SET-01…05 |
 | Non funzionali | tutti i requisiti M di §7 |
 
-**Criterio di uscita di R1:** tutti i requisiti M di R1 implementati e testati su Firefox desktop, Firefox Android e Chrome; import di almeno 10 configurazioni reali di LeechBlock senza perdite non segnalate; test di usabilità con almeno 5 persone (USAB-01); nessun bug critico aperto.
+**Criterio di uscita di R1:** tutti i requisiti M di R1 implementati e testati su Firefox desktop, Firefox Android e Chrome; test di usabilità con almeno 5 persone (USAB-01); nessun bug critico aperto.
 
 ### 9.2 R2 — v1.x "Precisione e frizione intelligente"
 
@@ -1230,7 +1226,7 @@ Coach LLM opzionale (INT-17), chiave di sicurezza come fattore di sblocco (PRO-0
 | Monetizzazione tramite dati, pubblicità o upsell invasivi | ETH-01. |
 | Gamification competitiva e social (classifiche) | Rischio di vergogna e di confronto; non supportata dalle evidenze. |
 | Safari | Fuori dai target dichiarati. |
-| Filtraggio DNS o di rete a livello di sistema | Fuori dal perimetro di un'estensione (LB#735). |
+| Filtraggio DNS o di rete a livello di sistema | Fuori dal perimetro di un'estensione. |
 
 ---
 
@@ -1240,14 +1236,14 @@ Coach LLM opzionale (INT-17), chiave di sicurezza come fattore di sblocco (PRO-0
 |---|---|---|---|
 | Lacune o regressioni delle API su Firefox Android | Media | Alto | Rilevamento delle funzionalità (REL-02), test su Android a ogni release (REL-03), canale beta. |
 | Ulteriori restrizioni di MV3 o delle policy degli store | Media | Alto | Approccio DNR-first, nessun codice remoto, disclosure dei permessi chiara. |
-| Scope creep (LeechBlock ha quasi 10 anni di funzioni) | Alta | Medio | Perimetro R1 rigoroso; tutto il resto passa da Discussions e roadmap. |
+| Scope creep (gli strumenti maturi accumulano anni di funzioni) | Alta | Medio | Perimetro R1 rigoroso; tutto il resto passa da Discussions e roadmap. |
 | Manutenzione delle regole sugli elementi dei siti | Alta | Medio | Regole come dati (ELM-02), comunità, test automatici sui selettori, rilascio indipendente delle liste. |
 | Utenti che si chiudono fuori da soli | Media | Alto | Uscita d'emergenza (PRO-15), anteprime (ONB-07), livelli spiegati. |
 | Diffidenza verso il permesso "tutti i siti" | Alta | Medio | Open source, informativa chiara, nessuna rete, build riproducibili. |
 | Prestazioni con liste enormi o molte regex | Media | Medio | Compilazione in DNR, limiti e fallback (PERF-05), diagnostica. |
 | Sfide anti-elusione poco accessibili | Media | Medio | Alternative accessibili (A11Y-05). |
 | Efficacia modesta o in calo nel tempo (abituazione) | Media | Medio | Varietà opzionale, contesto, frizione leggera ma sostenibile (P4, P5). |
-| Bus factor (LeechBlock dipende da un solo manutentore) | Media | Alto | Governance aperta, documentazione, revisione del codice, più manutentori con diritti di release. |
+| Bus factor (molti progetti open source della categoria dipendono da un solo manutentore) | Media | Alto | Governance aperta, documentazione, revisione del codice, più manutentori con diritti di release. |
 
 ---
 
@@ -1255,7 +1251,7 @@ Coach LLM opzionale (INT-17), chiave di sicurezza come fattore di sblocco (PRO-0
 
 | # | Decisione | Opzioni | Raccomandazione |
 |---|---|---|---|
-| D1 | Licenza | GPL-3.0-or-later · MPL-2.0 · MIT | **GPL-3.0-or-later**: garantisce che i fork restino aperti e verificabili (gli utenti diffidano delle estensioni chiuse, vedi Unhook). Il codice MPL-2.0 di LeechBlock resta riutilizzabile, perché MPL-2.0 è compatibile con la GPL. |
+| D1 | Licenza | GPL-3.0-or-later · MPL-2.0 · MIT | **GPL-3.0-or-later**: garantisce che i fork restino aperti e verificabili (gli utenti diffidano delle estensioni chiuse, vedi Unhook). |
 | D2 | Manifest su Firefox | MV3 · MV2 (`webRequest` bloccante) | **MV3 su entrambi i browser**, con DNR come meccanismo primario; `webRequest` di Firefox solo per i casi limite, dietro un adattatore. |
 | D3 | Framework UI | Svelte · Preact · Lit · vanilla | Scegliere tramite ADR dopo un prototipo, misurando bundle e memoria del popup. |
 | D4 | Intervento predefinito nei template | Blocco · ritardo/intenzione | **Ritardo con domanda d'intenzione** per i siti "tentazione"; blocco per le finestre esplicite e le sessioni (P3, P4, P8). |
@@ -1264,7 +1260,7 @@ Coach LLM opzionale (INT-17), chiave di sicurezza come fattore di sblocco (PRO-0
 | D7 | Attesa predefinita dell'uscita d'emergenza | 4 h · 24 h · 72 h | 24 h, configurabile tra 4 ore e 7 giorni. |
 | D8 | Partner TOTP in R1 o R2 | — | R2, per contenere il perimetro di R1. |
 | D9 | Hosting e firma delle liste comunitarie | Raw GitHub · release firmate | Release versionate con checksum; cambio di fonte sempre opt-in. |
-| D10 | Riutilizzo del codice di LeechBlock | Riuso selettivo (MPL) · riscrittura | Riscrittura con architettura nuova; riuso puntuale ammesso nel rispetto della MPL (intestazioni dei file). |
+| D10 | Codice | Riuso di codice esistente · scrittura da zero | Scrittura da zero con un'architettura propria. |
 | D11 | Misurare l'efficacia senza telemetria | Nessuna misura · export volontario | Export anonimo volontario per studi, mai automatico. |
 
 ---
@@ -1372,111 +1368,49 @@ Funzionalità: Uscita d'emergenza (PRO-15)
 
 | Richiesta o problema (fonte) | Requisiti |
 |---|---|
-| Override con limite in tempo (LB-D594) | BRK-04, BRK-08 |
-| Blocco di iframe e risorse incorporate (LB-D402, LB#756) | MAT-13 |
-| Pagina senza immagini e video (LB-D489) | INT-16 |
-| Motivo e registro degli override (LB-D433) | BRK-06, STA-03 |
-| Non perdere il commento in scrittura (LB-D348, LB-D352) | INT-13 |
-| Ripresa del video (LB-D425, LB-D711) | INT-15 |
-| Override per set, pagina o URL (LB-D367, LB-D526, LB-D687) | BRK-01, BRK-02, INT-14 |
-| Limite di visite (LB#34, LB-D610, LB-D431) | LIM-04, SEM-08 |
-| Note per set (LB-D491) | MOT-01, INT-01 |
-| Limitare l'accesso alle opzioni (LB-D583, LB-D751) | PRO-03, PRO-17 |
-| Sfide alternative, divieto di incollare (LB-D371, LB-D467, LB-D548) | INT-04 |
-| Password per set (LB-D454) | PRO-16 |
-| Date specifiche, ricorrenze mensili (LB-D506, LB-D511) | SCH-05, BRK-04 |
-| Statistiche dettagliate (LB-D465) | STA-02 |
-| Countdown nascosto o casuale (LB-D397, LB-D398) | INT-02 |
-| Sessione con allowlist (LB-D622) | FOC-02 |
-| Lockdown ritardato o programmato (LB-D510, LB-D413) | FOC-04, SCH-08 |
-| Durata scelta dall'utente (LB-D739) | LIM-06, INT-03 |
-| Tempo guadagnato (LB-D627) | LIM-08 |
-| Compatibilità della sintassi con uBO e AdGuard (LB-D660) | MAT-05 |
-| Più di 30 set, sotto-set (LB-D709, LB-D523) | SET-04, MAT-18 |
-| API per programmi esterni (LB-D690, LB#246) | API-03 |
-| Fasce notturne (LB-FAQ, LB#654) | SCH-01 |
-| Sincronizzazione (LB#19) | DAT-09 (R3) |
-| CPU alta, molte tab (LB#268, LB#53, AMO) | PERF-01, PERF-03 |
-| Impostazioni perse (LB#63, LB#75, AMO) | DAT-03, DAT-07, REL-01 |
-| Conteggio durante la sospensione (LB#122, LBC#18) | TIM-02, SCH-07 |
-| Android: conteggio ad app minimizzata (LB#81, LB#495) | TIM-04 |
-| Android rotto da API mancante (LB#531) | REL-02, API-01 |
+| Override con limite in tempo | BRK-04, BRK-08 |
+| Blocco di iframe e risorse incorporate | MAT-13 |
+| Pagina senza immagini e video | INT-16 |
+| Motivo e registro degli override | BRK-06, STA-03 |
+| Non perdere il commento in scrittura | INT-13 |
+| Ripresa del video | INT-15 |
+| Override per gruppo, pagina o URL | BRK-01, BRK-02, INT-14 |
+| Limite di visite | LIM-04, SEM-08 |
+| Note per gruppo | MOT-01, INT-01 |
+| Limitare l'accesso alle opzioni | PRO-03, PRO-17 |
+| Sfide alternative, divieto di incollare | INT-04 |
+| Password per gruppo | PRO-16 |
+| Date specifiche, ricorrenze mensili | SCH-05, BRK-04 |
+| Statistiche dettagliate | STA-02 |
+| Countdown nascosto o casuale | INT-02 |
+| Sessione con allowlist | FOC-02 |
+| Lockdown ritardato o programmato | FOC-04, SCH-08 |
+| Durata scelta dall'utente | LIM-06, INT-03 |
+| Tempo guadagnato | LIM-08 |
+| Compatibilità della sintassi con uBO e AdGuard | MAT-05 |
+| Molti gruppi, sotto-gruppi | SET-04, MAT-18 |
+| API per programmi esterni | API-03 |
+| Fasce notturne (Doc, GH) | SCH-01 |
+| Sincronizzazione | DAT-09 (R3) |
+| CPU alta, molte tab (GH, AMO) | PERF-01, PERF-03 |
+| Impostazioni perse (GH, AMO) | DAT-03, DAT-07, REL-01 |
+| Conteggio durante la sospensione | TIM-02, SCH-07 |
+| Android: conteggio ad app minimizzata | TIM-04 |
+| Android rotto da API mancante | REL-02, API-01 |
 | Bypass in incognito (AMO, Chrome Web Store) | PRO-09, PRO-10 |
 | Pagina caricata prima del blocco, cookie (AMO:block-website, AMO:blocksite) | ENF-01 |
 | Pausa che non riblocca (AMO:impulse-blocker) | BRK-07, ENF-02 |
 | Tab distrutte (AMO:block-website) | ENF-04 |
 | Elementi che si rompono a ogni restyling (AMO:unhook, socialfocus) | ELM-02, MAINT-05 |
 | Tono colpevolizzante (AMO:one-sec) | INT-01, §8.5, ETH-04 |
-| Opzioni bloccate per sempre (LB#306, LB-D410) | PRO-15 |
-| ReDoS nelle regex importate (LB#778) | SEC-03 |
-| Aggiramento riordinando i set (LB#252) | SEM-03 |
-| Eccezione che sopprime i timer di altri set (LB-D710) | SEM-04, TIM-07 |
+| Opzioni bloccate per sempre | PRO-15 |
+| ReDoS nelle regex importate | SEC-03 |
+| Aggiramento riordinando i gruppi | SEM-03 |
+| Eccezione che sopprime i timer di altri gruppi | SEM-04, TIM-07 |
 
 ---
 
-## Appendice A — Parità con LeechBlock NG
-
-| Opzione di LeechBlock NG | Equivalente in WebHandbrake | Note |
-|---|---|---|
-| Nome del block set | Nome del gruppo (SET-04) | Più colore, icona e nota "perché". |
-| Lista di siti, `*`, `**`, `*+`, `+`, `>`, `~`, `#`, `FILE` | MAT-01…MAT-12 | `>` diventa una condizione sull'origine della navigazione (MAT-10). |
-| Ordina la lista | MAT-22 | |
-| Fasce orarie `HHMM` | SCH-01, SCH-02 | Con fasce notturne e griglia visuale. |
-| Limite di tempo per periodo | LIM-01, LIM-02 | Con finestra mobile. |
-| Rollover | LIM-07 | Con tetto e accumulo. |
-| Conta solo la tab attiva / solo con audio | TIM-01 | |
-| `OR` / `AND` | SCH-04 (policy multiple) | Sostituito da un modello più chiaro. |
-| Giorni della settimana | SCH-01 | |
-| Pagina default, ritardo, password, vuota, personalizzata | INT-01, INT-02, INT-04, INT-07 | La "password page" diventa un costo per proseguire (BRK-05). |
-| Messaggio personalizzato | INT-07, MOT-01 | |
-| Finestre private o normali; tab attive o inattive | MAT-19, ENF-02 | |
-| Filtro, silenzia tab, CSS personalizzato, filtro "nessuno" | INT-05 | Con intensità regolabile. |
-| Chiudi la tab | INT-06 | Più il reindirizzamento. |
-| Blocco immediato | ENF-02 | Sempre attivo per default. |
-| Mostra la parola chiave | INT-01 | |
-| Parole chiave solo nel titolo | MAT-12 | |
-| Ritardo solo sulla prima pagina; accesso per N minuti dopo il ritardo; secondi di ritardo; caricamento automatico; annulla se perde il focus | INT-02 | Più countdown nascosto, durata casuale e ritardo crescente. |
-| Ricarica la pagina bloccata ogni N secondi | ENF-04 | Sostituito dalla riapertura automatica allo sblocco, senza polling. |
-| Aggiungi la pagina bloccata alla cronologia | ENF-06 | Più la cancellazione delle visite. |
-| Consenti override; override durante il lockdown | BRK-01, FOC-09 | Per gruppo. |
-| Disattiva il set (debug) | SET-04 | Disattivare è un indebolimento (PRO-02). |
-| Timer per set | NOT-01 | |
-| Referrer o parole chiave come condizioni di consenso | MAT-10, MAT-12 | |
-| Attendi N secondi dopo il caricamento | MAT-12 | Ricontrollo automatico sui contenuti dinamici. |
-| Impedisci l'accesso alle opzioni del set o generali quando bloccato | PRO-04, PRO-16 | |
-| Blocca `about:addons`, `about:support`, `about:profiles`, `about:debugging`, estensioni, impostazioni | PRO-08 | Più `about:config` e `chrome://flags`. |
-| Override applicato anche alle pagine interne | PRO-08 | |
-| Offset del periodo del limite | LIM-02, SEM-09 | |
-| Carica la lista da URL | LST-02 | Abbonamenti opt-in con anteprima. |
-| Regex per URL da bloccare, da consentire e parole chiave | MAT-06, MAT-12 | Con protezione dal ReDoS. |
-| Ignora il frammento | MAT-07 | |
-| Annulla il lockdown attivo | FOC-03, FOC-05 | Accorciare è un indebolimento. |
-| Numero di block set (1–30) | SET-04 | Illimitati. |
-| Requisito di accesso alle opzioni; nascondi i caratteri della password; fasce senza accesso alle opzioni | PRO-05 | |
-| Timer sopra la pagina; badge sotto i 10 minuti | NOT-01, NOT-02 | Soglie configurabili. |
-| Messaggio di avviso N secondi prima | NOT-03 | |
-| Override: durata, numero per periodo, requisiti, codice predefinito, password separata, conferma | BRK-03…BRK-05, PRO-06 | Più budget in minuti, ambito per pagina e partner TOTP. |
-| Tema, CSS delle pagine di blocco | SET-01, INT-07 | |
-| Menu contestuale | API-02 | Solo desktop. |
-| Blocca tutti i sottodomini | MAT-01 | Default sì. |
-| Disattiva il link alla pagina bloccata | INT-01 | Opzione per nascondere l'URL. |
-| Formato orario | SET-03 | |
-| Offset dell'orologio | SCH-06, SCH-07 | Sostituito da fuso orario corretto e rilevamento delle manomissioni. |
-| Ignora i salti di tempo | TIM-02 | Automatico. |
-| Finestre sempre a fuoco | TIM-01 | Opzione avanzata. |
-| Usa il focus del documento (Android) | TIM-04 | Automatico su Android. |
-| Codice d'accesso come immagine | INT-04 | Canvas per default. |
-| Sync storage | DAT-09 | R3, cifrato. |
-| Consenti sempre il sito di LeechBlock | ONB-06 | Documentazione offline più sito consentibile. |
-| Modalità diagnostica | DIA-01 | |
-| Salva i dati ogni N s; elabora le tab ogni N s; solo tab attive | PERF-01, PERF-04 | Resi superflui dall'architettura a eventi (eventuali opzioni avanzate solo per il debug). |
-| Export e import (testo, JSON, sync) | DAT-01, DAT-02 | Più import da LeechBlock. |
-| Menu: Lockdown, Override, Statistiche, Aggiungi siti, Annulla override, Azzera rollover, Scarta il tempo rimanente | FOC-01, BRK-*, STA-02, MAT-17, BRK-09, LIM-07, LIM-11 | |
-| Managed storage | PRO-11 | |
-
----
-
-## Appendice B — Vettori di elusione e contromisure
+## Appendice A — Vettori di elusione e contromisure
 
 | # | Vettore | Contromisura in WebHandbrake | Efficacia |
 |---|---|---|---|
@@ -1490,7 +1424,7 @@ Funzionalità: Uscita d'emergenza (PRO-15)
 | 8 | Modificare lo storage via `about:debugging` | Blocco di `about:debugging` (PRO-08); verifica di coerenza all'avvio | Media |
 | 9 | Reinstallare per azzerare le impostazioni | Managed storage (PRO-11); registro; promemoria di backup | Media |
 | 10 | Importare una configurazione più permissiva | Import trattato come indebolimento (PRO-12) | Alta |
-| 11 | Riordinare i set per cambiare la precedenza | Vince sempre il più grave (SEM-03) | Alta |
+| 11 | Riordinare i gruppi per cambiare la precedenza | Vince sempre il più grave (SEM-03) | Alta |
 | 12 | Copiare il codice casuale dal DOM | Testo disegnato su canvas (INT-04) | Alta |
 | 13 | Incollare nel campo della sfida | Incolla disabilitato, solo eventi `isTrusted` (INT-04) | Alta |
 | 14 | Mirror, proxy, cache, traduttori, frontend alternativi | Liste curate (MAT-14) e template (LST-01) | Media |
@@ -1503,13 +1437,13 @@ Funzionalità: Uscita d'emergenza (PRO-15)
 | 21 | Modalità lettura, `view-source:` | Gestione esplicita degli URL (TIM-06, ENF-03) | Media |
 | 22 | Web app installate, widget | Best effort (ENF-13) | Bassa |
 | 23 | Altri dispositivi e app native | Fuori ambito | — |
-| 24 | Manipolare i timer con le opzioni sulle tab inattive (LB#198) | Contabilità calcolata nel background (TIM-03) | Alta |
+| 24 | Manipolare i timer con le opzioni sulle tab inattive | Contabilità calcolata nel background (TIM-03) | Alta |
 
 > **Posizione etica.** Nessuna estensione può essere inaggirabile per chi ha pieno controllo del proprio dispositivo. L'obiettivo è alzare il **costo d'attivazione** dell'elusione sopra quello dell'impulso, come osservato su HN: *"It doesn't need to be impossible"*. Chi vuole di più può usare le policy di sistema, in modo consapevole e reversibile.
 
 ---
 
-## Appendice C — Compatibilità delle API WebExtension
+## Appendice B — Compatibilità delle API WebExtension
 
 Fonte: MDN browser-compat-data 8.1.4 (2026-10-01). "✖" indica che l'API non è supportata.
 
@@ -1538,9 +1472,9 @@ Fonte: MDN browser-compat-data 8.1.4 (2026-10-01). "✖" indica che l'API non è
 
 ---
 
-## Appendice D — Bibliografia e fonti
+## Appendice C — Bibliografia e fonti
 
-### D.1 Letteratura scientifica
+### C.1 Letteratura scientifica
 
 - **[P1]** Lyngs, U., Lukoff, K., Slovak, P., Binns, R., Slack, A., Inzlicht, M., Van Kleek, M., Shadbolt, N. (2019). *Self-Control in Cyberspace: Applying Dual Systems Theory to a Review of Digital Self-Control Tools.* CHI '19. <https://arxiv.org/abs/1902.00157>
 - **[P2]** Monge Roffarello, A., De Russis, L. (2023). *Achieving Digital Wellbeing Through Digital Self-Control Tools: A Systematic Review and Meta-Analysis.* ACM TOCHI 30(4). <https://iris.polito.it/handle/11583/2972709>
@@ -1573,23 +1507,21 @@ Fonte: MDN browser-compat-data 8.1.4 (2026-10-01). "✖" indica che l'API non è
 - **[P29]** Ko, M. et al. (2015). *NUGU: A Group-Based Intervention App for Improving Self-Regulation of Limiting Smartphone Use.* CSCW '15.
 - **[P30]** Kim, Y.-H. et al. (2016). *TimeAware: Leveraging Framing Effects to Enhance Personal Productivity.* CHI '16.
 
-### D.2 Domini adiacenti
+### C.2 Domini adiacenti
 
 - **[X1]** UK Gambling Commission, *Remote gambling and software technical standards — RTS 12: Financial limits.* <https://www.gamblingcommission.gov.uk/manual/remote-gambling-and-software-technical-standards/rts-12-financial-limits>
 - **[X2]** Bitwarden, *Emergency Access.* <https://bitwarden.com/help/emergency-access/>
 - **[X3]** uBlock Origin, AdGuard, uBlacklist: documentazione dei progetti. <https://github.com/gorhill/uBlock> · <https://github.com/iorate/ublacklist>
 
-### D.3 Fonti tecniche
+### C.3 Fonti tecniche
 
 - **[T1]** MDN browser-compat-data 8.1.4 (2026-10-01). <https://github.com/mdn/browser-compat-data>
 - **[T2]** Chrome for Developers, *chrome.declarativeNetRequest.* <https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest>
 - **[T3]** Chrome for Developers, *The extension service worker lifecycle.* <https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/lifecycle>
 
-### D.4 LeechBlock NG e prodotti analizzati
+### C.4 Prodotti analizzati
 
-- LeechBlock NG: sito, documentazione, FAQ, cronologia versioni. <https://www.proginosko.com/leechblock/>
-- Repository e discussioni. <https://github.com/proginosko/LeechBlockNG> · <https://github.com/proginosko/LeechBlockNG/discussions> · <https://github.com/proginosko/LeechBlockNG-chrome>
-- Pagine AMO e recensioni (API `addons.mozilla.org/api/v5`): `leechblock-ng`, `block-website`, `blocksite`, `impulse-blocker`, `freedom-website-blocker`, `one-sec`, `news-feed-eradicator`, `stayfree`, `besttimetracker`, `forest-stay-focused-be-present`, `socialfocus`, `ublacklist`, `df-youtube`, `youtube-recommended-videos`.
+- Pagine AMO e recensioni (API `addons.mozilla.org/api/v5`): `block-website`, `blocksite`, `impulse-blocker`, `freedom-website-blocker`, `one-sec`, `news-feed-eradicator`, `stayfree`, `besttimetracker`, `forest-stay-focused-be-present`, `socialfocus`, `ublacklist`, `df-youtube`, `youtube-recommended-videos`.
 - Cold Turkey Blocker — funzionalità. <https://getcoldturkey.com/features>
 - StayFocusd — scheda su Edge Add-ons. <https://microsoftedge.microsoft.com/addons/detail/stayfocusd/lahgekkpgepaollpapdonfpdiiggjoch>
 - BlockSite. <https://blocksite.co/>
@@ -1598,4 +1530,4 @@ Fonte: MDN browser-compat-data 8.1.4 (2026-10-01). "✖" indica che l'API non è
 - Time Tracker — Web Habit Builder. <https://github.com/sheepzh/time-tracker-4-browser>
 - Mindful (Android). <https://github.com/akaMrNagar/Mindful>
 - HabitLab. <https://purl.stanford.edu/qq438qv1791>
-- Hacker News (API Algolia): ricerche su "leechblock", "website blocker extension", "cold turkey blocker", "stayfocusd", "one sec app friction".
+- Hacker News (API Algolia): ricerche su "website blocker extension", "cold turkey blocker", "stayfocusd", "one sec app friction".

@@ -31,7 +31,7 @@ single code base, with no account, no server and no telemetry.
   typed confirmation. An emergency exit always exists.
 - **"Why?"** everywhere: which group, entry and rule apply, and when it changes.
 - **Local statistics** (daily aggregates only), insights, CSV/JSON export, deletion in one click.
-- **Import from LeechBlock NG**, export/import, automatic backups with integrity checks.
+- **Export and import** (including plain lists of sites), automatic backups with integrity checks.
 - **Accessible** (WCAG 2.2 AA checks in CI), light/dark/high-contrast themes, responsive down to
   phones, fully translatable (English source, ICU plurals).
 

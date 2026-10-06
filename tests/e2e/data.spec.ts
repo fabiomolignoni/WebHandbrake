@@ -11,46 +11,29 @@ test.afterEach(async () => {
   await h.close();
 });
 
-const LEECHBLOCK = [
-  'numSets=2',
-  'setName1=Social%20media',
-  'sites1=lbsocial.test +lbsocial.test/help >ref.test ~cats',
-  'times1=0000-2400',
-  'days1=127',
-  'limitMins1=',
-  'limitPeriod1=',
-  'blockURL1=blocked.html?$S&$U',
-  'allowOverride1=true',
-  'setName2=Video',
-  'sites2=lbvideo.test',
-  'times2=',
-  'limitMins2=30',
-  'limitPeriod2=86400',
-  'days2=127',
-  'blockURL2=delayed.html?$S&$U',
-  'delaySecs2=20',
-  'oa=2',
+const LIST = [
+  '# sites that distract me',
+  'social.test',
+  '0.0.0.0 video.test',
+  '||news.test^',
+  'not a site ::',
 ].join('\n');
 
-test('DAT-02: LeechBlock NG export is converted with a report', async () => {
-  const preview = (await h.rpc('data.preview', { text: LEECHBLOCK, mode: 'merge' })) as any;
-  expect(preview.format).toBe('leechblock');
-  expect(preview.groups.map((g: any) => g.name)).toEqual(['Social media', 'Video']);
-  expect(preview.warnings.join(' ')).toContain('ref.test');
-  expect(preview.warnings.join(' ')).toContain('cats');
-  const r = (await h.rpc('data.import', { text: LEECHBLOCK, mode: 'merge' })) as any;
+test('DAT-02: a plain list of sites (hosts file, uBlock syntax) becomes a rule, with a report', async () => {
+  const preview = (await h.rpc('data.preview', { text: LIST, mode: 'merge' })) as any;
+  expect(preview.format).toBe('list');
+  expect(preview.groups).toEqual([{ name: 'Imported list', sites: 3, policies: 1 }]);
+  expect(preview.warnings.join(' ')).toContain('not a site');
+  const r = (await h.rpc('data.import', { text: LIST, mode: 'merge' })) as any;
   expect(r.applied.length).toBeGreaterThan(0);
   const cfg = ((await h.rpc('config.get')) as any).config;
-  const social = cfg.groups.find((g: any) => g.name === 'Social media');
-  expect(social.targets.map((t: any) => `${t.allow ? '+' : ''}${t.value}`)).toEqual([
-    'lbsocial.test',
-    '+lbsocial.test/help',
+  const imported = cfg.groups.find((g: any) => g.name === 'Imported list');
+  expect(imported.targets.map((t: any) => t.value).sort()).toEqual([
+    'news.test',
+    'social.test',
+    'video.test',
   ]);
-  expect(social.policies[0].schedule.windows[0]).toMatchObject({ start: 0, end: 1440 });
-  const video = cfg.groups.find((g: any) => g.name === 'Video');
-  expect(video.policies[0].budget).toMatchObject({ type: 'time', minutes: 30, period: { kind: 'day' } });
-  expect(video.policies[0].intervention).toMatchObject({ type: 'delay', seconds: 20 });
-  const p = await h.open('http://lbsocial.test/');
+  const p = await h.open('http://news.test/');
   expect(p.url()).toContain('intervention.html');
 });
 

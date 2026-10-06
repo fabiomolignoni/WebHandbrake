@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { TEMPLATES } from '../../src/data/templates';
 import { BLOCK, delay, group, policy, target } from './fixtures';
 import { type Harness, launch } from './harness';
 
@@ -24,6 +25,27 @@ test('ENF-01: a blocked site is stopped before any request reaches the network',
   expect(h.requests.filter((r) => r.startsWith('www.blocked.test'))).toEqual([]);
   const free = await h.open('http://free.test/');
   await expect(free.locator('#real')).toHaveText('REAL free.test/');
+});
+
+test('ENF-01: a site in every country ("shop.*") is stopped before any request', async () => {
+  await h.configure((c) => {
+    c.groups = [group('Shop', ['shop.*', 'store.test/cart'], [policy(BLOCK)])];
+  });
+  for (const url of ['http://www.shop.co.test/item', 'http://shop.test/', 'http://store.test/cart/1']) {
+    const p = await h.open(url);
+    expect(isIntervention(p.url()), url).toBe(true);
+  }
+  expect(h.requests.filter((r) => /shop\.|store\.test\/cart/.test(r))).toEqual([]);
+});
+
+test('ENF-01: every ready-made list fits the browser filters (none left to the fallback)', async () => {
+  await h.configure((c) => {
+    c.groups = TEMPLATES.map((tpl) => group(tpl.id, tpl.sites, [policy(BLOCK)]));
+  });
+  const d = (await h.rpc('diag.get')) as any;
+  expect(d.rules.lastError).toBeNull();
+  expect(d.rules.overflow).toEqual([]);
+  expect(d.rules.regex).toBeGreaterThan(0);
 });
 
 test('MAT-04 / SEM-06: exceptions and exceptions of exceptions', async () => {

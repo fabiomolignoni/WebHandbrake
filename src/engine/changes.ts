@@ -633,8 +633,11 @@ function ownerActive(c: Config, owner: Owner): boolean {
   return true;
 }
 
-/** Classifies a unit against the configuration it applies to. */
-export function classify(unit: ChangeUnit, config: Config): Direction {
+/**
+ * Classifies a unit against the configuration it applies to. `unprotected` is true when nothing
+ * can be restricted yet: no rules and no running or planned focus session (first run).
+ */
+export function classify(unit: ChangeUnit, config: Config, opts: { unprotected?: boolean } = {}): Direction {
   switch (unit.kind) {
     case 'group.add':
       return 'strengthen';
@@ -700,6 +703,15 @@ export function classify(unit: ChangeUnit, config: Config): Direction {
         ? 'weaken'
         : 'neutral';
     case 'setting':
+      // Nothing to protect yet (first run): a gentler level loosens nothing. A focus session
+      // restricts without rules, and its early end follows the level, so it counts as protected.
+      if (
+        unit.path === 'protection.level' &&
+        opts.unprotected &&
+        config.groups.length === 0 &&
+        unit.base !== 'locked'
+      )
+        return 'neutral';
       return classifySetting(unit.path, unit.base, unit.value);
   }
 }

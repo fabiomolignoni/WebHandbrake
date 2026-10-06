@@ -61,10 +61,8 @@ export function groupFromTemplate(templateId: string | null, level: ProtectionLe
     color: tpl.color,
     icon: tpl.icon,
     targets: targetsFromSites(tpl.sites),
-    policies: [
-      newPolicy({ intervention: tpl.style === 'block' ? { type: 'block' } : frictionIntervention() }),
-    ],
-    pause: pausePolicyFor(tpl.style === 'block' ? 'strict' : level),
+    policies: [newPolicy({ intervention: frictionIntervention() })],
+    pause: pausePolicyFor(level),
   });
 }
 

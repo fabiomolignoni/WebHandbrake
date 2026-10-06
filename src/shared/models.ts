@@ -294,6 +294,8 @@ export interface PopupModel {
   warnings: Warning[];
   laterCount: number;
   canAdd: boolean;
+  /** A quick focus session has rules to apply (FOC-01): otherwise it would block nothing. */
+  canFocus: boolean;
   quickMinutes: number[];
   onboarded: boolean;
   /** Global protection level (shown in the popup header). */
@@ -379,7 +381,7 @@ export interface LaterModel {
 }
 
 export interface ImportPreview {
-  format: 'webhandbrake' | 'leechblock' | 'list' | 'unknown';
+  format: 'webhandbrake' | 'list' | 'unknown';
   groups: { name: string; sites: number; policies: number }[];
   warnings: string[];
   errors: string[];

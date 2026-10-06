@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Group } from '../../src/engine/types';
 import { installFakeBrowser } from './fake-browser';
 import { BLOCK, group } from './helpers';
@@ -136,5 +136,60 @@ describe('maintenance', () => {
     };
     await maintenance();
     expect(Object.keys(store.state.activity)).toEqual(['g:new']);
+  });
+});
+
+describe('first run protection level (PRO-02)', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    installFakeBrowser();
+  });
+  afterEach(() => {
+    vi.doUnmock('../../src/background/reconcile');
+  });
+
+  async function strictWithoutRules() {
+    // Only the decision is under test: browser side effects (filters, alarms) are skipped.
+    vi.doMock('../../src/background/reconcile', () => ({ reconcile: async () => {} }));
+    const { store } = await import('../../src/background/store');
+    const protection = await import('../../src/background/protection');
+    const sessions = await import('../../src/background/sessions');
+    await store.ready();
+    store.config = {
+      ...store.config,
+      groups: [],
+      settings: {
+        ...store.config.settings,
+        protection: { ...store.config.settings.protection, level: 'strict' },
+      },
+    };
+    const soft = () => {
+      const next = structuredClone(store.config);
+      next.settings.protection.level = 'soft';
+      return protection.proposeConfig(next, 'test');
+    };
+    return { store, sessions, soft };
+  }
+
+  it('a gentler level is applied at once while nothing is protected', async () => {
+    const { store, soft } = await strictWithoutRules();
+    const r = await soft();
+    expect(r.applied).toHaveLength(1);
+    expect(store.config.settings.protection.level).toBe('soft');
+  });
+
+  it('a running focus session keeps the level protected, so its early end cannot be bypassed (regression)', async () => {
+    const { store, sessions, soft } = await strictWithoutRules();
+    const { id } = await sessions.startSession({
+      kind: 'allowlist',
+      allow: [],
+      minutes: 60,
+      locked: false,
+      noPauses: false,
+    } as never);
+    const r = await soft();
+    expect(r.applied).toHaveLength(0);
+    expect(store.config.settings.protection.level).toBe('strict');
+    expect((await sessions.endSession(id)).refused).toBe('session.error.strict');
   });
 });

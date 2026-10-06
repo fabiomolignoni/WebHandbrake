@@ -138,6 +138,10 @@ export function Segmented<T extends string | number>({
 }) {
   const { ref, onKey } = useRovingRadio(options, onChange);
   const selected = options.some((o) => o.value === value);
+  const firstEnabled = Math.max(
+    0,
+    options.findIndex((o) => !o.disabled),
+  );
   return (
     <div
       class={`segmented${block ? ' block' : ''}`}
@@ -155,7 +159,7 @@ export function Segmented<T extends string | number>({
             role="radio"
             aria-checked={checked}
             aria-label={o.aria}
-            tabIndex={checked || (!selected && i === 0) ? 0 : -1}
+            tabIndex={checked || (!selected && i === firstEnabled) ? 0 : -1}
             disabled={disabled || o.disabled}
             onClick={() => onChange(o.value)}
             onKeyDown={(e) => onKey(e as unknown as KeyboardEvent, i)}
@@ -189,6 +193,10 @@ export function RadioCards<T extends string | number>({
 }) {
   const { ref, onKey } = useRovingRadio(options, onChange);
   const selected = options.some((o) => o.value === value);
+  const firstEnabled = Math.max(
+    0,
+    options.findIndex((o) => !o.disabled),
+  );
   return (
     <div class={cls} role="radiogroup" aria-label={label} ref={ref}>
       {options.map((o, i) => {
@@ -200,7 +208,7 @@ export function RadioCards<T extends string | number>({
             role="radio"
             class={`${itemClass}${o.tone ? ` tone-${o.tone}` : ''}`}
             aria-checked={checked}
-            tabIndex={checked || (!selected && i === 0) ? 0 : -1}
+            tabIndex={checked || (!selected && i === firstEnabled) ? 0 : -1}
             disabled={o.disabled}
             onClick={() => onChange(o.value)}
             onKeyDown={(e) => onKey(e as unknown as KeyboardEvent, i)}

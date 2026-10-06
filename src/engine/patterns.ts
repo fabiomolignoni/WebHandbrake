@@ -159,6 +159,8 @@ function parseHostPath(
     if (!HOST_RE.test(host)) return { error: 'targets.error.invalid' };
     if (host.startsWith('www.') && host.length > 4) host = host.slice(4);
     if (host === '*' || /^\*(\.\*)*$/.test(host)) return { error: 'targets.error.tooBroad' };
+    // A word without a dot is not a site ("not a site" pasted from a text), except localhost and IPs.
+    if (!host.includes('.') && host !== 'localhost') return { error: 'targets.error.noDot' };
   }
 
   let fragment = '';
@@ -248,7 +250,7 @@ export function parseTargetList(text: string): {
   text.split(/\r?\n/).forEach((raw, i) => {
     // "+ example.com" is one exception, not a lone "+" followed by a blocking entry.
     const line = raw.replace(/^(\s*)(\+|@@)\s+/, '$1$2');
-    // LeechBlock exports put several sites on one line separated by spaces; hosts-file lines
+    // Several sites can be pasted on one line separated by spaces; hosts-file lines
     // ("0.0.0.0 example.com"), regular expressions and commented lines are kept whole.
     const whole =
       /\s#/.test(line) ||
@@ -256,12 +258,20 @@ export function parseTargetList(text: string): {
       /^\s*(?:0\.0\.0\.0|127\.0\.0\.1|::1?|::)\s/.test(line) ||
       /^\s*\+?\//.test(line);
     const parts = whole ? [line] : line.trim().split(/\s+/);
+    const failed: { line: number; text: string; error: string }[] = [];
+    let added = 0;
     for (const part of parts) {
       const r = parseTargetLine(part);
       if (!r || r.comment) continue;
-      if (r.error) errors.push({ line: i + 1, text: part.trim(), error: r.error });
-      else if (r.target) targets.push(r.target);
+      if (r.error) failed.push({ line: i + 1, text: part.trim(), error: r.error });
+      else if (r.target) {
+        targets.push(r.target);
+        added++;
+      }
     }
+    // A line of words that are not sites (a sentence) is one error, not one per word.
+    if (failed.length > 1 && !added) errors.push({ ...failed[0], text: line.trim() });
+    else errors.push(...failed);
   });
   return { targets, errors };
 }
@@ -423,7 +433,7 @@ export function compilePattern(target: Target): CompiledPattern | null {
   if (target.type === 'regex') {
     if (checkRegex(target.value)) return null;
     // SEM-06: regular expressions have minimal specificity; exceptions written as regular
-    // expressions win within their group (LeechBlock compatible).
+    // expressions win within their group, so a broad pattern can carve out a narrow exception.
     const parts: [number, number, number, number] = target.allow ? [99, 99, 99, 9] : [0, 0, 0, 0];
     return {
       ...base,

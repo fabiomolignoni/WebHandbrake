@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'preact/hooks';
+import { isSensitiveSite } from '../../data/templates';
 import { newId } from '../../engine/defaults';
 import type { Group } from '../../engine/types';
 import { t } from '../../i18n/i18n';
@@ -45,10 +46,13 @@ export function GroupsNav({ current }: { current: 'groups' | 'lists' | 'allowlis
   );
 }
 
+/** The first few sites, without addresses from the sensitive lists (shown only when asked). */
 function sitesPreview(g: Group): string {
   const sites = g.targets.filter((x) => !x.allow).map((x) => x.value);
-  const shown = sites.slice(0, 3).join(', ');
-  return sites.length > 3 ? t('groups.sitesMore', { sites: shown, count: sites.length - 3 }) : shown;
+  const shown = sites.filter((x) => !isSensitiveSite(x)).slice(0, 3);
+  if (!shown.length) return '';
+  const more = sites.length - shown.length;
+  return more > 0 ? t('groups.sitesMore', { sites: shown.join(', '), count: more }) : shown.join(', ');
 }
 
 export function GroupsPage() {
@@ -184,9 +188,9 @@ export function GroupsPage() {
                       </span>
                     )}
                   </div>
-                  <p class="sites ellipsis" title={sitesPreview(g)}>
+                  <p class="sites ellipsis" title={sitesPreview(g) || undefined}>
                     {t('groups.sites', { count: sites })}
-                    {sites > 0 && ` · ${sitesPreview(g)}`}
+                    {sitesPreview(g) && ` · ${sitesPreview(g)}`}
                   </p>
                   <div class="rules">
                     {summarizeGroup(g).map((line, i) => (
