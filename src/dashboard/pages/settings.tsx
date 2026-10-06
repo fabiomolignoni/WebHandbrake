@@ -12,14 +12,13 @@ import { describeUnit } from '../../shared/summary';
 import {
   Banner,
   Button,
-  Chips,
   Dialog,
   Field,
   IconButton,
   NumberInput,
+  Segmented,
   Select,
   Spinner,
-  Tabs,
   Toggle,
   toast,
 } from '../../ui/components';
@@ -55,14 +54,14 @@ function General() {
         <h2>{t('settings.appearance')}</h2>
         <Field label={t('settings.theme')}>
           {() => (
-            <Chips
+            <Segmented
               value={s.theme}
               onChange={(theme) => void save((x) => (x.theme = theme))}
               label={t('settings.theme')}
               options={[
-                { value: 'system', label: t('settings.theme.system') },
-                { value: 'light', label: t('settings.theme.light') },
-                { value: 'dark', label: t('settings.theme.dark') },
+                { value: 'system', label: t('settings.theme.system'), icon: 'settings' },
+                { value: 'light', label: t('settings.theme.light'), icon: 'sun' },
+                { value: 'dark', label: t('settings.theme.dark'), icon: 'moon' },
               ]}
             />
           )}
@@ -648,7 +647,7 @@ function ImportDialog({ onClose }: { onClose: () => void }) {
           >
             {t('import.chooseFile')}
           </Button>
-          <Chips
+          <Segmented
             value={mode}
             onChange={(m) => {
               setMode(m);
@@ -1105,12 +1104,13 @@ export function SettingsPage({ sub }: { sub: string }) {
           <h1>{t('settings.title')}</h1>
         </div>
       </div>
-      <Tabs
-        tabs={SUBS.map((x) => ({ value: x, label: t(`settings.tab.${x}`) }))}
-        value={current}
-        onChange={(v) => navigate(`/settings/${v}`)}
-        label={t('settings.title')}
-      />
+      <nav class="subnav" aria-label={t('settings.sections')}>
+        {SUBS.map((x) => (
+          <a key={x} href={`#/settings/${x}`} aria-current={x === current ? 'page' : undefined}>
+            {t(`settings.tab.${x}`)}
+          </a>
+        ))}
+      </nav>
       {current === 'general' && <General />}
       {current === 'feedback' && <Feedback />}
       {current === 'time' && <TimeSettings />}

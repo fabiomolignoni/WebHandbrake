@@ -14,6 +14,7 @@ test.afterEach(async () => {
 const ROUTES = [
   'today',
   'groups',
+  'groups/new',
   'lists',
   'allowlist',
   'focus',
@@ -76,18 +77,68 @@ for (const width of [1280, 390]) {
         location.hash = `#/groups/${id}`;
       }, g.id);
       await p.waitForTimeout(400);
-      for (const tab of ['Sites', 'Rules', 'Breaks & page', 'Protection', 'More']) {
-        await p.getByRole('tab', { name: tab }).click();
+      // One page with a section nav (docs/ux-redesign.md §6.5): every section is reachable.
+      const ids: Record<string, string> = { 'When & how': 'rules', 'Block page': 'page' };
+      for (const section of ['Sites', 'When & how', 'Breaks', 'Block page', 'Protection', 'Advanced']) {
+        await p.locator('.section-nav').getByRole('button', { name: section, exact: true }).click();
         await p.waitForTimeout(150);
-        if (shots)
-          await p.screenshot({
-            path: `${shots}/${width}-editor-${g.name}-${tab.replace(/\W+/g, '')}.png`,
-            fullPage: true,
-          });
+        await expect(p.locator(`#sec-${ids[section] ?? section.toLowerCase()}`)).toBeVisible();
       }
+      // Rules open in place, with the friction picker.
+      await p.locator('.policy-sentence').first().click();
+      await expect(p.getByRole('radiogroup', { name: 'What happens' })).toBeVisible();
+      if (shots) await p.screenshot({ path: `${shots}/${width}-editor-${g.name}.png`, fullPage: true });
     }
   });
 }
+
+test('a rule is created step by step: sites → when → what happens → review', async () => {
+  await setup();
+  const p = await h.page('dashboard.html#/groups');
+  await p.setViewportSize({ width: 1280, height: 900 });
+  await p.getByRole('button', { name: 'New rule' }).click();
+  await expect(p.getByRole('heading', { name: 'Which sites?' })).toBeVisible();
+  // A rule needs sites: the next step stays closed until there is one.
+  await expect(p.getByRole('button', { name: 'Next: when' })).toBeDisabled();
+  await p.getByRole('button', { name: 'News', exact: true }).click();
+  await p.getByPlaceholder('Add a site, or paste a list…').fill('papers.test');
+  await p.getByRole('button', { name: 'Add', exact: true }).click();
+  await expect(p.getByLabel('Name', { exact: true })).toHaveValue('News');
+  await p.getByRole('button', { name: 'Next: when' }).click();
+  await p.getByRole('radio', { name: /At certain times/ }).click();
+  await p.getByRole('button', { name: 'Next: what happens' }).click();
+  // Friction is recommended for temptations; "only count" needs "every time".
+  await expect(p.getByRole('radio', { name: /Ask what I want to do/ })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  await expect(p.getByRole('radio', { name: /Only count the time/ })).toBeDisabled();
+  await p.getByRole('radio', { name: /^Block/ }).click();
+  await p.getByRole('button', { name: 'Next: review' }).click();
+  // The review states the plan: when (the schedule) and what happens.
+  await expect(p.locator('.plan-text')).toContainText('Mon–Fri');
+  await expect(p.locator('.plan-text')).toContainText('WebHandbrake blocks them.');
+  await p.getByRole('button', { name: 'Create rule' }).click();
+  await expect(p.getByRole('heading', { name: 'Rules', exact: true })).toBeVisible({ timeout: 5000 });
+  const cfg = ((await h.rpc('config.get')) as any).config;
+  const created = cfg.groups[cfg.groups.length - 1];
+  expect(created.name).toBe('News');
+  expect(created.targets.map((x: any) => x.value)).toContain('papers.test');
+  expect(created.policies).toHaveLength(1);
+  expect(created.policies[0].schedule.mode).toBe('during');
+  expect(created.policies[0].intervention.type).toBe('block');
+});
+
+test('the wizard hands its draft to the full editor', async () => {
+  await setup();
+  const p = await h.page('dashboard.html#/groups/new?template=video');
+  await p.setViewportSize({ width: 1280, height: 900 });
+  await expect(p.locator('.target-row .value').first()).toBeVisible();
+  await p.getByRole('button', { name: 'Use the full editor' }).click();
+  await expect(p.locator('.section-nav')).toBeVisible();
+  await expect(p.getByLabel('Name', { exact: true })).toHaveValue('Video');
+  await expect(p.locator('#sec-sites .target-row')).not.toHaveCount(0);
+});
 
 test('the group editor saves a renamed group and a new site', async () => {
   await setup();

@@ -167,6 +167,7 @@ export async function popupModel(tabId?: number): Promise<PopupModel> {
     canAdd: Boolean(parsed?.web),
     quickMinutes: [25, 50, 90],
     onboarded: store.config.settings.onboarded,
+    level: store.config.settings.protection.level,
   };
 }
 

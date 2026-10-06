@@ -296,6 +296,8 @@ export interface PopupModel {
   canAdd: boolean;
   quickMinutes: number[];
   onboarded: boolean;
+  /** Global protection level (shown in the popup header). */
+  level: ProtectionLevel;
 }
 
 export interface SessionRequest {

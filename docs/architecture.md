@@ -15,7 +15,7 @@ src/
   popup/        Toolbar popup.
   dashboard/    Full-page management UI (hash router, pages, editors).
   intervention/ The page shown instead of a restricted site.
-  ui/           Shared Preact components, design system CSS, hooks.
+  ui/           Shared Preact components, design system CSS, state tones (status.ts), hooks.
   shared/       View models, typed RPC, formatting, natural-language summaries.
   i18n/         ICU message formatting and locale loading.
   platform/     Browser adapter and feature detection (Chrome/Firefox/Android).
@@ -24,6 +24,9 @@ src/
 ```
 
 ## Data model
+
+In the interface a group is called a *rule* and a policy a *condition* (see
+[`ux-redesign.md`](ux-redesign.md) §10); the code keeps the model names.
 
 `Config` (groups, shared lists, "Always allowed", settings) is the user's intent. Every entity has
 a stable id, a revision and an update time, and deletions leave tombstones, so cross-device sync

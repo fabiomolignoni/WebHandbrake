@@ -105,7 +105,7 @@ test('INT-04 / A11Y-05: a challenge can be passed with the accessible phrase, pa
   const p = await h.open('http://type.test/');
   await expect(p.locator('canvas.challenge-canvas')).toBeVisible();
   await p.getByRole('button', { name: /screen reader/ }).click();
-  const phrase = (await p.locator('blockquote').textContent())!.trim();
+  const phrase = (await p.locator('form blockquote').textContent())!.trim();
   const input = p.getByLabel('Sentence');
   await input.focus();
   await p.evaluate((text) => {

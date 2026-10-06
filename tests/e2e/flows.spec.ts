@@ -19,7 +19,7 @@ test('FOC-01: a focus session starts from the popup in two taps and blocks the g
   });
   expect(isIntervention((await h.open('http://games.test/')).url())).toBe(false);
   const popup = await h.page('popup.html');
-  await popup.getByRole('combobox', { name: 'Duration' }).selectOption('50');
+  await popup.getByRole('radio', { name: '50 min' }).click();
   await popup.getByRole('button', { name: 'Start focus' }).click();
   await expect(popup.getByText(/Focus until/)).toBeVisible();
   expect(isIntervention((await h.open('http://games.test/')).url())).toBe(true);

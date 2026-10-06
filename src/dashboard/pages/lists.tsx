@@ -6,10 +6,12 @@ import type { SharedList } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { call } from '../../shared/rpc';
 import { Button, Dialog, Empty, Field } from '../../ui/components';
+import { Icon } from '../../ui/icons';
 import { useSaveFlow } from '../../ui/saveflow';
 import { TargetsEditor } from '../components/targets';
 import { clone, useDashboard } from '../context';
 import { navigate, setNavigationGuard } from '../router';
+import { GroupsNav } from './groups';
 
 export function ListsPage() {
   const { model } = useDashboard();
@@ -18,9 +20,6 @@ export function ListsPage() {
     <div class="stack stack-lg">
       <div class="page-head">
         <div>
-          <a href="#/groups" class="small">
-            ← {t('nav.groups')}
-          </a>
           <h1>{t('lists.title')}</h1>
           <p>{t('lists.subtitle')}</p>
         </div>
@@ -28,18 +27,19 @@ export function ListsPage() {
           {t('lists.new')}
         </Button>
       </div>
+      <GroupsNav current="lists" />
       {cfg.lists.length === 0 ? (
         <div class="card">
           <Empty icon="list" title={t('lists.empty')} />
         </div>
       ) : (
-        <ul class="list">
+        <ul class="group-list">
           {cfg.lists.map((l) => {
             const used = cfg.groups.filter((g) => g.lists.includes(l.id));
             return (
-              <li key={l.id} class="row between">
-                <div class="stack" style={{ gap: '2px' }}>
-                  <a href={`#/lists/${l.id}`}>
+              <li key={l.id} class="card card-link tight row between nowrap">
+                <div class="stack" style={{ gap: '2px', minWidth: 0 }}>
+                  <a class="stretched" href={`#/lists/${l.id}`}>
                     <strong>{l.name}</strong>
                   </a>
                   <span class="small muted">
@@ -49,9 +49,7 @@ export function ListsPage() {
                       : t('lists.unused')}
                   </span>
                 </div>
-                <Button size="small" icon="edit" onClick={() => navigate(`/lists/${l.id}`)}>
-                  {t('common.edit')}
-                </Button>
+                <Icon name="chevron-right" class="muted" />
               </li>
             );
           })}
@@ -103,8 +101,9 @@ export function ListEditorPage({ id }: { id: string }) {
     <div class="stack stack-lg">
       <div class="page-head">
         <div>
-          <a href="#/lists" class="small">
-            ← {t('lists.title')}
+          <a href="#/lists" class="back quiet">
+            <Icon name="chevron-left" />
+            {t('lists.title')}
           </a>
           <h1>{draft.name || t('lists.newTitle')}</h1>
           {used.length > 0 && <p>{t('lists.usedBy', { groups: used.map((g) => g.name).join(', ') })}</p>}

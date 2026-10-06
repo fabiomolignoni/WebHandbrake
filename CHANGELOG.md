@@ -4,6 +4,29 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- Redesigned interface (see [`docs/ux-redesign.md`](docs/ux-redesign.md)): one visual language
+  for the friction ladder (a tone, an icon and words for every state), a status-first popup with
+  quick-action tiles and a preview of what "Block this site" adds, a Today page that leads with
+  what is happening now, clickable group rows with an overflow menu, a one-page group editor with
+  a section nav, rules as "When → Then" sentence cards and a friction picker, an intervention page
+  that presents the healthy choice and "continue" as one decision, a reorganised protection
+  centre, setting rows, segmented controls and stronger input contrast.
+
+- "Groups" are now called **Rules** and the lines inside them **conditions**; the browser's
+  technical rules are called browser filters in Diagnostics. A new rule is created in four steps
+  (sites, when, what happens, review), with ready-made lists, a recommended option and the plan
+  stated in one sentence; the full editor stays one click away.
+
+### Fixed
+
+- In the dark theme, links no longer turn navigation items and rule names teal.
+- The popup no longer repeats the next step ("then Wait … · then Wait"); the rule editor no
+  longer shows "What happens" twice.
+
 ## [1.0.0] — unreleased
 
 First version (release R1 of the requirements).

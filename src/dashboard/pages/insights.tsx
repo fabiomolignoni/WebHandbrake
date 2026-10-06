@@ -10,7 +10,17 @@ import { t } from '../../i18n/i18n';
 import { formatDate, formatDateTime, formatDuration, formatPercent } from '../../shared/format';
 import type { StatsModel } from '../../shared/models';
 import { call } from '../../shared/rpc';
-import { Button, Chips, ColorDot, Dialog, Empty, IconButton, Spinner, toast } from '../../ui/components';
+import {
+  Button,
+  ColorDot,
+  Dialog,
+  Empty,
+  IconButton,
+  Menu,
+  Segmented,
+  Spinner,
+  toast,
+} from '../../ui/components';
 import { downloadText } from '../../ui/download';
 import { useModel } from '../../ui/hooks';
 import { useDashboard } from '../context';
@@ -57,23 +67,50 @@ function rangeLabel(span: Span, r: { from: string; to: string }) {
   return `${formatDate(from)} – ${formatDate(to)}`;
 }
 
+function dayLabel(key: string, count: number): string {
+  if (key.length === 7) {
+    const [y, m] = key.split('-').map(Number);
+    return formatDate(new Date(y, m - 1, 1).getTime(), { month: 'short' });
+  }
+  const d = parseDayKey(key);
+  const ms = new Date(d.y, d.m, d.d).getTime();
+  return count <= 7 ? formatDate(ms, { weekday: 'short' }) : String(d.d);
+}
+
 function Trend({ s }: { s: StatsModel }) {
   const [table, setTable] = useState(false);
   const days = s.days.length > 62 ? monthly(s) : s.days;
   const max = Math.max(1, ...days.map((d) => d.seconds));
   const todayKey = dayKey(logicalDayOf(Date.now(), { dayStart: 0, weekStart: 1 }));
+  // Labels for at most ~16 columns, so they never overlap.
+  const every = Math.max(1, Math.ceil(days.length / 16));
   return (
     <div class="stack stack-sm">
       {!table ? (
-        <div class="bars" role="img" aria-label={t('insights.trendLabel')}>
-          {days.map((d) => (
-            <div
-              key={d.day}
-              class={`bar${d.seconds ? '' : ' empty-bar'}${d.day === todayKey ? ' today' : ''}`}
-              style={{ height: `${Math.max(2, (d.seconds / max) * 100)}%` }}
-              title={`${d.day}: ${formatDuration(d.seconds)}`}
-            />
-          ))}
+        <div class="chart">
+          <div class="axis" aria-hidden="true">
+            <span>{formatDuration(max)}</span>
+            <span>{formatDuration(max / 2)}</span>
+            <span>0</span>
+          </div>
+          <div>
+            <div class="bars" role="img" aria-label={t('insights.trendLabel')}>
+              {days.map((d) => (
+                <div class="col" key={d.day}>
+                  <div
+                    class={`bar${d.seconds ? '' : ' empty-bar'}${d.day === todayKey ? ' today' : ''}`}
+                    style={{ height: `${Math.max(2, (d.seconds / max) * 100)}%` }}
+                    title={`${d.day}: ${formatDuration(d.seconds)}`}
+                  />
+                </div>
+              ))}
+            </div>
+            <div class="bar-labels" aria-hidden="true">
+              {days.map((d, i) => (
+                <span key={d.day}>{i % every === 0 ? dayLabel(d.day, days.length) : ''}</span>
+              ))}
+            </div>
+          </div>
         </div>
       ) : (
         <table class="table">
@@ -150,7 +187,7 @@ function DeleteDialog({
       }
     >
       <div class="stack">
-        <Chips
+        <Segmented
           value={scope}
           onChange={setScope}
           label={t('insights.deleteWhat')}
@@ -203,20 +240,20 @@ export function InsightsPage() {
           <h1>{t('insights.title')}</h1>
           <p>{t('insights.subtitle')}</p>
         </div>
-        <div class="row">
-          <Button size="small" icon="download" onClick={() => exportAs('csv')}>
-            CSV
-          </Button>
-          <Button size="small" icon="download" onClick={() => exportAs('json')}>
-            JSON
-          </Button>
-          <Button size="small" variant="danger" icon="trash" onClick={() => setDel(true)}>
-            {t('insights.delete')}
-          </Button>
-        </div>
+        <Menu
+          label={t('insights.dataActions')}
+          text={t('insights.data')}
+          icon="download"
+          items={[
+            { label: t('insights.exportCsv'), icon: 'download', onSelect: () => void exportAs('csv') },
+            { label: t('insights.exportJson'), icon: 'download', onSelect: () => void exportAs('json') },
+            'separator',
+            { label: t('insights.delete'), icon: 'trash', danger: true, onSelect: () => setDel(true) },
+          ]}
+        />
       </div>
       <div class="row between">
-        <Chips
+        <Segmented
           value={span}
           onChange={(v) => {
             setSpan(v);
@@ -249,31 +286,29 @@ export function InsightsPage() {
         <Spinner />
       ) : (
         <>
-          <div class="grid tiles" style={{ ['--min' as string]: '200px' }}>
-            <div class="card tile">
-              <span class="value">{formatDuration(s.total.seconds)}</span>
-              <span class="caption">{t('insights.total')}</span>
-              {change !== null && (
-                <span class="small muted">{t('insights.vsPrevious', { change: formatPercent(change) })}</span>
-              )}
-            </div>
-            <div class="card tile">
-              <span class="value">{s.counters.impulses}</span>
-              <span class="caption">{t('insights.impulses', { count: s.counters.impulses })}</span>
-            </div>
-            <div class="card tile">
-              <span class="value">{s.counters.shown}</span>
-              <span class="caption">{t('insights.shown', { count: s.counters.shown })}</span>
-            </div>
-            <div class="card tile">
-              <span class="value">{s.counters.pauses}</span>
-              <span class="caption">
-                {t('insights.pauses', { count: s.counters.pauses, minutes: s.counters.pauseMinutes })}
-              </span>
-            </div>
-            <div class="card tile">
-              <span class="value">{s.counters.sessions}</span>
-              <span class="caption">{t('insights.sessions', { count: s.counters.sessions })}</span>
+          <div class="card">
+            <div class="kpis">
+              <div class="kpi">
+                <span class="value">{formatDuration(s.total.seconds)}</span>
+                <span class="caption">{t('insights.total')}</span>
+                {change !== null && (
+                  <span class="delta">{t('insights.vsPrevious', { change: formatPercent(change) })}</span>
+                )}
+              </div>
+              {[
+                { v: s.counters.impulses, c: t('insights.impulses', { count: s.counters.impulses }) },
+                { v: s.counters.shown, c: t('insights.shown', { count: s.counters.shown }) },
+                {
+                  v: s.counters.pauses,
+                  c: t('insights.pauses', { count: s.counters.pauses, minutes: s.counters.pauseMinutes }),
+                },
+                { v: s.counters.sessions, c: t('insights.sessions', { count: s.counters.sessions }) },
+              ].map((k) => (
+                <div class="kpi" key={k.c}>
+                  <span class={`value${k.v ? '' : ' zero'}`}>{k.v}</span>
+                  <span class="caption">{k.c}</span>
+                </div>
+              ))}
             </div>
           </div>
           {s.total.seconds === 0 && s.counters.shown === 0 ? (

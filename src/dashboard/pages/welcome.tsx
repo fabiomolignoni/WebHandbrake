@@ -6,16 +6,14 @@
 import { useEffect, useState } from 'preact/hooks';
 import { TEMPLATES } from '../../data/templates';
 import {
-  delayIntervention,
-  frictionIntervention,
   GROUP_COLORS,
   newGroup,
-  newPolicy,
   pausePolicyFor,
+  quickPolicies,
   SCHEDULE_PRESETS,
   targetsFromSites,
 } from '../../engine/defaults';
-import type { Group, Intervention, Policy, ProtectionLevel, Target, TimeWindow } from '../../engine/types';
+import type { Group, Policy, ProtectionLevel, Target, TimeWindow } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { api, browserName } from '../../platform/api';
 import { call } from '../../shared/rpc';
@@ -27,7 +25,7 @@ import { WindowsEditor } from '../components/schedule';
 import { TargetsEditor } from '../components/targets';
 import { clone, useDashboard } from '../context';
 import { navigate } from '../router';
-import { LevelExplanation } from './group-editor';
+import { LevelExplanation, levelIcon } from './group-editor';
 
 type Goal = 'schedule' | 'limit' | 'friction' | 'block' | 'track';
 type Style = 'ask' | 'delay' | 'block';
@@ -40,31 +38,18 @@ const GOALS: { id: Goal; icon: string }[] = [
   { id: 'track', icon: 'chart' },
 ];
 
-function intervention(style: Style): Intervention {
-  return style === 'ask'
-    ? frictionIntervention()
-    : style === 'delay'
-      ? delayIntervention(30)
-      : { type: 'block' };
-}
-
 function policiesFor(goal: Goal, style: Style, windows: TimeWindow[], minutes: number): Policy[] {
   switch (goal) {
     case 'schedule':
-      return [newPolicy({ schedule: { mode: 'during', windows }, intervention: intervention(style) })];
+      return quickPolicies('schedule', style, windows, minutes);
     case 'limit':
-      return [
-        newPolicy({
-          budget: { type: 'time', minutes, period: { kind: 'day' } },
-          intervention: intervention(style),
-        }),
-      ];
+      return quickPolicies('daily', style, windows, minutes);
     case 'friction':
-      return [newPolicy({ intervention: intervention(style) })];
+      return quickPolicies('always', style, windows, minutes);
     case 'block':
-      return [newPolicy({ intervention: { type: 'block' } })];
+      return quickPolicies('always', 'block', windows, minutes);
     case 'track':
-      return [newPolicy({ intervention: { type: 'track' } })];
+      return quickPolicies('always', 'track', windows, minutes);
   }
 }
 
@@ -362,7 +347,7 @@ export function WelcomePage() {
                 aria-checked={level === l}
                 onClick={() => setLevel(l)}
               >
-                <Icon name={l === 'soft' ? 'leaf' : l === 'balanced' ? 'shield' : 'lock'} />
+                <Icon name={levelIcon(l)} />
                 <span class="stack stack-sm">
                   <strong>{t(`level.${l}`)}</strong>
                   <LevelExplanation level={l} />
