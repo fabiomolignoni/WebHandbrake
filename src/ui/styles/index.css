@@ -3732,15 +3732,18 @@ details.disclosure.guide > summary .icon-svg {
 .target-row.hidden-sites {
   grid-template-columns: minmax(0, 1fr) auto;
 }
-/* The way to the dashboard: labelled and tinted, the most used way out of the popup. */
+/* The way to the dashboard, the most used way out of the popup: a filled, labelled button. */
 .popup .popup-head .open-dashboard {
-  background: var(--accent-soft);
-  color: var(--accent-strong);
-  border-color: transparent;
-  font-weight: 650;
+  min-height: 36px;
+  padding: 0 var(--s4) 0 var(--s3);
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
 }
-.popup .popup-head .open-dashboard:hover {
-  background: color-mix(in srgb, var(--accent-soft), var(--accent) 14%);
+.popup .popup-head .open-dashboard .icon-svg {
+  width: 18px;
+  height: 18px;
 }
 .link-row > .grow {
   min-width: 0;
