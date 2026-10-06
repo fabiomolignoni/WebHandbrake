@@ -25,21 +25,21 @@ button {
   padding: 2px 8px; color: inherit; font: inherit; font-size: .9em; background: rgba(255,255,255,.12);
 }
 button:hover { background: rgba(255,255,255,.22); }
-button:focus-visible { outline: 2px solid #8fd3cf; outline-offset: 2px; }
+button:focus-visible { outline: 2px solid #a6b2f4; outline-offset: 2px; }
 .handle { cursor: grab; padding: 0 2px; opacity: .6; font-size: 14px; }
 .panel {
   position: fixed; pointer-events: auto; left: 50%; transform: translateX(-50%); bottom: 24px;
   width: min(560px, calc(100vw - 24px)); padding: 14px 16px; border-radius: 14px;
   color: #1d2327; background: #fbfaf7; box-shadow: 0 10px 40px rgba(0,0,0,.28); font-size: 14px; line-height: 1.45;
-  border-top: 4px solid var(--c, #2f7a78);
+  border-top: 4px solid var(--c, #4850a5);
 }
 .panel h2 { margin: 0 0 4px; font-size: 15px; font-weight: 650; }
 .panel p { margin: 0 0 8px; }
 .panel .row { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
 .panel button { background: #e7ece9; color: #1d2327; padding: 6px 12px; }
-.panel button.primary { background: #2f7a78; color: #fff; }
+.panel button.primary { background: #4850a5; color: #fff; }
 .bar { height: 6px; border-radius: 3px; background: #e2e5e2; overflow: hidden; flex: 1; min-width: 120px; }
-.bar > i { display: block; height: 100%; background: #2f7a78; transition: width 1s linear; }
+.bar > i { display: block; height: 100%; background: #4850a5; transition: width 1s linear; }
 .top { top: 12px; bottom: auto; }
 @media (prefers-color-scheme: dark) {
   .panel { color: #eceeea; background: #22282c; }

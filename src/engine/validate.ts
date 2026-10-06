@@ -38,13 +38,8 @@ function policyIssues(p: Policy, i: number): Issue[] {
       out.push({ level: 'warning', key: 'validate.zeroVisits', params: { n }, policy: i });
   }
   const iv = p.intervention;
-  if (iv.type === 'redirect') {
-    try {
-      const u = new URL(iv.url.replace(/\{[a-z]+\}/g, 'x'));
-      if (!/^https?:$/.test(u.protocol)) throw new Error('scheme');
-    } catch {
-      out.push({ level: 'error', key: 'validate.redirectUrl', params: { n }, policy: i });
-    }
+  if (iv.type === 'redirect' && !isRedirectUrl(iv.url)) {
+    out.push({ level: 'error', key: 'validate.redirectUrl', params: { n }, policy: i });
   }
   if (iv.type === 'challenge' && iv.kind === 'phrase' && !iv.phrase?.trim()) {
     out.push({ level: 'error', key: 'validate.phrase', params: { n }, policy: i });
@@ -53,6 +48,16 @@ function policyIssues(p: Policy, i: number): Issue[] {
     out.push({ level: 'error', key: 'validate.askChoices', params: { n }, policy: i });
   }
   return out;
+}
+
+/** A redirect goes to a web page; {url}, {group} and {until} are replaced when it happens. */
+export function isRedirectUrl(url: string): boolean {
+  try {
+    const u = new URL(url.trim().replace(/\{[a-z]+\}/g, 'x'));
+    return /^https?:$/.test(u.protocol) && u.hostname !== '';
+  } catch {
+    return false;
+  }
 }
 
 export function validateTargets(targets: Target[]): Issue[] {

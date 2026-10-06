@@ -2,8 +2,8 @@
 
 import { t } from '../../i18n/i18n';
 import { api } from '../../platform/api';
-import { Button } from '../../ui/components';
-import { navigate } from '../router';
+import { NEW_ISSUE_URL, REPO_URL } from '../../shared/links';
+import { Icon } from '../../ui/icons';
 
 const SECTIONS: { id: string; paragraphs: number }[] = [
   { id: 'start', paragraphs: 3 },
@@ -20,6 +20,7 @@ const SECTIONS: { id: string; paragraphs: number }[] = [
 
 const SYNTAX: [string, string][] = [
   ['youtube.com', 'help.syntax.domain'],
+  ['amazon.*', 'help.syntax.countries'],
   ['=m.youtube.com', 'help.syntax.host'],
   ['reddit.com/r/funny', 'help.syntax.path'],
   ['example.com/page$', 'help.syntax.page'],
@@ -33,7 +34,7 @@ const SYNTAX: [string, string][] = [
   ['||example.com^  ·  *://*.example.com/*', 'help.syntax.import'],
 ];
 
-const FAQ = ['private', 'flash', 'locked', 'android', 'leechblock', 'sync', 'uninstall'];
+const FAQ = ['private', 'flash', 'locked', 'android', 'sync', 'uninstall'];
 
 export function HelpPage() {
   const version = api.runtime.getManifest().version;
@@ -44,9 +45,6 @@ export function HelpPage() {
           <h1>{t('help.title')}</h1>
           <p>{t('help.subtitle')}</p>
         </div>
-        <Button onClick={() => navigate('/welcome')} icon="sparkle">
-          {t('help.rerunSetup')}
-        </Button>
       </div>
       <nav class="card" aria-label={t('help.contents')}>
         <ul class="row" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
@@ -61,15 +59,17 @@ export function HelpPage() {
               </button>
             </li>
           ))}
-          <li>
-            <button
-              type="button"
-              class="link-btn"
-              onClick={() => document.getElementById('help-faq')?.scrollIntoView()}
-            >
-              {t('help.faq')}
-            </button>
-          </li>
+          {(['faq', 'about'] as const).map((id) => (
+            <li key={id}>
+              <button
+                type="button"
+                class="link-btn"
+                onClick={() => document.getElementById(`help-${id}`)?.scrollIntoView()}
+              >
+                {t(`help.${id}`)}
+              </button>
+            </li>
+          ))}
         </ul>
       </nav>
       {SECTIONS.map((s) => (
@@ -126,9 +126,33 @@ export function HelpPage() {
         </ul>
         <p class="small muted">{t('help.shortcutsNote')}</p>
       </section>
-      <section class="card stack">
+      <section id="help-about" class="card stack">
         <h2>{t('help.about')}</h2>
         <p>{t('help.aboutBody', { version })}</p>
+        <ul class="list link-list">
+          <li>
+            <a class="link-row" href={REPO_URL} target="_blank" rel="noopener noreferrer">
+              <Icon name="code" />
+              <span class="stack stack-xs grow">
+                <strong>{t('help.source')}</strong>
+                <span class="small muted">{REPO_URL.replace('https://', '')}</span>
+              </span>
+              <Icon name="external" />
+              <span class="sr-only">{t('common.newTab')}</span>
+            </a>
+          </li>
+          <li>
+            <a class="link-row" href={NEW_ISSUE_URL} target="_blank" rel="noopener noreferrer">
+              <Icon name="chat" />
+              <span class="stack stack-xs grow">
+                <strong>{t('help.issue')}</strong>
+                <span class="small muted">{t('help.issueHelp')}</span>
+              </span>
+              <Icon name="external" />
+              <span class="sr-only">{t('common.newTab')}</span>
+            </a>
+          </li>
+        </ul>
         <p class="small muted">{t('help.license')}</p>
       </section>
     </div>

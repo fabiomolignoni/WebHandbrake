@@ -77,6 +77,9 @@ const PATHS: Record<string, string> = {
   'arrow-right': 'M5 12h14 M12 5l7 7-7 7',
   'shield-check': 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z M9 12l2 2 4-4',
   'more-v': 'M12 5h.01 M12 12h.01 M12 19h.01',
+  pin: 'M9 3h6l-1 6 4 3H6l4-3z M12 12v9',
+  code: 'M8 7l-5 5 5 5 M16 7l5 5-5 5 M14 4l-4 16',
+  dashboard: 'M4 4h7v9H4z M13 4h7v5h-7z M13 11h7v9h-7z M4 15h7v5H4z',
   palette:
     'M12 21a9 9 0 1 1 9-9c0 2-1.5 3-3.5 3H16a2 2 0 0 0-1.5 3.3A1.6 1.6 0 0 1 12 21z M7.5 11h.01 M10 7.5h.01 M14.5 7.5h.01',
 };
@@ -116,18 +119,18 @@ export const GROUP_ICONS = [
 export function BrakeLogo({ size = 28 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 128 128" aria-hidden="true" focusable="false">
-      <rect x="4" y="4" width="120" height="120" rx="28" style={{ fill: 'var(--accent, #2f7a78)' }} />
+      <rect x="4" y="4" width="120" height="120" rx="28" style={{ fill: 'var(--brand, #4850a5)' }} />
       <path
         d="M33 31 A47 47 0 0 0 33 97"
         fill="none"
-        stroke="#ffffffb0"
+        stroke="#d6d9f5"
         stroke-width="8"
         stroke-linecap="round"
       />
       <path
         d="M95 31 A47 47 0 0 1 95 97"
         fill="none"
-        stroke="#ffffffb0"
+        stroke="#d6d9f5"
         stroke-width="8"
         stroke-linecap="round"
       />

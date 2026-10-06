@@ -53,9 +53,11 @@ function App() {
     if (!model) return;
     applyAppearance(model.config.settings);
     setWeekStart(model.config.settings.weekStart);
+    // The first run replaces the landing page only: links to a page (Help from the sites guide,
+    // a page opened from the popup) keep working while the setup is in progress.
     if (
       !model.config.settings.onboarded &&
-      section !== 'welcome' &&
+      section === 'today' &&
       !sessionStorage.getItem('whb-skip-welcome')
     )
       navigate('/welcome');

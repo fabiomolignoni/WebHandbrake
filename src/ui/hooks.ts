@@ -1,6 +1,7 @@
 /** Data hooks: models are fetched from the background and refreshed when it broadcasts a change. */
 
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
+import { DEFAULT_ACCENT } from '../engine/defaults';
 import type { Settings } from '../engine/types';
 import { initI18n } from '../i18n/i18n';
 import { api } from '../platform/api';
@@ -75,10 +76,12 @@ export function applyAppearance(
   } else root.setAttribute('data-theme', s.theme);
   if (s.highContrast) root.setAttribute('data-contrast', 'high');
   else root.removeAttribute('data-contrast');
-  if (s.accent && /^#[0-9a-f]{6}$/i.test(s.accent) && !s.highContrast) {
+  // The default accent uses the tokens tuned for each theme; a custom one is derived from the colour.
+  const custom = s.accent && /^#[0-9a-f]{6}$/i.test(s.accent) && s.accent.toLowerCase() !== DEFAULT_ACCENT;
+  if (custom && !s.highContrast) {
     root.style.setProperty('--accent', dark ? lighten(s.accent) : s.accent);
     root.style.setProperty('--accent-strong', dark ? lighten(s.accent, 0.5) : darken(s.accent));
-    root.style.setProperty('--accent-soft', mix(s.accent, dark ? '#1c2123' : '#ffffff', dark ? 0.75 : 0.83));
+    root.style.setProperty('--accent-soft', mix(s.accent, dark ? '#1b1e24' : '#ffffff', dark ? 0.75 : 0.83));
   } else {
     root.style.removeProperty('--accent');
     root.style.removeProperty('--accent-strong');

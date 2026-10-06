@@ -333,6 +333,8 @@ function FocusPanel({ m, reload }: { m: PopupModel; reload: () => void }) {
       </section>
     );
   }
+  // A quick session applies the rules marked for it: with none, it would look active and block nothing.
+  if (!m.canFocus) return null;
   return (
     <section class="panel" aria-labelledby="focus-title">
       <div class="row between">
@@ -400,7 +402,7 @@ function App() {
     <div class="popup">
       <header class="popup-head">
         <BrakeLogo size={22} />
-        <span class="brand-name grow">WebHandbrake</span>
+        <span class="sr-only">WebHandbrake</span>
         <button
           type="button"
           class="level"
@@ -413,13 +415,16 @@ function App() {
             <span class="sr-only">{t('popup.pendingReady', { count: m.pendingReady })}</span>
           )}
         </button>
-        <IconButton
-          icon="settings"
-          label={t('popup.openDashboard')}
-          variant="ghost"
+        <span class="grow" />
+        <Button
+          icon="dashboard"
           size="small"
+          class="open-dashboard"
+          title={t('popup.openDashboard')}
           onClick={() => openDashboard()}
-        />
+        >
+          {t('popup.dashboard')}
+        </Button>
       </header>
       <div class="popup-body">
         {!m.onboarded && (
@@ -567,8 +572,8 @@ function App() {
             </span>
           )}
         </span>
-        <button type="button" class="link-btn nowrap" onClick={() => openDashboard()}>
-          {t('popup.dashboard')} →
+        <button type="button" class="link-btn nowrap" onClick={() => openDashboard('/insights')}>
+          {t('popup.details')} →
         </button>
       </footer>
       {pausing && pause && (

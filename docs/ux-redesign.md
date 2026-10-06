@@ -9,6 +9,9 @@ information architecture, wireframes) without changing the functional requiremen
   inherit the new design system
 - Iteration 2 (§10): "Groups" renamed to "Rules", and a step-by-step wizard to create one; §2–§9
   keep the original word "group"
+- Iteration 3 (§11): first run rebuilt around active choices, new brand colour, hidden addresses
+  for sensitive lists, "Allowed" for unrestricted states, a short guide for writing addresses, a
+  labelled Dashboard button in the popup, links to the source code and issues
 - Unchanged: rule engine, data model, permissions. Two small supporting changes: the popup model
   carries the global protection level (header chip), and `targetFor` moved from the background to
   `engine/page-target.ts` so that the popup can preview the entry it will add
@@ -325,7 +328,7 @@ graduated-friction principle G1 (C5).
 | Name | C1 | C2 | C3 | C4 | C5 | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
 | Groups | 2 | 5 | 5 | 2 | 3 | Accurate but meaningless on its own |
-| Blocks | 5 | 2 | 1 | 5 | 1 | Cold Turkey "Blocks", Opal "Blocks" tab, LeechBlock "block sets"; wrong for rules that ask, wait or only count; clashes with the "Block" intervention ("Block → Block"); frames every rule as a wall |
+| Blocks | 5 | 2 | 1 | 5 | 1 | Cold Turkey "Blocks", Opal "Blocks" tab; wrong for rules that ask, wait or only count; clashes with the "Block" intervention ("Block → Block"); frames every rule as a wall |
 | Limits | 4 | 4 | 1 | 4 | 4 | Screen Time "App Limits"; clashes with time limits, used everywhere (budgets, help, privacy, protection) |
 | Rules | 4 | 5 | 4 | 3 | 5 | Jomo "Rules" tab, e-mail rules; matches the existing copy ("your rules", protection levels); needs the inner lines renamed |
 | Brakes | 2 | 5 | 5 | 1 | 5 | On brand, but a metaphor: weak scent |
@@ -359,9 +362,10 @@ New rule = a four-step wizard. Opening the full editor stays possible at any ste
    chips (they add their sites, name, colour and icon), your own sites (paste anything).
 2. **When should it apply?** Every time · At certain times (week windows with presets) · After
    some time each day (15 min … 2 h).
-3. **What should happen?** From the gentlest to the strongest, in the tones of §5.1: Only count the
-   time · Ask what I want to do · Make me wait 30 s · Block. The recommended option is friction for
-   temptations and block for the lists that are clearly unwanted (gambling, adult content).
+3. **What should happen?** Every intervention, from the gentlest to the strongest, in the tones of
+   §5.1: Count only · Reminder · Filter · Ask first · Wait · Challenge · Block · Close tab ·
+   Redirect. Nothing is pre-selected (changed in iteration 3, §11.2); a redirect asks for its
+   address, every other setting starts from a default that the editor can refine.
 4. **Check and create.** The plan as one sentence ("After 30 min a day on facebook.com and 16 more
    sites, WebHandbrake first asks what you want to do."), name, optional personal reason, colour
    and icon, and the defaults (break cost, protection level). "Create rule" or "Customise all
@@ -372,10 +376,11 @@ Why this structure:
 - **Implementation intentions.** The steps build an if-then plan ("when situation X, then I do
   Y"), and the review sentence states it; forming such plans has a medium-to-large effect on goal
   attainment (Gollwitzer & Sheeran 2006, d = 0.65 over 94 tests).
-- **Defaults matter** (Johnson & Goldstein 2003). The pre-selected option is the gentle, effective
-  one (friction: Grüning et al. 2023, Haliburton et al. 2024), since restrictive lockouts frustrate
-  (Kim et al. 2019) and soft commitments are the ones people take up (Bryan, Karlan & Nelson 2010).
-  Block is still one tap away and is recommended where it fits.
+- **Defaults matter** (Johnson & Goldstein 2003), which is why the first version pre-selected the
+  gentle option. Iteration 3 replaced this with an active choice (§11.2): the right intervention
+  depends on the person and the sites. Friction stays the gentle middle of the scale and is
+  described as such (Grüning et al. 2023, Haliburton et al. 2024; Kim et al. 2019 on lockouts;
+  Bryan, Karlan & Nelson 2010 on soft commitments).
 - **A personal reason** at the end (optional): goal reminders keep people on task (Lyngs et al.
   2020) and are shown on the page that stops you.
 - **NN/g wizard guidelines.** Few steps (4), visible progress with step names, descriptive buttons
@@ -390,9 +395,171 @@ Where: `src/dashboard/pages/group-wizard.tsx`, `quickPolicies()` in `src/engine/
 used by onboarding), tests in `tests/e2e/ui.spec.ts`, `tests/e2e/a11y.spec.ts` (every step) and
 `tests/unit/quick-rules.test.ts`.
 
-## 11. References
+## 11. Iteration 3: first run, identity and details
+
+Feedback on the first run and on everyday use led to a third round. Each change below was checked
+against the same sources as before; new ones are in §12.
+
+### 11.1 First run
+
+```
+ Welcome ── ✓ Installed ── 1 Your goal ── 2 Sites ── 3 Details* ── 4 Your plan ── You're set
+                                                    (* hours, daily time or what happens)
+```
+
+- **Welcome.** The value in three points (gentle, firm when needed, private) and two buttons of
+  the same size: **Set up in about a minute** (primary) and **Skip setup** (secondary). A skip
+  link was too easy to miss; a secondary button keeps the hierarchy (one primary action per view)
+  while making the way out equally visible (NN/g on onboarding: always allow skipping; Material 3:
+  outlined buttons for the alternative to the main action).
+- **Endowed progress.** "Installed" is shown as an already completed step (Nunes & Drèze 2006:
+  people are more likely to finish a task that is visibly under way; Kivetz, Urminsky & Zheng 2006:
+  effort increases near the goal). Only the steps of the chosen goal are counted: 3 or 4.
+- **Your goal.** Five outcomes in the user's words ("Stop opening sites out of habit", "Spend less
+  time on some sites", "Stay focused at certain hours", "Block some sites completely", "Just see
+  where my time goes"). None is pre-selected and none is marked as recommended (§11.2).
+- **Sites.** The ready-made lists as tiles, **your own sites always visible** (no disclosure: it
+  is one of the two ways to answer the question, not an advanced option) with the short guide of
+  §11.7, and a live **selection summary**: one line per rule that will be created with its number
+  of sites, then the total ("3 rules · 38 sites in total"). Addresses of sensitive lists are not
+  shown (§11.4).
+- **Details.** Hours (week windows) for a schedule, minutes a day for a limit, and what happens:
+  **all nine interventions** (§11.2), with a miniature of what each looks like on a site (show,
+  don't tell). "Block" and "Just see" imply the intervention, so they skip this step.
+- **Your plan.** The if-then sentence of §10.2, the rules that will be created, the optional
+  personal reason, and how firm the protection should be. The current level starts selected: it
+  is the state of the extension, not a recommendation. The site-access permission is asked here,
+  in context, only when missing (permission priming).
+- **You're set.** Next steps that cannot be done by the page itself: pin the button (Chrome hides
+  extensions behind the puzzle menu), try a site, allow private windows when needed.
+- "Run the setup again" was removed from Help: rules are created with **New rule** (§10.2), and a
+  second first run would only duplicate rules.
+
+### 11.2 Active choice instead of recommendations
+
+We do not know why someone installed the extension, so the first run and the rule wizard no
+longer pre-select or label anything as "Recommended" where the answer depends on the person (goal,
+what happens). The next step opens once a choice is made.
+
+- Defaults work when most people share the same best option; when preferences are heterogeneous,
+  an **active decision** gives better outcomes than any default (Carroll, Choi, Laibson, Madrian &
+  Metrick 2009). Requiring a choice also raises follow-through compared with an opt-out default
+  (Keller, Harlam, Loewenstein & Volpp 2011, *enhanced active choice*).
+- Choosing one's own goal and response supports autonomy, which predicts lasting self-regulation
+  (Ryan & Deci 2000), and it is the plan of an implementation intention (Gollwitzer & Sheeran
+  2006).
+- Defaults remain where they help: the settings of the chosen intervention (30 s wait, grayscale
+  filter, 24-character challenge…), stated as "Its settings use sensible defaults; you can
+  fine-tune them later in the rule." Only the redirect address has no sensible default and is
+  asked for.
+- All nine interventions are offered in the order of the friction ladder (gentler → stronger),
+  in a 3 × 3 grid with the tones of §5.1, and the description of the chosen one below. "Count
+  only" is available with "Every time" only (a schedule or a limit that only counts makes no
+  sense).
+
+### 11.3 Colour and identity
+
+Every trace of the product that inspired the first version was removed (importer, requirement
+references, comments, comparisons); lists of sites are still imported in generic formats (plain
+lists, hosts files, uBlock Origin / AdGuard, uBlacklist).
+
+The default accent and brand colour is a muted **indigo `#4850a5`** (dark theme `#a6b2f4`):
+
+- Purple-blue is among the most pleasant and least arousing hues (Valdez & Mehrabian 1994): the
+  extension should calm, not alarm. Red is avoided for the brand, since in achievement contexts it
+  signals threat and avoidance (Elliot & Maier 2014); red-like tones stay for warnings.
+- Blue is associated with competence and trust (Labrecque & Milne 2012), fitting a tool people
+  hand control to; colour–emotion associations are largely shared across countries (Jonauskaite
+  et al. 2020), which matters for a translated product.
+- It is distinct from the green/teal used before and from the state tones (green allowed, teal
+  gentle, amber friction, plum protected), so the brand never reads as a state.
+- Text on the accent and the accent on the background pass WCAG AA in light, dark and high
+  contrast; the old default is migrated automatically when it was never changed.
+
+### 11.4 Sensitive lists
+
+The extension may be used by minors and on shared screens, so the addresses of the gambling and
+adult lists are never shown unless asked: the onboarding tiles show "19 sites · not shown", rule
+rows and plan sentences count them without naming them, and the sites editor collapses them into
+one row ("19 addresses from sensitive lists are hidden · Show"). The addresses are not needed to
+decide; showing them on request keeps the list reviewable.
+
+### 11.5 "Allowed" instead of "Free"
+
+"Free" was ambiguous (free of charge, free time, free of rules?) and the extension itself is
+described as free software. Following the vocabulary problem (Furnas et al. 1987) and Jakob's law,
+states now use the pair people know from Screen Time ("Always Allowed"), Family Link and Microsoft
+Family Safety: **Allowed / Blocked**. "Allowed until 17:00", "Allowed · Reminder"; a rule that only
+counts shows **Time counted**.
+
+### 11.6 Ready-made lists cover whole platforms
+
+Lists target a platform, not a country domain: `amazon.*` matches amazon.com, amazon.it,
+amazon.co.uk…, subdomains are always included (m.youtube.com), and alternative domains of the same
+service are listed (youtu.be, fb.com). The lists live in `src/data/templates.ts` for review.
+
+### 11.7 Writing addresses: the short guide
+
+Next to every sites input, a collapsed **"How to write an address"** guide lists what people want
+to do, each with an example: a whole site, the site in every country (`amazon.*`), one subdomain,
+only the exact address (`=`), a section, a single page (`$`), only the home page, any text (`*`),
+an exception (`+`), and pasting lists. The full syntax stays in Help.
+
+- Help should be concise, task-oriented and list concrete steps (Nielsen #10); minimalist
+  instruction starts from real tasks (Carroll 1990); worked examples teach faster than rules
+  (Sweller & Cooper 1985).
+- Picking an example puts it in the input, selected, ready to be edited (recognition rather than
+  recall, Nielsen #6).
+- A sentence pasted by mistake is reported once ("Line 1 'not a site': not a site address…"),
+  not once per word; among real sites, each wrong entry is still reported on its own.
+
+### 11.8 Popup: the way to the dashboard
+
+The gear icon was ambiguous (a gear means settings) and small. The header now has a labelled,
+tinted **Dashboard** button at the top right, where people look for "open the app" (NN/g on icon
+usability: labels for all but universal icons; Material 3 tonal buttons for important secondary
+actions). To make room, the product name became a screen-reader label next to the logo. The
+footer link under today's time now opens **Details** (Insights), matching what it sits under.
+
+### 11.9 Source code and issues
+
+Help → **About** links to the source code and to "Report a problem or suggest an idea" (GitHub
+issue chooser); Diagnostics adds "Open an issue on GitHub" next to "Copy diagnostic report". They
+are plain links opened by the user; the extension itself still makes no network requests
+(PRIV-01). The manifest's homepage points to the repository too.
+
+Verification: unit tests (list parsing, first-run classification), Chromium end-to-end tests of
+the first run (active choices, hidden addresses, selection summary, custom sites) and of the
+wizard (nine options, redirect address), axe WCAG 2.2 AA checks on every first-run and wizard
+step, 390 px layout checks, screenshots in light and dark themes, and the Firefox smoke test.
+
+## 12. References
 
 - Bryan, G., Karlan, D., Nelson, S. (2010). *Commitment Devices.* Annual Review of Economics 2.
+- Carroll, G. D., Choi, J. J., Laibson, D., Madrian, B. C., Metrick, A. (2009). *Optimal Defaults
+  and Active Decisions.* Quarterly Journal of Economics 124(4).
+- Carroll, J. M. (1990). *The Nurnberg Funnel: Designing Minimalist Instruction for Practical
+  Computer Skill.* MIT Press.
+- Elliot, A. J., Maier, M. A. (2014). *Color Psychology: Effects of Perceiving Color on
+  Psychological Functioning in Humans.* Annual Review of Psychology 65.
+- Jonauskaite, D., et al. (2020). *Universal Patterns in Color-Emotion Associations Are Further
+  Shaped by Linguistic and Geographic Proximity.* Psychological Science 31(10).
+- Keller, P. A., Harlam, B., Loewenstein, G., Volpp, K. G. (2011). *Enhanced active choice: A new
+  method to motivate behavior change.* Journal of Consumer Psychology 21(4).
+- Kivetz, R., Urminsky, O., Zheng, Y. (2006). *The Goal-Gradient Hypothesis Resurrected.* Journal
+  of Marketing Research 43(1).
+- Labrecque, L. I., Milne, G. R. (2012). *Exciting red and competent blue: the importance of color
+  in marketing.* Journal of the Academy of Marketing Science 40(5).
+- Nunes, J. C., Drèze, X. (2006). *The Endowed Progress Effect.* Journal of Consumer Research
+  32(4).
+- Ryan, R. M., Deci, E. L. (2000). *Self-Determination Theory and the Facilitation of Intrinsic
+  Motivation, Social Development, and Well-Being.* American Psychologist 55(1).
+- Sweller, J., Cooper, G. A. (1985). *The Use of Worked Examples as a Substitute for Problem
+  Solving in Learning Algebra.* Cognition and Instruction 2(1).
+- Valdez, P., Mehrabian, A. (1994). *Effects of Color on Emotions.* Journal of Experimental
+  Psychology: General 123(4).
+- NN/g: *Mobile-App Onboarding*; *Icon Usability*; *Help and Documentation* (heuristic #10).
+  Google. *Material Design 3 — Buttons* (filled tonal, outlined).
 - Furnas, G. W., Landauer, T. K., Gomez, L. M., Dumais, S. T. (1987). *The vocabulary problem in
   human-system communication.* Communications of the ACM 30(11).
 - Gollwitzer, P. M., Sheeran, P. (2006). *Implementation intentions and goal achievement: a

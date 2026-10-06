@@ -6,6 +6,7 @@ import type { Alternative, Config, Settings } from '../../engine/types';
 import { AVAILABLE_LOCALES, t } from '../../i18n/i18n';
 import { api } from '../../platform/api';
 import { formatDateTime } from '../../shared/format';
+import { NEW_ISSUE_URL } from '../../shared/links';
 import type { ImportPreview } from '../../shared/models';
 import { call } from '../../shared/rpc';
 import { describeUnit } from '../../shared/summary';
@@ -24,6 +25,7 @@ import {
 } from '../../ui/components';
 import { copyText, downloadText, pickTextFile } from '../../ui/download';
 import { useModel } from '../../ui/hooks';
+import { Icon } from '../../ui/icons';
 import { useSaveFlow } from '../../ui/saveflow';
 import { PeriodSelect } from '../components/policy';
 import { clone, useDashboard } from '../context';
@@ -733,6 +735,14 @@ function ImportDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
+/** The reason of a backup; reasons this version does not know (older imports…) get a generic label. */
+function backupReason(reason: string): string {
+  const key = `backup.reason.${reason}`;
+  const label = t(key);
+  if (label !== key) return label;
+  return reason.startsWith('import-') ? t('backup.reason.import') : t('backup.reason.other');
+}
+
 function DataSettings() {
   const [stats, setStats] = useState(false);
   const [secrets, setSecrets] = useState(false);
@@ -803,11 +813,8 @@ function DataSettings() {
             {backups.slice(0, 50).map((b) => (
               <li key={b.at} class="row between">
                 <span class="small">
-                  {formatDateTime(b.at)} ·{' '}
-                  {t(`backup.reason.${b.reason}`) === `backup.reason.${b.reason}`
-                    ? b.reason
-                    : t(`backup.reason.${b.reason}`)}{' '}
-                  · {t('data.groupsCount', { count: b.groups })}
+                  {formatDateTime(b.at)} · {backupReason(b.reason)} ·{' '}
+                  {t('data.groupsCount', { count: b.groups })}
                 </span>
                 <Button size="small" onClick={() => void flow.run(call('backups.restore', { at: b.at }))}>
                   {t('data.restore')}
@@ -1073,6 +1080,11 @@ function Diagnostics() {
           >
             {t('diag.copyReport')}
           </Button>
+          <a class="btn ghost" href={NEW_ISSUE_URL} target="_blank" rel="noopener noreferrer">
+            <Icon name="external" />
+            {t('diag.openIssue')}
+            <span class="sr-only">{t('common.newTab')}</span>
+          </a>
         </div>
         <details class="disclosure">
           <summary>{t('diag.counters')}</summary>

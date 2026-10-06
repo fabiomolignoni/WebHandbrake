@@ -76,12 +76,31 @@ for (const theme of ['light', 'dark']) {
       location.hash = '#/groups/new?template=social';
     });
     for (const step of ['when', 'what happens', 'review']) {
+      if (step === 'review') await p.getByRole('radio', { name: 'Ask first' }).click();
       await p.getByRole('button', { name: `Next: ${step}` }).click();
       await p.waitForTimeout(200);
       const r = await new AxeBuilder({ page: p })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
         .analyze();
       all.push(...summary(r.violations).map((s) => `wizard ${step}: ${s}`));
+    }
+    // Every screen of the first run.
+    await p.evaluate(() => {
+      sessionStorage.clear();
+      location.hash = '#/welcome';
+    });
+    await p.getByRole('button', { name: 'Set up in about a minute' }).click();
+    const screens = ['goal', 'sites', 'details', 'plan'];
+    for (const [i, screen] of screens.entries()) {
+      if (screen === 'sites') await p.getByRole('radio', { name: /Stop opening sites out of habit/ }).click();
+      if (screen === 'details') await p.getByRole('button', { name: /^Social media/ }).click();
+      if (screen === 'plan') await p.getByRole('radio', { name: 'Wait' }).click();
+      if (i > 0) await p.getByRole('button', { name: /^Next:/ }).click();
+      await p.waitForTimeout(200);
+      const r = await new AxeBuilder({ page: p })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+        .analyze();
+      all.push(...summary(r.violations).map((s) => `first run ${screen}: ${s}`));
     }
     expect(all).toEqual([]);
   });

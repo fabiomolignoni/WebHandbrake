@@ -6,12 +6,11 @@
  */
 
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { TEMPLATES } from '../../data/templates';
+import { isSensitiveSite, TEMPLATES } from '../../data/templates';
 import {
   GROUP_COLORS,
   newGroup,
   pausePolicyFor,
-  QUICK_DELAY_SECONDS,
   type QuickHow,
   type QuickWhen,
   quickIntervention,
@@ -20,24 +19,24 @@ import {
   targetsFromSites,
 } from '../../engine/defaults';
 import type { Group, Target, TimeWindow } from '../../engine/types';
+import { isRedirectUrl } from '../../engine/validate';
 import { t } from '../../i18n/i18n';
-import { formatDuration } from '../../shared/format';
 import { call } from '../../shared/rpc';
-import { describeWindows } from '../../shared/summary';
-import { Banner, Button, GroupTile, RadioCards, Segmented, ToneIcon, toast } from '../../ui/components';
+import { Banner, Button, GroupTile, RadioCards, Segmented, toast } from '../../ui/components';
 import { GROUP_ICONS, Icon } from '../../ui/icons';
 import { costLabel } from '../../ui/pause';
 import { useSaveFlow } from '../../ui/saveflow';
-import { interventionIcon, toneOf } from '../../ui/status';
+import { toneOf } from '../../ui/status';
+import { HowPicker } from '../components/how-picker';
 import { WindowsEditor } from '../components/schedule';
 import { TargetsEditor } from '../components/targets';
 import { clone, useDashboard } from '../context';
+import { planSentence, sitesPhrase } from '../plan';
 import { navigate } from '../router';
 import { setEditorHandoff } from './group-editor';
 
 const STEPS = ['sites', 'when', 'how', 'review'] as const;
 const WHEN: QuickWhen[] = ['always', 'schedule', 'daily'];
-const HOW: QuickHow[] = ['track', 'ask', 'delay', 'block'];
 const WHEN_ICON: Record<QuickWhen, string> = { always: 'zap', schedule: 'calendar', daily: 'hourglass' };
 const MINUTES = [15, 30, 45, 60, 90, 120];
 /** The wizard keeps its state for the session: leaving and coming back resumes it (NN/g). */
@@ -52,8 +51,8 @@ interface State {
   when: QuickWhen;
   windows: TimeWindow[];
   minutes: number;
-  how: QuickHow;
-  howTouched: boolean;
+  how: QuickHow | null;
+  redirectUrl: string;
   note: string;
   color: string;
   icon: string;
@@ -63,7 +62,9 @@ interface State {
 function load(): State | null {
   try {
     const raw = sessionStorage.getItem(STORE);
-    return raw ? (JSON.parse(raw) as State) : null;
+    const s = raw ? (JSON.parse(raw) as State) : null;
+    // A wizard started by an earlier version has no redirect address.
+    return s ? { ...s, redirectUrl: s.redirectUrl ?? '' } : null;
   } catch {
     return null;
   }
@@ -75,15 +76,6 @@ function persist(s: State | null) {
   } catch {
     // storage unavailable: the wizard still works, it just does not resume
   }
-}
-
-/** "a.com, b.com and 3 more sites" */
-function sitesPhrase(targets: Target[]): string {
-  const values = targets.filter((x) => !x.allow).map((x) => x.value);
-  return t('wizard.sitesList', {
-    first: values.slice(0, 2).join(', '),
-    count: Math.max(0, values.length - 2),
-  });
 }
 
 export function GroupWizardPage({ template }: { template: string | null }) {
@@ -104,8 +96,8 @@ export function GroupWizardPage({ template }: { template: string | null }) {
       when: 'always',
       windows: clone(SCHEDULE_PRESETS.office),
       minutes: 30,
-      how: 'ask',
-      howTouched: false,
+      how: null,
+      redirectUrl: '',
       note: '',
       color: GROUP_COLORS.find((c) => !used.has(c)) ?? GROUP_COLORS[cfg.groups.length % GROUP_COLORS.length],
       icon: 'circle',
@@ -123,10 +115,13 @@ export function GroupWizardPage({ template }: { template: string | null }) {
     titleRef.current?.focus();
   }, [s.step]);
 
-  const blockStyle = s.templates.some((id) => TEMPLATES.find((x) => x.id === id)?.style === 'block');
-  const recommended: QuickHow = blockStyle ? 'block' : 'ask';
   const sites = s.targets.filter((x) => !x.allow);
-  const name = s.name.trim() || sites[0]?.value || '';
+  // Without a name, the first site names the rule, never an address from a sensitive list.
+  const name =
+    s.name.trim() ||
+    sites.find((x) => !isSensitiveSite(x.value))?.value ||
+    s.templates.map((id) => t(TEMPLATES.find((x) => x.id === id)?.nameKey ?? '')).join(' + ') ||
+    '';
 
   const build = (): Group =>
     newGroup({
@@ -135,8 +130,9 @@ export function GroupWizardPage({ template }: { template: string | null }) {
       icon: s.icon,
       note: s.note.trim(),
       targets: s.targets,
-      policies: quickPolicies(s.when, s.how, s.windows, s.minutes),
-      pause: pausePolicyFor(blockStyle ? 'strict' : level),
+      // The full editor can be opened before choosing: it then starts from a gentle question.
+      policies: quickPolicies(s.when, s.how ?? 'ask', s.windows, s.minutes, s.redirectUrl),
+      pause: pausePolicyFor(level),
     });
 
   const canNext =
@@ -144,14 +140,20 @@ export function GroupWizardPage({ template }: { template: string | null }) {
       ? sites.length > 0
       : s.step === 1
         ? s.when !== 'schedule' || s.windows.some((w) => w.days.length > 0)
-        : true;
+        : s.step === 2
+          ? s.how !== null && (s.how !== 'redirect' || isRedirectUrl(s.redirectUrl))
+          : true;
   const go = (step: number) => update({ step });
 
+  const [busy, setBusy] = useState(false);
   const create = async () => {
+    // A second click while saving would create the rule twice.
+    if (busy) return;
+    setBusy(true);
     const g = build();
     const next = clone(cfg);
     next.groups.push(g);
-    const ok = await flow.run(call('config.save', { config: next }));
+    const ok = await flow.run(call('config.save', { config: next })).finally(() => setBusy(false));
     if (ok) {
       persist(null);
       navigate('/groups');
@@ -173,7 +175,7 @@ export function GroupWizardPage({ template }: { template: string | null }) {
 
   const step = STEPS[s.step];
   const nextLabel = [t('wizard.next.when'), t('wizard.next.how'), t('wizard.next.review')][s.step];
-  const intervention = quickIntervention(s.how);
+  const intervention = quickIntervention(s.how ?? 'ask', s.redirectUrl);
 
   return (
     <div class="stack stack-lg wizard-page">
@@ -294,7 +296,7 @@ export function GroupWizardPage({ template }: { template: string | null }) {
             <RadioCards<QuickWhen>
               value={s.when}
               onChange={(when) =>
-                update({ when, ...(when !== 'always' && s.how === 'track' ? { how: recommended } : {}) })
+                update({ when, ...(when !== 'always' && s.how === 'track' ? { how: null } : {}) })
               }
               label={t('wizard.when.title')}
               itemClass="choice"
@@ -331,32 +333,14 @@ export function GroupWizardPage({ template }: { template: string | null }) {
         )}
 
         {step === 'how' && (
-          <RadioCards<QuickHow>
+          <HowPicker
             value={s.how}
-            onChange={(how) => update({ how, howTouched: true })}
+            onChange={(how) => update({ how })}
             label={t('wizard.how.title')}
-            itemClass="choice"
-            options={HOW.map((h) => ({ value: h, disabled: h === 'track' && s.when !== 'always' }))}
-            render={(o) => {
-              const type = quickIntervention(o.value).type;
-              return (
-                <>
-                  <ToneIcon tone={toneOf(type)} icon={interventionIcon(type)} />
-                  <span class="stack stack-xs">
-                    <span class="row" style={{ gap: '8px' }}>
-                      <strong>{t(`wizard.how.${o.value}`)}</strong>
-                      {o.value === recommended && <span class="tag accent">{t('wizard.recommended')}</span>}
-                    </span>
-                    <span class="small muted">
-                      {t(`wizard.how.${o.value}.desc`, { seconds: QUICK_DELAY_SECONDS })}
-                    </span>
-                    {o.value === 'track' && s.when !== 'always' && (
-                      <span class="tiny muted">{t('wizard.how.trackOnlyAlways')}</span>
-                    )}
-                  </span>
-                </>
-              );
-            }}
+            disabled={s.when === 'always' ? [] : ['track']}
+            disabledHint={t('wizard.how.trackOnlyAlways')}
+            redirectUrl={s.redirectUrl}
+            onRedirectUrl={(redirectUrl) => update({ redirectUrl })}
           />
         )}
 
@@ -367,14 +351,14 @@ export function GroupWizardPage({ template }: { template: string | null }) {
               <div class="stack stack-sm" style={{ minWidth: 0 }}>
                 <strong class="plan-name">{name}</strong>
                 <p class="plan-text">
-                  {t('wizard.review.plan', {
-                    cond: t(`wizard.cond.${s.when}`, {
-                      sites: sitesPhrase(s.targets),
-                      windows: describeWindows(s.windows),
-                      duration: formatDuration(s.minutes * 60),
-                    }),
-                    outcome: t(`wizard.then.${s.how}`, { seconds: QUICK_DELAY_SECONDS }),
-                  })}
+                  {planSentence(
+                    s.when,
+                    s.how ?? 'ask',
+                    sitesPhrase(s.targets),
+                    s.windows,
+                    s.minutes,
+                    s.redirectUrl,
+                  )}
                 </p>
               </div>
             </div>
@@ -447,7 +431,7 @@ export function GroupWizardPage({ template }: { template: string | null }) {
               <div class="stack stack-xs small">
                 <span>
                   {t('wizard.review.defaults', {
-                    cost: costLabel(pausePolicyFor(blockStyle ? 'strict' : level).cost),
+                    cost: costLabel(pausePolicyFor(level).cost),
                     level: t(`level.${level}`),
                   })}
                 </span>
@@ -473,7 +457,7 @@ export function GroupWizardPage({ template }: { template: string | null }) {
             </button>
           )}
           {step === 'review' ? (
-            <Button variant="primary" icon="check" disabled={!name} onClick={create}>
+            <Button variant="primary" icon="check" disabled={!name || busy} onClick={create}>
               {t('wizard.create')}
             </Button>
           ) : (
@@ -490,8 +474,8 @@ export function GroupWizardPage({ template }: { template: string | null }) {
 }
 
 /**
- * Selecting a ready-made list adds its sites (and, until the user changes them, its name, colour,
- * icon and suggested intervention); deselecting removes the sites no other selected list has.
+ * Selecting a ready-made list adds its sites (and, until the user changes them, its name, colour
+ * and icon); deselecting removes the sites no other selected list has.
  */
 function toggleTemplate(s: State, id: string): State {
   const tpl = TEMPLATES.find((x) => x.id === id);
@@ -508,13 +492,11 @@ function toggleTemplate(s: State, id: string): State {
   }
   const chosen = templates.map((x) => TEMPLATES.find((y) => y.id === x)!);
   const first = chosen[0];
-  const block = chosen.some((x) => x.style === 'block');
   return {
     ...s,
     templates,
     targets,
     ...(!s.nameTouched ? { name: chosen.map((x) => t(x.nameKey)).join(' + ') } : {}),
     ...(!s.lookTouched && first ? { color: first.color, icon: first.icon } : {}),
-    ...(!s.howTouched ? { how: block ? 'block' : 'ask' } : {}),
   };
 }

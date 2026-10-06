@@ -4,7 +4,16 @@
  * unknown fields (forward compatibility with newer versions and future sync).
  */
 
-import { defaultConfig, defaultOptions, defaultSettings, newId, pausePolicyFor } from './defaults';
+import {
+  DEFAULT_ACCENT,
+  defaultConfig,
+  defaultOptions,
+  defaultSettings,
+  GROUP_COLORS,
+  LEGACY_ACCENT,
+  newId,
+  pausePolicyFor,
+} from './defaults';
 import { checkRegex, compilePattern } from './patterns';
 import {
   type Config,
@@ -300,7 +309,7 @@ export function normalizeGroup(raw: unknown, errors: string[], now = Date.now())
     rev: num(raw.rev, 1, 1),
     updatedAt: num(raw.updatedAt, now),
     name: name || 'Group',
-    color: /^#[0-9a-f]{6}$/i.test(str(raw.color)) ? raw.color : '#3a7d7c',
+    color: /^#[0-9a-f]{6}$/i.test(str(raw.color)) ? raw.color : GROUP_COLORS[0],
     icon: str(raw.icon, 'circle', 40),
     note: str(raw.note, '', 2000),
     message: str(raw.message, '', 5000),
@@ -354,6 +363,7 @@ export function normalizeSettings(raw: unknown): Settings {
   s.protection.confirmHours = num(s.protection.confirmHours, 48, 1, 168);
   s.protection.access.lockWindows = normalizeWindows(s.protection.access.lockWindows);
   s.pauseLimit = { ...s.pauseLimit, period: normalizePeriod(s.pauseLimit?.period) };
+  if (typeof s.accent !== 'string' || s.accent.toLowerCase() === LEGACY_ACCENT) s.accent = DEFAULT_ACCENT;
   return s;
 }
 

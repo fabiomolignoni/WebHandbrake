@@ -6,6 +6,7 @@ import {
   type Group,
   type GroupOptions,
   type Intervention,
+  type InterventionType,
   type PausePolicy,
   type Policy,
   type ProtectionLevel,
@@ -21,14 +22,24 @@ export function newId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+/**
+ * Brand colour and default accent: a muted indigo (purple-blue), the pleasant and least arousing
+ * hue family in Valdez & Mehrabian (1994), associated with competence and calm rather than alarm
+ * (docs/ux-redesign.md §11.3).
+ */
+export const DEFAULT_ACCENT = '#4850a5';
+/** Accent used before v1.1, migrated to the new default when it was never changed. */
+export const LEGACY_ACCENT = '#2f7a78';
+
+/** Rule colours: distinct hues, readable as small dots and tiles in both themes. */
 export const GROUP_COLORS = [
-  '#3a7d7c',
-  '#5b7bd5',
+  '#4f6bd0',
   '#c4574f',
-  '#8a6d3b',
-  '#6b8f3c',
-  '#7a5ba8',
   '#b5762b',
+  '#6b8f3c',
+  '#2f8fa8',
+  '#7a5ba8',
+  '#8a6d3b',
   '#8c4a62',
 ];
 
@@ -37,7 +48,7 @@ export function defaultSettings(): Settings {
     language: 'auto',
     theme: 'system',
     highContrast: false,
-    accent: '#2f7a78',
+    accent: DEFAULT_ACCENT,
     hour12: 'auto',
     dateFormat: 'auto',
     weekStart: 1,
@@ -231,24 +242,42 @@ export function newPolicy(partial: Partial<Policy> = {}): Policy {
   };
 }
 
-/** When a new rule applies, as chosen in the creation wizard and in onboarding. */
-export type QuickWhen = 'always' | 'schedule' | 'daily';
-/** What happens, from the gentlest to the strongest (G1). */
-export type QuickHow = 'track' | 'ask' | 'delay' | 'block';
-
-export const QUICK_DELAY_SECONDS = 30;
-
-export function quickIntervention(how: QuickHow): Intervention {
-  switch (how) {
-    case 'track':
-      return { type: 'track' };
+/** Default settings of every intervention, used when it is chosen in the editor or a wizard. */
+export function defaultIntervention(type: InterventionType): Intervention {
+  switch (type) {
+    case 'remind':
+      return { type: 'remind' };
+    case 'filter':
+      return { type: 'filter', filter: 'grayscale', intensity: 100, mute: false };
     case 'ask':
       return frictionIntervention();
     case 'delay':
       return delayIntervention(QUICK_DELAY_SECONDS);
-    case 'block':
-      return { type: 'block' };
+    case 'challenge':
+      return {
+        type: 'challenge',
+        kind: 'random',
+        length: 24,
+        charset: 'alnum',
+        grant: { scope: 'site', mode: 'visit' },
+      };
+    case 'redirect':
+      return { type: 'redirect', url: 'https://' };
+    default:
+      return { type } as Intervention;
   }
+}
+
+/** When a new rule applies, as chosen in the creation wizard and in onboarding. */
+export type QuickWhen = 'always' | 'schedule' | 'daily';
+/** What happens: any intervention, from "only count" to "redirect" (G1). */
+export type QuickHow = Exclude<InterventionType, 'allow'>;
+
+export const QUICK_DELAY_SECONDS = 30;
+
+export function quickIntervention(how: QuickHow, redirectUrl?: string): Intervention {
+  if (how === 'redirect') return { type: 'redirect', url: redirectUrl?.trim() || 'https://' };
+  return defaultIntervention(how);
 }
 
 /** The starting condition of a rule: "when" × "what happens" (an if-then plan). */
@@ -257,8 +286,9 @@ export function quickPolicies(
   how: QuickHow,
   windows: TimeWindow[],
   minutes: number,
+  redirectUrl?: string,
 ): Policy[] {
-  const intervention = quickIntervention(how);
+  const intervention = quickIntervention(how, redirectUrl);
   if (when === 'schedule') return [newPolicy({ schedule: { mode: 'during', windows }, intervention })];
   if (when === 'daily')
     return [newPolicy({ budget: { type: 'time', minutes, period: { kind: 'day' } }, intervention })];

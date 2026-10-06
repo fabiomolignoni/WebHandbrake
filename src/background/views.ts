@@ -165,6 +165,7 @@ export async function popupModel(tabId?: number): Promise<PopupModel> {
     warnings: (await warnings()).filter((w) => w.kind === 'host-permission' || w.kind === 'dnr-error'),
     laterCount: store.later.length,
     canAdd: Boolean(parsed?.web),
+    canFocus: store.config.groups.some((g) => g.enabled && !g.archived && g.options.quickSession),
     quickMinutes: [25, 50, 90],
     onboarded: store.config.settings.onboarded,
     level: store.config.settings.protection.level,

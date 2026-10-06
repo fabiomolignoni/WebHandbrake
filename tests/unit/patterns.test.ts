@@ -79,7 +79,18 @@ describe('target syntax and normalisation (MAT-02)', () => {
     ]);
   });
 
-  it('accepts LeechBlock space separated lists', () => {
+  it('a word without a dot is not a site (except localhost)', () => {
+    const r = parseTargetList('not a site\nlocalhost\nyoutube.com');
+    expect(r.targets.map((x) => x.value)).toEqual(['localhost', 'youtube.com']);
+    // A sentence is one error for the whole line, not one per word.
+    expect(r.errors).toEqual([{ line: 1, text: 'not a site', error: 'targets.error.noDot' }]);
+    // Among real sites, each wrong entry is reported on its own.
+    const mixed = parseTargetList('facebook.com twitter instagram.com tiktok');
+    expect(mixed.targets.map((x) => x.value)).toEqual(['facebook.com', 'instagram.com']);
+    expect(mixed.errors.map((e) => e.text)).toEqual(['twitter', 'tiktok']);
+  });
+
+  it('accepts several sites on one line, separated by spaces', () => {
     const r = parseTargetList('facebook.com +facebook.com/groups twitter.com');
     expect(r.targets.map((x) => x.value)).toEqual(['facebook.com', 'facebook.com/groups', 'twitter.com']);
   });

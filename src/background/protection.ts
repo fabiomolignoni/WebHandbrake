@@ -28,6 +28,11 @@ import { accessSteps, createTicket, registerExecutor, type Step } from './ticket
 
 const emptyResult = (): SaveResult => ({ applied: [], ticket: null, pending: null, refused: null });
 
+/** Nothing can restrict navigation yet: no rules and no running or planned focus session. */
+export function unprotected(config: Config, t0 = now()): boolean {
+  return !config.groups.length && !store.state.sessions.some((s) => s.endAt > t0);
+}
+
 function unitLevel(u: ChangeUnit, config: Config, t0: number): { level: ProtectionLevel; groups: string[] } {
   const ids = unitGroups(u, config);
   if (!ids.length) return { level: globalLevel(t0), groups: [] };
@@ -82,9 +87,10 @@ export async function proposeConfig(
   let refusedUntil: number | null = null;
   let costLevel: ProtectionLevel = 'soft';
   const accessWindow = inAccessWindow(t0);
+  const free = unprotected(cur, t0);
 
   for (const u of units) {
-    const dir: Direction = classify(u, cur);
+    const dir: Direction = classify(u, cur, { unprotected: free });
     if (dir === 'strengthen') {
       immediate.push(u);
       continue;
@@ -137,7 +143,7 @@ export async function proposeConfig(
   if (costed.length) {
     const p = store.config.settings.protection;
     const steps: Step[] = [...access];
-    const weakening = costed.some((u) => classify(u, cur) === 'weaken');
+    const weakening = costed.some((u) => classify(u, cur, { unprotected: free }) === 'weaken');
     if (weakening)
       steps.push(
         costLevel === 'balanced' ? { type: 'wait', seconds: p.balancedDelaySeconds } : { type: 'confirm' },

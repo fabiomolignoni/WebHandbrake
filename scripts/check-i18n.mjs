@@ -85,7 +85,6 @@ const NAMESPACES = new Set([
   'targetType',
   'targets',
   'template',
-  'templateStyle',
   'test',
   'ticket',
   'time',
@@ -108,8 +107,8 @@ for await (const file of walk(join(root, 'src'))) {
   for (const m of src.matchAll(re)) used.add(m[1]);
   for (const m of src.matchAll(keyLike)) {
     const k = m[1];
-    if (IGNORE.test(k) || NOT_KEYS.has(k)) continue;
-    if (k in en || NAMESPACES.has(k.split('.')[0])) used.add(k);
+    if (NOT_KEYS.has(k)) continue;
+    if (k in en || (!IGNORE.test(k) && NAMESPACES.has(k.split('.')[0]))) used.add(k);
   }
 }
 
@@ -183,10 +182,8 @@ const DYNAMIC = {
   'wizard.{x}.intro': ['sites', 'when', 'how', 'review'],
   'wizard.when.{x}': ['always', 'schedule', 'daily'],
   'wizard.when.{x}.desc': ['always', 'schedule', 'daily'],
-  'wizard.how.{x}': ['track', 'ask', 'delay', 'block'],
-  'wizard.how.{x}.desc': ['track', 'ask', 'delay', 'block'],
   'wizard.cond.{x}': ['always', 'schedule', 'daily'],
-  'wizard.then.{x}': ['track', 'ask', 'delay', 'block'],
+  'wizard.then.{x}': ['track', 'remind', 'filter', 'ask', 'delay', 'challenge', 'block', 'close', 'redirect'],
   'editor.section.{x}': ['sites', 'rules', 'breaks', 'page', 'protection', 'advanced'],
   'focus.mode.{x}': ['groups', 'allowlist'],
   'focus.mode.{x}.desc': ['groups', 'allowlist'],
@@ -237,12 +234,19 @@ const DYNAMIC = {
   'settings.corner.{x}': ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
   'settings.size.{x}': ['small', 'medium', 'large'],
   'insights.span.{x}': ['day', 'week', 'month', 'year'],
-  'import.format.{x}': ['webhandbrake', 'leechblock', 'list', 'unknown'],
-  'templateStyle.{x}': ['ask', 'block'],
+  'import.format.{x}': ['webhandbrake', 'list', 'unknown'],
   'welcome.goal.{x}': ['schedule', 'limit', 'friction', 'block', 'track'],
   'welcome.goal.{x}.desc': ['schedule', 'limit', 'friction', 'block', 'track'],
-  'welcome.style.{x}': ['ask', 'delay', 'block'],
-  'welcome.style.{x}.desc': ['ask', 'delay', 'block'],
+  'welcome.{x}.title': ['goal', 'sites', 'plan'],
+  'welcome.{x}.intro': ['goal', 'sites', 'plan'],
+  'welcome.step.{x}': ['goal', 'sites', 'plan'],
+  'welcome.step.details.{x}': ['friction', 'limit', 'schedule'],
+  'welcome.details.{x}': ['friction', 'limit', 'schedule'],
+  'welcome.details.{x}.intro': ['friction', 'limit', 'schedule'],
+  'welcome.details.{x}.then': ['limit', 'schedule'],
+  'welcome.value.{x}.title': ['gentle', 'firm', 'private'],
+  'welcome.value.{x}.text': ['gentle', 'firm', 'private'],
+  'welcome.level.{x}': ['soft', 'balanced', 'strict'],
   'help.{x}.title': [
     'start',
     'groups',
@@ -255,15 +259,14 @@ const DYNAMIC = {
     'privacy',
     'mobile',
   ],
-  'help.faq.{x}.q': ['private', 'flash', 'locked', 'android', 'leechblock', 'sync', 'uninstall'],
-  'help.faq.{x}.a': ['private', 'flash', 'locked', 'android', 'leechblock', 'sync', 'uninstall'],
+  'help.faq.{x}.q': ['private', 'flash', 'locked', 'android', 'sync', 'uninstall'],
+  'help.faq.{x}.a': ['private', 'flash', 'locked', 'android', 'sync', 'uninstall'],
   'nav.{x}': ['today', 'groups', 'focus', 'later', 'insights', 'protection', 'settings', 'help'],
   'backup.reason.{x}': [
     'edit',
     'daily',
     'install',
     'import-webhandbrake',
-    'import-leechblock',
     'import-list',
     'import-group',
     'restore',

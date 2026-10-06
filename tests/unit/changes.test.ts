@@ -63,6 +63,31 @@ describe('change classification (PRO-02)', () => {
       ['setting', 'strengthen'],
     ]);
   });
+
+  it('a gentler level loosens nothing while nothing is protected yet (first run)', () => {
+    const empty = config([]);
+    const next = clone(empty);
+    next.settings.protection.level = 'soft';
+    next.groups.push(group('Video', ['video.test'], [{ schedule: office, intervention: BLOCK }]));
+    const dirs = (opts: { unprotected?: boolean }) =>
+      diffConfig(empty, next).map((u) => classify(u, empty, opts));
+    expect(dirs({ unprotected: true })).toEqual(['strengthen', 'neutral']);
+    // A running focus session restricts without rules: the caller reports it as protected.
+    expect(dirs({ unprotected: false })).toEqual(['strengthen', 'weaken']);
+    expect(dirs({})).toEqual(['strengthen', 'weaken']);
+    // With rules, lowering the level is always a weakening.
+    const lower = clone(base);
+    lower.settings.protection.level = 'soft';
+    expect(diffConfig(base, lower).map((u) => classify(u, base, { unprotected: true }))).toEqual(['weaken']);
+    // Locked stays locked.
+    const locked = clone(empty);
+    locked.settings.protection.level = 'locked';
+    const unlocked = clone(locked);
+    unlocked.settings.protection.level = 'soft';
+    expect(diffConfig(locked, unlocked).map((u) => classify(u, locked, { unprotected: true }))).toEqual([
+      'weaken',
+    ]);
+  });
 });
 
 describe('policy comparison', () => {

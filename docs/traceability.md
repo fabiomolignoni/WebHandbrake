@@ -98,8 +98,8 @@ Status of every requirement in the R1 scope of [`requisiti.md`](requisiti.md) §
 | STA-01…STA-04, STA-06, STA-07, MOT-01 | ✅ | Daily aggregates only, insights with comparison, attempts/impulses/breaks/sessions, neutral wording, CSV/JSON, deletion | E |
 | NOT-01…NOT-04, NOT-06 | ✅ | Movable accessible timer, badge, warnings in page and as notifications, optional notifications, reduced motion, optional sound | — |
 | LST-01, LST-03 | ✅ | 8 templates (data file), group sharing | E |
-| DAT-01…DAT-04, DAT-06, DAT-07 | ✅ | Versioned JSON export, LeechBlock NG import with report, backups with integrity check and restore, timestamped files, protected reset, migrations keeping unknown fields | U, E |
-| DAT-02 | 🟡 | LeechBlock NG (text and JSON), plain lists and uBlacklist are covered; Block Site (Ray) files are read as generic lists | E |
+| DAT-01…DAT-04, DAT-06, DAT-07 | ✅ | Versioned JSON export, import of lists of sites with a report, backups with integrity check and restore, timestamped files, protected reset, migrations keeping unknown fields | U, E |
+| DAT-02 | ✅ | Plain lists, hosts files, uBlock Origin / AdGuard and uBlacklist syntax, with a report of skipped lines | E |
 | DAT-05 | ✅ | Download + file picker + "Copy as text" fallback | ⏳ device test |
 | API-01, API-02 | ✅ | Shortcuts and context menu (desktop only, feature-detected) | — |
 | ONB-01…ONB-05, ONB-07 | ✅ | 2-minute wizard, permission checks per browser, contextual help, validation, simple/advanced mode, just-in-time explanations | E |
