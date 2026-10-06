@@ -1,4 +1,8 @@
-/** Group editor (§8.4.4): What · Rules · Breaks & page · Protection · Advanced, with "In brief". */
+/**
+ * Group editor (§8.4.4, docs/ux-redesign.md §6.5): everything about a group on one page — identity,
+ * sites, rules, breaks, block page, protection and advanced options — with a section nav, a live
+ * "In brief" summary, "Test a URL" and a sticky save bar.
+ */
 
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { TEMPLATES } from '../../data/templates';
@@ -15,11 +19,24 @@ import { hasErrors, validateGroup } from '../../engine/validate';
 import { t } from '../../i18n/i18n';
 import { formatDateTime } from '../../shared/format';
 import { call } from '../../shared/rpc';
-import { summarizeGroup } from '../../shared/summary';
-import { Banner, Button, ColorDot, Dialog, Field, Select, Tabs, Toggle, toast } from '../../ui/components';
+import { describeCondition, describeIntervention } from '../../shared/summary';
+import {
+  Banner,
+  Button,
+  Dialog,
+  Field,
+  GroupTile,
+  Menu,
+  RadioCards,
+  Select,
+  StatusPill,
+  Toggle,
+  toast,
+} from '../../ui/components';
 import { downloadText } from '../../ui/download';
 import { GROUP_ICONS, Icon } from '../../ui/icons';
 import { useSaveFlow } from '../../ui/saveflow';
+import { interventionIcon, toneOf } from '../../ui/status';
 import { PauseEditor } from '../components/pause-editor';
 import { PolicyCard } from '../components/policy';
 import { TargetsEditor } from '../components/targets';
@@ -27,7 +44,8 @@ import { TestUrl } from '../components/test-url';
 import { clone, useDashboard } from '../context';
 import { navigate, setNavigationGuard } from '../router';
 
-type TabId = 'what' | 'rules' | 'breaks' | 'protection' | 'advanced';
+const SECTIONS = ['sites', 'rules', 'breaks', 'page', 'protection', 'advanced'] as const;
+type SectionId = (typeof SECTIONS)[number];
 
 export function groupFromTemplate(templateId: string | null, level: ProtectionLevel): Group {
   const tpl = TEMPLATES.find((x) => x.id === templateId);
@@ -52,14 +70,115 @@ export function groupFromTemplate(templateId: string | null, level: ProtectionLe
 
 const LEVELS: ProtectionLevel[] = ['soft', 'balanced', 'strict', 'locked'];
 
+export function levelIcon(l: ProtectionLevel): string {
+  return { soft: 'leaf', balanced: 'shield', strict: 'shield-check', locked: 'lock' }[l];
+}
+
 export function LevelExplanation({ level }: { level: ProtectionLevel }) {
   return (
     <div class="stack stack-sm">
       <p>{t(`level.${level}.desc`)}</p>
-      <ul class="small text-2" style={{ margin: 0, paddingInlineStart: '18px' }}>
+      <ul class="small text-2 bullets">
         <li>{t(`level.${level}.weaken`)}</li>
         <li>{t(`level.${level}.pauses`)}</li>
       </ul>
+    </div>
+  );
+}
+
+/** Highlights the section currently in view (scroll spy). */
+function useCurrentSection(): SectionId {
+  const [current, setCurrent] = useState<SectionId>('sites');
+  useEffect(() => {
+    const onScroll = () => {
+      let found: SectionId = 'sites';
+      for (const id of SECTIONS) {
+        const el = document.getElementById(`sec-${id}`);
+        if (el && el.getBoundingClientRect().top < 140) found = id;
+      }
+      // At the bottom of the page the last sections cannot reach the top.
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4)
+        found = SECTIONS[SECTIONS.length - 1];
+      setCurrent(found);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  return current;
+}
+
+function SectionNav() {
+  const current = useCurrentSection();
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return (
+    <nav class="section-nav" aria-label={t('editor.sections')}>
+      {SECTIONS.map((id) => (
+        <button
+          key={id}
+          type="button"
+          aria-current={current === id ? 'true' : undefined}
+          onClick={() => {
+            const el = document.getElementById(`sec-${id}`);
+            el?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+            el?.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true });
+          }}
+        >
+          {t(`editor.section.${id}`)}
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+function SectionHead({ id, title, sub }: { id: SectionId; title: string; sub?: string }) {
+  return (
+    <div class="card-head">
+      <div>
+        <h2 id={`sec-${id}-title`} tabIndex={-1}>
+          {title}
+        </h2>
+        {sub && <p class="card-sub">{sub}</p>}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A draft handed over by the creation wizard ("Customise all options first"): the full editor
+ * opens with it instead of an empty rule. Kept in memory only, consumed once.
+ */
+let handoff: Group | null = null;
+export function setEditorHandoff(g: Group) {
+  handoff = g;
+}
+function takeHandoff(): Group | null {
+  const g = handoff;
+  handoff = null;
+  return g;
+}
+
+/** "In brief": each condition as a sentence with the tone of what happens (G5, SCH-04). */
+export function InBrief({ g }: { g: Group }) {
+  const last = g.policies[g.policies.length - 1];
+  const catchAll = last && last.schedule.mode === 'always' && !last.budget;
+  return (
+    <div class="stack stack-sm">
+      {g.policies.length === 0 && <p class="small">{t('summary.noPolicies')}</p>}
+      {g.policies.map((p, i) => (
+        <div key={p.id} class="stack stack-xs">
+          <span class="small">
+            <span class="muted num">{i + 1}. </span>
+            {describeCondition(p)}
+          </span>
+          <span>
+            <StatusPill small tone={toneOf(p.intervention.type)} icon={interventionIcon(p.intervention.type)}>
+              {describeIntervention(p.intervention)}
+            </StatusPill>
+          </span>
+        </div>
+      ))}
+      {g.policies.length > 0 && !catchAll && <p class="small muted">{t('summary.otherwise')}</p>}
     </div>
   );
 }
@@ -71,7 +190,7 @@ export function GroupEditorPage({ id, template }: { id: string; template: string
   const existing = cfg.groups.find((g) => g.id === id) ?? null;
   const isNew = !existing;
   const base = useMemo(
-    () => existing ?? groupFromTemplate(template, cfg.settings.protection.level),
+    () => existing ?? takeHandoff() ?? groupFromTemplate(template, cfg.settings.protection.level),
     [id, template],
   );
   const [draft, setDraft] = useState<Group>(() => clone(base));
@@ -82,7 +201,7 @@ export function GroupEditorPage({ id, template }: { id: string; template: string
     setDraft(clone(g));
     setSynced(JSON.stringify(g));
   };
-  const [tab, setTab] = useState<TabId>('what');
+  const [look, setLook] = useState(isNew && !template && !base.targets.length);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [lockPreview, setLockPreview] = useState<ProtectionLevel | null>(null);
@@ -107,6 +226,7 @@ export function GroupEditorPage({ id, template }: { id: string; template: string
   }, [dirty]);
 
   const issues = validateGroup(draft, cfg);
+  const errors = issues.filter((i) => i.level === 'error').length;
   const level = draft.protection ?? cfg.settings.protection.level;
   const set = (patch: Partial<Group>) => setDraft({ ...draft, ...patch });
   const setPolicy = (i: number, p: Policy) =>
@@ -117,6 +237,7 @@ export function GroupEditorPage({ id, template }: { id: string; template: string
     list.splice(i + dir, 0, p);
     set({ policies: list });
   };
+  const addPolicy = (p: Policy) => set({ policies: [...draft.policies, p] });
 
   const save = async () => {
     if (hasErrors(issues)) {
@@ -139,6 +260,16 @@ export function GroupEditorPage({ id, template }: { id: string; template: string
     }
   };
 
+  /** The on/off switch takes effect at once, like every switch (NN/g), without saving the draft. */
+  const setEnabled = async (enabled: boolean) => {
+    const next = clone(cfg);
+    next.groups = next.groups.map((g) => (g.id === draft.id ? { ...g, enabled } : g));
+    if (await flow.run(call('config.save', { config: next }))) {
+      setDraft((d) => ({ ...d, enabled }));
+      setSynced((s) => JSON.stringify({ ...JSON.parse(s), enabled }));
+    }
+  };
+
   const remove = async () => {
     setConfirmDelete(false);
     const next = clone(cfg);
@@ -150,36 +281,15 @@ export function GroupEditorPage({ id, template }: { id: string; template: string
     }
   };
 
-  const tabs: { value: TabId; label: string }[] = [
-    { value: 'what', label: `① ${t('editor.tab.what')}` },
-    { value: 'rules', label: `② ${t('editor.tab.rules')}` },
-    { value: 'breaks', label: `③ ${t('editor.tab.breaks')}` },
-    { value: 'protection', label: `④ ${t('editor.tab.protection')}` },
-    { value: 'advanced', label: t('editor.tab.advanced') },
-  ];
   const groupState = model.groups[draft.id];
 
   return (
     <div class="stack stack-lg">
       <div class="page-head">
-        <div class="stack stack-sm">
-          <a href="#/groups" class="small">
-            ← {t('nav.groups')}
-          </a>
-          <h1 class="row nowrap">
-            <ColorDot color={draft.color} />
-            {draft.name || t('editor.newGroup')}
-          </h1>
-        </div>
-        <div class="row">
-          {!isNew && (
-            <Toggle
-              checked={draft.enabled}
-              onChange={(enabled) => set({ enabled })}
-              label={draft.enabled ? t('groups.enabled') : t('groups.disabled')}
-            />
-          )}
-        </div>
+        <a href="#/groups" class="back quiet">
+          <Icon name="chevron-left" />
+          {t('nav.groups')}
+        </a>
       </div>
       {groupState?.lockedNow && (
         <Banner kind="info" icon="lock">
@@ -187,110 +297,139 @@ export function GroupEditorPage({ id, template }: { id: string; template: string
         </Banner>
       )}
       <div class="editor">
-        <div class="stack">
-          <Tabs tabs={tabs} value={tab} onChange={setTab} label={t('editor.sections')} />
-          {tab === 'what' && (
-            <div class="stack stack-lg">
-              <div class="card stack">
-                <Field label={t('editor.name')}>
-                  {(fid) => (
+        <div class="stack stack-lg">
+          <section class="card stack" aria-label={t('editor.identity')}>
+            <div class="identity">
+              <button
+                type="button"
+                class="identity-tile"
+                aria-expanded={look}
+                aria-label={t('editor.look')}
+                title={t('editor.look')}
+                onClick={() => setLook(!look)}
+              >
+                <GroupTile color={draft.color} icon={draft.icon} size={56} />
+              </button>
+              <div class="stack stack-xs" style={{ minWidth: 0 }}>
+                <div class="row nowrap">
+                  <div class="grow">
+                    <label for="group-name" class="sr-only">
+                      {t('editor.name')}
+                    </label>
                     <input
-                      id={fid}
-                      class="input"
+                      id="group-name"
+                      class="input name-input"
                       value={draft.name}
                       maxLength={80}
+                      placeholder={t('editor.namePlaceholder')}
                       onInput={(e) => set({ name: (e.target as HTMLInputElement).value })}
                     />
-                  )}
-                </Field>
-                <Field label={t('editor.note')} help={t('editor.noteHelp')}>
-                  {(fid, d) => (
-                    <textarea
-                      id={fid}
-                      aria-describedby={d}
-                      class="textarea"
-                      rows={2}
-                      maxLength={500}
-                      value={draft.note}
-                      placeholder={t('editor.notePlaceholder')}
-                      onInput={(e) => set({ note: (e.target as HTMLTextAreaElement).value })}
+                  </div>
+                  {!isNew && (
+                    <Toggle
+                      compact
+                      checked={draft.enabled}
+                      onChange={(enabled) => void setEnabled(enabled)}
+                      label={draft.enabled ? t('groups.enabled') : t('groups.disabled')}
                     />
                   )}
-                </Field>
-                <div class="row">
-                  <span class="label small">{t('editor.color')}</span>
-                  <div class="chips" role="radiogroup" aria-label={t('editor.color')}>
-                    {GROUP_COLORS.map((c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        role="radio"
-                        aria-checked={draft.color === c}
-                        class="chip"
-                        aria-label={c}
-                        onClick={() => set({ color: c })}
-                      >
-                        <ColorDot color={c} />
-                      </button>
-                    ))}
-                  </div>
-                  <span class="label small">{t('editor.icon')}</span>
-                  <div class="chips" role="radiogroup" aria-label={t('editor.icon')}>
-                    {GROUP_ICONS.map((ic) => (
-                      <button
-                        key={ic}
-                        type="button"
-                        role="radio"
-                        aria-checked={draft.icon === ic}
-                        class="chip"
-                        aria-label={ic}
-                        onClick={() => set({ icon: ic })}
-                      >
-                        <Icon name={ic} />
-                      </button>
-                    ))}
-                  </div>
                 </div>
-              </div>
-              <div class="card stack">
-                <h2>{t('editor.sites')}</h2>
-                <TargetsEditor
-                  targets={draft.targets}
-                  onChange={(targets) => set({ targets })}
-                  advanced={advanced}
-                  hint={t('editor.sitesHint')}
+                <label for="group-note" class="small text-2" style={{ fontWeight: 600 }}>
+                  {t('editor.note')}
+                </label>
+                <textarea
+                  id="group-note"
+                  aria-describedby="group-note-help"
+                  class="textarea note-input"
+                  rows={2}
+                  maxLength={500}
+                  value={draft.note}
+                  placeholder={t('editor.notePlaceholder')}
+                  onInput={(e) => set({ note: (e.target as HTMLTextAreaElement).value })}
                 />
+                <span class="help" id="group-note-help">
+                  {t('editor.noteHelp')}
+                </span>
               </div>
-              {cfg.lists.length > 0 && (
-                <div class="card stack">
-                  <h2>{t('editor.sharedLists')}</h2>
-                  <p class="help">{t('editor.sharedListsHelp')}</p>
-                  <div class="row">
-                    {cfg.lists.map((l) => (
-                      <label key={l.id} class="check">
-                        <input
-                          type="checkbox"
-                          checked={draft.lists.includes(l.id)}
-                          onChange={() =>
-                            set({
-                              lists: draft.lists.includes(l.id)
-                                ? draft.lists.filter((x) => x !== l.id)
-                                : [...draft.lists, l.id],
-                            })
-                          }
-                        />
-                        {l.name} <span class="muted small">({l.targets.length})</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
-          )}
-          {tab === 'rules' && (
-            <div class="card stack">
-              <h2>{t('editor.rules')}</h2>
-              <p class="help">{t('editor.rulesHelp')}</p>
+            {look && (
+              <div class="option-panel">
+                <div class="field">
+                  <span class="label small" id="color-label">
+                    {t('editor.color')}
+                  </span>
+                  <RadioCards
+                    value={draft.color}
+                    onChange={(color) => set({ color })}
+                    label={t('editor.color')}
+                    class="picker"
+                    itemClass="swatch"
+                    options={GROUP_COLORS.map((c) => ({ value: c }))}
+                    render={(o) => (
+                      <>
+                        <span style={{ background: o.value }} aria-hidden="true" />
+                        <span class="sr-only">
+                          {t('editor.colorN', { n: GROUP_COLORS.indexOf(o.value) + 1 })}
+                        </span>
+                      </>
+                    )}
+                  />
+                </div>
+                <div class="field">
+                  <span class="label small">{t('editor.icon')}</span>
+                  <RadioCards
+                    value={draft.icon}
+                    onChange={(icon) => set({ icon })}
+                    label={t('editor.icon')}
+                    class="picker"
+                    itemClass="icon-choice"
+                    options={GROUP_ICONS.map((ic) => ({ value: ic }))}
+                    render={(o) => <Icon name={o.value} label={t(`icon.${o.value}`)} />}
+                  />
+                </div>
+              </div>
+            )}
+          </section>
+
+          <SectionNav />
+
+          <section id="sec-sites" class="card editor-section" aria-labelledby="sec-sites-title">
+            <SectionHead id="sites" title={t('editor.sites')} sub={t('editor.sitesHint')} />
+            <TargetsEditor
+              targets={draft.targets}
+              onChange={(targets) => set({ targets })}
+              advanced={advanced}
+            />
+            {cfg.lists.length > 0 && (
+              <div class="stack stack-sm" style={{ marginTop: '20px' }}>
+                <h3>{t('editor.sharedLists')}</h3>
+                <p class="help">{t('editor.sharedListsHelp')}</p>
+                <div class="chips" role="group" aria-label={t('editor.sharedLists')}>
+                  {cfg.lists.map((l) => (
+                    <button
+                      key={l.id}
+                      type="button"
+                      class="chip"
+                      aria-pressed={draft.lists.includes(l.id)}
+                      onClick={() =>
+                        set({
+                          lists: draft.lists.includes(l.id)
+                            ? draft.lists.filter((x) => x !== l.id)
+                            : [...draft.lists, l.id],
+                        })
+                      }
+                    >
+                      {l.name} <span class="muted small">({l.targets.length})</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+
+          <section id="sec-rules" class="card editor-section" aria-labelledby="sec-rules-title">
+            <SectionHead id="rules" title={t('editor.rules')} sub={t('editor.rulesHelp')} />
+            <div class="stack stack-sm">
               {draft.policies.map((p, i) => (
                 <PolicyCard
                   key={p.id}
@@ -304,186 +443,191 @@ export function GroupEditorPage({ id, template }: { id: string; template: string
                   onRemove={() => set({ policies: draft.policies.filter((_, j) => j !== i) })}
                 />
               ))}
-              <div class="policy">
+              <div class="policy otherwise">
                 <div class="policy-head muted">
                   <span class="policy-index" aria-hidden="true">
                     ∗
                   </span>
-                  <span>{t('editor.otherwise')}</span>
+                  <span class="small">{t('editor.otherwise')}</span>
                 </div>
               </div>
-              <div class="row">
+              <div class="add-rule">
+                <span class="small text-2 strong">{t('editor.addRule')}</span>
                 <Button
-                  icon="plus"
+                  size="small"
+                  icon="calendar"
                   onClick={() =>
-                    set({
-                      policies: [
-                        ...draft.policies,
-                        newPolicy({
-                          schedule: {
-                            mode: 'during',
-                            windows: [{ days: [1, 2, 3, 4, 5], start: 540, end: 1020 }],
-                          },
-                          intervention: { type: 'block' },
-                        }),
-                      ],
-                    })
+                    addPolicy(
+                      newPolicy({
+                        schedule: {
+                          mode: 'during',
+                          windows: [{ days: [1, 2, 3, 4, 5], start: 540, end: 1020 }],
+                        },
+                        intervention: { type: 'block' },
+                      }),
+                    )
                   }
                 >
                   {t('editor.addSchedule')}
                 </Button>
                 <Button
-                  icon="plus"
+                  size="small"
+                  icon="hourglass"
                   onClick={() =>
-                    set({
-                      policies: [
-                        ...draft.policies,
-                        newPolicy({
-                          budget: { type: 'time', minutes: 30, period: { kind: 'day' } },
-                          intervention: { type: 'block' },
-                        }),
-                      ],
-                    })
+                    addPolicy(
+                      newPolicy({
+                        budget: { type: 'time', minutes: 30, period: { kind: 'day' } },
+                        intervention: { type: 'block' },
+                      }),
+                    )
                   }
                 >
                   {t('editor.addLimit')}
                 </Button>
                 <Button
-                  icon="plus"
-                  variant="ghost"
-                  onClick={() =>
-                    set({
-                      policies: [...draft.policies, newPolicy({ intervention: frictionIntervention() })],
-                    })
-                  }
+                  size="small"
+                  icon="wind"
+                  onClick={() => addPolicy(newPolicy({ intervention: frictionIntervention() }))}
                 >
                   {t('editor.addAlways')}
                 </Button>
               </div>
             </div>
-          )}
-          {tab === 'breaks' && (
-            <div class="stack stack-lg">
-              <div class="card stack">
-                <h2>{t('editor.breaks')}</h2>
-                <PauseEditor
-                  value={draft.pause}
-                  onChange={(pause) => set({ pause })}
-                  hasPassword={model.hasPassword}
+          </section>
+
+          <section id="sec-breaks" class="card editor-section" aria-labelledby="sec-breaks-title">
+            <SectionHead id="breaks" title={t('editor.breaks')} sub={t('editor.breaksHelp')} />
+            <PauseEditor
+              value={draft.pause}
+              onChange={(pause) => set({ pause })}
+              hasPassword={model.hasPassword}
+            />
+          </section>
+
+          <section id="sec-page" class="card editor-section stack" aria-labelledby="sec-page-title">
+            <SectionHead id="page" title={t('editor.page')} sub={t('editor.pageHelp')} />
+            <Field label={t('editor.message')} help={t('editor.messageHelp')}>
+              {(fid, d) => (
+                <textarea
+                  id={fid}
+                  aria-describedby={d}
+                  class="textarea"
+                  rows={3}
+                  maxLength={2000}
+                  value={draft.message}
+                  onInput={(e) => set({ message: (e.target as HTMLTextAreaElement).value })}
                 />
-              </div>
-              <div class="card stack">
-                <h2>{t('editor.page')}</h2>
-                <Field label={t('editor.message')} help={t('editor.messageHelp')}>
+              )}
+            </Field>
+            <Toggle
+              checked={draft.options.timer}
+              onChange={(timer) => set({ options: { ...draft.options, timer } })}
+              label={t('editor.timer')}
+              help={t('editor.timerHelp')}
+            />
+          </section>
+
+          <section
+            id="sec-protection"
+            class="card editor-section stack"
+            aria-labelledby="sec-protection-title"
+          >
+            <SectionHead id="protection" title={t('editor.protection')} />
+            <Field
+              label={t('editor.level')}
+              help={t('editor.levelHelp', { level: t(`level.${cfg.settings.protection.level}`) })}
+            >
+              {(fid, d) => (
+                <Select<string>
+                  id={fid}
+                  describedBy={d}
+                  value={draft.protection ?? 'global'}
+                  onChange={(v) => {
+                    if (v === 'locked') setLockPreview('locked');
+                    else
+                      set({
+                        protection: v === 'global' ? null : (v as ProtectionLevel),
+                        protectionUntil: null,
+                      });
+                  }}
+                  options={[
+                    {
+                      value: 'global',
+                      label: t('editor.levelGlobal', {
+                        level: t(`level.${cfg.settings.protection.level}`),
+                      }),
+                    },
+                    ...LEVELS.map((l) => ({ value: l, label: t(`level.${l}`) })),
+                  ]}
+                />
+              )}
+            </Field>
+            <div class="option-panel row nowrap top" style={{ gap: '12px' }}>
+              <Icon name={levelIcon(level)} />
+              <LevelExplanation level={level} />
+            </div>
+            {draft.protection === 'locked' && draft.protectionUntil && (
+              <p class="small">{t('editor.lockedUntil', { when: formatDateTime(draft.protectionUntil) })}</p>
+            )}
+          </section>
+
+          <section id="sec-advanced" class="card editor-section" aria-labelledby="sec-advanced-title">
+            <details class="disclosure bare">
+              <summary>
+                <h2 id="sec-advanced-title" tabIndex={-1} style={{ display: 'inline' }}>
+                  {t('editor.advanced')}
+                </h2>
+              </summary>
+              <div class="body stack">
+                <Field label={t('editor.privacy')} help={t('editor.privacyHelp')}>
                   {(fid, d) => (
-                    <textarea
+                    <Select<Group['options']['privacy']>
                       id={fid}
-                      aria-describedby={d}
-                      class="textarea"
-                      rows={3}
-                      maxLength={2000}
-                      value={draft.message}
-                      onInput={(e) => set({ message: (e.target as HTMLTextAreaElement).value })}
+                      describedBy={d}
+                      value={draft.options.privacy}
+                      onChange={(privacy) => set({ options: { ...draft.options, privacy } })}
+                      options={[
+                        { value: 'all', label: t('editor.privacy.all') },
+                        { value: 'normal', label: t('editor.privacy.normal') },
+                        { value: 'private', label: t('editor.privacy.private') },
+                      ]}
                     />
                   )}
                 </Field>
-                <Toggle
-                  checked={draft.options.timer}
-                  onChange={(timer) => set({ options: { ...draft.options, timer } })}
-                  label={t('editor.timer')}
-                  help={t('editor.timerHelp')}
-                />
+                <Field label={t('editor.tabs')} help={t('editor.tabsHelp')}>
+                  {(fid, d) => (
+                    <Select<Group['options']['tabs']>
+                      id={fid}
+                      describedBy={d}
+                      value={draft.options.tabs}
+                      onChange={(tabsMode) => set({ options: { ...draft.options, tabs: tabsMode } })}
+                      options={[
+                        { value: 'all', label: t('editor.tabs.all') },
+                        { value: 'active', label: t('editor.tabs.active') },
+                        { value: 'inactive', label: t('editor.tabs.inactive') },
+                      ]}
+                    />
+                  )}
+                </Field>
+                <div class="settings-list">
+                  <Toggle
+                    checked={draft.options.embeds}
+                    onChange={(embeds) => set({ options: { ...draft.options, embeds } })}
+                    label={t('editor.embeds')}
+                    help={t('editor.embedsHelp')}
+                  />
+                  <Toggle
+                    checked={draft.options.quickSession}
+                    onChange={(quickSession) => set({ options: { ...draft.options, quickSession } })}
+                    label={t('editor.quickSession')}
+                    help={t('editor.quickSessionHelp')}
+                  />
+                </div>
+                {!advanced && <p class="help">{t('editor.advancedModeHint')}</p>}
               </div>
-            </div>
-          )}
-          {tab === 'protection' && (
-            <div class="card stack">
-              <h2>{t('editor.protection')}</h2>
-              <Field
-                label={t('editor.level')}
-                help={t('editor.levelHelp', { level: t(`level.${cfg.settings.protection.level}`) })}
-              >
-                {(fid, d) => (
-                  <Select<string>
-                    id={fid}
-                    describedBy={d}
-                    value={draft.protection ?? 'global'}
-                    onChange={(v) => {
-                      if (v === 'locked') setLockPreview('locked');
-                      else
-                        set({
-                          protection: v === 'global' ? null : (v as ProtectionLevel),
-                          protectionUntil: null,
-                        });
-                    }}
-                    options={[
-                      {
-                        value: 'global',
-                        label: t('editor.levelGlobal', {
-                          level: t(`level.${cfg.settings.protection.level}`),
-                        }),
-                      },
-                      ...LEVELS.map((l) => ({ value: l, label: t(`level.${l}`) })),
-                    ]}
-                  />
-                )}
-              </Field>
-              <LevelExplanation level={level} />
-              {draft.protection === 'locked' && draft.protectionUntil && (
-                <p class="small">
-                  {t('editor.lockedUntil', { when: formatDateTime(draft.protectionUntil) })}
-                </p>
-              )}
-            </div>
-          )}
-          {tab === 'advanced' && (
-            <div class="card stack">
-              <h2>{t('editor.advanced')}</h2>
-              <Field label={t('editor.privacy')} help={t('editor.privacyHelp')}>
-                {(fid, d) => (
-                  <Select<Group['options']['privacy']>
-                    id={fid}
-                    describedBy={d}
-                    value={draft.options.privacy}
-                    onChange={(privacy) => set({ options: { ...draft.options, privacy } })}
-                    options={[
-                      { value: 'all', label: t('editor.privacy.all') },
-                      { value: 'normal', label: t('editor.privacy.normal') },
-                      { value: 'private', label: t('editor.privacy.private') },
-                    ]}
-                  />
-                )}
-              </Field>
-              <Field label={t('editor.tabs')} help={t('editor.tabsHelp')}>
-                {(fid, d) => (
-                  <Select<Group['options']['tabs']>
-                    id={fid}
-                    describedBy={d}
-                    value={draft.options.tabs}
-                    onChange={(tabsMode) => set({ options: { ...draft.options, tabs: tabsMode } })}
-                    options={[
-                      { value: 'all', label: t('editor.tabs.all') },
-                      { value: 'active', label: t('editor.tabs.active') },
-                      { value: 'inactive', label: t('editor.tabs.inactive') },
-                    ]}
-                  />
-                )}
-              </Field>
-              <Toggle
-                checked={draft.options.embeds}
-                onChange={(embeds) => set({ options: { ...draft.options, embeds } })}
-                label={t('editor.embeds')}
-                help={t('editor.embedsHelp')}
-              />
-              <Toggle
-                checked={draft.options.quickSession}
-                onChange={(quickSession) => set({ options: { ...draft.options, quickSession } })}
-                label={t('editor.quickSession')}
-                help={t('editor.quickSessionHelp')}
-              />
-              {!advanced && <p class="help">{t('editor.advancedModeHint')}</p>}
-            </div>
-          )}
+            </details>
+          </section>
+
           <div class="sticky-actions row between">
             <div class="row">
               <Button variant="primary" onClick={save} disabled={saving || (!dirty && !isNew)}>
@@ -492,40 +636,47 @@ export function GroupEditorPage({ id, template }: { id: string; template: string
               <Button variant="ghost" onClick={() => (dirty ? adopt(reference) : navigate('/groups'))}>
                 {dirty ? t('editor.discard') : t('common.close')}
               </Button>
-              {dirty && <span class="small muted">{t('editor.unsaved')}</span>}
+              {dirty && <span class="unsaved">{t('editor.unsaved')}</span>}
+              {errors > 0 && <span class="error-text">{t('editor.errorsCount', { count: errors })}</span>}
             </div>
             {!isNew && (
-              <div class="row">
-                <Button
-                  size="small"
-                  variant="ghost"
-                  icon="download"
-                  onClick={async () => {
-                    const r = await call('group.export', { groupId: draft.id });
-                    downloadText(r.filename, r.text);
-                  }}
-                >
-                  {t('groups.export')}
-                </Button>
-                <Button size="small" variant="danger" icon="trash" onClick={() => setConfirmDelete(true)}>
-                  {t('groups.delete')}
-                </Button>
-              </div>
+              <Menu
+                up
+                label={t('editor.moreActions')}
+                items={[
+                  {
+                    label: t('groups.export'),
+                    icon: 'download',
+                    onSelect: async () => {
+                      const r = await call('group.export', { groupId: draft.id });
+                      downloadText(r.filename, r.text);
+                    },
+                  },
+                  'separator',
+                  {
+                    label: t('groups.delete'),
+                    icon: 'trash',
+                    danger: true,
+                    onSelect: () => setConfirmDelete(true),
+                  },
+                ]}
+              />
             )}
           </div>
         </div>
         <aside class="editor-side" aria-label={t('editor.inBrief')}>
           <div class="card stack stack-sm">
             <h3>{t('editor.inBrief')}</h3>
-            {summarizeGroup(draft).map((line, i) => (
-              <p key={i} class="small">
-                {line}
-              </p>
-            ))}
-            <p class="small muted">{t('editor.subdomainsNote')}</p>
+            <p class="small text-2">
+              {t('groups.sites', { count: draft.targets.filter((x) => !x.allow).length })}
+              {draft.targets.some((x) => x.allow) &&
+                ` · ${t('editor.exceptionsCount', { count: draft.targets.filter((x) => x.allow).length })}`}
+            </p>
+            <InBrief g={draft} />
+            <p class="tiny muted">{t('editor.subdomainsNote')}</p>
           </div>
           {issues.length > 0 && (
-            <div class="stack stack-sm">
+            <section class="stack stack-sm" aria-label={t('editor.issues')}>
               {issues.map((iss, i) => (
                 <Banner
                   key={i}
@@ -534,7 +685,7 @@ export function GroupEditorPage({ id, template }: { id: string; template: string
                   <span class="small">{t(iss.key, iss.params)}</span>
                 </Banner>
               ))}
-            </div>
+            </section>
           )}
           <div class="card stack stack-sm">
             <h3>{t('test.title')}</h3>
@@ -607,7 +758,7 @@ export function LockedPreview({
     >
       <div class="stack">
         <p>{t('locked.body')}</p>
-        <ul class="small" style={{ margin: 0, paddingInlineStart: '18px' }}>
+        <ul class="small bullets">
           <li>{t('locked.point1')}</li>
           <li>{t('locked.point2')}</li>
           <li>{t('locked.point3')}</li>

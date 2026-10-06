@@ -10,14 +10,25 @@ import { formatDateTime, formatDuration, formatWhen } from '../../shared/format'
 import type { TicketView } from '../../shared/models';
 import { call } from '../../shared/rpc';
 import { describeUnit, describeWindows } from '../../shared/summary';
-import { Banner, Button, Dialog, Field, NumberInput, Select, Spinner, toast } from '../../ui/components';
+import {
+  Banner,
+  Button,
+  Dialog,
+  Field,
+  NumberInput,
+  RadioCards,
+  Select,
+  Spinner,
+  ToneIcon,
+  toast,
+} from '../../ui/components';
 import { useModel, useNow } from '../../ui/hooks';
 import { Icon } from '../../ui/icons';
 import { useSaveFlow } from '../../ui/saveflow';
 import { TicketDialog, TypingInput } from '../../ui/ticket';
 import { WindowsEditor } from '../components/schedule';
 import { clone, useDashboard } from '../context';
-import { LevelExplanation, LockedPreview } from './group-editor';
+import { LockedPreview, levelIcon } from './group-editor';
 
 const LEVELS: ProtectionLevel[] = ['soft', 'balanced', 'strict', 'locked'];
 
@@ -148,32 +159,52 @@ function Checklist() {
     { ok: null, text: t('checklist.otherBrowsers'), help: t('checklist.otherBrowsersHelp') },
     { ok: null, text: t('checklist.profiles'), help: t('checklist.profilesHelp') },
   ];
+  const checks = items.filter((it) => it.ok !== null);
+  const passed = checks.filter((it) => it.ok).length;
   return (
-    <ul class="list">
-      {items.map((it, i) => (
-        <li key={i} class="row nowrap top">
-          <Icon
-            name={it.ok === true ? 'check' : it.ok === false ? 'alert' : 'info'}
-            label={
-              it.ok === true
-                ? t('checklist.ok')
-                : it.ok === false
-                  ? t('checklist.attention')
-                  : t('checklist.info')
-            }
-          />
-          <div class="stack grow" style={{ gap: '2px' }}>
-            <span>{it.text}</span>
-            {it.help && <span class="small muted">{it.help}</span>}
-          </div>
-          {it.action && (
-            <Button size="small" onClick={it.action.run}>
-              {it.action.label}
-            </Button>
-          )}
-        </li>
-      ))}
-    </ul>
+    <div class="stack">
+      <div class="row nowrap">
+        <ToneIcon
+          tone={passed === checks.length ? 'free' : 'friction'}
+          icon={passed === checks.length ? 'shield-check' : 'shield'}
+          size={44}
+        />
+        <div class="stack stack-xs">
+          <strong>{t('checklist.score', { passed, total: checks.length })}</strong>
+          <span class="small text-2">
+            {passed === checks.length ? t('checklist.allGood') : t('checklist.someToCheck')}
+          </span>
+        </div>
+      </div>
+      <ul class="list">
+        {items.map((it, i) => (
+          <li key={i} class="row nowrap top">
+            <ToneIcon
+              size={28}
+              round
+              tone={it.ok === true ? 'free' : it.ok === false ? 'friction' : 'neutral'}
+              icon={it.ok === true ? 'check' : it.ok === false ? 'alert' : 'info'}
+              label={
+                it.ok === true
+                  ? t('checklist.ok')
+                  : it.ok === false
+                    ? t('checklist.attention')
+                    : t('checklist.info')
+              }
+            />
+            <div class="stack grow" style={{ gap: '2px' }}>
+              <span>{it.text}</span>
+              {it.help && <span class="small muted">{it.help}</span>}
+            </div>
+            {it.action && (
+              <Button size="small" onClick={it.action.run}>
+                {it.action.label}
+              </Button>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -372,7 +403,7 @@ export function ProtectionPage() {
     return flow.run(call('config.save', { config: next }));
   };
   return (
-    <div class="stack stack-lg">
+    <div class="stack stack-xl">
       <div class="page-head">
         <div>
           <h1>{t('protection.title')}</h1>
@@ -380,98 +411,152 @@ export function ProtectionPage() {
         </div>
       </div>
 
-      <div class="card stack">
-        <h2>{t('protection.pending')}</h2>
-        {!o ? (
-          <Spinner />
-        ) : o.pending.length === 0 ? (
-          <p class="muted">{t('protection.noPending')}</p>
-        ) : (
+      {o && o.pending.length > 0 && (
+        <section class="card stack tone-friction" aria-labelledby="pending-title">
+          <div class="row nowrap">
+            <ToneIcon tone="friction" icon="hourglass" />
+            <div>
+              <h2 id="pending-title">{t('protection.pending')}</h2>
+              <p class="card-sub">{t('protection.pendingHelp')}</p>
+            </div>
+          </div>
           <ul class="list">
             {o.pending.map((x) => (
               <PendingItem key={x.id} p={x} onChange={reload} />
             ))}
           </ul>
-        )}
-      </div>
+        </section>
+      )}
 
-      <div class="card stack">
-        <h2>{t('protection.level')}</h2>
-        <div class="grid" style={{ ['--min' as string]: '220px' }}>
-          {LEVELS.map((l) => (
-            <button
-              key={l}
-              type="button"
-              class="choice"
-              aria-pressed={p.level === l}
-              onClick={() => {
-                if (l === p.level) return;
-                if (l === 'locked') setLockPreview(true);
-                else
-                  void save((c) => {
-                    c.settings.protection.level = l;
-                    c.settings.protection.lockedUntil = null;
-                  });
-              }}
-            >
-              <Icon name={l === 'soft' ? 'leaf' : l === 'balanced' ? 'shield' : 'lock'} />
-              <span class="stack stack-sm">
-                <strong>{t(`level.${l}`)}</strong>
-                <LevelExplanation level={l} />
+      <section class="card stack" aria-labelledby="level-title">
+        <div>
+          <h2 id="level-title">{t('protection.level')}</h2>
+          <p class="card-sub">{t('protection.levelHelp')}</p>
+        </div>
+        <RadioCards<ProtectionLevel>
+          value={p.level}
+          label={t('protection.level')}
+          class="level-grid"
+          itemClass="choice"
+          options={LEVELS.map((l) => ({ value: l }))}
+          onChange={(l) => {
+            if (l === p.level) return;
+            if (l === 'locked') setLockPreview(true);
+            else
+              void save((c) => {
+                c.settings.protection.level = l;
+                c.settings.protection.lockedUntil = null;
+              });
+          }}
+          render={(o2) => (
+            <>
+              <Icon name={levelIcon(o2.value)} />
+              <span class="stack stack-xs">
+                <strong>{t(`level.${o2.value}`)}</strong>
+                <span class="small text-2">{t(`level.${o2.value}.desc`)}</span>
               </span>
-            </button>
-          ))}
+            </>
+          )}
+        />
+        <div class="option-panel">
+          <ul class="small bullets">
+            <li>{t(`level.${p.level}.weaken`)}</li>
+            <li>{t(`level.${p.level}.pauses`)}</li>
+          </ul>
         </div>
         {p.level === 'locked' && p.lockedUntil && (
           <Banner kind="info" icon="lock">
             {t('protection.lockedUntil', { when: formatDateTime(p.lockedUntil) })}
           </Banner>
         )}
-        <div class="row">
-          <Field label={t('protection.coolingOff')} help={t('protection.coolingOffHelp')}>
-            {() => (
-              <NumberInput
-                commitOnBlur
-                value={p.coolingOffHours}
-                min={1}
-                max={168}
-                suffix={t('common.hoursUnit')}
-                label={t('protection.coolingOff')}
-                onChange={(v) => void save((c) => (c.settings.protection.coolingOffHours = v))}
-              />
-            )}
-          </Field>
-          <Field label={t('protection.balancedDelay')}>
-            {() => (
-              <NumberInput
-                commitOnBlur
-                value={p.balancedDelaySeconds}
-                min={5}
-                max={3600}
-                suffix={t('common.secondsUnit')}
-                label={t('protection.balancedDelay')}
-                onChange={(v) => void save((c) => (c.settings.protection.balancedDelaySeconds = v))}
-              />
-            )}
-          </Field>
-          <Field label={t('protection.challengeLength')}>
-            {() => (
-              <NumberInput
-                commitOnBlur
-                value={p.challengeLength}
-                min={8}
-                max={200}
-                label={t('protection.challengeLength')}
-                onChange={(v) => void save((c) => (c.settings.protection.challengeLength = v))}
-              />
-            )}
-          </Field>
-        </div>
-      </div>
+        <details class="disclosure">
+          <summary>
+            <Icon name="sliders" />
+            {t('protection.fineTune')}
+          </summary>
+          <div class="body">
+            <div class="grid" style={{ ['--min' as string]: '200px' }}>
+              <Field label={t('protection.balancedDelay')} help={t('protection.balancedDelayHelp')}>
+                {() => (
+                  <NumberInput
+                    commitOnBlur
+                    value={p.balancedDelaySeconds}
+                    min={5}
+                    max={3600}
+                    suffix={t('common.secondsUnit')}
+                    label={t('protection.balancedDelay')}
+                    onChange={(v) => void save((c) => (c.settings.protection.balancedDelaySeconds = v))}
+                  />
+                )}
+              </Field>
+              <Field label={t('protection.coolingOff')} help={t('protection.coolingOffHelp')}>
+                {() => (
+                  <NumberInput
+                    commitOnBlur
+                    value={p.coolingOffHours}
+                    min={1}
+                    max={168}
+                    suffix={t('common.hoursUnit')}
+                    label={t('protection.coolingOff')}
+                    onChange={(v) => void save((c) => (c.settings.protection.coolingOffHours = v))}
+                  />
+                )}
+              </Field>
+              <Field label={t('protection.challengeLength')} help={t('protection.challengeLengthHelp')}>
+                {() => (
+                  <NumberInput
+                    commitOnBlur
+                    value={p.challengeLength}
+                    min={8}
+                    max={200}
+                    label={t('protection.challengeLength')}
+                    onChange={(v) => void save((c) => (c.settings.protection.challengeLength = v))}
+                  />
+                )}
+              </Field>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <section class="card stack" aria-labelledby="checklist-title">
+        <h2 id="checklist-title">{t('protection.checklist')}</h2>
+        <Checklist />
+        <Field label={t('protection.internalPages')} help={t('protection.internalPagesHelp')}>
+          {(id) => (
+            <Select
+              id={id}
+              value={p.internalPages}
+              onChange={(v) => void save((c) => (c.settings.protection.internalPages = v))}
+              options={[
+                { value: 'auto', label: t('protection.internal.auto') },
+                { value: 'always', label: t('protection.internal.always') },
+                { value: 'never', label: t('protection.internal.never') },
+              ]}
+            />
+          )}
+        </Field>
+        <label class="check small">
+          <input
+            type="checkbox"
+            checked={p.internalPagesFollowPause}
+            onChange={(e) =>
+              void save(
+                (c) =>
+                  (c.settings.protection.internalPagesFollowPause = (e.target as HTMLInputElement).checked),
+              )
+            }
+          />
+          {t('protection.internalFollowPause')}
+        </label>
+        <p class="small muted">{t('protection.hardeningNote')}</p>
+      </section>
 
       <div class="card stack">
-        <h2>{t('protection.access')}</h2>
-        <p class="help">{t('protection.accessHelp')}</p>
+        <div>
+          <h2>{t('protection.access')}</h2>
+          <p class="card-sub">{t('protection.accessHelp')}</p>
+        </div>
         <PasswordSection />
         <div class="row">
           <Field label={t('access.code')} help={t('access.codeHelp')}>
@@ -508,39 +593,6 @@ export function ProtectionPage() {
             </div>
           </div>
         </details>
-      </div>
-
-      <div class="card stack">
-        <h2>{t('protection.checklist')}</h2>
-        <Checklist />
-        <Field label={t('protection.internalPages')} help={t('protection.internalPagesHelp')}>
-          {(id) => (
-            <Select
-              id={id}
-              value={p.internalPages}
-              onChange={(v) => void save((c) => (c.settings.protection.internalPages = v))}
-              options={[
-                { value: 'auto', label: t('protection.internal.auto') },
-                { value: 'always', label: t('protection.internal.always') },
-                { value: 'never', label: t('protection.internal.never') },
-              ]}
-            />
-          )}
-        </Field>
-        <label class="check small">
-          <input
-            type="checkbox"
-            checked={p.internalPagesFollowPause}
-            onChange={(e) =>
-              void save(
-                (c) =>
-                  (c.settings.protection.internalPagesFollowPause = (e.target as HTMLInputElement).checked),
-              )
-            }
-          />
-          {t('protection.internalFollowPause')}
-        </label>
-        <p class="small muted">{t('protection.hardeningNote')}</p>
       </div>
 
       <div class="card stack">

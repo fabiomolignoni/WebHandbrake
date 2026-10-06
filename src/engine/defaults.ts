@@ -231,6 +231,40 @@ export function newPolicy(partial: Partial<Policy> = {}): Policy {
   };
 }
 
+/** When a new rule applies, as chosen in the creation wizard and in onboarding. */
+export type QuickWhen = 'always' | 'schedule' | 'daily';
+/** What happens, from the gentlest to the strongest (G1). */
+export type QuickHow = 'track' | 'ask' | 'delay' | 'block';
+
+export const QUICK_DELAY_SECONDS = 30;
+
+export function quickIntervention(how: QuickHow): Intervention {
+  switch (how) {
+    case 'track':
+      return { type: 'track' };
+    case 'ask':
+      return frictionIntervention();
+    case 'delay':
+      return delayIntervention(QUICK_DELAY_SECONDS);
+    case 'block':
+      return { type: 'block' };
+  }
+}
+
+/** The starting condition of a rule: "when" × "what happens" (an if-then plan). */
+export function quickPolicies(
+  when: QuickWhen,
+  how: QuickHow,
+  windows: TimeWindow[],
+  minutes: number,
+): Policy[] {
+  const intervention = quickIntervention(how);
+  if (when === 'schedule') return [newPolicy({ schedule: { mode: 'during', windows }, intervention })];
+  if (when === 'daily')
+    return [newPolicy({ budget: { type: 'time', minutes, period: { kind: 'day' } }, intervention })];
+  return [newPolicy({ intervention })];
+}
+
 export function templateById(id: string): TemplateDef | undefined {
   return TEMPLATES.find((t) => t.id === id);
 }

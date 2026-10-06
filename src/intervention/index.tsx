@@ -11,10 +11,10 @@ import { formatWhen } from '../shared/format';
 import type { DecisionView, InterventionModel, StepView, TicketView } from '../shared/models';
 import { call } from '../shared/rpc';
 import { setWeekStart } from '../shared/summary';
-import { Banner, Button, Chips, Toasts, toast } from '../ui/components';
+import { Banner, Button, ColorDot, Segmented, Toasts, toast } from '../ui/components';
 import { Explain } from '../ui/explain';
 import { bootPage, onBackgroundChange, useNow } from '../ui/hooks';
-import { BrakeLogo, Icon } from '../ui/icons';
+import { Icon } from '../ui/icons';
 import { costsLabel, PauseDialog, pauseBudgetLabel } from '../ui/pause';
 import { CanvasText, TypingInput } from '../ui/ticket';
 
@@ -109,6 +109,28 @@ function headline(m: InterventionModel): string {
   }
 }
 
+/** The icon at the top of the page: what kind of pause this is (docs/ux-redesign.md §6.6). */
+function emblem(m: InterventionModel): string {
+  switch (m.kind) {
+    case 'session':
+      return 'target';
+    case 'cooldown':
+      return 'hourglass';
+    case 'internal':
+      return 'shield';
+    case 'ask':
+      return 'chat';
+    case 'challenge':
+      return 'keyboard';
+    case 'delay':
+      return 'wind';
+    case 'selftest':
+      return 'check-circle';
+    default:
+      return 'brake';
+  }
+}
+
 function App() {
   const url = blockedUrl();
   const [m, setM] = useState<InterventionModel | null>(null);
@@ -185,7 +207,9 @@ function App() {
     return (
       <main class="intervention">
         <div class="panel">
-          <BrakeLogo size={56} />
+          <span class="emblem" aria-hidden="true">
+            <Icon name="brake" />
+          </span>
           <Banner kind="warning">{error}</Banner>
         </div>
       </main>
@@ -195,7 +219,9 @@ function App() {
     return (
       <main class="intervention" aria-busy="true">
         <div class="panel">
-          <BrakeLogo size={56} />
+          <span class="emblem" aria-hidden="true">
+            <Icon name="brake" />
+          </span>
           {reopen ? (
             <Button variant="primary" size="large" onClick={() => history.back()}>
               {t('iv.back')}
@@ -227,33 +253,37 @@ function App() {
   const passed = () => {
     if (bounceGuard(url)) void returnTo(url);
   };
+  const passable = Boolean(m.ticket) && !reopen;
 
   return (
     <main class="intervention" style={m.group ? { ['--group' as string]: m.group.color } : undefined}>
       <div class="panel">
-        <BrakeLogo size={64} />
+        <span class="emblem" aria-hidden="true">
+          <Icon name={emblem(m)} />
+        </span>
         <h1 ref={titleRef} tabIndex={-1}>
           {headline(m)}
         </h1>
         {m.kind === 'selftest' && <Banner kind="ok">{t('iv.selftest.body')}</Banner>}
         {m.group?.note && (
-          <p class="note">
-            “{m.group.note}” <span class="muted small">— {t('iv.yourNote')}</span>
-          </p>
+          <blockquote class="note">
+            “{m.group.note}”<span class="by">— {t('iv.yourNote')}</span>
+          </blockquote>
         )}
-        {m.group?.message && <p class="pre text-2">{m.group.message}</p>}
+        {m.group?.message && <p class="pre message">{m.group.message}</p>}
         {m.kind !== 'selftest' && (
           <p class="meta">
             {!m.hideUrl && <span>{m.host}</span>}
-            {!m.hideUrl && m.group && ' · '}
-            {m.group && <span>{t('iv.group', { group: m.group.name })}</span>}
+            {m.group && (
+              <span class="row nowrap" style={{ gap: '6px' }}>
+                <ColorDot color={m.group.color} />
+                {t('iv.group', { group: m.group.name })}
+              </span>
+            )}
             {m.decision && (
-              <>
-                {' · '}
-                <button type="button" class="link-btn" aria-expanded={why} onClick={() => setWhy(!why)}>
-                  {t('iv.why')}
-                </button>
-              </>
+              <button type="button" class="link-btn" aria-expanded={why} onClick={() => setWhy(!why)}>
+                {t('iv.why')}
+              </button>
             )}
           </p>
         )}
@@ -276,30 +306,34 @@ function App() {
           </Banner>
         )}
 
-        {m.ticket && !reopen && <PassStep ticket={m.ticket} url={url} model={m} onPassed={passed} />}
-
-        {m.kind !== 'selftest' && (
-          <div class="actions">
-            <Button variant="primary" size="large" icon="x" onClick={closeTab}>
-              {t('iv.closeTab')}
-            </Button>
-            <div class="secondary-actions">
-              <Button onClick={goBack} icon="arrow-left">
-                {t('iv.goBack')}
+        {passable ? (
+          <PassStep ticket={m.ticket!} url={url} model={m} onPassed={passed} onClose={closeTab} />
+        ) : (
+          m.kind !== 'selftest' && (
+            <div class="actions">
+              <Button variant="primary" size="large" icon="x" onClick={closeTab}>
+                {t('iv.closeTab')}
               </Button>
-              {m.canSaveLater && (
-                <Button onClick={saveLater} icon="bookmark" disabled={saved}>
-                  {saved ? t('iv.savedShort') : t('iv.saveLater')}
-                </Button>
-              )}
             </div>
+          )
+        )}
+        {m.kind !== 'selftest' && (
+          <div class="secondary-actions">
+            <Button variant="ghost" onClick={goBack} icon="arrow-left">
+              {t('iv.goBack')}
+            </Button>
+            {m.canSaveLater && (
+              <Button variant="ghost" onClick={saveLater} icon="bookmark" disabled={saved}>
+                {saved ? t('iv.savedShort') : t('iv.saveLater')}
+              </Button>
+            )}
           </div>
         )}
 
         {m.alternatives.length > 0 && m.kind !== 'selftest' && (
           <div class="stack stack-sm" style={{ alignItems: 'center' }}>
             <span class="section-title">{t('iv.alternatives')}</span>
-            <div class="row" style={{ justifyContent: 'center' }}>
+            <div class="alternatives">
               {m.alternatives.map((a) =>
                 a.url ? (
                   <Button
@@ -314,7 +348,8 @@ function App() {
                     {a.label}
                   </Button>
                 ) : (
-                  <span key={a.id} class="tag calm">
+                  <span key={a.id} class="alt">
+                    <Icon name="leaf" />
                     {a.label}
                   </span>
                 ),
@@ -324,13 +359,13 @@ function App() {
         )}
 
         {m.pause && m.kind !== 'session' && (
-          <p class="small muted">
+          <p class="break-link">
             {m.pause.available ? (
               <>
                 <button type="button" class="link-btn" onClick={() => setPauseOpen(true)}>
                   {t('iv.takeBreak')}
                 </button>{' '}
-                ({[costsLabel(m.pause.costs), pauseBudgetLabel(m.pause)].filter(Boolean).join(' · ')})
+                · {[costsLabel(m.pause.costs), pauseBudgetLabel(m.pause)].filter(Boolean).join(' · ')}
               </>
             ) : (
               m.pause.reason && t(m.pause.reason)
@@ -353,6 +388,7 @@ function App() {
 }
 
 const SUGGESTIONS = ['iv.ask.s1', 'iv.ask.s2', 'iv.ask.s3', 'iv.ask.s4'];
+const RING = 2 * Math.PI * 46;
 
 /** Delay, intention question or challenge (INT-02, INT-03, INT-04). */
 function PassStep({
@@ -360,11 +396,13 @@ function PassStep({
   url,
   model,
   onPassed,
+  onClose,
 }: {
   ticket: TicketView;
   url: string;
   model: InterventionModel;
   onPassed: () => void;
+  onClose: () => void;
 }) {
   const [ticket, setTicket] = useState(initial);
   const [value, setValue] = useState('');
@@ -433,8 +471,7 @@ function PassStep({
 
   return (
     <form
-      class="card stack"
-      style={{ width: '100%', textAlign: 'start' }}
+      class="card stack pass"
       onSubmit={(e) => {
         e.preventDefault();
         if (!waiting) void submit();
@@ -443,15 +480,38 @@ function PassStep({
       {step.type === 'wait' && (
         <div class="stack" style={{ alignItems: 'center', textAlign: 'center' }}>
           <div class="breathe" aria-hidden="true">
-            {delayOpts?.hideCountdown ? '' : left}
+            <svg viewBox="0 0 100 100" focusable="false" aria-hidden="true">
+              <circle class="track" cx="50" cy="50" r="46" />
+              <circle
+                class="value"
+                cx="50"
+                cy="50"
+                r="46"
+                style={{
+                  strokeDasharray: `${RING}`,
+                  strokeDashoffset: `${RING * (1 - (waitSeconds > 0 ? Math.min(1, left / waitSeconds) : 0))}`,
+                }}
+              />
+            </svg>
+            <span>{delayOpts?.hideCountdown ? '' : left}</span>
           </div>
-          <p class="muted" role="status" aria-live="polite">
+          {/* Announced at a moderate pace (A11Y-03); sighted users follow the ring. */}
+          <p
+            class={left > 0 && !delayOpts?.hideCountdown ? 'sr-only' : 'muted'}
+            role="status"
+            aria-live="polite"
+          >
             {left > 0
               ? delayOpts?.hideCountdown
                 ? t('iv.delay.hidden')
                 : t('iv.delay.left', { seconds: left > 10 ? Math.ceil(left / 10) * 10 : left })
               : t('iv.delay.ready')}
           </p>
+          {left > 0 && !delayOpts?.hideCountdown && (
+            <p class="muted" aria-hidden="true">
+              {t('iv.delay.hint')}
+            </p>
+          )}
           {delayOpts?.onBlur === 'restart' && <p class="tiny muted">{t('iv.delay.restartNote')}</p>}
         </div>
       )}
@@ -482,11 +542,13 @@ function PassStep({
             onInput={(e) => setValue((e.target as HTMLInputElement).value)}
           />
           <div class="field">
-            <span class="label">{t('iv.ask.howLong')}</span>
-            <Chips
+            <span class="label" id="how-long">
+              {t('iv.ask.howLong')}
+            </span>
+            <Segmented
               value={minutes}
               onChange={setMinutes}
-              label={t('iv.ask.howLong')}
+              labelledBy="how-long"
               options={step.choices
                 .filter((c) => c <= step.maxMinutes)
                 .map((c) => ({ value: c, label: t('common.minutes', { n: c }) }))}
@@ -544,13 +606,16 @@ function PassStep({
         </>
       )}
       {error && <Banner kind="danger">{error}</Banner>}
-      <div class="row end">
-        <Button type="submit" disabled={busy || waiting} icon="chevron-right">
+      <div class="choice-actions">
+        <Button variant="primary" size="large" icon="x" onClick={onClose}>
+          {step.type === 'intention' ? t('iv.notNow') : t('iv.closeTab')}
+        </Button>
+        <Button type="submit" size="large" disabled={busy || waiting} icon="chevron-right">
           {step.type === 'intention' ? t('iv.ask.continue', { minutes }) : t('iv.continue')}
         </Button>
       </div>
-      <p class="tiny muted">
-        <Icon name="info" /> {t('iv.continueNote')} {url && null}
+      <p class="tiny muted center">
+        {t('iv.continueNote')} {url && null}
       </p>
     </form>
   );

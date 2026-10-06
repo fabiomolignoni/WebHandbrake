@@ -1,5 +1,6 @@
 /** Typed messaging between UI surfaces / content scripts and the background (SEC-05). */
 
+import type { Granularity } from '../engine/page-target';
 import type { Config, Group, LaterItem, PendingChange, Target } from '../engine/types';
 import { api } from '../platform/api';
 import type {
@@ -21,7 +22,7 @@ import type {
   TickResponse,
 } from './models';
 
-export type Granularity = 'domain' | 'host' | 'path' | 'page';
+export type { Granularity };
 
 export interface TickRequest {
   url: string;

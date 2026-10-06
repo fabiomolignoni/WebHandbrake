@@ -10,7 +10,7 @@ single code base, with no account, no server and no telemetry.
 
 ## Highlights
 
-- **Groups of sites** with precise targets: domains (subdomains included), single hosts, paths,
+- **Rules for the sites you choose**, created step by step, with precise targets: domains (subdomains included), single hosts, paths,
   exact pages, home pages, wildcards, query parameters, regular expressions, exceptions and
   exceptions of exceptions. Paste anything: URLs, lists, hosts files, uBlock Origin, AdGuard and
   uBlacklist syntax.

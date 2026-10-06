@@ -12,7 +12,7 @@ import type { Schedule, ScheduleMode, TimeWindow } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { formatMinutesOfDay, weekdayNames } from '../../shared/format';
 import { describeWindows } from '../../shared/summary';
-import { Button, Chips, IconButton } from '../../ui/components';
+import { Button, IconButton, Segmented } from '../../ui/components';
 import { useDashboard } from '../context';
 
 const SLOT = 30;
@@ -168,7 +168,7 @@ function DayToggles({ days, onChange }: { days: number[]; onChange: (d: number[]
         <button
           key={d}
           type="button"
-          class="chip"
+          class="chip no-check"
           aria-pressed={days.includes(d)}
           aria-label={long[d]}
           onClick={() => onChange(days.includes(d) ? days.filter((x) => x !== d) : [...days, d].sort())}
@@ -197,7 +197,7 @@ export function WindowsEditor({
           <button
             key={k}
             type="button"
-            class="chip"
+            class="btn soft small"
             onClick={() => onChange(JSON.parse(JSON.stringify(SCHEDULE_PRESETS[k])))}
           >
             {t(`schedule.preset.${k}`)}
@@ -302,7 +302,7 @@ export function ScheduleEditor({
 }) {
   return (
     <div class="stack">
-      <Chips<ScheduleMode>
+      <Segmented<ScheduleMode>
         value={schedule.mode}
         onChange={(mode) =>
           onChange({

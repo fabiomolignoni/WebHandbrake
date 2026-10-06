@@ -16,7 +16,19 @@ import type {
 } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { describeCondition, describeIntervention, describePeriod } from '../../shared/summary';
-import { Button, Chips, Field, IconButton, NumberInput, Select, Toggle } from '../../ui/components';
+import {
+  Button,
+  Field,
+  Menu,
+  NumberInput,
+  RadioCards,
+  Segmented,
+  Select,
+  StatusPill,
+  Toggle,
+} from '../../ui/components';
+import { Icon } from '../../ui/icons';
+import { interventionIcon, LADDER, toneOf } from '../../ui/status';
 import { ScheduleEditor } from './schedule';
 
 export function PeriodSelect({
@@ -110,7 +122,7 @@ export function BudgetEditor({
   const type = budget?.type ?? 'none';
   return (
     <div class="stack">
-      <Chips<'none' | Budget['type']>
+      <Segmented<'none' | Budget['type']>
         value={type}
         label={t('budget.label')}
         onChange={(v) => {
@@ -268,18 +280,6 @@ function GrantEditor({ grant, onChange }: { grant: GrantSpec; onChange: (g: Gran
   );
 }
 
-const TYPES: InterventionType[] = [
-  'track',
-  'remind',
-  'filter',
-  'ask',
-  'delay',
-  'challenge',
-  'block',
-  'close',
-  'redirect',
-];
-
 export function defaultIntervention(type: InterventionType): Intervention {
   switch (type) {
     case 'remind':
@@ -317,286 +317,305 @@ export function InterventionEditor({
   const v = value;
   return (
     <div class="stack">
-      <Field label={t('intervention.label')} help={t(`intervention.help.${v.type}`)}>
-        {(id, desc) => (
-          <Select<InterventionType>
-            id={id}
-            describedBy={desc}
-            value={v.type}
-            onChange={(type) => onChange(defaultIntervention(type))}
-            options={TYPES.map((x) => ({ value: x, label: t(`intervention.${x}`) }))}
-          />
-        )}
-      </Field>
-      {v.type === 'remind' && (
-        <Field label={t('intervention.remind.message')}>
-          {(id) => (
-            <input
-              id={id}
-              class="input"
-              value={v.message ?? ''}
-              maxLength={300}
-              onInput={(e) => onChange({ ...v, message: (e.target as HTMLInputElement).value })}
-            />
-          )}
-        </Field>
-      )}
-      {v.type === 'filter' && (
-        <div class="stack stack-sm">
-          <div class="row">
-            <Select<FilterKind>
-              value={v.filter}
-              label={t('filter.label')}
-              onChange={(filter) => onChange({ ...v, filter })}
-              options={(
-                [
-                  'grayscale',
-                  'blur',
-                  'fade',
-                  'invert',
-                  'sepia',
-                  'none',
-                  ...(advanced ? (['custom'] as const) : []),
-                ] as FilterKind[]
-              ).map((f) => ({ value: f, label: t(`filter.${f}`) }))}
-            />
-            {v.filter !== 'none' && v.filter !== 'custom' && (
-              <label class="row nowrap small">
-                {t('filter.intensity')}
-                <input
-                  type="range"
-                  min={10}
-                  max={100}
-                  step={5}
-                  value={v.intensity ?? 100}
-                  onInput={(e) => onChange({ ...v, intensity: Number((e.target as HTMLInputElement).value) })}
-                />
-                <span class="num">{v.intensity ?? 100}%</span>
-              </label>
-            )}
-          </div>
-          {v.filter === 'custom' && (
-            <Field label={t('filter.custom')} help={t('filter.customHelp')}>
-              {(id, d) => (
-                <input
-                  id={id}
-                  aria-describedby={d}
-                  class="input mono"
-                  value={v.css ?? ''}
-                  maxLength={200}
-                  onInput={(e) => onChange({ ...v, css: (e.target as HTMLInputElement).value })}
-                />
-              )}
-            </Field>
-          )}
-          <Toggle
-            checked={Boolean(v.mute)}
-            onChange={(mute) => onChange({ ...v, mute })}
-            label={t('filter.mute')}
-          />
+      <div>
+        <div class="friction-scale" aria-hidden="true">
+          <span>← {t('policy.gentler')}</span>
+          <span>{t('policy.stronger')} →</span>
         </div>
-      )}
-      {v.type === 'ask' && (
-        <div class="stack stack-sm">
-          <div class="row">
-            <span>{t('ask.choices')}</span>
-            <input
-              class="input inline mono"
-              style={{ width: '10em' }}
-              value={v.choices.join(', ')}
-              aria-label={t('ask.choices')}
-              onChange={(e) => {
-                const choices = (e.target as HTMLInputElement).value
-                  .split(/[,\s]+/)
-                  .map(Number)
-                  .filter((n) => n > 0 && n <= 1440)
-                  .slice(0, 6);
-                if (choices.length) onChange({ ...v, choices });
-              }}
-            />
-            <span>{t('ask.max')}</span>
-            <NumberInput
-              value={v.maxMinutes}
-              min={1}
-              max={1440}
-              label={t('ask.max')}
-              suffix={t('common.minutesUnit')}
-              onChange={(maxMinutes) => onChange({ ...v, maxMinutes })}
-            />
-          </div>
-          <div class="row">
-            <span>{t('ask.wait')}</span>
-            <NumberInput
-              value={v.seconds ?? 0}
-              min={0}
-              max={600}
-              label={t('ask.wait')}
-              suffix={t('common.secondsUnit')}
-              onChange={(seconds) => onChange({ ...v, seconds })}
-            />
-          </div>
-          <Toggle
-            checked={Boolean(v.requireIntention)}
-            onChange={(requireIntention) => onChange({ ...v, requireIntention })}
-            label={t('ask.require')}
-          />
-          <div class="row">
-            <label class="check small">
+        <RadioCards<InterventionType>
+          value={v.type}
+          onChange={(type) => onChange(defaultIntervention(type))}
+          label={t('intervention.label')}
+          class="friction-picker"
+          itemClass="friction-option"
+          options={LADDER.map((x) => ({ value: x, tone: toneOf(x) }))}
+          render={(o) => (
+            <>
+              <Icon name={interventionIcon(o.value)} />
+              <span>{t(`intervention.short.${o.value}`)}</span>
+            </>
+          )}
+        />
+      </div>
+      <div class={`option-panel tone-${toneOf(v.type)}`}>
+        <p class="small">
+          <strong>{t(`intervention.${v.type}`)}</strong> — {t(`intervention.help.${v.type}`)}
+        </p>
+        {v.type === 'remind' && (
+          <Field label={t('intervention.remind.message')}>
+            {(id) => (
               <input
-                type="checkbox"
-                checked={Boolean(v.cooldownMinutes)}
-                onChange={(e) =>
-                  onChange({ ...v, cooldownMinutes: (e.target as HTMLInputElement).checked ? 30 : undefined })
-                }
-              />
-              {t('ask.cooldown')}
-            </label>
-            {v.cooldownMinutes !== undefined && (
-              <NumberInput
-                value={v.cooldownMinutes}
-                min={1}
-                max={1440}
-                label={t('ask.cooldown')}
-                suffix={t('common.minutesUnit')}
-                onChange={(cooldownMinutes) => onChange({ ...v, cooldownMinutes })}
+                id={id}
+                class="input"
+                value={v.message ?? ''}
+                maxLength={300}
+                onInput={(e) => onChange({ ...v, message: (e.target as HTMLInputElement).value })}
               />
             )}
-          </div>
-        </div>
-      )}
-      {v.type === 'delay' && (
-        <div class="stack stack-sm">
-          <div class="row">
-            <span>{t('delay.seconds')}</span>
-            <NumberInput
-              value={v.seconds}
-              min={1}
-              max={3600}
-              label={t('delay.seconds')}
-              suffix={t('common.secondsUnit')}
-              onChange={(seconds) => onChange({ ...v, seconds })}
-            />
-            {advanced && (
-              <>
-                <span>{t('delay.randomTo')}</span>
-                <NumberInput
-                  value={v.randomTo ?? 0}
-                  min={0}
-                  max={3600}
-                  label={t('delay.randomTo')}
-                  suffix={t('common.secondsUnit')}
-                  onChange={(randomTo) => onChange({ ...v, randomTo: randomTo || undefined })}
-                />
-              </>
-            )}
-          </div>
-          {advanced && (
+          </Field>
+        )}
+        {v.type === 'filter' && (
+          <div class="stack stack-sm">
             <div class="row">
-              <span>{t('delay.increase')}</span>
-              <NumberInput
-                value={v.increase ?? 0}
-                min={0}
-                max={600}
-                label={t('delay.increase')}
-                suffix={t('common.secondsUnit')}
-                onChange={(increase) => onChange({ ...v, increase: increase || undefined })}
+              <Select<FilterKind>
+                value={v.filter}
+                label={t('filter.label')}
+                onChange={(filter) => onChange({ ...v, filter })}
+                options={(
+                  [
+                    'grayscale',
+                    'blur',
+                    'fade',
+                    'invert',
+                    'sepia',
+                    'none',
+                    ...(advanced ? (['custom'] as const) : []),
+                  ] as FilterKind[]
+                ).map((f) => ({ value: f, label: t(`filter.${f}`) }))}
               />
+              {v.filter !== 'none' && v.filter !== 'custom' && (
+                <label class="row nowrap small">
+                  {t('filter.intensity')}
+                  <input
+                    type="range"
+                    min={10}
+                    max={100}
+                    step={5}
+                    value={v.intensity ?? 100}
+                    onInput={(e) =>
+                      onChange({ ...v, intensity: Number((e.target as HTMLInputElement).value) })
+                    }
+                  />
+                  <span class="num">{v.intensity ?? 100}%</span>
+                </label>
+              )}
             </div>
-          )}
-          <div class="row">
-            <span>{t('delay.onBlur')}</span>
-            <Select<'pause' | 'restart' | 'ignore'>
-              value={v.onBlur ?? 'pause'}
-              label={t('delay.onBlur')}
-              onChange={(onBlur) => onChange({ ...v, onBlur })}
-              options={[
-                { value: 'pause', label: t('delay.onBlur.pause') },
-                { value: 'restart', label: t('delay.onBlur.restart') },
-                { value: 'ignore', label: t('delay.onBlur.ignore') },
-              ]}
-            />
-          </div>
-          <Toggle
-            checked={Boolean(v.autoContinue)}
-            onChange={(autoContinue) => onChange({ ...v, autoContinue })}
-            label={t('delay.auto')}
-          />
-          <Toggle
-            checked={Boolean(v.hideCountdown)}
-            onChange={(hideCountdown) => onChange({ ...v, hideCountdown })}
-            label={t('delay.hide')}
-          />
-          <GrantEditor grant={v.grant} onChange={(grant) => onChange({ ...v, grant })} />
-        </div>
-      )}
-      {v.type === 'challenge' && (
-        <div class="stack stack-sm">
-          <div class="row">
-            <Select<ChallengeKind>
-              value={v.kind}
-              label={t('challenge.kind')}
-              onChange={(kind) => onChange({ ...v, kind })}
-              options={[
-                { value: 'random', label: t('challenge.kind.random') },
-                { value: 'phrase', label: t('challenge.kind.phrase') },
-                { value: 'math', label: t('challenge.kind.math') },
-              ]}
-            />
-            {v.kind === 'random' && (
-              <>
-                <NumberInput
-                  value={v.length ?? 24}
-                  min={4}
-                  max={500}
-                  label={t('challenge.length')}
-                  suffix={t('challenge.chars')}
-                  onChange={(length) => onChange({ ...v, length })}
-                />
-                {advanced && (
-                  <Select<Charset>
-                    value={v.charset ?? 'alnum'}
-                    label={t('challenge.charset')}
-                    onChange={(charset) => onChange({ ...v, charset })}
-                    options={(['alnum', 'letters', 'digits', 'symbols'] as Charset[]).map((c) => ({
-                      value: c,
-                      label: t(`challenge.charset.${c}`),
-                    }))}
+            {v.filter === 'custom' && (
+              <Field label={t('filter.custom')} help={t('filter.customHelp')}>
+                {(id, d) => (
+                  <input
+                    id={id}
+                    aria-describedby={d}
+                    class="input mono"
+                    value={v.css ?? ''}
+                    maxLength={200}
+                    onInput={(e) => onChange({ ...v, css: (e.target as HTMLInputElement).value })}
                   />
                 )}
-              </>
+              </Field>
             )}
+            <Toggle
+              checked={Boolean(v.mute)}
+              onChange={(mute) => onChange({ ...v, mute })}
+              label={t('filter.mute')}
+            />
           </div>
-          {v.kind === 'phrase' && (
-            <Field label={t('challenge.phrase')} help={t('challenge.phraseHelp')}>
-              {(id, d) => (
+        )}
+        {v.type === 'ask' && (
+          <div class="stack stack-sm">
+            <div class="row">
+              <span>{t('ask.choices')}</span>
+              <input
+                class="input inline mono"
+                style={{ width: '10em' }}
+                value={v.choices.join(', ')}
+                aria-label={t('ask.choices')}
+                onChange={(e) => {
+                  const choices = (e.target as HTMLInputElement).value
+                    .split(/[,\s]+/)
+                    .map(Number)
+                    .filter((n) => n > 0 && n <= 1440)
+                    .slice(0, 6);
+                  if (choices.length) onChange({ ...v, choices });
+                }}
+              />
+              <span>{t('ask.max')}</span>
+              <NumberInput
+                value={v.maxMinutes}
+                min={1}
+                max={1440}
+                label={t('ask.max')}
+                suffix={t('common.minutesUnit')}
+                onChange={(maxMinutes) => onChange({ ...v, maxMinutes })}
+              />
+            </div>
+            <div class="row">
+              <span>{t('ask.wait')}</span>
+              <NumberInput
+                value={v.seconds ?? 0}
+                min={0}
+                max={600}
+                label={t('ask.wait')}
+                suffix={t('common.secondsUnit')}
+                onChange={(seconds) => onChange({ ...v, seconds })}
+              />
+            </div>
+            <Toggle
+              checked={Boolean(v.requireIntention)}
+              onChange={(requireIntention) => onChange({ ...v, requireIntention })}
+              label={t('ask.require')}
+            />
+            <div class="row">
+              <label class="check small">
                 <input
-                  id={id}
-                  aria-describedby={d}
-                  class="input"
-                  value={v.phrase ?? ''}
-                  maxLength={300}
-                  onInput={(e) => onChange({ ...v, phrase: (e.target as HTMLInputElement).value })}
+                  type="checkbox"
+                  checked={Boolean(v.cooldownMinutes)}
+                  onChange={(e) =>
+                    onChange({
+                      ...v,
+                      cooldownMinutes: (e.target as HTMLInputElement).checked ? 30 : undefined,
+                    })
+                  }
+                />
+                {t('ask.cooldown')}
+              </label>
+              {v.cooldownMinutes !== undefined && (
+                <NumberInput
+                  value={v.cooldownMinutes}
+                  min={1}
+                  max={1440}
+                  label={t('ask.cooldown')}
+                  suffix={t('common.minutesUnit')}
+                  onChange={(cooldownMinutes) => onChange({ ...v, cooldownMinutes })}
                 />
               )}
-            </Field>
-          )}
-          <GrantEditor grant={v.grant} onChange={(grant) => onChange({ ...v, grant })} />
-        </div>
-      )}
-      {v.type === 'redirect' && (
-        <Field label={t('redirect.url')} help={t('redirect.help')}>
-          {(id, d) => (
-            <input
-              id={id}
-              aria-describedby={d}
-              class="input mono"
-              value={v.url}
-              maxLength={2000}
-              onInput={(e) => onChange({ ...v, url: (e.target as HTMLInputElement).value })}
+            </div>
+          </div>
+        )}
+        {v.type === 'delay' && (
+          <div class="stack stack-sm">
+            <div class="row">
+              <span>{t('delay.seconds')}</span>
+              <NumberInput
+                value={v.seconds}
+                min={1}
+                max={3600}
+                label={t('delay.seconds')}
+                suffix={t('common.secondsUnit')}
+                onChange={(seconds) => onChange({ ...v, seconds })}
+              />
+              {advanced && (
+                <>
+                  <span>{t('delay.randomTo')}</span>
+                  <NumberInput
+                    value={v.randomTo ?? 0}
+                    min={0}
+                    max={3600}
+                    label={t('delay.randomTo')}
+                    suffix={t('common.secondsUnit')}
+                    onChange={(randomTo) => onChange({ ...v, randomTo: randomTo || undefined })}
+                  />
+                </>
+              )}
+            </div>
+            {advanced && (
+              <div class="row">
+                <span>{t('delay.increase')}</span>
+                <NumberInput
+                  value={v.increase ?? 0}
+                  min={0}
+                  max={600}
+                  label={t('delay.increase')}
+                  suffix={t('common.secondsUnit')}
+                  onChange={(increase) => onChange({ ...v, increase: increase || undefined })}
+                />
+              </div>
+            )}
+            <div class="row">
+              <span>{t('delay.onBlur')}</span>
+              <Select<'pause' | 'restart' | 'ignore'>
+                value={v.onBlur ?? 'pause'}
+                label={t('delay.onBlur')}
+                onChange={(onBlur) => onChange({ ...v, onBlur })}
+                options={[
+                  { value: 'pause', label: t('delay.onBlur.pause') },
+                  { value: 'restart', label: t('delay.onBlur.restart') },
+                  { value: 'ignore', label: t('delay.onBlur.ignore') },
+                ]}
+              />
+            </div>
+            <Toggle
+              checked={Boolean(v.autoContinue)}
+              onChange={(autoContinue) => onChange({ ...v, autoContinue })}
+              label={t('delay.auto')}
             />
-          )}
-        </Field>
-      )}
+            <Toggle
+              checked={Boolean(v.hideCountdown)}
+              onChange={(hideCountdown) => onChange({ ...v, hideCountdown })}
+              label={t('delay.hide')}
+            />
+            <GrantEditor grant={v.grant} onChange={(grant) => onChange({ ...v, grant })} />
+          </div>
+        )}
+        {v.type === 'challenge' && (
+          <div class="stack stack-sm">
+            <div class="row">
+              <Select<ChallengeKind>
+                value={v.kind}
+                label={t('challenge.kind')}
+                onChange={(kind) => onChange({ ...v, kind })}
+                options={[
+                  { value: 'random', label: t('challenge.kind.random') },
+                  { value: 'phrase', label: t('challenge.kind.phrase') },
+                  { value: 'math', label: t('challenge.kind.math') },
+                ]}
+              />
+              {v.kind === 'random' && (
+                <>
+                  <NumberInput
+                    value={v.length ?? 24}
+                    min={4}
+                    max={500}
+                    label={t('challenge.length')}
+                    suffix={t('challenge.chars')}
+                    onChange={(length) => onChange({ ...v, length })}
+                  />
+                  {advanced && (
+                    <Select<Charset>
+                      value={v.charset ?? 'alnum'}
+                      label={t('challenge.charset')}
+                      onChange={(charset) => onChange({ ...v, charset })}
+                      options={(['alnum', 'letters', 'digits', 'symbols'] as Charset[]).map((c) => ({
+                        value: c,
+                        label: t(`challenge.charset.${c}`),
+                      }))}
+                    />
+                  )}
+                </>
+              )}
+            </div>
+            {v.kind === 'phrase' && (
+              <Field label={t('challenge.phrase')} help={t('challenge.phraseHelp')}>
+                {(id, d) => (
+                  <input
+                    id={id}
+                    aria-describedby={d}
+                    class="input"
+                    value={v.phrase ?? ''}
+                    maxLength={300}
+                    onInput={(e) => onChange({ ...v, phrase: (e.target as HTMLInputElement).value })}
+                  />
+                )}
+              </Field>
+            )}
+            <GrantEditor grant={v.grant} onChange={(grant) => onChange({ ...v, grant })} />
+          </div>
+        )}
+        {v.type === 'redirect' && (
+          <Field label={t('redirect.url')} help={t('redirect.help')}>
+            {(id, d) => (
+              <input
+                id={id}
+                aria-describedby={d}
+                class="input mono"
+                value={v.url}
+                maxLength={2000}
+                onInput={(e) => onChange({ ...v, url: (e.target as HTMLInputElement).value })}
+              />
+            )}
+          </Field>
+        )}
+      </div>
     </div>
   );
 }
@@ -622,59 +641,64 @@ export function PolicyCard({
 }) {
   const [open, setOpen] = useState(Boolean(initialOpen));
   return (
-    <div class="policy">
+    <div class={`policy${open ? ' open' : ''}`}>
       <div class="policy-head">
         <span class="policy-index" aria-hidden="true">
           {index + 1}
         </span>
-        <button
-          type="button"
-          class="grow link-btn"
-          style={{ textAlign: 'start', textDecoration: 'none', color: 'inherit' }}
-          aria-expanded={open}
-          onClick={() => setOpen(!open)}
-        >
+        <button type="button" class="policy-sentence" aria-expanded={open} onClick={() => setOpen(!open)}>
           <span class="sr-only">{t('policy.number', { n: index + 1 })} </span>
-          <strong>{describeCondition(policy)}</strong> → {describeIntervention(policy.intervention)}
+          <span class="cond">{describeCondition(policy)}</span>
+          <span class="arrow" aria-hidden="true">
+            →
+          </span>
+          <StatusPill
+            small
+            tone={toneOf(policy.intervention.type)}
+            icon={interventionIcon(policy.intervention.type)}
+          >
+            {describeIntervention(policy.intervention)}
+          </StatusPill>
         </button>
-        <IconButton
-          icon="chevron-up"
-          size="small"
-          variant="ghost"
-          label={t('policy.up')}
-          disabled={index === 0}
-          onClick={() => onMove(-1)}
+        <Menu
+          label={t('policy.actions', { n: index + 1 })}
+          items={[
+            { label: t('policy.edit'), icon: 'edit', onSelect: () => setOpen(true) },
+            'separator',
+            { label: t('policy.up'), icon: 'chevron-up', disabled: index === 0, onSelect: () => onMove(-1) },
+            {
+              label: t('policy.down'),
+              icon: 'chevron-down',
+              disabled: index === count - 1,
+              onSelect: () => onMove(1),
+            },
+            'separator',
+            { label: t('policy.remove'), icon: 'trash', danger: true, onSelect: onRemove },
+          ]}
         />
-        <IconButton
-          icon="chevron-down"
-          size="small"
-          variant="ghost"
-          label={t('policy.down')}
-          disabled={index === count - 1}
-          onClick={() => onMove(1)}
-        />
-        <IconButton icon="trash" size="small" variant="ghost" label={t('policy.remove')} onClick={onRemove} />
       </div>
       {open && (
         <div class="policy-body">
-          <div class="stack stack-sm">
-            <h4>{t('policy.when')}</h4>
+          <div class="policy-block">
+            <span class="kw">{t('policy.kw.when')}</span>
             <ScheduleEditor
               schedule={policy.schedule}
               onChange={(schedule) => onChange({ ...policy, schedule })}
             />
           </div>
-          <div class="stack stack-sm">
-            <h4>{t('policy.budget')}</h4>
-            <p class="help">{t('policy.budgetHelp')}</p>
-            <BudgetEditor
-              budget={policy.budget}
-              advanced={advanced}
-              onChange={(budget) => onChange({ ...policy, budget })}
-            />
+          <div class="policy-block">
+            <span class="kw">{t('policy.kw.limit')}</span>
+            <div class="stack stack-sm">
+              <BudgetEditor
+                budget={policy.budget}
+                advanced={advanced}
+                onChange={(budget) => onChange({ ...policy, budget })}
+              />
+              <p class="help">{t('policy.budgetHelp')}</p>
+            </div>
           </div>
-          <div class="stack stack-sm">
-            <h4>{t('policy.how')}</h4>
+          <div class="policy-block">
+            <span class="kw">{t('policy.kw.then')}</span>
             <InterventionEditor
               value={policy.intervention}
               advanced={advanced}
@@ -682,7 +706,7 @@ export function PolicyCard({
             />
           </div>
           <div class="row end">
-            <Button size="small" onClick={() => setOpen(false)}>
+            <Button size="small" icon="check" onClick={() => setOpen(false)}>
               {t('common.done')}
             </Button>
           </div>

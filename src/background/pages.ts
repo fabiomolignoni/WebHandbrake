@@ -1,35 +1,12 @@
 /** "Block this site / page" (MAT-17) from the popup, the context menu and the keyboard shortcut. */
 
-import { defaultConfig, newGroup, newId, newPolicy } from '../engine/defaults';
-import type { Config, Target } from '../engine/types';
-import { parseUrl, stripWww } from '../engine/url';
+import { defaultConfig, newGroup, newPolicy } from '../engine/defaults';
+import { type Granularity, targetFor } from '../engine/page-target';
+import type { Config } from '../engine/types';
 import { t } from '../i18n/i18n';
 import type { SaveResult } from '../shared/models';
-import type { Granularity } from '../shared/rpc';
 import { proposeConfig } from './protection';
 import { store } from './store';
-
-export function targetFor(url: string, granularity: Granularity): Target | null {
-  const p = parseUrl(url);
-  if (!p?.web) return null;
-  const host = stripWww(p.host);
-  const path = p.path.length > 1 ? p.path.replace(/\/+$/, '') : '';
-  switch (granularity) {
-    case 'domain':
-      return { id: newId(), type: 'domain', value: host };
-    case 'host':
-      return { id: newId(), type: 'host', value: host };
-    case 'path':
-      return path
-        ? { id: newId(), type: 'path', value: `${host}${path}` }
-        : { id: newId(), type: 'domain', value: host };
-    case 'page': {
-      const q = p.query.map(([k, v]) => `${k}=${v}`).join('&');
-      if (!path && !q) return { id: newId(), type: 'homepage', value: host };
-      return { id: newId(), type: 'page', value: `${host}${path || '/'}${q ? `?${q}` : ''}` };
-    }
-  }
-}
 
 export async function addPage(
   url: string,

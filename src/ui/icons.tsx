@@ -66,13 +66,27 @@ const PATHS: Record<string, string> = {
     'M20.8 5.6a5.5 5.5 0 0 0-7.8 0L12 6.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 22l8.8-8.6a5.5 5.5 0 0 0 0-7.8z',
   key: 'M15 7a4 4 0 1 1-3.5 6L4 20.5V17h3v-3h3l1.5-1.5A4 4 0 0 1 15 7z M16 7h.01',
   zap: 'M13 2L3 14h9l-1 8 10-12h-9z',
+  brake:
+    'M12 18.5a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13z M10.6 15V9h2a1.8 1.8 0 0 1 0 3.6h-2 M4.6 6.2a9 9 0 0 0 0 11.6 M19.4 6.2a9 9 0 0 1 0 11.6',
+  droplet: 'M12 3s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11z',
+  keyboard: 'M3 6h18v12H3z M7 10h.01 M11 10h.01 M15 10h.01 M7 14h10',
+  redirect: 'M15 4l5 5-5 5 M20 9H9a5 5 0 0 0-5 5v6',
+  'x-circle': 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M15 9l-6 6 M9 9l6 6',
+  'check-circle': 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z M8 12.5l2.8 2.8L16 9.5',
+  sliders: 'M4 7h9 M17 7h3 M15 5v4 M4 17h3 M11 17h9 M9 15v4',
+  'arrow-right': 'M5 12h14 M12 5l7 7-7 7',
+  'shield-check': 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z M9 12l2 2 4-4',
+  'more-v': 'M12 5h.01 M12 12h.01 M12 19h.01',
+  palette:
+    'M12 21a9 9 0 1 1 9-9c0 2-1.5 3-3.5 3H16a2 2 0 0 0-1.5 3.3A1.6 1.6 0 0 1 12 21z M7.5 11h.01 M10 7.5h.01 M14.5 7.5h.01',
 };
 
 export function Icon({ name, label, class: cls }: { name: string; label?: string; class?: string }) {
   const d = PATHS[name] ?? PATHS.circle;
+  const dots = name === 'more' || name === 'more-v' || name === 'grip';
   return (
     <svg
-      class={`icon-svg${cls ? ` ${cls}` : ''}`}
+      class={`icon-svg${dots ? ' dots' : ''}${cls ? ` ${cls}` : ''}`}
       viewBox="0 0 24 24"
       aria-hidden={label ? undefined : 'true'}
       role={label ? 'img' : undefined}

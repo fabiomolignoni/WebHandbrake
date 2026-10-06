@@ -1,30 +1,38 @@
-/** Popup (§8.4.1): state of the current site and quick actions, two taps at most (FOC-01). */
+/**
+ * Popup (§8.4.1, docs/ux-redesign.md §6.1): status first — the state of the current site as a
+ * tinted hero with the most useful fact — then quick actions and focus, two taps at most (FOC-01).
+ */
 
 import { render } from 'preact';
 import { useState } from 'preact/hooks';
+import { type Granularity, targetFor } from '../engine/page-target';
 import { t } from '../i18n/i18n';
 import { extensionUrl, isAndroid } from '../platform/api';
 import { formatDuration, formatWhen } from '../shared/format';
-import type { PopupModel, TicketView } from '../shared/models';
-import { call, type Granularity } from '../shared/rpc';
-import { interventionName, setWeekStart } from '../shared/summary';
+import type { DecisionView, PopupModel, TicketView } from '../shared/models';
+import { call } from '../shared/rpc';
+import { describeIntervention, describeTarget, setWeekStart } from '../shared/summary';
 import {
   Banner,
   Button,
-  Chips,
   ColorDot,
+  FrictionMeter,
   IconButton,
   Progress,
-  Select,
+  RadioCards,
+  Ring,
+  Segmented,
   Spinner,
   Toasts,
+  ToneIcon,
   toast,
 } from '../ui/components';
-import { budgetText, Explain, verdict } from '../ui/explain';
+import { budgetText, Explain } from '../ui/explain';
 import { bootPage, useModel, useNow } from '../ui/hooks';
-import { BrakeLogo } from '../ui/icons';
+import { BrakeLogo, Icon } from '../ui/icons';
 import { costsLabel, PauseDialog, pauseBudgetLabel } from '../ui/pause';
 import { useSaveFlow } from '../ui/saveflow';
+import { interventionIcon, meterLevel, siteStatus, toneOf } from '../ui/status';
 import { TicketDialog } from '../ui/ticket';
 
 function openDashboard(route = '') {
@@ -32,120 +40,264 @@ function openDashboard(route = '') {
   window.close();
 }
 
-function SiteCard({ m, reload }: { m: PopupModel; reload: () => void }) {
+/** The next change for the current site, with the icon of what comes next. */
+function NextLine({ d, now }: { d: DecisionView; now: number }) {
+  if (d.severity >= 4) {
+    if (!d.until) return null;
+    return (
+      <p class="then">
+        <Icon name="clock" />
+        {t('why.nextChange', {
+          when: formatWhen(d.until, now),
+          what: d.next ? describeIntervention(d.next) : '',
+        })}
+      </p>
+    );
+  }
+  if (!d.restriction || !d.groups.length) return null;
+  const next = d.restriction.intervention;
+  return (
+    <p class={`then tone-${toneOf(next.type)}`}>
+      <span style={{ color: 'var(--tone)', display: 'inline-flex' }}>
+        <Icon name={interventionIcon(next.type)} />
+      </span>
+      {t(`why.restriction.${d.restriction.kind}`, {
+        when: formatWhen(d.restriction.at, now),
+        what: describeIntervention(next),
+      })}
+    </p>
+  );
+}
+
+function Hero({ m, reload }: { m: PopupModel; reload: () => void }) {
   const [why, setWhy] = useState(false);
   const [forfeit, setForfeit] = useState(false);
   const now = useNow(1000);
   const d = m.decision;
-  if (!m.tab || !d) {
-    return (
-      <section class="popup-section" aria-label={t('popup.currentSite')}>
-        <p class="muted">{t('popup.noPage')}</p>
-      </section>
-    );
-  }
-  const primary = d.groups[0];
+  const s = siteStatus(m.tab ? d : null, now);
+  const primary = d?.groups[0];
   const budget =
     primary?.policies.find((p) => p.budget && p.scheduleActive && !p.budget.exhausted)?.budget ?? null;
+  const pausedHere = m.activePauses.find((p) => d?.groups.some((g) => g.pause?.id === p.id));
+  const level = meterLevel(s.tone);
   return (
-    <section class="popup-section" aria-label={t('popup.currentSite')}>
-      <div class="row between nowrap">
-        <strong class="ellipsis" title={d.host}>
-          {d.host}
-        </strong>
-        {m.tab.incognito && <span class="tag">{t('popup.private')}</span>}
-      </div>
-      {d.groups.length > 0 ? (
-        <div class="row">
-          {d.groups.map((g) => (
-            <span key={g.groupId} class="row nowrap" style={{ gap: '6px' }}>
-              <ColorDot color={g.color} />
-              <span class="small">{g.name}</span>
+    <section class={`hero tone-${s.tone}`} aria-label={t('popup.currentSite')}>
+      <div class="hero-top">
+        <ToneIcon tone={s.tone} icon={s.icon} size={40} />
+        <div class="stack stack-xs" style={{ minWidth: 0 }}>
+          {m.tab && d && !d.exempt && (
+            <span class="host ellipsis" title={d.host}>
+              {d.host}
+              {m.tab.incognito && (
+                <span class="tag" style={{ marginInlineStart: '6px' }}>
+                  {t('popup.private')}
+                </span>
+              )}
             </span>
-          ))}
+          )}
+          <span class="status">{s.title}</span>
         </div>
-      ) : (
-        !d.exempt && <p class="small muted">{d.excepted.length ? t('why.excepted') : t('popup.noRules')}</p>
-      )}
+        {level > 0 && <FrictionMeter level={level} tone={s.tone} />}
+      </div>
       {budget && (
-        <div class="stack stack-sm">
-          <Progress
-            value={budget.used}
-            max={budget.limit}
-            label={budgetText(budget)}
-            tone={budget.remaining < 300 && budget.type !== 'visits' ? 'warning' : undefined}
-          />
-          <div class="row between">
-            <span class="small text-2">{budgetText(budget)}</span>
+        <div class="stack stack-xs">
+          <Progress value={budget.used} max={budget.limit} label={budgetText(budget)} />
+          <div class="row between small">
+            <span class="text-2">{budgetText(budget)}</span>
             {!forfeit && (
-              <button type="button" class="link-btn tiny" onClick={() => setForfeit(true)}>
+              <button type="button" class="link-btn" onClick={() => setForfeit(true)}>
                 {t('popup.forfeit')}
               </button>
             )}
           </div>
-          {forfeit && primary && (
-            <div class="row">
-              <span class="small">{t('popup.forfeitConfirm', { group: primary.name })}</span>
-              <Button
-                size="small"
-                variant="primary"
-                onClick={async () => {
-                  await call('budget.forfeit', { groupId: primary.groupId });
-                  setForfeit(false);
-                  toast(t('popup.forfeitDone'));
-                  reload();
-                }}
-              >
-                {t('popup.forfeitYes')}
-              </Button>
-              <Button size="small" variant="ghost" onClick={() => setForfeit(false)}>
-                {t('common.cancel')}
-              </Button>
-            </div>
-          )}
         </div>
       )}
-      <p class="small">
-        {verdict(d, now)}
-        {d.restriction && d.severity < 4 && d.groups.length > 0 && (
-          <span class="muted">
-            {' '}
-            · {t('popup.then', { what: interventionName(d.restriction.intervention.type) })}
-          </span>
-        )}
-      </p>
-      {(d.groups.length > 0 || d.excepted.length > 0 || d.allowlisted) && (
-        <button
-          type="button"
-          class="link-btn small"
-          aria-expanded={why}
-          onClick={() => setWhy(!why)}
-          style={{ alignSelf: 'flex-start' }}
-        >
-          {t('popup.why')}
-        </button>
+      {forfeit && primary && (
+        <div class="hero-why stack stack-sm">
+          <span>{t('popup.forfeitConfirm', { group: primary.name })}</span>
+          <div class="row">
+            <Button
+              size="small"
+              variant="primary"
+              onClick={async () => {
+                await call('budget.forfeit', { groupId: primary.groupId });
+                setForfeit(false);
+                toast(t('popup.forfeitDone'));
+                reload();
+              }}
+            >
+              {t('popup.forfeitYes')}
+            </Button>
+            <Button size="small" variant="ghost" onClick={() => setForfeit(false)}>
+              {t('common.cancel')}
+            </Button>
+          </div>
+        </div>
       )}
-      {why && <Explain d={d} />}
+      {d && <NextLine d={d} now={now} />}
+      {pausedHere && (
+        <div class="row">
+          <Button
+            size="small"
+            icon="x"
+            onClick={async () => {
+              await call('pause.cancel', { grantId: pausedHere.id });
+              reload();
+            }}
+          >
+            {t('popup.endPause')}
+          </Button>
+        </div>
+      )}
+      {d && (d.groups.length > 0 || d.excepted.length > 0 || d.allowlisted) && (
+        <div class="hero-foot">
+          <div class="row" style={{ gap: '4px 10px' }}>
+            {d.groups.map((g) => (
+              <span key={g.groupId} class="row nowrap small text-2" style={{ gap: '6px' }}>
+                <ColorDot color={g.color} />
+                {g.name}
+              </span>
+            ))}
+          </div>
+          <button type="button" class="link-btn" aria-expanded={why} onClick={() => setWhy(!why)}>
+            {t('popup.why')}
+          </button>
+        </div>
+      )}
+      {why && d && (
+        <div class="hero-why">
+          <Explain d={d} />
+        </div>
+      )}
     </section>
   );
 }
 
-function FocusCard({ m, reload }: { m: PopupModel; reload: () => void }) {
-  const [minutes, setMinutes] = useState(String(m.quickMinutes[0]));
+function AddSite({ m, onDone, onCancel }: { m: PopupModel; onDone: () => void; onCancel: () => void }) {
+  const [granularity, setGranularity] = useState<Granularity>('domain');
+  const [groupId, setGroupId] = useState<string>(m.groups[0]?.id ?? 'new');
+  const [name, setName] = useState('');
+  const flow = useSaveFlow();
+  const url = m.tab?.url ?? '';
+  const options: { value: Granularity; label: string }[] = [
+    { value: 'domain', label: t('popup.add.domain') },
+    { value: 'host', label: t('popup.add.host') },
+    { value: 'path', label: t('popup.add.path') },
+    { value: 'page', label: t('popup.add.page') },
+  ];
+  const preview = (g: Granularity) => {
+    const tg = targetFor(url, g);
+    return tg ? describeTarget(tg) : '';
+  };
+  // Hide granularities that give the same entry as a broader one (e.g. "This section" on a home page).
+  const seen = new Set<string>();
+  const distinct = options.filter((o) => {
+    const p = `${targetFor(url, o.value)?.type}|${preview(o.value)}`;
+    if (seen.has(p)) return false;
+    seen.add(p);
+    return true;
+  });
+  const add = async () => {
+    const ok = await flow.run(
+      call('config.addPage', {
+        url,
+        granularity,
+        groupId: groupId === 'new' ? null : groupId,
+        newGroupName: name || m.tab!.host,
+      }),
+    );
+    if (ok) onDone();
+  };
+  return (
+    <section class="panel" aria-labelledby="add-title">
+      <div class="row between nowrap">
+        <strong id="add-title">{t('popup.add.title')}</strong>
+        <IconButton icon="x" label={t('common.close')} variant="ghost" size="small" onClick={onCancel} />
+      </div>
+      <RadioCards
+        value={granularity}
+        onChange={setGranularity}
+        label={t('popup.add.what')}
+        class="granularity"
+        itemClass="choice"
+        options={distinct}
+        render={(o, checked) => (
+          <>
+            <span class="radio-dot" aria-hidden="true" />
+            <span class="stack stack-xs grow" style={{ minWidth: 0 }}>
+              <span class={checked ? 'strong' : ''}>{options.find((x) => x.value === o.value)?.label}</span>
+              <span class="value">{preview(o.value)}</span>
+            </span>
+          </>
+        )}
+      />
+      <div class="field">
+        <label for="add-group" class="small">
+          {t('popup.add.group')}
+        </label>
+        <select
+          id="add-group"
+          class="select"
+          value={groupId}
+          onChange={(e) => setGroupId((e.target as HTMLSelectElement).value)}
+        >
+          {m.groups.map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.name}
+            </option>
+          ))}
+          <option value="new">{t('popup.add.newGroup')}</option>
+        </select>
+      </div>
+      {groupId === 'new' && (
+        <input
+          class="input"
+          value={name}
+          placeholder={m.tab?.host}
+          aria-label={t('popup.add.newGroupName')}
+          onInput={(e) => setName((e.target as HTMLInputElement).value)}
+        />
+      )}
+      <div class="row end">
+        <Button variant="ghost" size="small" onClick={onCancel}>
+          {t('common.cancel')}
+        </Button>
+        <Button variant="primary" size="small" icon="plus" onClick={add}>
+          {t('popup.add.action')}
+        </Button>
+      </div>
+      {flow.element}
+    </section>
+  );
+}
+
+function FocusPanel({ m, reload }: { m: PopupModel; reload: () => void }) {
+  const [minutes, setMinutes] = useState<number>(m.quickMinutes[0]);
   const [ticket, setTicket] = useState<TicketView | null>(null);
   const now = useNow(1000);
   const active = m.sessions.find((s) => s.startAt <= now && now < s.endAt);
   const upcoming = m.sessions.find((s) => s.startAt > now);
   if (active) {
+    const total = active.endAt - active.startAt;
+    const left = Math.max(0, active.endAt - now);
     return (
-      <section class="popup-section" aria-label={t('popup.focus')}>
-        <div class="row between">
-          <strong>{t('popup.focusUntil', { when: formatWhen(active.endAt, now) })}</strong>
-          {active.locked && <span class="tag">{t('focus.locked')}</span>}
+      <section class="panel tone-protected" aria-label={t('popup.focus')}>
+        <div class="session-compact">
+          <Ring value={total > 0 ? left / total : 0}>{Math.ceil(left / 60_000)}</Ring>
+          <div class="stack stack-xs grow">
+            <strong>{t('popup.focusUntil', { when: formatWhen(active.endAt, now) })}</strong>
+            <span class="small text-2">{t('focus.left', { duration: formatDuration(left / 1000) })}</span>
+          </div>
+          {active.locked && (
+            <span class="tag" title={t('focus.lockedHelp')}>
+              <Icon name="lock" /> {t('focus.locked')}
+            </span>
+          )}
         </div>
         <div class="row">
           <Button
             size="small"
+            icon="plus"
             onClick={async () => {
               await call('session.extend', { id: active.id, minutes: 15 });
               reload();
@@ -182,101 +334,45 @@ function FocusCard({ m, reload }: { m: PopupModel; reload: () => void }) {
     );
   }
   return (
-    <section class="popup-section" aria-label={t('popup.focus')}>
-      <div class="row nowrap">
-        <Button
-          variant="primary"
-          icon="play"
-          class="grow"
-          onClick={async () => {
-            await call('session.start', {
-              kind: 'groups',
-              groups: [],
-              allow: [],
-              minutes: Number(minutes),
-              locked: false,
-              noPauses: false,
-            });
-            toast(t('focus.started', { minutes: Number(minutes) }));
-            reload();
-          }}
-        >
-          {t('popup.startFocus')}
-        </Button>
-        <span style={{ width: '120px' }}>
-          <Select
-            value={minutes}
-            onChange={setMinutes}
-            label={t('popup.focusDuration')}
-            options={m.quickMinutes.map((n) => ({ value: String(n), label: t('common.minutes', { n }) }))}
-          />
-        </span>
+    <section class="panel" aria-labelledby="focus-title">
+      <div class="row between">
+        <strong id="focus-title" class="row nowrap" style={{ gap: '6px' }}>
+          <Icon name="target" />
+          {t('popup.focus')}
+        </strong>
+        {upcoming && (
+          <span class="tiny muted">
+            {t('popup.focusStarts', { when: formatWhen(upcoming.startAt, now) })}
+          </span>
+        )}
       </div>
-      {upcoming && (
-        <p class="small muted">{t('popup.focusStarts', { when: formatWhen(upcoming.startAt, now) })}</p>
-      )}
+      <Segmented
+        block
+        value={minutes}
+        onChange={setMinutes}
+        label={t('popup.focusDuration')}
+        options={m.quickMinutes.map((n) => ({ value: n, label: t('common.minutes', { n }) }))}
+      />
+      <Button
+        block
+        variant="primary"
+        icon="play"
+        onClick={async () => {
+          await call('session.start', {
+            kind: 'groups',
+            groups: [],
+            allow: [],
+            minutes,
+            locked: false,
+            noPauses: false,
+          });
+          toast(t('focus.started', { minutes }));
+          reload();
+        }}
+      >
+        {t('popup.startFocus')}
+      </Button>
     </section>
-  );
-}
-
-function AddSite({ m, onDone }: { m: PopupModel; onDone: () => void }) {
-  const [granularity, setGranularity] = useState<Granularity>('domain');
-  const [groupId, setGroupId] = useState<string>(m.groups[0]?.id ?? 'new');
-  const [name, setName] = useState('');
-  const flow = useSaveFlow();
-  const add = async () => {
-    const ok = await flow.run(
-      call('config.addPage', {
-        url: m.tab!.url,
-        granularity,
-        groupId: groupId === 'new' ? null : groupId,
-        newGroupName: name || m.tab!.host,
-      }),
-    );
-    if (ok) onDone();
-  };
-  return (
-    <div class="stack stack-sm card flat tight">
-      <span class="label small">{t('popup.add.what')}</span>
-      <Chips
-        value={granularity}
-        onChange={setGranularity}
-        label={t('popup.add.what')}
-        options={[
-          { value: 'domain', label: t('popup.add.domain') },
-          { value: 'host', label: t('popup.add.host') },
-          { value: 'path', label: t('popup.add.path') },
-          { value: 'page', label: t('popup.add.page') },
-        ]}
-      />
-      <label class="label small" for="add-group">
-        {t('popup.add.group')}
-      </label>
-      <Select
-        id="add-group"
-        value={groupId}
-        onChange={setGroupId}
-        options={[
-          ...m.groups.map((g) => ({ value: g.id, label: g.name })),
-          { value: 'new', label: t('popup.add.newGroup') },
-        ]}
-      />
-      {groupId === 'new' && (
-        <input
-          class="input"
-          value={name}
-          placeholder={m.tab?.host}
-          aria-label={t('popup.add.newGroupName')}
-          onInput={(e) => setName((e.target as HTMLInputElement).value)}
-        />
-      )}
-      <div class="row end">
-        <Button variant="primary" size="small" onClick={add}>
-          {t('popup.add.action')}
-        </Button>
-      </div>
-      {flow.element}
-    </div>
   );
 }
 
@@ -298,11 +394,25 @@ function App() {
       </div>
     );
   const pause = m.pause;
+  const otherPauses = m.activePauses.filter((p) => !m.decision?.groups.some((g) => g.pause?.id === p.id));
+  const tiles = (pause ? 1 : 0) + (m.canAdd ? 2 : 0);
   return (
     <div class="popup">
       <header class="popup-head">
-        <BrakeLogo size={24} />
-        <strong class="grow">WebHandbrake</strong>
+        <BrakeLogo size={22} />
+        <span class="brand-name grow">WebHandbrake</span>
+        <button
+          type="button"
+          class="level"
+          onClick={() => openDashboard('/protection')}
+          title={t('popup.levelTitle')}
+        >
+          <Icon name="shield" />
+          {t(`level.${m.level}`)}
+          {m.pendingReady > 0 && (
+            <span class="sr-only">{t('popup.pendingReady', { count: m.pendingReady })}</span>
+          )}
+        </button>
         <IconButton
           icon="settings"
           label={t('popup.openDashboard')}
@@ -310,16 +420,9 @@ function App() {
           size="small"
           onClick={() => openDashboard()}
         />
-        <IconButton
-          icon="help"
-          label={t('nav.help')}
-          variant="ghost"
-          size="small"
-          onClick={() => openDashboard('/help')}
-        />
       </header>
-      {!m.onboarded && (
-        <section class="popup-section">
+      <div class="popup-body">
+        {!m.onboarded && (
           <Banner
             kind="accent"
             action={
@@ -330,116 +433,144 @@ function App() {
           >
             {t('popup.notSetUp')}
           </Banner>
-        </section>
-      )}
-      {m.warnings.map((w) => (
-        <section class="popup-section" key={w.kind}>
-          <Banner kind="warning">{t(`warning.${w.kind}.short`)}</Banner>
-        </section>
-      ))}
-      <SiteCard m={m} reload={reload} />
-      <FocusCard m={m} reload={reload} />
-      {(m.canAdd || pause || m.activePauses.length > 0 || m.restorable > 0 || m.pendingReady > 0) && (
-        <section class="popup-section" aria-label={t('popup.actions')}>
-          <div class="row">
-            {m.canAdd && (
-              <Button size="small" icon="plus" aria-expanded={adding} onClick={() => setAdding(!adding)}>
-                {t('popup.blockSite')}
-              </Button>
+        )}
+        {m.warnings.map((w) => (
+          <Banner key={w.kind} kind="warning">
+            {t(`warning.${w.kind}.short`)}
+          </Banner>
+        ))}
+        <Hero m={m} reload={reload} />
+        {tiles > 0 && (
+          <div
+            class="action-tiles"
+            role="group"
+            aria-label={t('popup.actions')}
+            style={{ gridTemplateColumns: `repeat(${tiles}, minmax(0, 1fr))` }}
+          >
+            {pause && (
+              <button
+                type="button"
+                class="action-tile"
+                disabled={!pause.available}
+                onClick={() => setPausing(true)}
+              >
+                <Icon name="pause" />
+                {t('popup.pause')}
+                <span class="sub">
+                  {pause.available
+                    ? [costsLabel(pause.costs), pauseBudgetLabel(pause)].filter(Boolean).join(' · ')
+                    : pause.reason
+                      ? t(pause.reason)
+                      : ''}
+                </span>
+              </button>
             )}
             {m.canAdd && (
-              <Button
-                size="small"
-                icon="bookmark"
+              <button
+                type="button"
+                class="action-tile"
                 onClick={async () => {
                   await call('later.add', { url: m.tab!.url, title: m.tab!.title });
                   toast(t('popup.savedLater'));
-                }}
-              >
-                {t('popup.later')}
-              </Button>
-            )}
-            {pause && (
-              <Button size="small" icon="pause" disabled={!pause.available} onClick={() => setPausing(true)}>
-                {t('popup.pause')}
-              </Button>
-            )}
-          </div>
-          {pause && (
-            <p class="tiny muted">
-              {pause.available
-                ? [costsLabel(pause.costs), pauseBudgetLabel(pause)].filter(Boolean).join(' · ')
-                : pause.reason
-                  ? t(pause.reason)
-                  : ''}
-            </p>
-          )}
-          {adding && (
-            <AddSite
-              m={m}
-              onDone={() => {
-                setAdding(false);
-                reload();
-              }}
-            />
-          )}
-          {m.activePauses.map((p) => (
-            <div key={p.id} class="row between">
-              <span class="small">
-                {p.until
-                  ? t('popup.pausedUntil', { when: formatWhen(p.until, now) })
-                  : t('popup.pausedLeft', { duration: formatDuration(p.remaining ?? 0) })}
-              </span>
-              <Button
-                size="small"
-                variant="ghost"
-                onClick={async () => {
-                  await call('pause.cancel', { grantId: p.id });
                   reload();
                 }}
               >
-                {t('popup.endPause')}
-              </Button>
-            </div>
-          ))}
-          {m.restorable > 0 && (
-            <Button
-              size="small"
-              icon="refresh"
-              onClick={async () => {
-                const r = await call('tabs.reopenBlocked', {});
-                toast(t('popup.reopened', { count: r.reopened }));
-                reload();
-              }}
-            >
-              {t('popup.reopen', { count: m.restorable })}
-            </Button>
-          )}
-          {m.pendingReady > 0 && (
-            <button type="button" class="link-btn small" onClick={() => openDashboard('/protection')}>
-              {t('popup.pendingReady', { count: m.pendingReady })}
-            </button>
-          )}
-        </section>
-      )}
-      <section class="popup-section">
-        <p class="small">{t('popup.today', { duration: formatDuration(m.today.seconds) })}</p>
-        {m.today.impulses > 0 && (
-          <p class="small text-2">{t('popup.impulses', { count: m.today.impulses })}</p>
+                <Icon name="bookmark" />
+                {t('popup.later')}
+              </button>
+            )}
+            {m.canAdd && (
+              <button
+                type="button"
+                class="action-tile"
+                aria-expanded={adding}
+                onClick={() => setAdding(!adding)}
+              >
+                <Icon name="plus" />
+                {t('popup.blockSite')}
+              </button>
+            )}
+          </div>
         )}
-        <div class="row between">
-          {m.laterCount > 0 ? (
-            <button type="button" class="link-btn small" onClick={() => openDashboard('/later')}>
-              {t('popup.laterCount', { count: m.laterCount })}
-            </button>
-          ) : (
-            <span />
+        {adding && (
+          <AddSite
+            m={m}
+            onCancel={() => setAdding(false)}
+            onDone={() => {
+              setAdding(false);
+              reload();
+            }}
+          />
+        )}
+        {(otherPauses.length > 0 || m.restorable > 0 || m.pendingReady > 0) && (
+          <section class="panel" aria-label={t('popup.status')}>
+            {otherPauses.map((p) => (
+              <div key={p.id} class="row between nowrap">
+                <span class="row nowrap small" style={{ gap: '8px' }}>
+                  <ToneIcon tone="calm" icon="pause" size={26} />
+                  {p.until
+                    ? t('popup.pausedUntil', { when: formatWhen(p.until, now) })
+                    : t('popup.pausedLeft', { duration: formatDuration(p.remaining ?? 0) })}
+                </span>
+                <Button
+                  size="small"
+                  variant="ghost"
+                  onClick={async () => {
+                    await call('pause.cancel', { grantId: p.id });
+                    reload();
+                  }}
+                >
+                  {t('popup.endPause')}
+                </Button>
+              </div>
+            ))}
+            {m.restorable > 0 && (
+              <Button
+                size="small"
+                icon="refresh"
+                onClick={async () => {
+                  const r = await call('tabs.reopenBlocked', {});
+                  toast(t('popup.reopened', { count: r.reopened }));
+                  reload();
+                }}
+              >
+                {t('popup.reopen', { count: m.restorable })}
+              </Button>
+            )}
+            {m.pendingReady > 0 && (
+              <button
+                type="button"
+                class="link-btn small"
+                style={{ alignSelf: 'flex-start' }}
+                onClick={() => openDashboard('/protection')}
+              >
+                {t('popup.pendingReady', { count: m.pendingReady })}
+              </button>
+            )}
+          </section>
+        )}
+        <FocusPanel m={m} reload={reload} />
+      </div>
+      <footer class="foot">
+        <span class="stack stack-xs" style={{ minWidth: 0 }}>
+          <span>
+            <strong class="num">{formatDuration(m.today.seconds)}</strong> {t('popup.todayLimited')}
+          </span>
+          {(m.today.impulses > 0 || m.laterCount > 0) && (
+            <span class="tiny muted">
+              {[
+                m.today.impulses > 0 ? t('popup.impulses', { count: m.today.impulses }) : '',
+                m.laterCount > 0 ? t('popup.laterCount', { count: m.laterCount }) : '',
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </span>
           )}
-          <button type="button" class="link-btn small" onClick={() => openDashboard()}>
-            {t('popup.openDashboard')} →
-          </button>
-        </div>
-      </section>
+        </span>
+        <button type="button" class="link-btn nowrap" onClick={() => openDashboard()}>
+          {t('popup.dashboard')} →
+        </button>
+      </footer>
       {pausing && pause && (
         <PauseDialog options={pause} url={m.tab?.url} onClose={() => setPausing(false)} onStarted={reload} />
       )}

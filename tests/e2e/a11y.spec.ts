@@ -14,6 +14,7 @@ test.afterEach(async () => {
 const ROUTES = [
   'today',
   'groups',
+  'groups/new',
   'focus',
   'later',
   'insights',
@@ -53,6 +54,35 @@ for (const theme of ['light', 'dark']) {
         .analyze();
       all.push(...summary(r.violations).map((s) => `${route}: ${s}`));
     }
+    // Interactive states of the redesign: a rule open with the friction picker, an open menu.
+    await p.locator('.policy-sentence').first().click();
+    await p.waitForTimeout(200);
+    const rule = await new AxeBuilder({ page: p })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .analyze();
+    all.push(...summary(rule.violations).map((s) => `rule editor: ${s}`));
+    await p.evaluate(() => {
+      location.hash = '#/groups';
+    });
+    await p.waitForTimeout(400);
+    await p.getByRole('button', { name: /More actions for Social/ }).click();
+    const menu = await new AxeBuilder({ page: p })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .analyze();
+    all.push(...summary(menu.violations).map((s) => `group menu: ${s}`));
+    await p.keyboard.press('Escape');
+    // Every step of the creation wizard.
+    await p.evaluate(() => {
+      location.hash = '#/groups/new?template=social';
+    });
+    for (const step of ['when', 'what happens', 'review']) {
+      await p.getByRole('button', { name: `Next: ${step}` }).click();
+      await p.waitForTimeout(200);
+      const r = await new AxeBuilder({ page: p })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+        .analyze();
+      all.push(...summary(r.violations).map((s) => `wizard ${step}: ${s}`));
+    }
     expect(all).toEqual([]);
   });
 }
@@ -72,5 +102,15 @@ test('A11Y-01: popup and intervention page pass WCAG checks', async () => {
   const popup = await h.page('popup.html');
   await popup.waitForTimeout(500);
   const r2 = await new AxeBuilder({ page: popup }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze();
-  expect([...summary(r1.violations), ...summary(r2.violations)]).toEqual([]);
+  // The popup of a web page, with the "Block this site" panel open.
+  const site = await h.open('http://other.test/');
+  await popup.evaluate(async () => {
+    const [tab] = (await chrome.tabs.query({})).filter((x) => x.url?.includes('other.test'));
+    if (tab?.id) await chrome.tabs.update(tab.id, { active: true });
+  });
+  await popup.reload();
+  await popup.getByRole('button', { name: 'Block site' }).click();
+  const r3 = await new AxeBuilder({ page: popup }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze();
+  await site.close();
+  expect([...summary(r1.violations), ...summary(r2.violations), ...summary(r3.violations)]).toEqual([]);
 });

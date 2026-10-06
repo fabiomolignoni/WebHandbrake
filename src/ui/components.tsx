@@ -43,38 +43,407 @@ export function IconButton({ icon, label, ...rest }: BtnProps & { icon: string; 
   );
 }
 
+/**
+ * Switch with immediate effect, laid out as a setting row: label and help first, switch at the
+ * end (NN/g toggle guidelines). `compact` keeps label and switch together (toolbars, headers).
+ */
 export function Toggle({
   checked,
   onChange,
   label,
   help,
   disabled,
+  compact,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
   label: ComponentChildren;
   help?: ComponentChildren;
   disabled?: boolean;
+  compact?: boolean;
 }) {
   const id = useId();
   return (
-    <div class="stack" style={{ gap: '2px' }}>
-      <div class="toggle">
-        <button
-          type="button"
-          role="switch"
-          id={id}
-          aria-checked={checked}
-          disabled={disabled}
-          onClick={() => onChange(!checked)}
-          aria-describedby={help ? `${id}-help` : undefined}
-        />
+    <div class={`toggle${compact ? ' compact' : ''}`}>
+      <div class="toggle-text">
         <label for={id}>{label}</label>
+        {help && (
+          <span class="help" id={`${id}-help`}>
+            {help}
+          </span>
+        )}
       </div>
-      {help && (
-        <span class="help" id={`${id}-help`} style={{ paddingInlineStart: '54px' }}>
-          {help}
-        </span>
+      <button
+        type="button"
+        role="switch"
+        id={id}
+        aria-checked={checked}
+        disabled={disabled}
+        onClick={() => onChange(!checked)}
+        aria-describedby={help ? `${id}-help` : undefined}
+      />
+    </div>
+  );
+}
+
+/** Arrow-key navigation shared by radio groups rendered as buttons (roving tab index). */
+function useRovingRadio<T>(
+  options: { value: T; disabled?: boolean }[],
+  onChange: (v: T) => void,
+  selector = 'button',
+) {
+  const ref = useRef<HTMLDivElement>(null);
+  const onKey = (e: KeyboardEvent, i: number) => {
+    const last = e.key === 'End';
+    const first = e.key === 'Home';
+    const dir =
+      e.key === 'ArrowRight' || e.key === 'ArrowDown'
+        ? 1
+        : e.key === 'ArrowLeft' || e.key === 'ArrowUp'
+          ? -1
+          : 0;
+    if (!dir && !first && !last) return;
+    e.preventDefault();
+    const enabled = options.map((o, idx) => ({ o, idx })).filter((x) => !x.o.disabled);
+    if (!enabled.length) return;
+    const pos = enabled.findIndex((x) => x.idx === i);
+    const next = first
+      ? enabled[0]
+      : last
+        ? enabled[enabled.length - 1]
+        : enabled[(pos + dir + enabled.length) % enabled.length];
+    onChange(next.o.value);
+    (ref.current?.querySelectorAll(selector)[next.idx] as HTMLElement | undefined)?.focus();
+  };
+  return { ref, onKey };
+}
+
+/** Segmented control: a short set of exclusive options (Apple HIG, Material 3: 2–5 options). */
+export function Segmented<T extends string | number>({
+  value,
+  onChange,
+  options,
+  label,
+  disabled,
+  block,
+  labelledBy,
+}: {
+  value: T;
+  onChange: (v: T) => void;
+  options: { value: T; label: ComponentChildren; icon?: string; disabled?: boolean; aria?: string }[];
+  label?: string;
+  labelledBy?: string;
+  disabled?: boolean;
+  block?: boolean;
+}) {
+  const { ref, onKey } = useRovingRadio(options, onChange);
+  const selected = options.some((o) => o.value === value);
+  return (
+    <div
+      class={`segmented${block ? ' block' : ''}`}
+      role="radiogroup"
+      aria-label={labelledBy ? undefined : label}
+      aria-labelledby={labelledBy}
+      ref={ref}
+    >
+      {options.map((o, i) => {
+        const checked = o.value === value;
+        return (
+          <button
+            key={String(o.value)}
+            type="button"
+            role="radio"
+            aria-checked={checked}
+            aria-label={o.aria}
+            tabIndex={checked || (!selected && i === 0) ? 0 : -1}
+            disabled={disabled || o.disabled}
+            onClick={() => onChange(o.value)}
+            onKeyDown={(e) => onKey(e as unknown as KeyboardEvent, i)}
+          >
+            {o.icon && <Icon name={o.icon} />}
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Radio group of rich options (radio cards, friction picker). */
+export function RadioCards<T extends string | number>({
+  value,
+  onChange,
+  options,
+  label,
+  class: cls = 'stack stack-sm',
+  itemClass = 'choice',
+  render,
+}: {
+  value: T;
+  onChange: (v: T) => void;
+  options: { value: T; disabled?: boolean; tone?: string }[];
+  label: string;
+  class?: string;
+  itemClass?: string;
+  render: (o: { value: T }, checked: boolean) => ComponentChildren;
+}) {
+  const { ref, onKey } = useRovingRadio(options, onChange);
+  const selected = options.some((o) => o.value === value);
+  return (
+    <div class={cls} role="radiogroup" aria-label={label} ref={ref}>
+      {options.map((o, i) => {
+        const checked = o.value === value;
+        return (
+          <button
+            key={String(o.value)}
+            type="button"
+            role="radio"
+            class={`${itemClass}${o.tone ? ` tone-${o.tone}` : ''}`}
+            aria-checked={checked}
+            tabIndex={checked || (!selected && i === 0) ? 0 : -1}
+            disabled={o.disabled}
+            onClick={() => onChange(o.value)}
+            onKeyDown={(e) => onKey(e as unknown as KeyboardEvent, i)}
+          >
+            {render(o, checked)}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** A state shown as tone + icon + words (never colour alone, WCAG 1.4.1). */
+export function StatusPill({
+  tone,
+  icon,
+  children,
+  small,
+  title,
+}: {
+  tone: string;
+  icon?: string;
+  children: ComponentChildren;
+  small?: boolean;
+  title?: string;
+}) {
+  return (
+    <span class={`pill tone-${tone}${small ? ' small' : ''}`} title={title}>
+      {icon && <Icon name={icon} />}
+      <span>{children}</span>
+    </span>
+  );
+}
+
+export function ToneIcon({
+  tone,
+  icon,
+  size = 36,
+  round,
+  label,
+}: {
+  tone: string;
+  icon: string;
+  size?: number;
+  round?: boolean;
+  label?: string;
+}) {
+  const cls = `tone-icon tone-${tone}${round ? ' round' : ''}`;
+  const style = { ['--size' as string]: `${size}px` };
+  return label ? (
+    <span class={cls} style={style} role="img" aria-label={label}>
+      <Icon name={icon} />
+    </span>
+  ) : (
+    <span class={cls} style={style} aria-hidden="true">
+      <Icon name={icon} />
+    </span>
+  );
+}
+
+/** The group's icon on a tile tinted with the group colour. */
+export function GroupTile({ color, icon, size = 40 }: { color: string; icon: string; size?: number }) {
+  return (
+    <span
+      class="group-tile"
+      style={{ ['--group' as string]: color, ['--size' as string]: `${size}px` }}
+      aria-hidden="true"
+    >
+      <Icon name={icon || 'circle'} />
+    </span>
+  );
+}
+
+/** Four notches from free to protected: the handbrake, made visible. Decorative: the level is
+    always also given in words next to it. */
+export function FrictionMeter({ level, tone }: { level: number; tone: string }) {
+  return (
+    <span class={`meter tone-${tone}`} aria-hidden="true">
+      {[1, 2, 3, 4].map((n) => (
+        <i key={n} class={n <= level ? 'on' : ''} />
+      ))}
+    </span>
+  );
+}
+
+/** Circular progress (0…1) with a label inside. */
+export function Ring({
+  value,
+  children,
+  label,
+  class: cls,
+}: {
+  value: number;
+  children?: ComponentChildren;
+  label?: string;
+  class?: string;
+}) {
+  const c = 2 * Math.PI * 44;
+  const v = Math.min(1, Math.max(0, value));
+  const inner = (
+    <>
+      <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <circle class="track" cx="50" cy="50" r="44" />
+        <circle
+          class="value"
+          cx="50"
+          cy="50"
+          r="44"
+          style={{ strokeDasharray: `${c}`, strokeDashoffset: `${c * (1 - v)}` }}
+        />
+      </svg>
+      <span class="label" aria-hidden={label ? 'true' : undefined}>
+        {children}
+      </span>
+    </>
+  );
+  const klass = `ring${cls ? ` ${cls}` : ''}`;
+  return label ? (
+    <span class={klass} role="img" aria-label={label}>
+      {inner}
+    </span>
+  ) : (
+    <span class={klass}>{inner}</span>
+  );
+}
+
+export type MenuItem =
+  | {
+      label: string;
+      icon?: string;
+      onSelect: () => void;
+      disabled?: boolean;
+      danger?: boolean;
+    }
+  | 'separator';
+
+/**
+ * Overflow menu (menu button pattern, WAI-ARIA APG): arrows, Home/End, Escape and Tab close it
+ * and focus returns to the button.
+ */
+export function Menu({
+  label,
+  items,
+  icon = 'more',
+  size = 'small',
+  up,
+  text,
+}: {
+  label: string;
+  items: MenuItem[];
+  icon?: string;
+  size?: 'small';
+  up?: boolean;
+  /** Visible label: the button shows it next to the icon instead of being icon-only. */
+  text?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  const menuId = useId();
+  const entries = () =>
+    Array.from(wrap.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)') ?? []);
+  useEffect(() => {
+    if (!open) return;
+    entries()[0]?.focus();
+    const onDown = (e: PointerEvent) => {
+      if (!wrap.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', onDown);
+    return () => document.removeEventListener('pointerdown', onDown);
+  }, [open]);
+  const close = (focus = true) => {
+    setOpen(false);
+    if (focus) button.current?.focus();
+  };
+  const onKey = (e: KeyboardEvent) => {
+    const list = entries();
+    const i = list.indexOf(document.activeElement as HTMLButtonElement);
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      close();
+    } else if (e.key === 'Tab') close(false);
+    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const d = e.key === 'ArrowDown' ? 1 : -1;
+      list[(i + d + list.length) % list.length]?.focus();
+    } else if (e.key === 'Home' || e.key === 'End') {
+      e.preventDefault();
+      list[e.key === 'Home' ? 0 : list.length - 1]?.focus();
+    }
+  };
+  return (
+    <div class="menu-wrap above" ref={wrap}>
+      <button
+        ref={button}
+        type="button"
+        class={text ? `btn ${size}` : `btn ghost icon ${size}`}
+        aria-label={text ? undefined : label}
+        title={label}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={open ? menuId : undefined}
+        onClick={() => setOpen(!open)}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowDown' && !open) {
+            e.preventDefault();
+            setOpen(true);
+          }
+        }}
+      >
+        <Icon name={icon} />
+        {text}
+      </button>
+      {open && (
+        <div
+          class={`menu${up ? ' up' : ''}`}
+          role="menu"
+          id={menuId}
+          aria-label={label}
+          onKeyDown={(e) => onKey(e as unknown as KeyboardEvent)}
+        >
+          {items.map((it, i) =>
+            it === 'separator' ? (
+              <hr key={`s${i}`} />
+            ) : (
+              <button
+                key={it.label}
+                type="button"
+                role="menuitem"
+                tabIndex={-1}
+                class={it.danger ? 'danger' : undefined}
+                disabled={it.disabled}
+                onClick={() => {
+                  close();
+                  it.onSelect();
+                }}
+              >
+                {it.icon && <Icon name={it.icon} />}
+                {it.label}
+              </button>
+            ),
+          )}
+        </div>
       )}
     </div>
   );

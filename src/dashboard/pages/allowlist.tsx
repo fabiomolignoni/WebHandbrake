@@ -9,6 +9,7 @@ import { useSaveFlow } from '../../ui/saveflow';
 import { TargetsEditor } from '../components/targets';
 import { clone, useDashboard } from '../context';
 import { setNavigationGuard } from '../router';
+import { GroupsNav } from './groups';
 
 export function AllowlistPage() {
   const { model } = useDashboard();
@@ -40,13 +41,11 @@ export function AllowlistPage() {
     <div class="stack stack-lg">
       <div class="page-head">
         <div>
-          <a href="#/groups" class="small">
-            ← {t('nav.groups')}
-          </a>
           <h1>{t('allowlist.title')}</h1>
           <p>{t('allowlist.subtitle')}</p>
         </div>
       </div>
+      <GroupsNav current="allowlist" />
       <Banner kind="info">{t('allowlist.note')}</Banner>
       <div class="card stack">
         <TargetsEditor
