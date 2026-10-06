@@ -417,6 +417,7 @@ function App() {
         </button>
         <span class="grow" />
         <Button
+          variant="primary"
           icon="dashboard"
           size="small"
           class="open-dashboard"
