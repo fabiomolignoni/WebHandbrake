@@ -58,6 +58,10 @@ class ChromiumTab implements TabDriver {
     }
     await this.page.keyboard.type(text);
   }
+  async select(q: WireQuery, value: string) {
+    const el = await this.element(q);
+    await el.selectOption(value, { timeout: 5000 });
+  }
   async press(key: string) {
     await this.page.keyboard.press(key);
   }
@@ -66,6 +70,13 @@ class ChromiumTab implements TabDriver {
   }
   async screenshot(path: string) {
     await this.page.screenshot({ path, fullPage: true });
+  }
+  async viewport(width: number, height: number) {
+    await this.page.setViewportSize({ width, height });
+  }
+  async inject(source: string) {
+    // The DevTools protocol evaluates outside the page's Content-Security-Policy.
+    await this.page.evaluate(source);
   }
 }
 

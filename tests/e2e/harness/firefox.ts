@@ -102,7 +102,19 @@ class FirefoxTab implements TabDriver {
   async type(q: WireQuery, text: string, clear: boolean) {
     const id = await this.element(q);
     if (clear) await this.s.wd.classic('POST', `/element/${id}/clear`);
-    await this.s.wd.classic('POST', `/element/${id}/value`, { text });
+    // A new line is the Enter key, as in Playwright.
+    await this.s.wd.classic('POST', `/element/${id}/value`, { text: text.replace(/\n/g, KEYS.Enter) });
+  }
+  async select(q: WireQuery, value: string) {
+    await this.s.focus(this.context);
+    // Clicking an <option> selects it, as a user choosing in the list.
+    const ref = await this.s.wd.classic('POST', '/execute/sync', {
+      script: `const el = (${QUERY}).apply(null, [arguments[0], 'element']); return el ? [...el.options].find((o) => o.value === arguments[1]) ?? null : null;`,
+      args: [q, value],
+    });
+    const id = elementId(ref);
+    if (!id) throw new Error('option not found');
+    await this.s.wd.classic('POST', `/element/${id}/click`);
   }
   async press(key: string) {
     await this.s.focus(this.context);
@@ -128,6 +140,31 @@ class FirefoxTab implements TabDriver {
         },
       ],
     });
+  }
+  async viewport(width: number, height: number) {
+    try {
+      await this.s.wd.bidi('browsingContext.setViewport', {
+        context: this.context,
+        viewport: { width, height },
+      });
+    } catch {
+      // Refused on extension pages: size the window instead (Firefox keeps a minimum width).
+      await this.s.focus(this.context);
+      const inner = await this.evaluate<[number, number]>(
+        '() => [window.outerWidth - window.innerWidth, window.outerHeight - window.innerHeight]',
+        [],
+      );
+      await this.s.wd.classic('POST', '/window/rect', { width: width + inner[0], height: height + inner[1] });
+    }
+  }
+  async inject(source: string) {
+    const r = await this.s.wd.bidi('script.evaluate', {
+      expression: `${source}\n;void 0`,
+      target: { context: this.context },
+      awaitPromise: false,
+      resultOwnership: 'none',
+    });
+    if (r.type === 'exception') throw new Error(r.exceptionDetails?.text ?? 'exception');
   }
   async screenshot(path: string) {
     const { writeFile } = await import('node:fs/promises');

@@ -25,11 +25,17 @@ export interface TabDriver {
   click(q: WireQuery): Promise<void>;
   /** Focuses the element of a query and types with real keystrokes (optionally clearing it first). */
   type(q: WireQuery, text: string, clear: boolean): Promise<void>;
+  /** Chooses an option of a native <select> with real input. */
+  select(q: WireQuery, value: string): Promise<void>;
   /** Presses a key ("Enter", "Escape", "Tab", "ArrowDown", a character…) on the focused element. */
   press(key: string): Promise<void>;
   /** Moves the mouse (user activity). */
   mouse(x: number, y: number): Promise<void>;
   screenshot(path: string): Promise<void>;
+  /** Sets the size of the page's viewport (responsive layouts). */
+  viewport(width: number, height: number): Promise<void>;
+  /** Runs a script source in the page, whatever its Content-Security-Policy (axe-core). */
+  inject(source: string): Promise<void>;
   isClosed(): boolean;
 }
 
