@@ -1,6 +1,7 @@
 /**
- * Accessibility in real browsers (A11Y-01…A11Y-05): axe-core WCAG 2.2 AA checks on every page and
- * interactive state, in the light and dark themes, and keyboard use.
+ * Accessibility in real browsers (A11Y-01…A11Y-03): axe-core WCAG 2.2 AA checks on every page and
+ * interactive state, in the light and dark themes, keyboard use and focus. The accessible
+ * alternative to the typed challenge (A11Y-05) is in interventions.spec.ts.
  */
 
 import { expect, type Tab, test } from './harness';

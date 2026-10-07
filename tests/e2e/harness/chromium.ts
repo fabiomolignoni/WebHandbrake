@@ -1,11 +1,19 @@
 /** Chromium backend: Playwright over the Chrome DevTools Protocol, with the unpacked extension loaded. */
 
+import { createHash } from 'node:crypto';
+import { realpathSync } from 'node:fs';
 import { type BrowserContext, chromium, type ElementHandle, type Page, type Worker } from '@playwright/test';
 import type { BrowserDriver, LaunchOptions, TabDriver } from './driver';
 import { cachedBrowsers } from './firefox';
 import { pageQuery, type WireQuery } from './queries';
 
 const QUERY = pageQuery.toString();
+
+/** The ID Chromium gives an unpacked extension: derived from the SHA-256 of its directory. */
+function unpackedExtensionId(dir: string): string {
+  const hex = createHash('sha256').update(realpathSync(dir)).digest('hex').slice(0, 32);
+  return [...hex].map((c) => String.fromCharCode(97 + Number.parseInt(c, 16))).join('');
+}
 
 function expr(fnSource: string, args: unknown[]): string {
   return `(${fnSource})(${args.map((a) => (a === undefined ? 'undefined' : JSON.stringify(a))).join(', ')})`;
@@ -114,15 +122,8 @@ export async function launchChromium(opts: LaunchOptions): Promise<BrowserDriver
       if (m.type() === 'error') errors.push(`[service worker] ${m.text()}`);
     });
   };
-  // The service worker may register before or while we look for it.
-  let worker: Worker | undefined;
-  for (let i = 0; i < 30 && !worker; i++) {
-    worker = context.serviceWorkers().find((w) => w.url().startsWith('chrome-extension://'));
-    if (!worker)
-      worker = await context.waitForEvent('serviceworker', { timeout: 1000 }).catch(() => undefined);
-  }
-  if (!worker) throw new Error('the extension service worker did not start');
-  const origin = `chrome-extension://${new URL(worker.url()).host}`;
+  // Known in advance: under load, the service worker may register before Playwright sees it.
+  const origin = `chrome-extension://${unpackedExtensionId(opts.extension)}`;
   for (const w of context.serviceWorkers()) watchWorker(w);
   context.on('serviceworker', watchWorker);
 
@@ -151,6 +152,12 @@ export async function launchChromium(opts: LaunchOptions): Promise<BrowserDriver
     }
     return helper;
   };
+
+  // The extension is loaded once one of its pages can use the extension APIs.
+  if (!(await ready(await helperPage()))) {
+    await context.close().catch(() => undefined);
+    throw new Error(`the extension did not load (${origin})`);
+  }
 
   const driver: BrowserDriver = {
     name: 'chromium',

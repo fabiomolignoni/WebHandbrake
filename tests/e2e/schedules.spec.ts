@@ -106,6 +106,10 @@ test('SCH-01: an overnight window belongs to the day it starts', async ({ h }) =
 });
 
 test('SEM-09: with days starting at 04:00, a night window belongs to the evening before', async ({ h }) => {
+  // A later day start is a weakening: at the Soft level it costs a confirmation, not a wait.
+  await h.configure((c) => {
+    c.settings.protection.level = 'soft';
+  });
   await h.configure((c) => {
     c.settings.dayStart = 4 * 60;
     // Monday 01:00–03:00 of the "logical" Monday = the night after Monday.
