@@ -3,7 +3,8 @@
  * Firefox with the test build of the extension (dist-test/), a local web server and real input.
  */
 
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect } from '@playwright/test';
@@ -14,6 +15,7 @@ import { describeQuery, type ElementInfo, pageQuery, type Query, type TextMatch,
 import { TestServer } from './server';
 
 const QUERY = pageQuery.toString();
+const require = createRequire(import.meta.url);
 const DEFAULT_TIMEOUT = 10_000;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -99,6 +101,34 @@ export class Locator {
   async type(text: string) {
     await this.waitFor('enabled');
     await retry(`type ${this}`, () => this.tab.driver.type(toWire(this.query), text, false));
+  }
+
+  /**
+   * Pastes text into the element with the real clipboard: the text is copied with Ctrl+C from a
+   * temporary text area of the page, then pasted with Ctrl+V (trusted events, as a user does).
+   */
+  async paste(text: string) {
+    await this.waitFor('enabled');
+    await this.tab.eval((t: string) => {
+      const area = document.createElement('textarea');
+      area.id = '__whb_clip';
+      area.value = t;
+      area.style.cssText =
+        'position: fixed; top: 0; left: 0; width: 200px; height: 60px; z-index: 2147483647';
+      document.body.appendChild(area);
+      area.focus();
+      area.select();
+    }, text);
+    await this.tab.driver.press('Control+c');
+    await this.tab.eval(() => document.getElementById('__whb_clip')?.remove());
+    await this.tab.driver.click(toWire(this.query));
+    await this.tab.driver.press('Control+v');
+  }
+
+  /** Chooses an option (by value) of a native <select>. */
+  async select(value: string) {
+    await this.waitFor('enabled');
+    await retry(`select ${this}`, () => this.tab.driver.select(toWire(this.query), value));
   }
 
   /** Focuses the element and presses a key. */
@@ -287,6 +317,45 @@ export class Tab {
   screenshot(path: string) {
     return this.driver.screenshot(path);
   }
+
+  viewport(width: number, height: number) {
+    return this.driver.viewport(width, height);
+  }
+
+  /** Horizontal overflow of the page in pixels (0 for a layout that fits, §8.1). */
+  overflowX(): Promise<number> {
+    return this.eval(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  }
+
+  /**
+   * WCAG checks with axe-core (A11Y-01), the same engine in both browsers. Returns one line per
+   * violation, empty when everything passes.
+   */
+  async axe(tags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']): Promise<string[]> {
+    const ready = await this.eval(() => typeof (globalThis as { axe?: unknown }).axe !== 'undefined');
+    if (!ready) await this.driver.inject(axeSource());
+    return this.eval(
+      (t: string[]) =>
+        (globalThis as unknown as { axe: any }).axe
+          .run(document, { runOnly: { type: 'tag', values: t } })
+          .then((r: any) =>
+            r.violations.map(
+              (v: any) =>
+                `${v.id} (${v.impact}): ${v.nodes
+                  .slice(0, 3)
+                  .map((n: any) => n.target.join(' '))
+                  .join(' | ')}`,
+            ),
+          ),
+      tags,
+    );
+  }
+}
+
+let axeCache: string | null = null;
+function axeSource(): string {
+  if (!axeCache) axeCache = readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8');
+  return axeCache;
 }
 
 export interface TicketView {
