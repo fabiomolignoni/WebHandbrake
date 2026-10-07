@@ -35,9 +35,13 @@ import { useSaveFlow } from '../ui/saveflow';
 import { interventionIcon, meterLevel, siteStatus, toneOf } from '../ui/status';
 import { TicketDialog } from '../ui/ticket';
 
+/**
+ * Opens a dashboard page, then closes the popup. Closing first could drop the request: when the
+ * browser has stopped the background, the message waits for it to start and dies with the popup.
+ */
 function openDashboard(route = '') {
-  void call('tabs.open', { url: extensionUrl(`dashboard.html${route ? `#${route}` : ''}`) });
-  window.close();
+  const close = () => window.close();
+  call('tabs.open', { url: extensionUrl(`dashboard.html${route ? `#${route}` : ''}`) }).then(close, close);
 }
 
 /** The next change for the current site, with the icon of what comes next. */

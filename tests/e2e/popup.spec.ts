@@ -135,3 +135,18 @@ test('the popup keeps its width when the browser sizes it from its content', asy
   });
   expect(width).toBe(380);
 });
+
+test('the Dashboard button works after the browser has stopped the background (regression)', async ({
+  h,
+  browserName,
+}) => {
+  await h.configure(() => undefined);
+  const popup = await h.popup(await h.open('http://site.test/'));
+  await popup.button('Dashboard', { exact: true }).expectVisible();
+  // As Chrome does with an idle service worker: the request must wait for it to start again.
+  if (browserName === 'chromium') expect(await h.stopBackground()).toBe(true);
+  const dashboards = async () => (await h.tabs()).filter((t) => t.url.includes('/dashboard.html')).length;
+  const before = await dashboards();
+  await popup.button('Dashboard', { exact: true }).click();
+  await expect.poll(dashboards).toBe(before + 1);
+});
