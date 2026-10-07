@@ -6,7 +6,7 @@
   "license": "GPL-3.0-or-later",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
   },
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -14,7 +14,9 @@
     "build:firefox": "node scripts/build.mjs --target=firefox",
     "build:test": "node scripts/build.mjs --test",
     "watch": "node scripts/build.mjs --watch",
+    "build:verify": "node scripts/verify-build.mjs",
     "package": "node scripts/build.mjs && node scripts/package.mjs",
+    "package:source": "node scripts/package.mjs --source",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tests/e2e/tsconfig.json",
     "lint": "biome check .",
     "format": "biome format --write .",
