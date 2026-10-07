@@ -8,6 +8,7 @@ import { api, extensionUrl, INTERVENTION_PAGE, quiet } from '../platform/api';
 import type { InterventionModel } from '../shared/models';
 import { now } from './clock';
 import { randomInt } from './crypto';
+import { logDecision } from './diagnostics-state';
 import { removeSelftestRule, SELFTEST_HOST, syncRules } from './dnr-sync';
 import { internalPagesBlocked, interventionTabs, isProtectedInternal } from './enforce';
 import { ctx, decideUrl, decisionView } from './engine';
@@ -121,6 +122,14 @@ export async function interventionModel(
     shownRecently.set(key, c.now);
     const gid = primary?.group.id ?? 'session';
     store.usage.count(`shown:${gid}`, c.now, store.cc.cal);
+    // DIA-01: most restrictions are applied by the browser filters, then shown here.
+    void logDecision(
+      store.config.settings.diagnostics.decisionLog,
+      'page',
+      url,
+      d.intervention.type,
+      primary?.group.name,
+    );
     store.scheduleUsage();
     if (d.session) countSessionStop(d.session.id);
     else if (primary?.session) countSessionStop(primary.session.id);

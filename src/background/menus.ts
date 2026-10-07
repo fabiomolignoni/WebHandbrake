@@ -81,7 +81,8 @@ export async function onMenuClicked(info: chrome.contextMenus.OnClickData, tab?:
   if (!item || !arg) return;
   const url = root === 'link' ? info.linkUrl : (info.pageUrl ?? tab?.url);
   if (!url) return;
-  await addPage(url, item.granularity, arg === 'new' ? null : arg);
+  // One configuration change at a time, as for the changes made from the dashboard.
+  await store.mutate(() => addPage(url, item.granularity, arg === 'new' ? null : arg));
 }
 
 export function registerMenuClicks() {
@@ -107,10 +108,11 @@ export async function onCommand(command: string, tab?: chrome.tabs.Tab) {
     const active = tab ?? (await quiet(api.tabs.query({ active: true, currentWindow: true })))?.[0];
     if (!active?.url) return;
     const last = store.meta.lastAddGroup;
+    // A rule that is archived (or off) blocks nothing: never the destination of a shortcut.
+    const usable = (g: { enabled: boolean; archived: boolean }) => g.enabled && !g.archived;
     const group =
-      store.config.groups.find((g) => g.id === last && g.enabled) ??
-      store.config.groups.find((g) => g.enabled && !g.archived);
-    await addPage(active.url, 'domain', group?.id ?? null);
+      store.config.groups.find((g) => g.id === last && usable(g)) ?? store.config.groups.find(usable);
+    await store.mutate(() => addPage(active.url!, 'domain', group?.id ?? null));
   }
 }
 
