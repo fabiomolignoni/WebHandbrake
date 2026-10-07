@@ -407,6 +407,44 @@ export function looksLikeConfig(raw: unknown): boolean {
   return isObj(raw) && Array.isArray(raw.groups) && isObj(raw.settings) && typeof raw.schema === 'number';
 }
 
+/**
+ * JSON with the keys of every object in alphabetical order. Chrome's storage returns objects with
+ * sorted keys while Firefox keeps their order: a checksum must not depend on it.
+ */
+export function canonicalJson(value: unknown): string {
+  return JSON.stringify(value, (_key, v) =>
+    v && typeof v === 'object' && !Array.isArray(v)
+      ? Object.fromEntries(
+          Object.keys(v as object)
+            .sort()
+            .map((k) => [k, (v as Record<string, unknown>)[k]]),
+        )
+      : v,
+  );
+}
+
+/** Checksum of a stored configuration (DAT-03), whatever the order of its keys. */
+export function configChecksum(config: unknown): string {
+  return checksum(canonicalJson(config));
+}
+
+/** Version of the checksum of the stored configuration: 2 = canonical JSON (configChecksum). */
+export const CHECKSUM_VERSION = 2;
+
+/**
+ * Whether a stored configuration is intact. Checksums of version 2 cover canonical JSON. Earlier
+ * ones covered the keys in the order they were written: checkable only where the storage keeps
+ * that order (Firefox); in Chrome, which sorts the keys, they could never be checked.
+ */
+export function storedConfigIntact(
+  stored: { data: unknown; sum?: unknown; v?: unknown },
+  storageKeepsKeyOrder: boolean,
+): boolean {
+  if (stored.v === CHECKSUM_VERSION) return stored.sum === configChecksum(stored.data);
+  if (stored.sum === checksum(JSON.stringify(stored.data))) return true;
+  return !storageKeepsKeyOrder && typeof stored.sum === 'string';
+}
+
 /** FNV-1a checksum of a JSON string (integrity, not security). */
 export function checksum(text: string): string {
   let h = 0x811c9dc5;

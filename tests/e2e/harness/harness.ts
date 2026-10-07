@@ -312,7 +312,13 @@ export class Harness {
   static async launch(browser: BrowserName, more: Partial<LaunchOptions> = {}): Promise<Harness> {
     const server = new TestServer();
     await server.start();
-    const opts: LaunchOptions = { extension: extensionDir(browser), port: server.port, ...more };
+    // Chromium keeps its profile in a directory of ours, so that the browser can be restarted on it.
+    const opts: LaunchOptions = {
+      extension: extensionDir(browser),
+      port: server.port,
+      ...(browser === 'chromium' ? { profile: tempProfile() } : {}),
+      ...more,
+    };
     const driver = browser === 'chromium' ? await launchChromium(opts) : await launchFirefox(opts);
     const h = new Harness(browser, driver, server, opts);
     await h.attachControl();
@@ -443,13 +449,31 @@ export class Harness {
     await this.rpc(kind === 'next' ? 'test.reconcile' : 'test.periodic');
   }
 
+  /**
+   * Starts the extension again from its storage: a browser restart in Chromium (where a reloaded
+   * command-line extension stays disabled), a reload of the add-on in Firefox (where a temporary
+   * add-on does not survive a browser restart). Open tabs of the harness are no longer valid.
+   */
+  async restart() {
+    if (this.browser === 'chromium') await this.restartBrowser();
+    else await this.reloadExtension();
+  }
+
   /** Reloads the extension (as an update would) and waits for its background. */
   async reloadExtension() {
     const before = (await this.state()).bootId;
     await this.control.eval(() => chrome.runtime.reload()).catch(() => undefined);
-    await sleep(500);
-    await this.attachControl();
-    await expect.poll(async () => (await this.state()).bootId, { timeout: 15_000 }).not.toBe(before);
+    // The extension's pages are closed by the reload; a new control page is opened.
+    await sleep(1000);
+    await expect
+      .poll(
+        async () => {
+          await this.attachControl();
+          return (await this.state()).bootId;
+        },
+        { timeout: 20_000 },
+      )
+      .not.toBe(before);
   }
 
   /** Terminates the background (Chrome service worker) as the browser does when it is idle. */

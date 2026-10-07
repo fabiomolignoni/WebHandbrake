@@ -69,7 +69,8 @@ class FirefoxTab implements TabDriver {
     await this.s.wd.bidi('browsingContext.close', { context: this.context }).catch(() => {});
   }
   async activate() {
-    await this.s.wd.bidi('browsingContext.activate', { context: this.context });
+    // BiDi's browsingContext.activate refuses extension pages; WebDriver classic selects any tab.
+    await this.s.focus(this.context);
   }
   async evaluate<R>(fnSource: string, args: unknown[]): Promise<R> {
     const r = await this.s.wd.bidi('script.callFunction', {
@@ -229,20 +230,21 @@ export async function launchFirefox(opts: LaunchOptions): Promise<BrowserDriver>
       return tab;
     },
     async control() {
-      if (!control || control.closed) {
-        const { context } = await wd.bidi('browsingContext.create', { type: 'tab', background: true });
-        control = s.tab(context);
-        for (let i = 0; i < 50; i++) {
-          await control.navigate(`${origin}/test.html`);
-          await new Promise((r) => setTimeout(r, 150));
-          const ready = await control
-            .evaluate<boolean>(
-              '() => document.readyState === "complete" && location.protocol === "moz-extension:" && Boolean(globalThis.browser?.runtime?.id)',
-              [],
-            )
-            .catch(() => false);
-          if (ready) break;
-        }
+      const ready = (t: FirefoxTab) =>
+        t
+          .evaluate<boolean>(
+            '() => document.readyState === "complete" && location.protocol === "moz-extension:" && Boolean(globalThis.browser?.runtime?.id)',
+            [],
+          )
+          .catch(() => false);
+      if (control && !control.closed && (await ready(control))) return control;
+      if (control) await control.close();
+      const { context } = await wd.bidi('browsingContext.create', { type: 'tab', background: true });
+      control = s.tab(context);
+      for (let i = 0; i < 75; i++) {
+        await control.navigate(`${origin}/test.html`);
+        await new Promise((r) => setTimeout(r, 200));
+        if (await ready(control)) break;
       }
       return control;
     },

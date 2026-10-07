@@ -67,6 +67,81 @@ describe('store integrity (DAT-03, DAT-07)', () => {
   });
 });
 
+describe('integrity with Chrome storage, which sorts object keys (regression)', () => {
+  it('a configuration read back by a restarted service worker is intact, not "restored"', async () => {
+    vi.resetModules();
+    installFakeBrowser({ chrome: true });
+    const { Store } = await import('../../src/background/store');
+    const { newGroup } = await import('../../src/engine/defaults');
+    const s = new Store();
+    await s.ready();
+    const a = JSON.parse(JSON.stringify(s.config));
+    a.groups.push(newGroup({ name: 'First' }));
+    await s.writeConfig(a, 'edit');
+    const b = JSON.parse(JSON.stringify(a));
+    b.groups.push(newGroup({ name: 'Second' }));
+    await s.writeConfig(b, 'edit');
+    // The service worker stops and starts again: the store is loaded from storage.
+    vi.resetModules();
+    const { Store: Again } = await import('../../src/background/store');
+    const t = new Again();
+    await t.ready();
+    expect(t.config.groups.map((g) => g.name)).toEqual(['First', 'Second']);
+    expect(t.meta.restored).toBeNull();
+    expect(t.pendingTamper).toEqual([]);
+  });
+
+  it('accepts checksums written before (insertion order), in Chrome too', async () => {
+    vi.resetModules();
+    const storage = installFakeBrowser({ chrome: true });
+    const { checksum, normalizeConfig } = await import('../../src/engine/schema');
+    const { defaultConfig, newGroup } = await import('../../src/engine/defaults');
+    const { config } = normalizeConfig({ ...defaultConfig(), groups: [newGroup({ name: 'Old' })] });
+    storage.local.set('config', { data: config, sum: checksum(JSON.stringify(config)) });
+    const { Store } = await import('../../src/background/store');
+    const s = new Store();
+    await s.ready();
+    expect(s.config.groups.map((g) => g.name)).toEqual(['Old']);
+    expect(s.meta.restored).toBeNull();
+  });
+
+  it('checks legacy checksums where the storage keeps the key order (Firefox)', async () => {
+    const { checksum, configChecksum, storedConfigIntact } = await import('../../src/engine/schema');
+    const data = { schema: 1, groups: [], settings: { b: 1, a: 2 } };
+    const legacy = checksum(JSON.stringify(data));
+    expect(storedConfigIntact({ data, sum: legacy }, true)).toBe(true);
+    expect(storedConfigIntact({ data: { ...data, groups: [1] }, sum: legacy }, true)).toBe(false);
+    // Chrome sorted the keys: an earlier checksum cannot be checked there.
+    expect(storedConfigIntact({ data, sum: 'whatever' }, false)).toBe(true);
+    // Version 2 is checked everywhere, whatever the order of the keys.
+    const sorted = { groups: [], schema: 1, settings: { a: 2, b: 1 } };
+    expect(storedConfigIntact({ data: sorted, sum: configChecksum(data), v: 2 }, false)).toBe(true);
+    expect(
+      storedConfigIntact({ data: { ...sorted, schema: 2 }, sum: configChecksum(data), v: 2 }, false),
+    ).toBe(false);
+  });
+
+  it('still detects a damaged configuration', async () => {
+    vi.resetModules();
+    const storage = installFakeBrowser({ chrome: true });
+    const { Store } = await import('../../src/background/store');
+    const { newGroup } = await import('../../src/engine/defaults');
+    const s = new Store();
+    await s.ready();
+    const a = JSON.parse(JSON.stringify(s.config));
+    a.groups.push(newGroup({ name: 'First' }));
+    await s.writeConfig(a, 'edit');
+    const stored = storage.local.get('config') as { data: { groups: { name: string }[] }; sum: string };
+    stored.data.groups[0].name = 'Tampered';
+    vi.resetModules();
+    const { Store: Again } = await import('../../src/background/store');
+    const t = new Again();
+    await t.ready();
+    expect(t.config.groups).toEqual([]);
+    expect(t.pendingTamper[0].kind).toBe('state-restored');
+  });
+});
+
 describe('snapshot rotation', () => {
   it('removes snapshots that are no longer referenced', async () => {
     vi.resetModules();

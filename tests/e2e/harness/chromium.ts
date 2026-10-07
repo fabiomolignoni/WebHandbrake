@@ -101,9 +101,14 @@ export async function launchChromium(opts: LaunchOptions): Promise<BrowserDriver
       if (m.type() === 'error') errors.push(`[service worker] ${m.text()}`);
     });
   };
-  let [worker] = context.serviceWorkers();
-  if (!worker) worker = await context.waitForEvent('serviceworker', { timeout: 15_000 });
-  // URL.origin is "null" for chrome-extension: URLs in Node.
+  // The service worker may register before or while we look for it.
+  let worker: Worker | undefined;
+  for (let i = 0; i < 30 && !worker; i++) {
+    worker = context.serviceWorkers().find((w) => w.url().startsWith('chrome-extension://'));
+    if (!worker)
+      worker = await context.waitForEvent('serviceworker', { timeout: 1000 }).catch(() => undefined);
+  }
+  if (!worker) throw new Error('the extension service worker did not start');
   const origin = `chrome-extension://${new URL(worker.url()).host}`;
   for (const w of context.serviceWorkers()) watchWorker(w);
   context.on('serviceworker', watchWorker);
@@ -120,18 +125,16 @@ export async function launchChromium(opts: LaunchOptions): Promise<BrowserDriver
   context.on('page', watchPage);
 
   let helper: Page | null = null;
+  const ready = (p: Page) => p.evaluate(() => Boolean(globalThis.chrome?.runtime?.id)).catch(() => false);
   const helperPage = async () => {
-    if (!helper || helper.isClosed()) {
-      helper = await context.newPage();
-      for (let i = 0; i < 50; i++) {
-        const ok = await helper
-          .goto(`${origin}/test.html`)
-          .then(() => true)
-          .catch(() => false);
-        if (ok) break;
-        // The extension is reloading.
-        await new Promise((r) => setTimeout(r, 200));
-      }
+    if (helper && !helper.isClosed() && (await ready(helper))) return helper;
+    if (helper && !helper.isClosed()) await helper.close().catch(() => undefined);
+    helper = await context.newPage();
+    for (let i = 0; i < 75; i++) {
+      await helper.goto(`${origin}/test.html`).catch(() => undefined);
+      if (await ready(helper)) break;
+      // The extension is reloading.
+      await new Promise((r) => setTimeout(r, 200));
     }
     return helper;
   };
