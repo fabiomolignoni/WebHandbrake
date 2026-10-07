@@ -37,6 +37,12 @@ All notable changes to this project are documented here. The format follows
 - Help → About links to the source code and to the issue tracker; Diagnostics links to a new
   issue next to the report. "Run the setup again" was removed.
 
+### Added
+
+- End-to-end tests run every scenario with the real extension in both Chromium and Firefox
+  (headless, in CI), from popup, dashboard and intervention pages to restarts, time limits,
+  schedules, protection and accessibility checks. See [`docs/testing.md`](docs/testing.md).
+
 ### Removed
 
 - The importer for another extension's settings. Lists of sites are still imported from plain
@@ -44,6 +50,20 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- In Chrome, the configuration was reported as damaged and replaced by the previous backup every
+  time the background restarted (about 30 s after the last activity), undoing recent changes.
+- Passes and breaks for a single page did not work on `http://` pages: the page and the
+  intervention page alternated in a loop.
+- In Firefox, when the extension has no access to the sites, a blocked page now shows the
+  WebHandbrake page instead of an empty error page.
+- The on-page reminder, the timer (and its label for screen readers) and the grace-period
+  countdown no longer show empty placeholders instead of the rule name and the time.
+- The intention given at the entry question is now recalled on the page, once.
+- Reminders are shown once per visit, not on every page of it.
+- The "Block this site" keyboard shortcut no longer adds the site to an archived or disabled rule.
+- The diagnostics log of recent decisions now records the pages stopped by the browser filters.
+- In Chrome, the popup's Dashboard and Set up buttons did nothing when the browser had stopped the
+  extension's background: the popup closed before its request could be delivered.
 - Choosing a gentler protection level during the first run no longer asks to wait or confirm
   while nothing is protected yet (no rules and no focus session).
 - Addresses with wildcards, paths or every-country endings (`amazon.*`) are installed as one
