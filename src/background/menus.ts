@@ -1,5 +1,6 @@
 /** Context menu (API-02) and keyboard shortcuts (API-01), desktop only (feature detected). */
 
+import { DEFAULT_SESSION_MINUTES, QUICK_SESSION_MINUTES } from '../engine/limits';
 import { t } from '../i18n/i18n';
 import { api, extensionUrl, features, quiet } from '../platform/api';
 import type { Granularity } from '../shared/rpc';
@@ -52,7 +53,7 @@ export async function rebuildMenus() {
     });
   }
   create({ id: 'focus', title: t('menu.focus'), contexts: ctxs(['page', 'action']) });
-  for (const m of [25, 50, 90]) {
+  for (const m of QUICK_SESSION_MINUTES) {
     create({
       id: `focus|${m}`,
       parentId: 'focus',
@@ -71,7 +72,7 @@ export async function onMenuClicked(info: chrome.contextMenus.OnClickData, tab?:
       kind: 'groups',
       groups: [],
       allow: [],
-      minutes: Number(arg) || 25,
+      minutes: Number(arg) || DEFAULT_SESSION_MINUTES,
       locked: false,
       noPauses: false,
     });
@@ -98,7 +99,7 @@ export async function onCommand(command: string, tab?: chrome.tabs.Tab) {
       kind: 'groups',
       groups: [],
       allow: [],
-      minutes: 25,
+      minutes: DEFAULT_SESSION_MINUTES,
       locked: false,
       noPauses: false,
     });

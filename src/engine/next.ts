@@ -14,11 +14,10 @@ import {
   severityOf,
   type UrlContext,
 } from './decide';
+import { HORIZON_DAYS } from './limits';
 import { DAY, periodRange, scheduleBoundaries } from './time';
 import type { Intervention } from './types';
 import { usageKeys } from './usage';
-
-const HORIZON_DAYS = 8;
 
 /** Instants after `now` at which decisions for the given groups may change (sorted, unique). */
 export function candidateTimes(ctx: EngineContext, groups: CompiledGroup[]): number[] {

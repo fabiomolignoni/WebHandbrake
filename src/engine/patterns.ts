@@ -19,6 +19,7 @@
  * *://*.example.com/* (uBlacklist / match patterns), hosts file lines, full URLs.
  */
 
+import { MAX_REGEX_LENGTH } from './limits';
 import type { Target, TargetType } from './types';
 import { type ParsedUrl, stripWww, toAsciiHost } from './url';
 
@@ -279,8 +280,6 @@ export function parseTargetList(text: string): {
 // ---------------------------------------------------------------------------
 // Regular expression safety (SEC-03, MAT-06)
 // ---------------------------------------------------------------------------
-
-export const MAX_REGEX_LENGTH = 1000;
 
 /** Returns an i18n error key when the expression is unsafe or invalid, null otherwise. */
 export function checkRegex(src: string): string | null {

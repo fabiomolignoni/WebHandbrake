@@ -9,6 +9,15 @@ import { parseTargetList } from './patterns';
 import { normalizeConfig } from './schema';
 import type { Config, Group, SharedList, Target } from './types';
 
+/** `format` of the export file with the whole configuration (docs/data-format.md). */
+export const EXPORT_FORMAT = 'webhandbrake';
+/** `version` of the export file with the whole configuration. */
+export const EXPORT_VERSION = 1;
+/** `format` of the file that shares a single rule with its shared lists (LST-03). */
+export const EXPORT_RULE_FORMAT = 'webhandbrake-group';
+/** `version` of the single-rule file. */
+export const EXPORT_RULE_VERSION = 1;
+
 export interface ImportResult {
   format: 'webhandbrake' | 'list' | 'group' | 'unknown';
   config: Config | null;
@@ -39,10 +48,10 @@ export function detectAndImport(text: string, now = Date.now()): ImportResult {
       return { ...result('unknown'), errors: ['import.error.json'] };
     }
     if (isObj(data)) {
-      if (data.format === 'webhandbrake' || (Array.isArray(data.groups) && isObj(data.settings))) {
+      if (data.format === EXPORT_FORMAT || (Array.isArray(data.groups) && isObj(data.settings))) {
         return importWebHandbrake(data, now);
       }
-      if (data.format === 'webhandbrake-group' && isObj(data.group)) return importGroupShare(data, now);
+      if (data.format === EXPORT_RULE_FORMAT && isObj(data.group)) return importGroupShare(data, now);
     }
     const strings = collectStrings(data);
     if (strings.length) return importList(strings.join('\n'), now);
@@ -96,7 +105,11 @@ export function exportGroup(config: Config, groupId: string): string | null {
   const g = config.groups.find((x) => x.id === groupId);
   if (!g) return null;
   const lists = config.lists.filter((l) => g.lists.includes(l.id));
-  return JSON.stringify({ format: 'webhandbrake-group', version: 1, group: g, lists }, null, 2);
+  return JSON.stringify(
+    { format: EXPORT_RULE_FORMAT, version: EXPORT_RULE_VERSION, group: g, lists },
+    null,
+    2,
+  );
 }
 
 // ---------------------------------------------------------------------------

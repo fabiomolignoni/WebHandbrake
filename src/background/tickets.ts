@@ -5,6 +5,7 @@
  */
 
 import type { ChangeUnit } from '../engine/changes';
+import { TICKET_LOCK_MS, TICKET_MAX_FAILURES, TICKET_TTL_MS } from '../engine/limits';
 import type { Charset, Cost, PauseScope } from '../engine/types';
 import { sessionStore } from '../platform/api';
 import type { StepView, TicketPurposeKind, TicketView } from '../shared/models';
@@ -70,7 +71,6 @@ const executors = new Map<Purpose['kind'], Executor>();
 const tickets = new Map<string, Ticket>();
 let loaded = false;
 
-const TICKET_TTL = 60 * 60_000;
 const STORE_KEY = 'tickets';
 
 export function registerExecutor(kind: Purpose['kind'], fn: Executor) {
@@ -182,7 +182,7 @@ export async function createTicket(
     steps,
     index: 0,
     createdAt: now(),
-    expiresAt: now() + TICKET_TTL,
+    expiresAt: now() + TICKET_TTL_MS,
     active: {},
     collected: {},
     failures: 0,
@@ -229,8 +229,8 @@ export async function answerTicket(
   const step = t.steps[t.index];
   const fail = async (error: string) => {
     t.failures++;
-    if (t.failures >= 5) {
-      t.lockedUntil = n + 30_000;
+    if (t.failures >= TICKET_MAX_FAILURES) {
+      t.lockedUntil = n + TICKET_LOCK_MS;
       t.failures = 0;
     }
     await persist();

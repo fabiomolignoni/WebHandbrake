@@ -2,8 +2,14 @@
 
 import { classify, diffConfig } from '../engine/changes';
 import { defaultConfig } from '../engine/defaults';
-import { detectAndImport, exportGroup, mergeImport } from '../engine/importers';
-import { MAX_IMPORT_BYTES } from '../engine/schema';
+import {
+  detectAndImport,
+  EXPORT_FORMAT,
+  EXPORT_VERSION,
+  exportGroup,
+  mergeImport,
+} from '../engine/importers';
+import { MAX_IMPORT_BYTES, MAX_LATER_ITEMS } from '../engine/limits';
 import type { Config } from '../engine/types';
 import { t } from '../i18n/i18n';
 import { api } from '../platform/api';
@@ -18,8 +24,8 @@ export async function exportData(includeStats: boolean, includeSecrets: boolean)
   const config: Config = JSON.parse(JSON.stringify(store.config));
   if (!includeSecrets) config.settings.protection.access.passwordHash = null;
   const out: Record<string, unknown> = {
-    format: 'webhandbrake',
-    version: 1,
+    format: EXPORT_FORMAT,
+    version: EXPORT_VERSION,
     exportedAt: new Date().toISOString(),
     config,
     later: store.later,
@@ -84,7 +90,9 @@ export async function applyImport(text: string, mode: 'merge' | 'replace'): Prom
   if (imp.format === 'webhandbrake' && imp.config && mode === 'replace') {
     const raw = JSON.parse(text);
     if (Array.isArray(raw.later)) {
-      store.later = raw.later.filter((i: unknown) => typeof i === 'object' && i !== null).slice(0, 1000);
+      store.later = raw.later
+        .filter((i: unknown) => typeof i === 'object' && i !== null)
+        .slice(0, MAX_LATER_ITEMS);
       await store.saveLater();
     }
   }
@@ -128,12 +136,21 @@ export async function resetConfig(): Promise<SaveResult> {
   return proposeConfig(next, 'reset');
 }
 
+/** The row of Settings › Privacy that a storage key belongs to (a `privacy.key.*` label). */
+function storageGroup(key: string): string {
+  if (key === 'u:min') return 'u:min';
+  if (key.startsWith('u:')) return 'usage';
+  if (key.startsWith('bk:') || key === 'backups:index') return 'backups';
+  if (key === 'config:pre-migration') return 'config';
+  return key;
+}
+
 /** PRIV-05: what is stored, with sizes. */
 export async function storageUsage() {
   const all = await api.storage.local.get(null);
   const groups: Record<string, number> = {};
   for (const [k, v] of Object.entries(all)) {
-    const name = k.startsWith('u:') ? 'usage' : k.startsWith('bk:') || k === 'backups:index' ? 'backups' : k;
+    const name = storageGroup(k);
     groups[name] = (groups[name] ?? 0) + JSON.stringify(v).length;
   }
   let total: number | null = null;

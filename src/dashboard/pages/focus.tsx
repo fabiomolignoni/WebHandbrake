@@ -1,6 +1,7 @@
 /** Focus sessions and lockdown (FOC-01…FOC-05, FOC-09, ONB-07; docs/ux-redesign.md §6.7). */
 
 import { useState } from 'preact/hooks';
+import { DEFAULT_SESSION_MINUTES, QUICK_SESSION_MINUTES } from '../../engine/limits';
 import type { FocusSession, Group, Target } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { formatDuration, formatWhen } from '../../shared/format';
@@ -124,7 +125,7 @@ export function QuickSession({
   groups: Group[];
   onChange: () => void;
 }) {
-  const [minutes, setMinutes] = useState<number | 'until'>(25);
+  const [minutes, setMinutes] = useState<number | 'until'>(DEFAULT_SESSION_MINUTES);
   const [untilTime, setUntilTime] = useState('17:00');
   const [mode, setMode] = useState<'groups' | 'allowlist'>('groups');
   const [selected, setSelected] = useState<string[]>(() =>
@@ -169,9 +170,7 @@ export function QuickSession({
       labelledBy={compact ? undefined : 'focus-duration'}
       label={t('focus.duration')}
       options={[
-        { value: 25, label: t('common.minutes', { n: 25 }) },
-        { value: 50, label: t('common.minutes', { n: 50 }) },
-        { value: 90, label: t('common.minutes', { n: 90 }) },
+        ...QUICK_SESSION_MINUTES.map((n) => ({ value: n, label: t('common.minutes', { n }) })),
         { value: 180, label: t('common.hours', { n: 3 }) },
         { value: 'until', label: t('focus.until') },
       ]}

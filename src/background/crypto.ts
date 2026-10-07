@@ -1,6 +1,6 @@
-/** Password hashing (SEC-01): PBKDF2-SHA256, 600 000 iterations, random salt, constant-time check. */
+/** Password hashing (SEC-01): PBKDF2-SHA256 (PBKDF2_ITERATIONS), random salt, constant-time check. */
 
-export const PBKDF2_ITERATIONS = 600_000;
+import { PBKDF2_ITERATIONS } from '../engine/limits';
 
 const enc = new TextEncoder();
 

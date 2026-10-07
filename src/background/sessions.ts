@@ -1,6 +1,7 @@
 /** Focus sessions and lockdown (FOC-01…FOC-05, FOC-07, FOC-09). */
 
 import { LEVEL_RANK } from '../engine/changes';
+import { DEFAULT_SESSION_MINUTES, MAX_SESSION_MS } from '../engine/limits';
 import type { FocusSession, PendingChange, ProtectionLevel } from '../engine/types';
 import type { SessionRequest, TicketView } from '../shared/models';
 import { now } from './clock';
@@ -9,14 +10,12 @@ import { reconcile } from './reconcile';
 import { store } from './store';
 import { createTicket, registerExecutor } from './tickets';
 
-const MAX_SESSION_MS = 7 * 24 * 3_600_000;
-
 export async function startSession(req: SessionRequest): Promise<{ id: string }> {
   await store.ready();
   const t0 = now();
   const startAt = t0 + Math.max(0, req.startInMinutes ?? 0) * 60_000;
-  let endAt = req.until ?? startAt + Math.max(1, req.minutes ?? 25) * 60_000;
-  if (endAt <= startAt) endAt = startAt + 25 * 60_000;
+  let endAt = req.until ?? startAt + Math.max(1, req.minutes ?? DEFAULT_SESSION_MINUTES) * 60_000;
+  if (endAt <= startAt) endAt = startAt + DEFAULT_SESSION_MINUTES * 60_000;
   endAt = Math.min(endAt, startAt + MAX_SESSION_MS);
   const groups =
     req.kind === 'groups'

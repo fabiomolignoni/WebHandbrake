@@ -1,6 +1,7 @@
 /** Intervention page model and passes (INT-01…INT-07, INT-12, INT-14, STA-03). */
 
 import { isNav, PASSABLE, SEVERITY } from '../engine/decide';
+import { MAX_CUSTOM_CSS_CHARS, RECHECK_GRANT_MS } from '../engine/limits';
 import { dayKeyOf } from '../engine/time';
 import type { Grant, Intervention } from '../engine/types';
 import { displayHost, pageKey, parseUrl } from '../engine/url';
@@ -48,7 +49,7 @@ export function sanitizeCss(css: string): string {
     .replace(/url\s*\([^)]*\)/gi, 'none')
     .replace(/expression\s*\(/gi, '(')
     .replace(/<\/?style[^>]*>/gi, '')
-    .slice(0, 20_000);
+    .slice(0, MAX_CUSTOM_CSS_CHARS);
 }
 
 function fillPlaceholders(template: string, url: string, group: string, until: number | null): string {
@@ -96,7 +97,7 @@ export async function interventionModel(
       scope: 'page',
       url: pageKey(url),
       createdAt: t0,
-      until: t0 + 2 * 60_000,
+      until: t0 + RECHECK_GRANT_MS,
       severity: 0,
     });
     await store.saveState();
