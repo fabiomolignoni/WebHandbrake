@@ -17,7 +17,8 @@ bug reports and ideas are all welcome.
 npm ci
 npm run watch          # rebuilds dist/chrome and dist/firefox
 npm run check          # typecheck, lint, i18n check, unit tests
-npm run test:e2e       # Chromium end-to-end tests
+npm run browsers       # once: Chromium, Firefox and geckodriver for the end-to-end tests
+npm run test:e2e       # end-to-end scenarios in Chromium and Firefox
 ```
 
 Load `dist/chrome` as an unpacked extension or `dist/firefox` with `web-ext run`.
@@ -29,10 +30,12 @@ Load `dist/chrome` as an unpacked extension or `dist/firefox` with `web-ext run`
   lives in `src/background`, `src/platform` and the UI folders.
 - Every user-visible string goes through `t()` with a key in `src/locales/en.json` (with a
   `description` when the context is not obvious). Use ICU plurals for counts.
-- UI must stay accessible: keyboard navigation, labels, contrast (axe checks run in CI), no
-  information conveyed by colour alone, `prefers-reduced-motion` respected.
+- UI must stay accessible: keyboard navigation, labels, contrast (axe checks run in CI in both
+  browsers), no information conveyed by colour alone, `prefers-reduced-motion` respected.
 - Write in a calm, non-judgemental tone (see §8.5 of the requirements).
-- New behaviour comes with tests: unit tests for the engine, end-to-end tests for flows.
+- New behaviour comes with tests: unit tests for the engine, end-to-end scenarios for flows. A
+  scenario runs in both browsers; see [`docs/testing.md`](docs/testing.md) for the harness and
+  how to write one.
 
 ## Site lists and templates
 

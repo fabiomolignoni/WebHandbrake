@@ -88,7 +88,8 @@ them (PRO-14).
 
 ## Persistence and reliability
 
-Storage is the source of truth (REL-01). The configuration is written with a checksum and every
+Storage is the source of truth (REL-01). The configuration is written with a checksum of its
+canonical JSON (sorted keys: Chrome returns stored objects with their keys sorted) and every
 write keeps the previous version (last 20 plus one per day for 30 days); a corrupted configuration
 is restored from the latest valid snapshot at start-up (DAT-03). Schema migrations keep a copy of
 the original data until they succeed (DAT-07). Unknown fields are always preserved.
@@ -107,3 +108,10 @@ broadcasts a "changed" message so open pages refresh.
 | Context menu, shortcuts | yes | yes | not available (feature-detected) |
 | Window focus | page focus + visibility (all platforms) | | |
 | Minimum version | 121 | 140 | 142 |
+
+## Testing
+
+Unit tests cover the pure engine and the background modules against an in-memory fake of the
+browser APIs; end-to-end scenarios run the test build (`dist-test`, with a test clock and test
+entry points compiled out of the production build) in real Chromium and Firefox. See
+[`testing.md`](testing.md).

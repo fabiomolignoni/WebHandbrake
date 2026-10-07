@@ -26,7 +26,12 @@ jobs:
       - run: npx web-ext lint --source-dir dist/firefox --warnings-as-errors=false
 
   e2e:
+    name: e2e (${{ matrix.browser }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -34,30 +39,24 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      - name: Install Chromium
+        if: matrix.browser == 'chromium'
+        run: npx playwright install --with-deps chromium
+      - name: Install Firefox and geckodriver
+        if: matrix.browser == 'firefox'
+        run: npm run browsers -- --skip-chromium
+      - run: npm run test:e2e:${{ matrix.browser }}
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: playwright-results
-          path: test-results
-
-  firefox:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: Install Firefox
-        run: echo "FIREFOX_BIN=$(npx @puppeteer/browsers install firefox@stable --path "$RUNNER_TEMP/browsers" | tail -1 | cut -d' ' -f2-)" >> "$GITHUB_ENV"
-      - run: npm run test:firefox
+          name: e2e-${{ matrix.browser }}
+          path: |
+            test-results
+            playwright-report
 
   package:
     if: github.event_name == 'push'
-    needs: [check, e2e, firefox]
+    needs: [check, e2e]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

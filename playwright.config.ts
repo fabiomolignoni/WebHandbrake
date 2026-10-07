@@ -11,7 +11,8 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   fullyParallel: true,
   workers: process.env.E2E_WORKERS ? Number(process.env.E2E_WORKERS) : 3,
-  retries: 0,
+  // One retry on CI: a test that only passes the second time is reported as flaky, to be fixed.
+  retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list']],
   projects: [
     { name: 'chromium', use: { browserName: 'chromium' } },

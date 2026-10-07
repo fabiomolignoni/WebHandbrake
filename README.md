@@ -66,11 +66,13 @@ reproducible (no minification, no timestamps, no remote code).
 | `npm run lint` | Biome lint and formatting checks |
 | `npm run i18n` | Every message key used exists, ICU syntax is valid |
 | `npm test` | Unit tests (rule engine, schedules, budgets, DNR compiler, change classifier, importers, store) |
-| `npm run test:e2e` | End-to-end tests in Chromium with the built extension (Playwright) |
-| `npm run test:firefox` | Smoke test in a real Firefox through WebDriver BiDi (`FIREFOX_BIN` required) |
+| `npm run browsers` | Downloads the browsers of the end-to-end suite (Chromium, Firefox, geckodriver) |
+| `npm run test:e2e` | End-to-end scenarios with the real extension in headless Chromium and Firefox |
+| `npm run test:e2e:chromium` / `test:e2e:firefox` | The same scenarios in one browser |
 | `npm run check` | Typecheck + lint + i18n + unit tests |
 
-See [`docs/architecture.md`](docs/architecture.md) for how the pieces fit together and
+See [`docs/architecture.md`](docs/architecture.md) for how the pieces fit together,
+[`docs/testing.md`](docs/testing.md) for how the extension is tested and
 [`docs/adr`](docs/adr) for the main decisions.
 
 ## Translating
