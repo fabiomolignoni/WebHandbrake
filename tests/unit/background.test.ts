@@ -193,3 +193,20 @@ describe('first run protection level (PRO-02)', () => {
     expect((await sessions.endSession(id)).refused).toBe('session.error.strict');
   });
 });
+
+describe('navigation errors of a blocked request (ENF-12)', () => {
+  it('recognises the errors of a blocking rule in Chrome and Firefox, not a navigation the user left', async () => {
+    vi.resetModules();
+    installFakeBrowser();
+    const { BLOCKED_BY_RULE } = await import('../../src/background/enforce');
+    for (const e of ['net::ERR_BLOCKED_BY_CLIENT', 'NS_ERROR_ABORT', 'Error code 2147500036'])
+      expect(BLOCKED_BY_RULE.test(e), e).toBe(true);
+    for (const e of [
+      'net::ERR_ABORTED',
+      'NS_BINDING_ABORTED',
+      'Error code 2152398850',
+      'net::ERR_NAME_NOT_RESOLVED',
+    ])
+      expect(BLOCKED_BY_RULE.test(e), e).toBe(false);
+  });
+});

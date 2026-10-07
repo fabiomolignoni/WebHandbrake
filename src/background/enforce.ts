@@ -209,6 +209,13 @@ async function checkNavigation(tabId: number, url: string, reason: 'navigation' 
   await enforceTab(tab, reason);
 }
 
+/**
+ * Errors of a navigation stopped by a blocking rule: net::ERR_BLOCKED_BY_CLIENT in Chrome,
+ * NS_ERROR_ABORT in Firefox, which may report it as its number (0x80004004 = 2147500036). A
+ * navigation the user abandoned is NS_BINDING_ABORTED / net::ERR_ABORTED: not ours.
+ */
+export const BLOCKED_BY_RULE = /BLOCKED_BY_CLIENT|NS_ERROR_ABORT\b|\b2147500036\b|blocked/i;
+
 export function registerNavigationListeners(onCommitted: (tabId: number, url: string) => void) {
   const nav = api.webNavigation;
   if (!nav) return;
@@ -254,7 +261,7 @@ export function registerNavigationListeners(onCommitted: (tabId: number, url: st
   nav.onErrorOccurred.addListener(
     onTopFrame((d) => {
       const err = (d as unknown as { error?: string }).error ?? '';
-      if (dnrStatus.hostAccess || !/BLOCKED_BY_CLIENT|NS_ERROR_ABORT|blocked/i.test(err)) return;
+      if (dnrStatus.hostAccess || !BLOCKED_BY_RULE.test(err)) return;
       void (async () => {
         await store.ready();
         const tab = await quiet(api.tabs.get(d.tabId));

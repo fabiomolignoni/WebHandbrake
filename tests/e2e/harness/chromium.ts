@@ -83,6 +83,8 @@ export async function launchChromium(opts: LaunchOptions): Promise<BrowserDriver
       `--load-extension=${opts.extension}`,
       // Every host is served by the local test server.
       `--host-resolver-rules=MAP * 127.0.0.1:${opts.port}`,
+      // The browser's own time queries would appear among the requests the extension must not make.
+      '--disable-features=NetworkTimeServiceQuerying',
     ],
   });
   const errors: string[] = [];
