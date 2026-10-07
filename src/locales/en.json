@@ -1149,7 +1149,7 @@
     "message": "Contents"
   },
   "help.emergency.p1": {
-    "message": "If your settings turn out to be too strict, the emergency exit always works and needs nobody else: request it, wait (24 hours by default), then type a sentence."
+    "message": "If your settings turn out to be too strict, the emergency exit always works and needs nobody else: request it, wait ({hours} hours by default), then type a sentence."
   },
   "help.emergency.p2": {
     "message": "It ends all sessions, sets every protection level to Soft and removes the password. Your rules stay as they are. The exit is recorded."
@@ -1269,7 +1269,7 @@
     "message": "Making your rules stricter is always immediate. Loosening them (removing a site, raising a limit, turning a rule off…) depends on the protection level of the rule or of the whole extension."
   },
   "help.protection.p2": {
-    "message": "Soft asks for a confirmation. Balanced makes you wait a little. Strict puts the change in a queue for a cooling-off period (24 hours by default): after the wait you confirm it with a short challenge, or it expires; while a strict rule is active, it cannot be loosened at all. Locked refuses every loosening until a date you choose."
+    "message": "Soft asks for a confirmation. Balanced makes you wait a little. Strict puts the change in a queue for a cooling-off period ({hours} hours by default): after the wait you confirm it with a short challenge, or it expires; while a strict rule is active, it cannot be loosened at all. Locked refuses every loosening until a date you choose."
   },
   "help.protection.p3": {
     "message": "Pending changes are listed in Protection, where you can confirm or cancel them. A password and random codes can be added for every change that is not a strengthening."
@@ -1287,7 +1287,7 @@
     "message": "A condition can use time windows (also overnight, like 22:00–02:00), and optionally a limit: time per hour, day, week, month or custom period, visits per period, or continuous use followed by a mandatory stop."
   },
   "help.rules.p3": {
-    "message": "Time is counted only while the page is visible, the window has the focus and you are active (or a video is playing). Several tabs of the same rule never count twice. A visit starts when you come back after a few minutes away (5 by default)."
+    "message": "Time is counted only while the page is visible, the window has the focus and you are active (or a video is playing). Several tabs of the same rule never count twice. A visit starts when you come back after a few minutes away ({minutes} by default)."
   },
   "help.rules.p4": {
     "message": "When several rules apply to the same site, the strictest result wins, whatever their order. \"Test a URL\" in the rule editor and \"Why?\" in the popup show exactly which condition applies and when it will change."
@@ -1299,7 +1299,7 @@
     "message": "block the current site"
   },
   "help.shortcut.focus": {
-    "message": "start a 25-minute focus session"
+    "message": "start a {minutes}-minute focus session"
   },
   "help.shortcut.popup": {
     "message": "open the popup"
