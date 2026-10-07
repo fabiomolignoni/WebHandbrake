@@ -186,6 +186,8 @@ test('STA-06: statistics export (CSV, JSON) and deletion; limits survive the del
   await p.expectIntervention(true, 3000);
   const r = await expectAllowed(h, 'http://read.test/');
   await useUntil(r, async () => false, 2500);
+  // Nothing is being counted any more while the statistics are deleted.
+  await r.close();
   await h.rpc('test.flush');
   const csv = await h.rpc('stats.export', { format: 'csv' });
   expect(csv.filename).toMatch(/^webhandbrake-statistics-.*\.csv$/);
