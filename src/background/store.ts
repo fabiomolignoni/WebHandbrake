@@ -11,11 +11,18 @@
 
 import { type CompiledConfig, compileConfig } from '../engine/compile';
 import { defaultConfig, defaultState } from '../engine/defaults';
-import { checksum, looksLikeConfig, migrate, normalizeConfig } from '../engine/schema';
+import {
+  CHECKSUM_VERSION,
+  configChecksum,
+  looksLikeConfig,
+  migrate,
+  normalizeConfig,
+  storedConfigIntact,
+} from '../engine/schema';
 import { addDays, dayKey, logicalDayOf } from '../engine/time';
 import type { Config, DayRecord, LaterItem, MinuteBuckets, RuntimeState, TamperEvent } from '../engine/types';
 import { Usage } from '../engine/usage';
-import { api } from '../platform/api';
+import { api, isFirefox } from '../platform/api';
 
 export interface SnapshotMeta {
   at: number;
@@ -143,12 +150,16 @@ export class Store {
   private async loadConfig(stored: unknown): Promise<Config> {
     try {
       if (!isObj(stored) || !looksLikeConfig(stored.data)) throw new Error('structure');
-      if (checksum(JSON.stringify(stored.data)) !== stored.sum) throw new Error('checksum');
+      // Firefox keeps the order of the keys; Chrome returns them sorted.
+      if (!storedConfigIntact(stored as { data: unknown }, isFirefox)) throw new Error('checksum');
       const { data, migrated, from } = migrate(stored.data);
       const { config } = normalizeConfig(data);
       if (migrated) {
         // Keep the pre-migration copy until the next successful write (DAT-07 rollback).
         await api.storage.local.set({ 'config:pre-migration': { from, data: stored.data } });
+        await this.writeConfigRaw(config);
+      } else if (stored.v !== CHECKSUM_VERSION) {
+        // Written by an earlier version: from now on the checksum can be checked in every browser.
         await this.writeConfigRaw(config);
       }
       return config;
@@ -190,7 +201,7 @@ export class Store {
 
   private async writeConfigRaw(config: Config) {
     await api.storage.local.set({
-      config: { data: config, sum: checksum(JSON.stringify(config)), savedAt: Date.now() },
+      config: { data: config, sum: configChecksum(config), v: CHECKSUM_VERSION, savedAt: Date.now() },
     });
   }
 
@@ -252,7 +263,7 @@ export class Store {
     this.cc = compileConfig(next);
     await this.saveIndex(before, after, {
       [meta.key]: prev,
-      config: { data: next, sum: checksum(JSON.stringify(next)), savedAt: now },
+      config: { data: next, sum: configChecksum(next), v: CHECKSUM_VERSION, savedAt: now },
     });
     await api.storage.local.remove('config:pre-migration');
   }
