@@ -1,12 +1,11 @@
 /**
  * Usage accounting store: daily aggregates (statistics, day-based budgets) and minute buckets
- * for the last 48 hours (hourly/rolling budgets). STA-07: only aggregates are stored.
+ * for the last MINUTE_RETENTION_MINUTES (hourly/rolling budgets). STA-07: only aggregates are stored.
  */
 
+import { MINUTE_RETENTION_MINUTES } from './limits';
 import { type CalendarSettings, dayKeyOf, MINUTE, type PeriodRange } from './time';
 import type { DayRecord, MinuteBuckets } from './types';
-
-export const MINUTE_RETENTION = 48 * 60;
 
 export const usageKeys = {
   group: (groupId: string) => `g:${groupId}`,
@@ -117,7 +116,7 @@ export class Usage {
   }
 
   pruneMinutes(now: number) {
-    const min = Math.floor(now / MINUTE) - MINUTE_RETENTION;
+    const min = Math.floor(now / MINUTE) - MINUTE_RETENTION_MINUTES;
     for (const key of Object.keys(this.minutes)) {
       const m = this.minutes[key];
       for (const mk of Object.keys(m)) if (Number(mk) < min) delete m[mk];

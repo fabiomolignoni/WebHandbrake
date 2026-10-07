@@ -1,5 +1,6 @@
 /** In-memory diagnostics: performance counters and the decision log ring buffer (DIA-01). */
 
+import { DECISION_LOG_SIZE } from '../engine/limits';
 import type { InterventionType } from '../engine/types';
 import { sessionStore } from '../platform/api';
 import type { DecisionLogEntry } from '../shared/models';
@@ -13,7 +14,6 @@ export const counters = {
   wakeups: 0,
 };
 
-const LOG_SIZE = 200;
 let log: DecisionLogEntry[] | null = null;
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -32,7 +32,7 @@ export async function logDecision(
   if (!enabled) return;
   const l = await ensure();
   l.push({ at: Date.now(), where, url, intervention, group });
-  if (l.length > LOG_SIZE) l.splice(0, l.length - LOG_SIZE);
+  if (l.length > DECISION_LOG_SIZE) l.splice(0, l.length - DECISION_LOG_SIZE);
   if (!saveTimer) {
     saveTimer = setTimeout(() => {
       saveTimer = null;

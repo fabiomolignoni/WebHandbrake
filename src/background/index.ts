@@ -4,6 +4,7 @@
  */
 
 import { newId } from '../engine/defaults';
+import { INACTIVE_GAP_MS } from '../engine/limits';
 import { initI18n, t } from '../i18n/i18n';
 import { api, extensionUrl, quiet, sessionStore } from '../platform/api';
 import { captureErrors } from '../shared/test-hooks';
@@ -96,7 +97,7 @@ async function boot() {
   const lastAlive = store.state.lastAlive;
   setTimeout(() => {
     const gap = Date.now() - (lastAlive || Date.now());
-    if (!alive && !startupEvent && !store.firstRun && gap > 10 * 60_000) {
+    if (!alive && !startupEvent && !store.firstRun && gap > INACTIVE_GAP_MS) {
       store.addTamper({ at: Date.now(), kind: 'inactive-gap', detail: String(Math.round(gap / 60_000)) });
       void store.saveState();
     }

@@ -8,13 +8,16 @@
  *   browser already receives (no additional requests, no data stored).
  */
 
+import {
+  CLOCK_AGREEMENT_MS,
+  CLOCK_JUMP_TOLERANCE_MS,
+  CLOCK_MIN_AGREEING_HOSTS,
+  CLOCK_SKEW_SAMPLES,
+  CLOCK_SKEW_THRESHOLD_MS,
+} from '../engine/limits';
 import type { TamperEvent } from '../engine/types';
 import { api, features } from '../platform/api';
 import { store } from './store';
-
-const JUMP_TOLERANCE = 60_000;
-const SKEW_THRESHOLD = 10 * 60_000;
-const SKEW_SAMPLES = 9;
 
 let anchor: { trusted: number; mono: number } | null = null;
 const samples: { host: string; offset: number }[] = [];
@@ -33,13 +36,13 @@ export function now(): number {
   let t = wall;
   if (anchor) {
     const expected = anchor.trusted + (mono - anchor.mono);
-    if (wall < expected - JUMP_TOLERANCE) {
+    if (wall < expected - CLOCK_JUMP_TOLERANCE_MS) {
       t = expected;
       report({ at: wall, kind: 'clock-backward', detail: String(Math.round((expected - wall) / 60_000)) });
     }
   }
   const last = store.state.lastWall || 0;
-  if (t < last - JUMP_TOLERANCE) {
+  if (t < last - CLOCK_JUMP_TOLERANCE_MS) {
     report({ at: wall, kind: 'clock-backward', detail: String(Math.round((last - t) / 60_000)) });
     t = last;
   }
@@ -122,14 +125,14 @@ export function addSample(host: string, offset: number) {
   const i = samples.findIndex((s) => s.host === host);
   if (i !== -1) samples.splice(i, 1);
   samples.push({ host, offset });
-  if (samples.length > SKEW_SAMPLES) samples.shift();
-  if (samples.length < 3) return;
+  if (samples.length > CLOCK_SKEW_SAMPLES) samples.shift();
+  if (samples.length < CLOCK_MIN_AGREEING_HOSTS) return;
   const sorted = samples.map((s) => s.offset).sort((a, b) => a - b);
   const median = sorted[Math.floor(sorted.length / 2)];
-  const agreeing = sorted.filter((o) => Math.abs(o - median) < 120_000).length;
-  if (agreeing < 3) return;
+  const agreeing = sorted.filter((o) => Math.abs(o - median) < CLOCK_AGREEMENT_MS).length;
+  if (agreeing < CLOCK_MIN_AGREEING_HOSTS) return;
   const current = store.state.clockOffset || 0;
-  if (Math.abs(median) > SKEW_THRESHOLD) {
+  if (Math.abs(median) > CLOCK_SKEW_THRESHOLD_MS) {
     if (Math.abs(median - current) > 60_000) {
       store.state.clockOffset = Math.round(median);
       // The highest time seen was measured with the wrong clock.

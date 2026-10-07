@@ -1,5 +1,7 @@
 /** File export and import that also work on Firefox for Android (DAT-05). */
 
+import { MAX_IMPORT_BYTES } from '../engine/limits';
+
 export function downloadText(filename: string, text: string, mime = 'application/json') {
   const blob = new Blob([text], { type: `${mime};charset=utf-8` });
   const url = URL.createObjectURL(blob);
@@ -23,7 +25,7 @@ export function pickTextFile(accept = '.json,.txt,.csv,application/json,text/pla
       const file = input.files?.[0];
       input.remove();
       if (!file) return resolve(null);
-      if (file.size > 10 * 1024 * 1024) return resolve(null);
+      if (file.size > MAX_IMPORT_BYTES) return resolve(null);
       resolve(await file.text());
     });
     document.body.appendChild(input);

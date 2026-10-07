@@ -1,5 +1,6 @@
 /** Statistics (STA-01…STA-07): queries, export and deletion. Only daily aggregates exist. */
 
+import { BUDGET_KEEP_DAYS } from '../engine/limits';
 import { addDays, dayKey, logicalDayOf, parseDayKey } from '../engine/time';
 import type { DayRecord } from '../engine/types';
 import { api } from '../platform/api';
@@ -172,9 +173,8 @@ export async function exportStats(format: 'csv' | 'json') {
 /**
  * Usage that limits depend on is kept even when statistics are deleted, otherwise deleting
  * statistics would refill exhausted budgets: group and group-site totals, passes (increasing
- * delays) and break records, for the longest budget period (90 days).
+ * delays) and break records, for BUDGET_KEEP_DAYS (the longest limit period plus a margin).
  */
-const BUDGET_DAYS = 92;
 
 function budgetOnly(rec: DayRecord): DayRecord {
   return {
@@ -184,7 +184,7 @@ function budgetOnly(rec: DayRecord): DayRecord {
 }
 
 function budgetCutoff(): string {
-  return dayKey(addDays(logicalDayOf(Date.now(), store.cc.cal), -BUDGET_DAYS));
+  return dayKey(addDays(logicalDayOf(Date.now(), store.cc.cal), -BUDGET_KEEP_DAYS));
 }
 
 /** Removes the given days, keeping only budget data for the recent ones. */
@@ -225,7 +225,7 @@ export async function deleteStats(
       delete store.usage.minutes['a:'];
       store.usage.dirtyMinutes = true;
       // Break records stay for break limits, without the reasons.
-      const since = Date.now() - BUDGET_DAYS * 86_400_000;
+      const since = Date.now() - BUDGET_KEEP_DAYS * 86_400_000;
       store.state.pauses = store.state.pauses.filter((p) => p.at >= since).map(({ reason: _r, ...p }) => p);
       store.intentions = [];
       await store.saveIntentions();

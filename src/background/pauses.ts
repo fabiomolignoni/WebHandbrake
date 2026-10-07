@@ -2,6 +2,7 @@
 
 import { costRank } from '../engine/changes';
 import { activeSessions, decide, grantActive } from '../engine/decide';
+import { MAX_BREAK_RECORDS } from '../engine/limits';
 import { periodRange } from '../engine/time';
 import type { Cost, Grant, Group, PausePolicy, Period } from '../engine/types';
 import { pageKey } from '../engine/url';
@@ -238,7 +239,7 @@ registerExecutor('pause', async (ticket) => {
     reason,
     grantId: grant.id,
   });
-  store.state.pauses = store.state.pauses.slice(-1000);
+  store.state.pauses = store.state.pauses.slice(-MAX_BREAK_RECORDS);
   const ids = p.groups === '*' ? store.config.groups.map((g) => g.id) : p.groups;
   for (const id of ids) {
     store.usage.count(`pause:${id}`, t0, store.cc.cal);

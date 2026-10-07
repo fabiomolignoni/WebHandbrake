@@ -30,8 +30,6 @@ import {
   type TimeWindow,
 } from './types';
 
-export const MAX_IMPORT_BYTES = 10 * 1024 * 1024;
-
 const isObj = (v: unknown): v is Record<string, any> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 const num = (v: unknown, def: number, min = -Infinity, max = Infinity) =>

@@ -1,6 +1,7 @@
 /** Read models for the dashboard and the popup. */
 
 import { activeSessions, decide, grantActive, isNav, SEVERITY } from '../engine/decide';
+import { QUICK_SESSION_MINUTES } from '../engine/limits';
 import { dayKeyOf } from '../engine/time';
 import type { FocusSession } from '../engine/types';
 import { displayHost, parseUrl } from '../engine/url';
@@ -166,7 +167,7 @@ export async function popupModel(tabId?: number): Promise<PopupModel> {
     laterCount: store.later.length,
     canAdd: Boolean(parsed?.web),
     canFocus: store.config.groups.some((g) => g.enabled && !g.archived && g.options.quickSession),
-    quickMinutes: [25, 50, 90],
+    quickMinutes: [...QUICK_SESSION_MINUTES],
     onboarded: store.config.settings.onboarded,
     level: store.config.settings.protection.level,
   };

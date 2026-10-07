@@ -3,14 +3,25 @@
  * the service worker / event page wakes up.
  *
  * - config: written with a checksum; every write keeps the previous version as a snapshot
- *   (last 20 + one per day for 30 days, DAT-03), each under its own key with a small index. A
- *   corrupted config is restored from the latest valid snapshot at start-up.
+ *   (the last RECENT_SNAPSHOTS plus one per day for DAILY_SNAPSHOTS days, DAT-03), each under its
+ *   own key with a small index. A corrupted config is restored from the latest valid snapshot at
+ *   start-up.
  * - state: written immediately on meaningful changes; activity counters are batched (PERF-04).
- * - usage: one key per logical day plus minute buckets, flushed at most every 10 s (TIM-05).
+ * - usage: one key per logical day plus minute buckets, flushed at most every USAGE_FLUSH_MS
+ *   (TIM-05).
+ *
+ * The caps and retention periods live in src/engine/limits.ts.
  */
 
 import { type CompiledConfig, compileConfig } from '../engine/compile';
 import { defaultConfig, defaultState } from '../engine/defaults';
+import {
+  DAILY_SNAPSHOTS,
+  MAX_INTENTIONS,
+  MAX_PROTECTION_EVENTS,
+  RECENT_SNAPSHOTS,
+  USAGE_FLUSH_MS,
+} from '../engine/limits';
 import {
   CHECKSUM_VERSION,
   configChecksum,
@@ -63,12 +74,7 @@ export interface IntentionRecord {
   minutes: number;
 }
 
-const RECENT_SNAPSHOTS = 20;
-const DAILY_SNAPSHOTS = 30;
 const USAGE_DAYS_IN_MEMORY = 95;
-const USAGE_FLUSH_MS = 10_000;
-const MAX_TAMPER = 200;
-const MAX_INTENTIONS = 500;
 
 function snapshotKey(at: number): string {
   return `bk:${at.toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
@@ -292,7 +298,7 @@ export class Store {
       clearTimeout(this.stateTimer);
       this.stateTimer = null;
     }
-    this.state.tamper = this.state.tamper.slice(-MAX_TAMPER);
+    this.state.tamper = this.state.tamper.slice(-MAX_PROTECTION_EVENTS);
     const { activity, ...rest } = this.state;
     await api.storage.local.set({ state: rest, activity });
   }
@@ -351,7 +357,7 @@ export class Store {
 
   addTamper(e: TamperEvent) {
     this.state.tamper.push(e);
-    this.state.tamper = this.state.tamper.slice(-MAX_TAMPER);
+    this.state.tamper = this.state.tamper.slice(-MAX_PROTECTION_EVENTS);
   }
 
   /** Loads day records outside the in-memory window (statistics). */

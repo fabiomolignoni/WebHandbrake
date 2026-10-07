@@ -1,6 +1,7 @@
 /** "Save for later" list (INT-12). */
 
 import { isNav } from '../engine/decide';
+import { MAX_LATER_ITEMS } from '../engine/limits';
 import type { LaterItem } from '../engine/types';
 import { pageKey } from '../engine/url';
 import { t } from '../i18n/i18n';
@@ -32,7 +33,7 @@ export async function addLater(
     wasBlocked: isNav(decideUrl(url, null)),
   };
   store.later.unshift(item);
-  store.later = store.later.slice(0, 1000);
+  store.later = store.later.slice(0, MAX_LATER_ITEMS);
   await store.saveLater();
   broadcast(['later']);
   return item;
