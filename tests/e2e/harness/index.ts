@@ -49,8 +49,3 @@ export const test = base.extend<Fixtures>({
     expect(errors, 'errors in the extension (background, pages, content scripts)').toEqual([]);
   },
 });
-
-/** Skips a test in one browser, with the reason (a browser limitation, never a failing test). */
-export function only(browser: BrowserName, reason: string) {
-  test.skip(({ browserName }) => browserName !== browser, reason);
-}

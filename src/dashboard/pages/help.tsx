@@ -1,43 +1,97 @@
 /** Offline help (ONB-03, ONB-06): everything needed to use WebHandbrake, available without network. */
 
+import { Fragment } from 'preact';
 import { t } from '../../i18n/i18n';
-import { api } from '../../platform/api';
+import { api, features } from '../../platform/api';
 import { NEW_ISSUE_URL, REPO_URL } from '../../shared/links';
 import { Icon } from '../../ui/icons';
+import {
+  defaultShortcut,
+  HELP_TOPICS,
+  type HelpBlock,
+  type HelpFacts,
+  helpFacts,
+  SHORTCUTS,
+  SYNTAX,
+} from '../help-content';
 
-const SECTIONS: { id: string; paragraphs: number }[] = [
-  { id: 'start', paragraphs: 3 },
-  { id: 'groups', paragraphs: 3 },
-  { id: 'rules', paragraphs: 4 },
-  { id: 'interventions', paragraphs: 3 },
-  { id: 'pauses', paragraphs: 2 },
-  { id: 'focus', paragraphs: 2 },
-  { id: 'protection', paragraphs: 4 },
-  { id: 'emergency', paragraphs: 2 },
-  { id: 'privacy', paragraphs: 2 },
-  { id: 'mobile', paragraphs: 2 },
-];
+function SyntaxTable() {
+  return (
+    <table class="table">
+      <thead>
+        <tr>
+          <th>{t('help.syntax.entry')}</th>
+          <th>{t('help.syntax.meaning')}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {SYNTAX.map(([code, key]) => (
+          <tr key={code}>
+            <td>
+              <code>{code}</code>
+            </td>
+            <td>{t(key)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
 
-const SYNTAX: [string, string][] = [
-  ['youtube.com', 'help.syntax.domain'],
-  ['amazon.*', 'help.syntax.countries'],
-  ['=m.youtube.com', 'help.syntax.host'],
-  ['reddit.com/r/funny', 'help.syntax.path'],
-  ['example.com/page$', 'help.syntax.page'],
-  ['example.com/$', 'help.syntax.homepage'],
-  ['reddit.com/r/*/comments/*', 'help.syntax.wildcard'],
-  ['news.*/sport/**', 'help.syntax.doubleWildcard'],
-  ['youtube.com/watch?list=*', 'help.syntax.query'],
-  ['+reddit.com/r/rust', 'help.syntax.exception'],
-  ['/^https?:\\/\\/(www\\.)?example\\.com\\/a+$/', 'help.syntax.regex'],
-  ['# comment', 'help.syntax.comment'],
-  ['||example.com^  ·  *://*.example.com/*', 'help.syntax.import'],
-];
+/** The default keys of the commands (`suggested_key` in the manifest); hidden without the commands API. */
+function Shortcuts({ facts }: { facts: HelpFacts }) {
+  if (!features.commands) return null;
+  const commands = api.runtime.getManifest().commands;
+  const rows = SHORTCUTS.flatMap((s) => {
+    const combo = defaultShortcut(commands, s.command);
+    return combo ? [{ ...s, combo }] : [];
+  });
+  if (!rows.length) return null;
+  return (
+    <ul class="small" style={{ margin: 0, paddingInlineStart: '18px' }}>
+      {rows.map((r) => (
+        <li key={r.command}>
+          {r.combo.split('+').map((k, i) => (
+            <Fragment key={k}>
+              {i > 0 && '+'}
+              <kbd>{k}</kbd>
+            </Fragment>
+          ))}{' '}
+          — {t(r.description, r.params?.(facts))}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
-const FAQ = ['private', 'flash', 'locked', 'android', 'sync', 'uninstall'];
+function Block({ block, facts }: { block: HelpBlock; facts: HelpFacts }) {
+  if ('p' in block) return <p>{t(block.p, block.params?.(facts))}</p>;
+  if ('list' in block)
+    return (
+      <ul>
+        {block.list.map((key) => (
+          <li key={key}>{t(key, block.params?.(facts))}</li>
+        ))}
+      </ul>
+    );
+  if ('q' in block)
+    return (
+      <>
+        <h3>{t(block.q, block.params?.(facts))}</h3>
+        <p>{t(block.a, block.params?.(facts))}</p>
+      </>
+    );
+  if ('syntax' in block) return <SyntaxTable />;
+  return <Shortcuts facts={facts} />;
+}
 
 export function HelpPage() {
   const version = api.runtime.getManifest().version;
+  const facts = helpFacts();
+  const contents = [
+    ...HELP_TOPICS.map((topic) => ({ id: topic.id, title: t(topic.title) })),
+    { id: 'about', title: t('help.about') },
+  ];
   return (
     <div class="stack stack-lg">
       <div class="page-head">
@@ -48,84 +102,27 @@ export function HelpPage() {
       </div>
       <nav class="card" aria-label={t('help.contents')}>
         <ul class="row" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-          {SECTIONS.map((s) => (
-            <li key={s.id}>
+          {contents.map((c) => (
+            <li key={c.id}>
               <button
                 type="button"
                 class="link-btn"
-                onClick={() => document.getElementById(`help-${s.id}`)?.scrollIntoView()}
+                onClick={() => document.getElementById(`help-${c.id}`)?.scrollIntoView()}
               >
-                {t(`help.${s.id}.title`)}
-              </button>
-            </li>
-          ))}
-          {(['faq', 'about'] as const).map((id) => (
-            <li key={id}>
-              <button
-                type="button"
-                class="link-btn"
-                onClick={() => document.getElementById(`help-${id}`)?.scrollIntoView()}
-              >
-                {t(`help.${id}`)}
+                {c.title}
               </button>
             </li>
           ))}
         </ul>
       </nav>
-      {SECTIONS.map((s) => (
-        <section key={s.id} id={`help-${s.id}`} class="card stack">
-          <h2>{t(`help.${s.id}.title`)}</h2>
-          {Array.from({ length: s.paragraphs }, (_, i) => (
-            <p key={i}>{t(`help.${s.id}.p${i + 1}`)}</p>
+      {HELP_TOPICS.map((topic) => (
+        <section key={topic.id} id={`help-${topic.id}`} class="card stack">
+          <h2>{t(topic.title)}</h2>
+          {topic.blocks.map((block, i) => (
+            <Block key={i} block={block} facts={facts} />
           ))}
-          {s.id === 'groups' && (
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>{t('help.syntax.entry')}</th>
-                  <th>{t('help.syntax.meaning')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {SYNTAX.map(([code, key]) => (
-                  <tr key={code}>
-                    <td>
-                      <code>{code}</code>
-                    </td>
-                    <td>{t(key)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
         </section>
       ))}
-      <section id="help-faq" class="card stack">
-        <h2>{t('help.faq')}</h2>
-        {FAQ.map((f) => (
-          <details key={f} class="disclosure">
-            <summary>{t(`help.faq.${f}.q`)}</summary>
-            <div class="body">
-              <p>{t(`help.faq.${f}.a`)}</p>
-            </div>
-          </details>
-        ))}
-      </section>
-      <section class="card stack">
-        <h2>{t('help.shortcuts')}</h2>
-        <ul class="small" style={{ margin: 0, paddingInlineStart: '18px' }}>
-          <li>
-            <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd> — {t('help.shortcut.popup')}
-          </li>
-          <li>
-            <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> — {t('help.shortcut.focus')}
-          </li>
-          <li>
-            <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> — {t('help.shortcut.block')}
-          </li>
-        </ul>
-        <p class="small muted">{t('help.shortcutsNote')}</p>
-      </section>
       <section id="help-about" class="card stack">
         <h2>{t('help.about')}</h2>
         <p>{t('help.aboutBody', { version })}</p>
