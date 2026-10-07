@@ -214,7 +214,7 @@ export class Tab {
   async settle(timeout = DEFAULT_TIMEOUT) {
     const end = Date.now() + timeout;
     await sleep(100);
-    while (Date.now() < end) {
+    while (Date.now() < end && !this.driver.isClosed()) {
       const state = await this.driver
         .evaluate<string>('() => document.readyState', [])
         .catch(() => 'navigating');

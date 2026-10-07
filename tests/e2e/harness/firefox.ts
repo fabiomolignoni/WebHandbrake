@@ -73,13 +73,19 @@ class FirefoxTab implements TabDriver {
     await this.s.focus(this.context);
   }
   async evaluate<R>(fnSource: string, args: unknown[]): Promise<R> {
-    const r = await this.s.wd.bidi('script.callFunction', {
-      functionDeclaration: `async function (json) { const v = await (${fnSource})(...JSON.parse(json)); return v === undefined ? '\\u0000undefined' : JSON.stringify(v); }`,
-      arguments: [{ type: 'string', value: JSON.stringify(args) }],
-      target: { context: this.context },
-      awaitPromise: true,
-      resultOwnership: 'none',
-    });
+    const r = await this.s.wd
+      .bidi('script.callFunction', {
+        functionDeclaration: `async function (json) { const v = await (${fnSource})(...JSON.parse(json)); return v === undefined ? '\\u0000undefined' : JSON.stringify(v); }`,
+        arguments: [{ type: 'string', value: JSON.stringify(args) }],
+        target: { context: this.context },
+        awaitPromise: true,
+        resultOwnership: 'none',
+      })
+      .catch((e) => {
+        // The tab is gone (closed by the extension or the page).
+        if (e instanceof WebDriverError && e.error === 'no such frame') this.closed = true;
+        throw e;
+      });
     if (r.type === 'exception') throw new Error(r.exceptionDetails?.text ?? 'exception');
     const v = r.result?.value as string | undefined;
     if (v === undefined || v === '\u0000undefined') return undefined as R;
