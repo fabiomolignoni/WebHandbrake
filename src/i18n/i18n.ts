@@ -76,6 +76,11 @@ export function hasMessage(key: string): boolean {
   return key in messages || key in fallback;
 }
 
+/** The message of a key with its placeholders, for a context that formats it later (the overlay). */
+export function template(key: string): string {
+  return messages[key]?.message ?? fallback[key]?.message ?? key;
+}
+
 /** Translates a key with ICU parameters. Unknown keys are returned as is (and caught by the i18n check). */
 export function t(key: string, params?: Params): string {
   const m = messages[key]?.message ?? fallback[key]?.message;

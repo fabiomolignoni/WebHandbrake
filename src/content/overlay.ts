@@ -4,6 +4,7 @@
  * reduced motion respected (NOT-06), draggable with mouse, touch and keyboard (NOT-01).
  */
 
+import { formatMessage } from '../i18n/icu';
 import type { TickResponse } from '../shared/models';
 
 const CSS = `
@@ -60,8 +61,9 @@ const fmt = (sec: number) => {
     : `${m}:${String(r).padStart(2, '0')}`;
 };
 
-const fill = (template: string | undefined, params: Record<string, string | number>) =>
-  (template ?? '').replace(/\{(\w+)\}/g, (_, k) => String(params[k] ?? ''));
+/** Formats a message of the overlay (ICU, with plurals) sent by the background with its placeholders. */
+const fill = (labels: Record<string, string>, key: string, params: Record<string, string | number> = {}) =>
+  formatMessage(labels[key] ?? '', params, labels.__locale ?? 'en');
 
 export class Overlay {
   private host: HTMLElement | null = null;
@@ -73,6 +75,7 @@ export class Overlay {
   private seconds = 0;
   private lastAnnounced = -1;
   private seenReminders = new Set<string>();
+  private seenIntentions = new Set<string>();
   private seenWarnings = new Set<string>();
   private drag: { x: number; y: number } | null = null;
   private position: { left: number; top: number } | null = null;
@@ -85,7 +88,8 @@ export class Overlay {
     if (this.root) return;
     this.host = document.createElement('webhandbrake-overlay');
     this.host.style.cssText = 'all: initial; position: fixed; z-index: 2147483647;';
-    this.root = this.host.attachShadow({ mode: 'closed' });
+    // Open in the test build only, so that the end-to-end suite can read the overlay.
+    this.root = this.host.attachShadow({ mode: __TEST__ ? 'open' : 'closed' });
     const style = document.createElement('style');
     style.textContent = CSS;
     this.layer = document.createElement('div');
@@ -108,10 +112,16 @@ export class Overlay {
       this.seenReminders.add(res.remind.id);
       this.showPanel(
         res.remind.color,
-        fill(labels['overlay.remind.title'], { group: res.remind.group }),
+        fill(labels, 'overlay.remind.title', { group: res.remind.group }),
         [res.remind.message, res.remind.note].filter(Boolean).join('\n'),
         labels,
       );
+    }
+    // INT-03: the intention given at the entry question, recalled discreetly once per pass.
+    const intention = res.intention ? `${res.intention.text}|${res.intention.until ?? ''}` : null;
+    if (res.intention && intention && !this.seenIntentions.has(intention)) {
+      this.seenIntentions.add(intention);
+      this.showPanel('#4850a5', fill(labels, 'overlay.intention'), res.intention.text, labels, 15_000);
     }
     if (res.warning && !this.seenWarnings.has(res.warning.id)) {
       this.seenWarnings.add(res.warning.id);
@@ -152,14 +162,14 @@ export class Overlay {
     (chip.querySelector('.dot') as HTMLElement).style.background = timer.color;
     chip.querySelector('.time')!.textContent = fmt(timer.seconds);
     const labelKey = timer.kind === 'grant' ? 'overlay.pauseLeft' : 'overlay.timerLeft';
-    chip.querySelector('.label')!.textContent = fill(labels[labelKey], { group: timer.label });
+    chip.querySelector('.label')!.textContent = fill(labels, labelKey, { group: timer.label });
     const hide = chip.querySelector('.hide') as HTMLButtonElement;
     hide.textContent = '×';
     hide.setAttribute('aria-label', labels['overlay.hide'] ?? 'Hide');
     hide.title = labels['overlay.hide'] ?? 'Hide';
     chip.setAttribute(
       'aria-label',
-      fill(labels['overlay.timer.aria'], { group: timer.label, time: fmt(timer.seconds) }),
+      fill(labels, 'overlay.timer.aria', { group: timer.label, time: fmt(timer.seconds) }),
     );
     this.place(chip, s.corner);
     // A11Y-03: announce at most once per minute.
@@ -294,7 +304,7 @@ export class Overlay {
     const end = Date.now() + seconds * 1000;
     const update = () => {
       const left = Math.max(0, (end - Date.now()) / 1000);
-      p.textContent = fill(labels['overlay.grace.body'], { seconds: Math.ceil(left) });
+      p.textContent = fill(labels, 'overlay.grace.body', { seconds: Math.ceil(left) });
       fillEl.style.width = `${(left / seconds) * 100}%`;
       if (left <= 0) {
         clearInterval(iv);

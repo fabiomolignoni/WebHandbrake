@@ -378,8 +378,18 @@ function FocusPanel({ m, reload }: { m: PopupModel; reload: () => void }) {
   );
 }
 
+/**
+ * Test build only: a headless browser has no toolbar, so the end-to-end suite opens the popup in a
+ * tab and names the tab it is for (popup.html?tab=<id>).
+ */
+const forTab = __TEST__ ? Number(new URLSearchParams(location.search).get('tab')) || undefined : undefined;
+
 function App() {
-  const { data: m, reload, error } = useModel('popup.get', {}, [], 5000);
+  const {
+    data: m,
+    reload,
+    error,
+  } = useModel('popup.get', forTab !== undefined ? { tabId: forTab } : {}, [], 5000);
   const [adding, setAdding] = useState(false);
   const [pausing, setPausing] = useState(false);
   const now = useNow(1000);

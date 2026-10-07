@@ -18,6 +18,9 @@ const SKEW_SAMPLES = 9;
 
 let anchor: { trusted: number; mono: number } | null = null;
 const samples: { host: string; offset: number }[] = [];
+/** Test build only: shift applied by the end-to-end suite to travel in time (always 0 otherwise). */
+let testOffset = 0;
+const TEST_CLOCK_KEY = 'test:clock';
 
 function monotonic(): number {
   return typeof performance !== 'undefined' ? performance.now() : Date.now();
@@ -25,7 +28,7 @@ function monotonic(): number {
 
 /** Current trusted time in ms. Records tamper events when the clock moved backwards. */
 export function now(): number {
-  const wall = Date.now() + (store.state.clockOffset || 0);
+  const wall = Date.now() + (store.state.clockOffset || 0) + testOffset;
   const mono = monotonic();
   let t = wall;
   if (anchor) {
@@ -43,6 +46,32 @@ export function now(): number {
   anchor = { trusted: t, mono };
   if (t > last) store.state.lastWall = t;
   return t;
+}
+
+/**
+ * Test build only: moves the extension's clock. Unless `detect` is set, the move is not a clock
+ * jump for the tamper detection (the highest time seen is reset).
+ */
+export async function setTestClock(offset: number, detect = false) {
+  if (!__TEST__) return;
+  testOffset = offset;
+  if (!detect) {
+    anchor = null;
+    store.state.lastWall = 0;
+    lastReport = 0;
+  }
+  await api.storage.local.set({ [TEST_CLOCK_KEY]: offset });
+}
+
+export function testClockOffset(): number {
+  return testOffset;
+}
+
+/** Test build only: the clock keeps its shift when the background restarts. */
+export async function restoreTestClock() {
+  if (!__TEST__) return;
+  const r = await api.storage.local.get(TEST_CLOCK_KEY);
+  testOffset = Number(r[TEST_CLOCK_KEY]) || 0;
 }
 
 let lastReport = 0;

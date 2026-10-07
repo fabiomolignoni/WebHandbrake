@@ -11,6 +11,7 @@
 import { api } from '../platform/api';
 import type { TickResponse } from '../shared/models';
 import type { Envelope, TickRequest } from '../shared/rpc';
+import { reportErrorsToBackground } from '../shared/test-hooks';
 import { Overlay } from './overlay';
 
 declare global {
@@ -25,6 +26,7 @@ if (!window.__webHandbrake && window.top === window) {
 }
 
 function start() {
+  if (__TEST__) reportErrorsToBackground('content');
   let lastInput = Date.now();
   let lastTyped = 0;
   let lastEditable: Element | null = null;

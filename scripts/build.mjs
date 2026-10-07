@@ -4,7 +4,11 @@
  * dist/chrome and dist/firefox with browser specific manifests. No timestamps, no minification,
  * no remote code: the output is readable and identical for identical sources.
  *
- *   node scripts/build.mjs [--target=chrome|firefox|all] [--watch]
+ * With --test the same sources are built into dist-test/ with the hooks of the end-to-end suite
+ * (__TEST__, see tests/e2e and docs/testing.md). Packages are never made from dist-test/, and the
+ * normal build checks that it contains none of these hooks.
+ *
+ *   node scripts/build.mjs [--target=chrome|firefox|all] [--watch] [--test]
  */
 
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
@@ -20,6 +24,8 @@ const args = Object.fromEntries(
   }),
 );
 const targets = !args.target || args.target === 'all' ? ['chrome', 'firefox'] : [args.target];
+const testBuild = Boolean(args.test);
+const outRoot = join(root, testBuild ? 'dist-test' : 'dist');
 const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
 
 const entries = {
@@ -108,10 +114,26 @@ async function copyStatic(out) {
   await cp(join(root, 'src/_locales'), join(out, '_locales'), { recursive: true });
   await mkdir(join(out, 'locales'), { recursive: true });
   await cp(join(root, 'src/locales'), join(out, 'locales'), { recursive: true });
+  // An empty extension page from which the end-to-end suite calls the background.
+  if (testBuild)
+    await writeFile(
+      join(out, 'test.html'),
+      '<!doctype html>\n<html lang="en"><meta charset="utf-8"><title>WebHandbrake test</title><body></body></html>\n',
+    );
+}
+
+/** The hooks of the end-to-end suite must never reach a package. */
+async function checkNoTestHooks(out) {
+  for (const file of Object.keys(entries)) {
+    if (file === 'ui') continue;
+    const code = await readFile(join(out, `${file}.js`), 'utf8');
+    if (/["']test\.(clock|reportError)["']|class ShiftedDate|function testHandlers/.test(code))
+      throw new Error(`${out}/${file}.js contains end-to-end test hooks`);
+  }
 }
 
 async function buildTarget(target) {
-  const out = join(root, 'dist', target);
+  const out = join(outRoot, target);
   await rm(out, { recursive: true, force: true });
   await mkdir(out, { recursive: true });
   const options = {
@@ -128,7 +150,11 @@ async function buildTarget(target) {
     sourcemap: false,
     minify: false,
     logLevel: 'warning',
-    define: { 'process.env.NODE_ENV': '"production"', __TARGET__: JSON.stringify(target) },
+    define: {
+      'process.env.NODE_ENV': '"production"',
+      __TARGET__: JSON.stringify(target),
+      __TEST__: JSON.stringify(testBuild),
+    },
     loader: { '.svg': 'text' },
   };
   if (args.watch) {
@@ -153,7 +179,8 @@ async function buildTarget(target) {
   await esbuild.build(options);
   await copyStatic(out);
   await writeFile(join(out, 'manifest.json'), `${JSON.stringify(manifest(target), null, 2)}\n`);
-  console.log(`built dist/${target}`);
+  if (!testBuild) await checkNoTestHooks(out);
+  console.log(`built ${testBuild ? 'dist-test' : 'dist'}/${target}`);
 }
 
 for (const target of targets) await buildTarget(target);

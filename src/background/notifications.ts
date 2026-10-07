@@ -2,6 +2,7 @@
 
 import { api, extensionUrl, quiet } from '../platform/api';
 import { store } from './store';
+import { testLog } from './test-log';
 
 export async function notificationsAllowed(): Promise<boolean> {
   if (!api.notifications?.create) return false;
@@ -11,7 +12,7 @@ export async function notificationsAllowed(): Promise<boolean> {
 export async function notify(id: string, title: string, message: string) {
   if (!store.config.settings.notifications.enabled) return;
   if (!(await notificationsAllowed())) return;
-  await quiet(
+  const created = await quiet(
     api.notifications.create(id, {
       type: 'basic',
       iconUrl: extensionUrl('icons/icon-128.png'),
@@ -19,6 +20,7 @@ export async function notify(id: string, title: string, message: string) {
       message,
     }),
   );
+  if (__TEST__ && created !== undefined) testLog.notifications.push({ id, title, message });
 }
 
 export function registerNotificationClicks() {

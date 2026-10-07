@@ -72,13 +72,17 @@ export function stripFragment(url: string): string {
   return i === -1 ? url : url.slice(0, i);
 }
 
-/** URL used as identity for page-scoped grants and "Save for later" de-duplication. */
+/**
+ * URL used as identity for page-scoped grants and "Save for later" de-duplication. Like every
+ * target, it does not depend on http or https: a pass for http://site/a also opens https://site/a,
+ * and the browser filters, evaluated on https representatives, see the same page.
+ */
 export function pageKey(url: string): string {
   const p = parseUrl(url);
   if (!p) return stripFragment(url);
   const q = p.query.map(([k, v]) => `${k}=${v}`).join('&');
   const path = p.path.length > 1 ? p.path.replace(/\/+$/, '') : p.path;
-  return `${p.scheme}://${stripWww(p.host)}${path}${q ? `?${q}` : ''}`;
+  return `${p.web ? 'https' : p.scheme}://${stripWww(p.host)}${path}${q ? `?${q}` : ''}`;
 }
 
 export function stripWww(host: string): string {
