@@ -13,8 +13,8 @@ import { nextRestriction } from '../engine/next';
 import type { Activity, Group } from '../engine/types';
 import { stripWww } from '../engine/url';
 import { usageKeys } from '../engine/usage';
-import { t as tr } from '../i18n/i18n';
-import { api } from '../platform/api';
+import { locale, template, t as tr } from '../i18n/i18n';
+import { api, sessionStore } from '../platform/api';
 import type { TickResponse } from '../shared/models';
 import type { TickRequest } from '../shared/rpc';
 import { updateBadge } from './badge';
@@ -150,7 +150,28 @@ export function filterCss(kind: string, intensity: number, custom?: string): str
   return (FILTERS[kind] ?? FILTERS.none)(intensity);
 }
 
-function responseFor(d: Decision, t: number, incognito: boolean): TickResponse {
+/**
+ * Reminders and intentions already shown (MOT-01, INT-03): once per visit and per pass, whatever
+ * the number of pages opened meanwhile (every page load starts a new content script). Kept in
+ * session storage, so that a restarted service worker does not show them again.
+ */
+let announced: Set<string> | null = null;
+const ANNOUNCED_KEY = 'announced';
+
+async function loadAnnounced(): Promise<Set<string>> {
+  if (!announced) announced = new Set((await sessionStore.get<string[]>(ANNOUNCED_KEY)) ?? []);
+  return announced;
+}
+
+function announceOnce(key: string, active: boolean): boolean {
+  if (!active || !announced || announced.has(key)) return false;
+  if (announced.size > 500) announced.clear();
+  announced.add(key);
+  void sessionStore.set(ANNOUNCED_KEY, [...announced]);
+  return true;
+}
+
+function responseFor(d: Decision, t: number, incognito: boolean, active: boolean): TickResponse {
   const s = store.config.settings;
   const c = ctx(t);
   const showTimer = s.timer.enabled && d.groups.some((g) => g.group.options.timer);
@@ -179,16 +200,21 @@ function responseFor(d: Decision, t: number, incognito: boolean): TickResponse {
     res.filter = { css: filterCss(i.filter, i.intensity ?? 100, i.css), mute: Boolean(i.mute) };
   if (i.type === 'remind' && primary) {
     const act = store.state.activity[usageKeys.group(primary.group.id)];
-    res.remind = {
-      id: `${primary.group.id}:${act?.visitStart ?? 0}`,
-      group: primary.group.name,
-      color: primary.group.color,
-      note: primary.group.note,
-      message: i.message ?? '',
-    };
+    const id = `${primary.group.id}:${act?.visitStart ?? 0}`;
+    // Shown when the page is in use (not to a tab opened in the background), once per visit.
+    if (act && announceOnce(`remind:${id}`, active)) {
+      res.remind = {
+        id,
+        group: primary.group.name,
+        color: primary.group.color,
+        note: primary.group.note,
+        message: i.message ?? '',
+      };
+    }
   }
   const pass = d.groups.find((g) => g.pass?.intention)?.pass;
-  if (pass?.intention) res.intention = { text: pass.intention, until: pass.until ?? null };
+  if (pass?.intention && announceOnce(`intention:${pass.id}`, active))
+    res.intention = { text: pass.intention, until: pass.until ?? null };
 
   const r = nextRestriction(c, d.url, { incognito }, d);
   if (r) {
@@ -226,6 +252,7 @@ const lastSeverity = new Map<number, number>();
 
 export async function onTick(req: TickRequest, sender: chrome.runtime.MessageSender): Promise<TickResponse> {
   await store.ready();
+  await loadAnnounced();
   counters.ticks++;
   const tab = sender.tab;
   const incognito = Boolean(tab?.incognito);
@@ -254,7 +281,7 @@ export async function onTick(req: TickRequest, sender: chrome.runtime.MessageSen
     if (prev !== undefined && prev !== d.severity && isNav(d)) void reconcile('tick-change');
     if (tab.active) void updateBadge(tab.id, req.url, incognito);
   }
-  const res = responseFor(d, t, incognito);
+  const res = responseFor(d, t, incognito, req.active && !locked);
   if (req.labels) res.labels = overlayLabels();
   await applyMute(tab, res.filter?.mute ?? false);
   return res;
@@ -293,6 +320,10 @@ export function forgetTab(tabId: number) {
   lastSeverity.delete(tabId);
 }
 
+/**
+ * Messages of the overlay, with their placeholders: the content script formats them with the
+ * values it has ({group}, {time}, {seconds}). Translating them here would drop the placeholders.
+ */
 function overlayLabels(): Record<string, string> {
   const keys = [
     'overlay.hide',
@@ -308,5 +339,5 @@ function overlayLabels(): Record<string, string> {
     'overlay.timer.aria',
     'overlay.drag',
   ];
-  return Object.fromEntries(keys.map((k) => [k, tr(k)]));
+  return { ...Object.fromEntries(keys.map((k) => [k, template(k)])), __locale: locale() };
 }

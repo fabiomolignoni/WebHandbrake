@@ -5,6 +5,7 @@ import { compileDnr } from '../../src/engine/dnr';
 import { nextRestriction, untilFor } from '../../src/engine/next';
 import { inWindows, periodRange, scheduleActive, windowInterval } from '../../src/engine/time';
 import type { Grant, TimeWindow } from '../../src/engine/types';
+import { pageKey } from '../../src/engine/url';
 import { Usage, usageKeys } from '../../src/engine/usage';
 import { at, BLOCK, config, ctx, group } from './helpers';
 
@@ -272,6 +273,34 @@ describe('DNR compilation', () => {
     const { rules } = compileDnr(ctx(config([b]), at(0, 9)), { ...opts, hostAccess: false });
     expect(rules[0].action.type).toBe('block');
     expect(rules[0].condition.regexFilter).toBeUndefined();
+  });
+
+  it('a pass for one http:// page opens that page in the browser filters too (regression)', () => {
+    const a = group('A', ['wait.example'], [{ intervention: delayIntervention(5) }]);
+    const state = defaultState();
+    const pass: Grant = {
+      id: 'g1',
+      kind: 'pass',
+      groups: ['A'],
+      scope: 'page',
+      url: pageKey('http://wait.example/thread/1'),
+      createdAt: at(0, 9),
+      visit: true,
+      severity: SEVERITY.delay,
+    };
+    state.grants.push(pass);
+    const c = ctx(config([a]), at(0, 9), state);
+    expect(decide(c, 'http://wait.example/thread/1').intervention.type).toBe('track');
+    expect(decide(c, 'https://wait.example/thread/1').intervention.type).toBe('track');
+    expect(decide(c, 'http://wait.example/thread/2').intervention.type).toBe('delay');
+    // The page gets an allow rule above the redirect of the site, for http and https alike.
+    const { rules } = compileDnr(c, opts);
+    const allow = rules.find((r) => r.action.type === 'allow');
+    expect(allow?.priority).toBeGreaterThan(rules.find((r) => r.action.type === 'redirect')!.priority);
+    const re = new RegExp(allow!.condition.regexFilter!, 'i');
+    expect(re.test('http://wait.example/thread/1')).toBe(true);
+    expect(re.test('https://www.wait.example/thread/1')).toBe(true);
+    expect(re.test('http://wait.example/thread/2')).toBe(false);
   });
 
   it('follows the engine for cross-group regions', () => {

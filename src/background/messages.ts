@@ -38,6 +38,7 @@ import { reconcile } from './reconcile';
 import { endSession, extendSession, startSession } from './sessions';
 import { deleteStats, exportStats, getStats } from './stats';
 import { store } from './store';
+import { TEST_CONTENT_METHODS, testHandlers } from './testing';
 import { accessibleAlternative, answerTicket, cancelTicket, getTicket, ticketView } from './tickets';
 import { configModel, overviewModel, popupModel } from './views';
 
@@ -133,7 +134,11 @@ const handlers: { [M in Method]: Handler<M> } = {
   'test.url': () => ({ allowlisted: null }),
 };
 
-const CONTENT_METHODS = new Set<Method>(['cs.tick', 'cs.recheck', 'cs.graceDone']);
+// End-to-end test hooks: only in the test build, never in a package (see testing.ts).
+if (__TEST__) Object.assign(handlers, testHandlers());
+
+const CONTENT_METHODS = new Set<string>(['cs.tick', 'cs.recheck', 'cs.graceDone']);
+if (__TEST__) for (const m of TEST_CONTENT_METHODS) CONTENT_METHODS.add(m);
 
 /** Methods that change the configuration run one at a time, so concurrent saves never overwrite each other. */
 const SERIALISED = new Set<Method>([

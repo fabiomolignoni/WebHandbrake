@@ -4,22 +4,23 @@
  */
 
 import { newId } from '../engine/defaults';
-import { dayKeyOf } from '../engine/time';
 import { initI18n, t } from '../i18n/i18n';
 import { api, extensionUrl, quiet, sessionStore } from '../platform/api';
+import { captureErrors } from '../shared/test-hooks';
 import { forgetTab, initIdle, releaseMute, setIdleState } from './accounting';
 import { updateBadge } from './badge';
-import { initClockObserver, now } from './clock';
-import { counters } from './diagnostics-state';
+import { initClockObserver, restoreTestClock } from './clock';
 import { registerNavigationListeners, registerTabListeners } from './enforce';
-import { announceAvailableLater } from './later';
 import { registerCommands, registerMenuClicks } from './menus';
 import { onMessage } from './messages';
 import { registerNotificationClicks } from './notifications';
-import { checkIncognito, registerPermissionListeners } from './permissions';
-import { ALARM_NEXT, ALARM_PERIODIC, ensurePeriodicAlarm, maintenance, reconcile } from './reconcile';
-import { applyRetention } from './stats';
+import { periodic } from './periodic';
+import { registerPermissionListeners } from './permissions';
+import { ALARM_NEXT, ALARM_PERIODIC, ensurePeriodicAlarm, reconcile } from './reconcile';
 import { store } from './store';
+import { testLog } from './test-log';
+
+if (__TEST__) captureErrors('background', (m) => testLog.errors.push(m));
 
 let startupEvent = false;
 
@@ -82,41 +83,8 @@ registerCommands();
 registerNotificationClicks();
 initClockObserver();
 
-/** Every minute: persist counters and expire timed state. No tab polling (PERF-01). */
-async function periodic() {
-  counters.wakeups++;
-  await store.flushAll();
-  const before = JSON.stringify([
-    store.state.grants.length,
-    store.state.sessions.length,
-    store.state.pending.length,
-  ]);
-  await maintenance();
-  const after = JSON.stringify([
-    store.state.grants.length,
-    store.state.sessions.length,
-    store.state.pending.length,
-  ]);
-  if (before !== after) await reconcile('periodic');
-  const today = dayKeyOf(now(), store.cc.cal);
-  if (store.meta.lastDaily !== today) {
-    store.meta.lastDaily = today;
-    await store.saveMeta();
-    await daily();
-  }
-  await announceAvailableLater();
-}
-
-async function daily() {
-  store.usage.pruneMinutes(now());
-  await store.flushUsage();
-  await applyRetention();
-  await checkIncognito();
-  // A daily snapshot even when nothing changed (DAT-03).
-  await store.snapshotDaily();
-}
-
 async function boot() {
+  if (__TEST__) await restoreTestClock();
   await store.ready();
   await initI18n(store.config.settings.language);
   for (const e of store.pendingTamper.splice(0)) store.addTamper(e);

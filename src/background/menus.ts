@@ -6,6 +6,7 @@ import type { Granularity } from '../shared/rpc';
 import { addPage } from './pages';
 import { startSession } from './sessions';
 import { store } from './store';
+import { testLog } from './test-log';
 
 type Contexts = chrome.contextMenus.CreateProperties['contexts'];
 const ctxs = (c: readonly string[]) => [...c] as unknown as Contexts;
@@ -17,6 +18,8 @@ const ROOT_ITEMS = [
 ];
 
 function create(props: chrome.contextMenus.CreateProperties) {
+  if (__TEST__)
+    testLog.menus.push({ id: String(props.id), parentId: props.parentId as string, title: props.title });
   try {
     api.contextMenus.create(props, () => void api.runtime.lastError);
   } catch {
@@ -27,6 +30,7 @@ function create(props: chrome.contextMenus.CreateProperties) {
 export async function rebuildMenus() {
   if (!features.contextMenus) return;
   await quiet(api.contextMenus.removeAll());
+  if (__TEST__) testLog.menus = [];
   if (!store.config.settings.contextMenu) return;
   const groups = store.config.groups.filter((g) => g.enabled && !g.archived);
   const urlPatterns = ['http://*/*', 'https://*/*'];
@@ -58,57 +62,59 @@ export async function rebuildMenus() {
   }
 }
 
+/** API-02: a click on one of the context menu items. */
+export async function onMenuClicked(info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab) {
+  await store.ready();
+  const [root, arg] = String(info.menuItemId).split('|');
+  if (root === 'focus') {
+    await startSession({
+      kind: 'groups',
+      groups: [],
+      allow: [],
+      minutes: Number(arg) || 25,
+      locked: false,
+      noPauses: false,
+    });
+    return;
+  }
+  const item = ROOT_ITEMS.find((x) => x.id === root);
+  if (!item || !arg) return;
+  const url = root === 'link' ? info.linkUrl : (info.pageUrl ?? tab?.url);
+  if (!url) return;
+  await addPage(url, item.granularity, arg === 'new' ? null : arg);
+}
+
 export function registerMenuClicks() {
   if (!features.contextMenus) return;
-  api.contextMenus.onClicked.addListener((info, tab) => {
-    void (async () => {
-      await store.ready();
-      const [root, arg] = String(info.menuItemId).split('|');
-      if (root === 'focus') {
-        await startSession({
-          kind: 'groups',
-          groups: [],
-          allow: [],
-          minutes: Number(arg) || 25,
-          locked: false,
-          noPauses: false,
-        });
-        return;
-      }
-      const item = ROOT_ITEMS.find((x) => x.id === root);
-      if (!item || !arg) return;
-      const url = root === 'link' ? info.linkUrl : (info.pageUrl ?? tab?.url);
-      if (!url) return;
-      await addPage(url, item.granularity, arg === 'new' ? null : arg);
-    })();
-  });
+  api.contextMenus.onClicked.addListener((info, tab) => void onMenuClicked(info, tab));
+}
+
+/** API-01: a keyboard shortcut. */
+export async function onCommand(command: string, tab?: chrome.tabs.Tab) {
+  await store.ready();
+  if (command === 'start-session') {
+    await startSession({
+      kind: 'groups',
+      groups: [],
+      allow: [],
+      minutes: 25,
+      locked: false,
+      noPauses: false,
+    });
+  } else if (command === 'open-dashboard') {
+    await quiet(api.tabs.create({ url: extensionUrl('dashboard.html') }));
+  } else if (command === 'block-site') {
+    const active = tab ?? (await quiet(api.tabs.query({ active: true, currentWindow: true })))?.[0];
+    if (!active?.url) return;
+    const last = store.meta.lastAddGroup;
+    const group =
+      store.config.groups.find((g) => g.id === last && g.enabled) ??
+      store.config.groups.find((g) => g.enabled && !g.archived);
+    await addPage(active.url, 'domain', group?.id ?? null);
+  }
 }
 
 export function registerCommands() {
   if (!features.commands) return;
-  api.commands.onCommand.addListener((command, tab) => {
-    void (async () => {
-      await store.ready();
-      if (command === 'start-session') {
-        await startSession({
-          kind: 'groups',
-          groups: [],
-          allow: [],
-          minutes: 25,
-          locked: false,
-          noPauses: false,
-        });
-      } else if (command === 'open-dashboard') {
-        await quiet(api.tabs.create({ url: extensionUrl('dashboard.html') }));
-      } else if (command === 'block-site') {
-        const active = tab ?? (await quiet(api.tabs.query({ active: true, currentWindow: true })))?.[0];
-        if (!active?.url) return;
-        const last = store.meta.lastAddGroup;
-        const group =
-          store.config.groups.find((g) => g.id === last && g.enabled) ??
-          store.config.groups.find((g) => g.enabled && !g.archived);
-        await addPage(active.url, 'domain', group?.id ?? null);
-      }
-    })();
-  });
+  api.commands.onCommand.addListener((command, tab) => void onCommand(command, tab));
 }

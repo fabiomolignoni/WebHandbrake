@@ -7,6 +7,7 @@ import { initI18n } from '../i18n/i18n';
 import { api } from '../platform/api';
 import { setFormatPrefs } from '../shared/format';
 import { type Api, type ChangedBroadcast, call, type Method } from '../shared/rpc';
+import { followTestClock, reportErrorsToBackground } from '../shared/test-hooks';
 
 const changeListeners = new Set<(c: ChangedBroadcast['changed']) => void>();
 let listening = false;
@@ -116,6 +117,10 @@ function darken(c: string) {
 
 /** Initialises i18n and appearance for a UI page. Returns the settings. */
 export async function bootPage(): Promise<Settings> {
+  if (__TEST__) {
+    reportErrorsToBackground(location.pathname.slice(1));
+    await followTestClock();
+  }
   const model = await call('config.get', {});
   const s = model.config.settings;
   await initI18n(s.language);
