@@ -100,6 +100,9 @@ const IGNORE = /\.(ts|tsx|js|json|css|html|png|svg|com)$|^(chrome|moz)-|^webhand
 // RPC method names and setting paths look like keys but are not messages.
 const rpc = await readFile(join(root, 'src/shared/rpc.ts'), 'utf8');
 const NOT_KEYS = new Set([...rpc.matchAll(/^\s+'?([a-zA-Z.]+)'?:\s*\{/gm)].map((m) => m[1]));
+// The methods of the test build (docs/testing.md) are declared with their handlers.
+const testing = await readFile(join(root, 'src/background/testing.ts'), 'utf8');
+for (const m of testing.matchAll(/^\s+'(test\.[a-zA-Z]+)':/gm)) NOT_KEYS.add(m[1]);
 const changesSrc = await readFile(join(root, 'src/engine/changes.ts'), 'utf8');
 for (const m of changesSrc.matchAll(/'([a-zA-Z]+\.[a-zA-Z.]+)'/g)) NOT_KEYS.add(m[1]);
 for await (const file of walk(join(root, 'src'))) {
