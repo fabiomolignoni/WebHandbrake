@@ -2,7 +2,7 @@
  * Target list editor (MAT-01…MAT-08, MAT-22): paste anything (URLs, lists, uBlock/uBlacklist
  * syntax), see line-by-line errors, exceptions in their own section, sort and de-duplicate,
  * edit everything as text in advanced mode. A short guide with examples sits next to the input
- * (docs/ux-redesign.md §11.7); addresses from the sensitive lists stay hidden until asked.
+ * (docs/design.md); addresses from the sensitive lists stay hidden until asked.
  */
 
 import type { Ref } from 'preact';

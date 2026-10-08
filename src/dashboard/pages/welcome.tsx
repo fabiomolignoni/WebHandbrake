@@ -1,5 +1,5 @@
 /**
- * First run (ONB-01, ONB-02, US-01; docs/ux-redesign.md §11.1): a welcome that states the value and
+ * First run (ONB-01, ONB-02; docs/design.md): a welcome that states the value and
  * the privacy promise, then goal → sites → details → your plan, and a "you're set" screen with the
  * next steps. Skippable and resumable within the session.
  *
@@ -92,7 +92,7 @@ function persist(s: State | null) {
   }
 }
 
-/** A site to show as an example: a plain address, never one from a sensitive list (§11.4). */
+/** A site to show as an example: a plain address, never one from a sensitive list. */
 const sampleSite = (groups: Group[]) =>
   groups
     .flatMap((g) => g.targets)

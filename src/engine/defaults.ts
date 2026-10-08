@@ -25,7 +25,7 @@ export function newId(): string {
 /**
  * Brand colour and default accent: a muted indigo (purple-blue), the pleasant and least arousing
  * hue family in Valdez & Mehrabian (1994), associated with competence and calm rather than alarm
- * (docs/ux-redesign.md §11.3).
+ * (docs/design.md).
  */
 export const DEFAULT_ACCENT = '#4850a5';
 /** Accent used before v1.1, migrated to the new default when it was never changed. */
@@ -217,7 +217,7 @@ export const SCHEDULE_PRESETS: Record<string, TimeWindow[]> = {
   nights: [{ days: ALL_DAYS, start: 23 * 60, end: 6 * 60 }],
 };
 
-/** D4: friction (wait + intention) for temptations, block for explicit windows and sessions. */
+/** Quick conditions: friction (wait + intention) for temptations, block for explicit windows and sessions. */
 export function frictionIntervention(): Intervention {
   return { type: 'ask', seconds: 10, choices: [5, 10, 15], maxMinutes: 15, requireIntention: false };
 }
@@ -270,7 +270,7 @@ export function defaultIntervention(type: InterventionType): Intervention {
 
 /** When a new rule applies, as chosen in the creation wizard and in onboarding. */
 export type QuickWhen = 'always' | 'schedule' | 'daily';
-/** What happens: any intervention, from "only count" to "redirect" (G1). */
+/** What happens: any intervention, from "only count" to "redirect" (principle G1). */
 export type QuickHow = Exclude<InterventionType, 'allow'>;
 
 export const QUICK_DELAY_SECONDS = 30;

@@ -1,5 +1,5 @@
 /**
- * Today (§8.4.2, docs/ux-redesign.md §6.3): status first — what is happening now, what comes next,
+ * Today (docs/design.md): status first — what is happening now, what comes next,
  * a focus session in one tap and today's numbers. Real problems are banners; setup steps are a
  * quiet card.
  */
@@ -20,7 +20,7 @@ import { navigate } from '../router';
 import { QuickSession } from './focus';
 import { levelIcon } from './group-editor';
 
-/** Setup steps rather than problems: shown as a quiet card, not as an alert (D1). */
+/** Setup steps rather than problems: shown as a quiet card, not as an alert. */
 const SETUP_WARNINGS: Warning['kind'][] = ['incognito'];
 
 export function WarningBanner({ w }: { w: Warning }) {

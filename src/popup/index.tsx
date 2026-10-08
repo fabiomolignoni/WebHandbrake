@@ -1,5 +1,5 @@
 /**
- * Popup (§8.4.1, docs/ux-redesign.md §6.1): status first — the state of the current site as a
+ * Popup (docs/design.md): status first — the state of the current site as a
  * tinted hero with the most useful fact — then quick actions and focus, two taps at most (FOC-01).
  */
 

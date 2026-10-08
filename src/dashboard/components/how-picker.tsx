@@ -1,7 +1,7 @@
 /**
  * "What should happen?" in the rule wizard and in onboarding: every intervention, gentlest first,
  * in the tones of the friction ladder, with the description of the chosen one. Nothing is
- * pre-selected: the right answer depends on the person (active choice, docs/ux-redesign.md §11.2).
+ * pre-selected: the right answer depends on the person (active choice, docs/design.md).
  * Every setting has a default except the redirect address, asked here.
  */
 

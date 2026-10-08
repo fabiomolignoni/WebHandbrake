@@ -1,5 +1,5 @@
 /**
- * Natural-language summaries (SCH-04, ONB-03, §8.4.3): the same functions are used by the group
+ * Natural-language summaries (SCH-04, ONB-03): the same functions are used by the group
  * cards, the editor's "In brief" panel and the "Why?" tool.
  */
 

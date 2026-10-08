@@ -12,33 +12,33 @@ ID. Planned and withdrawn IDs are listed only in the requirements.
 | Area | Implemented | Partial | Unverified | With unit tests | With e2e tests |
 |---|---|---|---|---|---|
 | [Constraints](#constraints) | 5 | 0 | 0 | 0 | 0 |
-| [Evaluation semantics](#evaluation-semantics) | 16 | 0 | 0 | 6 | 8 |
-| [Matching (MAT)](#matching-mat) | 16 | 1 | 0 | 6 | 11 |
+| [Evaluation semantics](#evaluation-semantics) | 10 | 0 | 6 | 6 | 8 |
+| [Matching (MAT)](#matching-mat) | 12 | 1 | 4 | 6 | 11 |
 | [Schedules (SCH)](#schedules-sch) | 5 | 1 | 0 | 2 | 4 |
 | [Limits (LIM)](#limits-lim) | 9 | 0 | 0 | 4 | 8 |
-| [Time accounting (TIM)](#time-accounting-tim) | 5 | 1 | 1 | 0 | 5 |
-| [Interventions (INT)](#interventions-int) | 13 | 1 | 0 | 1 | 11 |
+| [Time accounting (TIM)](#time-accounting-tim) | 4 | 1 | 2 | 0 | 5 |
+| [Interventions (INT)](#interventions-int) | 11 | 1 | 2 | 1 | 11 |
 | [Enforcement (ENF)](#enforcement-enf) | 9 | 0 | 2 | 2 | 8 |
 | [Breaks (BRK)](#breaks-brk) | 10 | 0 | 0 | 2 | 9 |
-| [Focus sessions (FOC)](#focus-sessions-foc) | 8 | 0 | 0 | 2 | 7 |
-| [Protection (PRO)](#protection-pro) | 14 | 1 | 0 | 1 | 10 |
+| [Focus sessions (FOC)](#focus-sessions-foc) | 7 | 0 | 1 | 2 | 7 |
+| [Protection (PRO)](#protection-pro) | 12 | 1 | 2 | 1 | 10 |
 | [Statistics (STA)](#statistics-sta) | 6 | 0 | 0 | 1 | 3 |
-| [Motivation (MOT)](#motivation-mot) | 1 | 0 | 0 | 0 | 0 |
-| [Notifications (NOT)](#notifications-not) | 5 | 0 | 0 | 0 | 3 |
-| [Lists (LST)](#lists-lst) | 3 | 0 | 0 | 0 | 1 |
+| [Motivation (MOT)](#motivation-mot) | 0 | 0 | 1 | 0 | 0 |
+| [Notifications (NOT)](#notifications-not) | 4 | 0 | 1 | 0 | 3 |
+| [Lists (LST)](#lists-lst) | 2 | 0 | 1 | 0 | 1 |
 | [Data (DAT)](#data-dat) | 6 | 1 | 1 | 2 | 6 |
-| [First run and help (ONB)](#first-run-and-help-onb) | 8 | 1 | 0 | 0 | 1 |
+| [First run and help (ONB)](#first-run-and-help-onb) | 5 | 1 | 3 | 0 | 1 |
 | [Diagnostics (DIA)](#diagnostics-dia) | 3 | 0 | 0 | 0 | 3 |
 | [Settings (SET)](#settings-set) | 4 | 1 | 0 | 0 | 3 |
 | [Interfaces (API)](#interfaces-api) | 2 | 0 | 0 | 0 | 2 |
 | [Privacy (PRIV)](#privacy-priv) | 6 | 1 | 0 | 0 | 2 |
-| [Security (SEC)](#security-sec) | 7 | 1 | 0 | 1 | 2 |
+| [Security (SEC)](#security-sec) | 5 | 1 | 2 | 1 | 2 |
 | [Performance (PERF)](#performance-perf) | 1 | 0 | 5 | 0 | 1 |
-| [Reliability (REL)](#reliability-rel) | 3 | 1 | 0 | 1 | 1 |
+| [Reliability (REL)](#reliability-rel) | 2 | 1 | 1 | 1 | 1 |
 | [Compatibility (COMP)](#compatibility-comp) | 2 | 0 | 1 | 0 | 0 |
-| [Accessibility (A11Y)](#accessibility-a11y) | 4 | 0 | 2 | 0 | 3 |
+| [Accessibility (A11Y)](#accessibility-a11y) | 3 | 0 | 3 | 0 | 4 |
 | [Internationalisation (I18N)](#internationalisation-i18n) | 1 | 3 | 0 | 0 | 0 |
-| [Usability (USAB)](#usability-usab) | 2 | 0 | 2 | 0 | 0 |
+| [Usability (USAB)](#usability-usab) | 1 | 0 | 3 | 0 | 0 |
 | [Maintainability (MAINT)](#maintainability-maint) | 3 | 2 | 0 | 0 | 0 |
 | [Ethics (ETH)](#ethics-eth) | 4 | 0 | 0 | 0 | 0 |
 
@@ -67,13 +67,13 @@ Planned: 54. Withdrawn: 17.
 | [SEM-07](requirements.md#sem-07) | When the result changes | implemented | e2e | — | schedules.spec.ts › SEM-07: "Test a URL" tells what applies now and what changes next | — |
 | [SEM-08](requirements.md#sem-08) | Visits | implemented | e2e | — | time.spec.ts › LIM-04: visits per day; a new visit starts after the visit gap (SEM-08) | — |
 | [SEM-09](requirements.md#sem-09) | Day start | implemented | unit, e2e | engine.test.ts › windows (SCH-01, SEM-09) | schedules.spec.ts › SEM-09: with days starting at 04:00, a night window belongs to the evening before | — |
-| [SEM-10](requirements.md#sem-10) | Conditions with a limit | implemented | unit | — | — | — |
-| [SEM-11](requirements.md#sem-11) | No condition applies | implemented | unit | — | — | — |
+| [SEM-10](requirements.md#sem-10) | Conditions with a limit | unverified | unit | — | — | — |
+| [SEM-11](requirements.md#sem-11) | No condition applies | unverified | unit | — | — | — |
 | [SEM-12](requirements.md#sem-12) | Ties between rules | implemented | review | — | — | — |
-| [SEM-13](requirements.md#sem-13) | Cool-downs and focus sessions | implemented | unit, e2e | — | — | — |
-| [SEM-14](requirements.md#sem-14) | Breaks | implemented | unit | — | — | — |
-| [SEM-15](requirements.md#sem-15) | Access after a question, wait or challenge | implemented | unit | — | — | — |
-| [SEM-16](requirements.md#sem-16) | Pages never restricted | implemented | unit | — | — | — |
+| [SEM-13](requirements.md#sem-13) | Cool-downs and focus sessions | unverified | unit, e2e | — | — | — |
+| [SEM-14](requirements.md#sem-14) | Breaks | unverified | unit | — | — | — |
+| [SEM-15](requirements.md#sem-15) | Access after a question, wait or challenge | unverified | unit | — | — | — |
+| [SEM-16](requirements.md#sem-16) | Pages never restricted | unverified | unit | — | — | — |
 
 ## Matching (MAT)
 
@@ -86,16 +86,16 @@ Planned: 54. Withdrawn: 17.
 | [MAT-05](requirements.md#mat-05) | Address syntax | implemented | unit, e2e | patterns.test.ts › target syntax and normalisation (MAT-02) › imports uBlock Origin, AdGuard, uBlacklist and hosts syntax (MAT-05) | enforcement.spec.ts › what is blocked › MAT-05: wildcards in labels and segments, sites in every country | — |
 | [MAT-06](requirements.md#mat-06) | Regular expressions | implemented | e2e | — | enforcement.spec.ts › what is blocked › MAT-06: regular expressions (advanced) are compiled to browser filters | — |
 | [MAT-07](requirements.md#mat-07) | Query parameters and fragments | implemented | unit, e2e | patterns.test.ts › matching (MAT-01, MAT-03, MAT-07) | enforcement.spec.ts › what is blocked › MAT-07: query parameters that must be present<br>enforcement.spec.ts › navigation layers › ENF-03 / MAT-07: fragment routes are checked only when an entry names a fragment | — |
-| [MAT-08](requirements.md#mat-08) | Comments and notes | implemented | unit | — | — | — |
-| [MAT-09](requirements.md#mat-09) | Local files and browser pages | implemented | unit | — | — | — |
+| [MAT-08](requirements.md#mat-08) | Comments and notes | unverified | unit | — | — | — |
+| [MAT-09](requirements.md#mat-09) | Local files and browser pages | unverified | unit | — | — | — |
 | [MAT-13](requirements.md#mat-13) | Embedded content | implemented | e2e | — | enforcement.spec.ts › navigation layers › MAT-13: embedded frames of a rule are blocked only when the rule says so | — |
 | [MAT-14](requirements.md#mat-14) | Mirrors and alternative front ends | partial | review | — | — | — |
-| [MAT-16](requirements.md#mat-16) | Explanations | implemented | e2e | — | — | — |
+| [MAT-16](requirements.md#mat-16) | Explanations | unverified | e2e | — | — | — |
 | [MAT-17](requirements.md#mat-17) | Add the current page | implemented | e2e | — | lifecycle.spec.ts › MAT-17 / API-02: "Block this site" from the context menu, for a page and for a link<br>lifecycle.spec.ts › MAT-17 / API-01: the "block this site" shortcut adds the site to the last rule used<br>popup.spec.ts › MAT-17: "Block site" adds this page, this section or the whole site, and restricts the tab at once | — |
 | [MAT-18](requirements.md#mat-18) | Shared lists | implemented | e2e | — | dashboard.spec.ts › MAT-18: a shared list is created and used by a rule<br>enforcement.spec.ts › evaluation semantics › MAT-18: a shared list blocks in every rule linked to it | — |
 | [MAT-19](requirements.md#mat-19) | Normal and private windows | implemented | unit, e2e | engine.test.ts › decisions › MAT-19: private-only groups | enforcement.spec.ts › navigation layers › MAT-19: rules for normal windows apply when navigation starts; rules for private windows do not | — |
 | [MAT-22](requirements.md#mat-22) | Managing entries | implemented | review | — | — | — |
-| [MAT-23](requirements.md#mat-23) | Every country domain | implemented | unit, e2e | — | — | — |
+| [MAT-23](requirements.md#mat-23) | Every country domain | unverified | unit, e2e | — | — | — |
 
 ## Schedules (SCH)
 
@@ -103,7 +103,7 @@ Planned: 54. Withdrawn: 17.
 |---|---|---|---|---|---|---|
 | [SCH-01](requirements.md#sch-01) | Weekly windows | implemented | unit, e2e | engine.test.ts › windows (SCH-01, SEM-09) | schedules.spec.ts › SCH-01 / SCH-03: weekday hours block during the window only<br>schedules.spec.ts › SCH-01: an overnight window belongs to the day it starts | — |
 | [SCH-02](requirements.md#sch-02) | Schedule editor | implemented | review | — | — | — |
-| [SCH-03](requirements.md#sch-03) | Schedule modes | implemented | unit, e2e | engine.test.ts › windows (SCH-01, SEM-09) › modes during/outside/always (SCH-03) | schedules.spec.ts › SCH-01 / SCH-03: weekday hours block during the window only<br>schedules.spec.ts › SCH-03 / US-06: "allowed only in these windows" (news at lunch time) | — |
+| [SCH-03](requirements.md#sch-03) | Schedule modes | implemented | unit, e2e | engine.test.ts › windows (SCH-01, SEM-09) › modes during/outside/always (SCH-03) | schedules.spec.ts › SCH-01 / SCH-03: weekday hours block during the window only<br>schedules.spec.ts › SCH-03: "allowed only in these windows" (news at lunch time) | — |
 | [SCH-04](requirements.md#sch-04) | Several conditions | implemented | e2e | — | schedules.spec.ts › SEM-02 / SCH-04: the first rule whose condition holds applies | — |
 | [SCH-06](requirements.md#sch-06) | Local time | partial | review | — | — | — |
 | [SCH-07](requirements.md#sch-07) | Manipulated system clock | implemented | e2e | — | protection.spec.ts › PRO-13 / SCH-07: a clock set backwards is detected and time does not go back<br>protection.spec.ts › SCH-07: a clock set forward is corrected with the Date of web responses (no extra request) | — |
@@ -129,9 +129,9 @@ Planned: 54. Withdrawn: 17.
 | [TIM-01](requirements.md#tim-01) | Active time | implemented | e2e | — | time.spec.ts › TIM-01 / LIM-01 / ENF-02: active time is counted and an exhausted budget applies within seconds<br>time.spec.ts › TIM-01: a tab in the background is not counted | — |
 | [TIM-02](requirements.md#tim-02) | Inactivity | partial | e2e | — | time.spec.ts › TIM-02: no time is counted while the system is locked or the user is idle | — |
 | [TIM-03](requirements.md#tim-03) | No double counting | implemented | e2e | — | time.spec.ts › TIM-03: several tabs of a rule never count twice | — |
-| [TIM-04](requirements.md#tim-04) | Firefox for Android | unverified | manual | — | — | — |
+| [TIM-04](requirements.md#tim-04) | Firefox for Android | unverified | manual | — | — | TIM-04 On Firefox for Android, time is counted only while the page is in front. |
 | [TIM-05](requirements.md#tim-05) | Persistence | implemented | e2e | — | time.spec.ts › TIM-05: counters reach the storage within seconds (at most 15 s can be lost) | — |
-| [TIM-06](requirements.md#tim-06) | Special pages | implemented | unit | — | — | — |
+| [TIM-06](requirements.md#tim-06) | Special pages | unverified | unit | — | — | — |
 | [TIM-07](requirements.md#tim-07) | Exceptions are not counted | implemented | e2e | — | time.spec.ts › TIM-07: time on an exception is not counted for the rule | — |
 
 ## Interventions (INT)
@@ -150,8 +150,8 @@ Planned: 54. Withdrawn: 17.
 | [INT-12](requirements.md#int-12) | Save for later | implemented | e2e | — | interventions.spec.ts › block page (INT-01) › INT-12: a page saved for later is listed, and opened once it is allowed<br>popup.spec.ts › INT-12: "Save for later" from the popup, counted in its footer | — |
 | [INT-13](requirements.md#int-13) | Grace period while typing | implemented | e2e | — | time.spec.ts › INT-13: typing in a page gives a grace period with a countdown and a copy button | — |
 | [INT-14](requirements.md#int-14) | Access for one page | implemented | e2e | — | interventions.spec.ts › delay (INT-02) › a pass for one page leaves the rest of the site restricted (INT-14) | — |
-| [INT-18](requirements.md#int-18) | Reminder | implemented | e2e | — | — | — |
-| [INT-19](requirements.md#int-19) | Only count time | implemented | e2e | — | — | — |
+| [INT-18](requirements.md#int-18) | Reminder | unverified | e2e | — | — | — |
+| [INT-19](requirements.md#int-19) | Only count time | unverified | e2e | — | — | — |
 
 ## Enforcement (ENF)
 
@@ -161,8 +161,8 @@ Planned: 54. Withdrawn: 17.
 | [ENF-02](requirements.md#enf-02) | Open tabs follow changes | implemented | e2e | — | breaks.spec.ts › BRK-07 / BRK-09 / ENF-02: a break unblocks; ending it re-blocks the open tabs at once<br>enforcement.spec.ts › evaluation semantics › disabled and archived rules do not restrict; enabling one restricts the open tabs (ENF-02)<br>enforcement.spec.ts › navigation layers › ENF-02: a rule for inactive tabs only restricts the tabs in the background at once<br>interventions.spec.ts › delay (INT-02) › a pass for some minutes ends by itself and the open tab is restricted again (ENF-02)<br>schedules.spec.ts › ENF-02 / ENF-04: open tabs follow the start and the end of a window<br>time.spec.ts › TIM-01 / LIM-01 / ENF-02: active time is counted and an exhausted budget applies within seconds | — |
 | [ENF-03](requirements.md#enf-03) | Single-page navigation | implemented | e2e | — | enforcement.spec.ts › navigation layers › ENF-03: single page navigations (pushState, replaceState) are caught<br>enforcement.spec.ts › navigation layers › ENF-03 / MAT-07: fragment routes are checked only when an entry names a fragment | — |
 | [ENF-04](requirements.md#enf-04) | Restoring pages | implemented | e2e | — | enforcement.spec.ts › restoring blocked pages › ENF-04: when a rule ends the page offers "Reopen", and the original URL comes back<br>enforcement.spec.ts › restoring blocked pages › ENF-04: with automatic reopening the page comes back by itself<br>enforcement.spec.ts › restoring blocked pages › ENF-04: blocked tabs are restored in bulk<br>popup.spec.ts › ENF-04: the popup reopens the tabs that are allowed again<br>schedules.spec.ts › ENF-02 / ENF-04: open tabs follow the start and the end of a window | — |
-| [ENF-05](requirements.md#enf-05) | Session restore and pinned tabs | unverified | manual | — | — | — |
-| [ENF-07](requirements.md#enf-07) | Independent of the page | unverified | manual | — | — | — |
+| [ENF-05](requirements.md#enf-05) | Session restore and pinned tabs | unverified | manual | — | — | ENF-05 After a browser restart that restores tabs, restricted tabs show the intervention page and pinned tabs stay pinned. |
+| [ENF-07](requirements.md#enf-07) | Independent of the page | unverified | manual | — | — | ENF-07 A site that blocks scripts or runs `beforeunload` handlers is still restricted. |
 | [ENF-08](requirements.md#enf-08) | From browser start | implemented | e2e | — | lifecycle.spec.ts › REL-01 / ENF-08: rules, state and blocking survive a restart, and apply before the first page | — |
 | [ENF-09](requirements.md#enf-09) | No loops | implemented | unit, e2e | engine.test.ts › redirect destinations (ENF-09) | enforcement.spec.ts › navigation layers › INT-06 / ENF-09: a redirect goes to the chosen page, even inside the blocked site, without loops | — |
 | [ENF-10](requirements.md#enf-10) | Back and forward | implemented | e2e | — | enforcement.spec.ts › navigation layers › ENF-10: going back to a page that is now restricted shows the intervention | — |
@@ -195,7 +195,7 @@ Planned: 54. Withdrawn: 17.
 | [FOC-05](requirements.md#foc-05) | Extending and ending early | implemented | e2e | — | focus.spec.ts › FOC-05: extending is immediate; ending early costs what the level says | — |
 | [FOC-07](requirements.md#foc-07) | End of a session | implemented | e2e | — | focus.spec.ts › FOC-07: the end of a session is notified with a summary | — |
 | [FOC-09](requirements.md#foc-09) | No breaks during a session | implemented | e2e | — | breaks.spec.ts › FOC-09: no breaks during a focus session that forbids them | — |
-| [FOC-11](requirements.md#foc-11) | Session length | implemented | e2e, review | — | — | — |
+| [FOC-11](requirements.md#foc-11) | Session length | unverified | e2e, review | — | — | — |
 
 ## Protection (PRO)
 
@@ -204,7 +204,7 @@ Planned: 54. Withdrawn: 17.
 | [PRO-01](requirements.md#pro-01) | Protection levels | implemented | e2e | — | protection.spec.ts › PRO-01: at the Soft level the editor asks for a confirmation, and "Keep my rules" keeps them<br>protection.spec.ts › PRO-01: at the Balanced level a weakening costs a wait that cannot be skipped<br>protection.spec.ts › PRO-01: the Locked level refuses every weakening until its date, then falls back | — |
 | [PRO-02](requirements.md#pro-02) | Asymmetry | implemented | unit, e2e | background.test.ts › first run protection level (PRO-02)<br>changes.test.ts › change classification (PRO-02) | protection.spec.ts › PRO-02: under Strict, strengthening is immediate and weakening an active rule is refused | — |
 | [PRO-03](requirements.md#pro-03) | Cooling-off | implemented | e2e | — | protection.spec.ts › PRO-03: a weakening waits for the cooling-off, then needs a typed confirmation in Protection<br>protection.spec.ts › PRO-03: a pending change can be cancelled, and expires when not confirmed in time | — |
-| [PRO-04](requirements.md#pro-04) | Settings locked while a rule restricts | implemented | e2e | — | — | — |
+| [PRO-04](requirements.md#pro-04) | Settings locked while a rule restricts | unverified | e2e | — | — | — |
 | [PRO-05](requirements.md#pro-05) | Access requirements | implemented | e2e | — | breaks.spec.ts › BRK-05 / PRO-05: a break that costs the password<br>protection.spec.ts › PRO-05: a settings password is asked by the background for every change but strengthening<br>protection.spec.ts › PRO-05: settings can be locked at certain hours (strengthening still allowed) | — |
 | [PRO-08](requirements.md#pro-08) | Browser pages | implemented | e2e | — | protection.spec.ts › PRO-08: browser settings pages are protected while strict rules are active | — |
 | [PRO-09](requirements.md#pro-09) | Private windows | implemented | e2e | — | lifecycle.spec.ts › PRO-09: the protection centre says whether private windows are covered | — |
@@ -215,7 +215,7 @@ Planned: 54. Withdrawn: 17.
 | [PRO-16](requirements.md#pro-16) | Protection per rule | partial | review | — | — | — |
 | [PRO-18](requirements.md#pro-18) | Checklist | implemented | review | — | — | — |
 | [PRO-19](requirements.md#pro-19) | No dark patterns | implemented | review | — | — | — |
-| [PRO-20](requirements.md#pro-20) | First run | implemented | unit | — | — | — |
+| [PRO-20](requirements.md#pro-20) | First run | unverified | unit | — | — | — |
 
 ## Statistics (STA)
 
@@ -232,7 +232,7 @@ Planned: 54. Withdrawn: 17.
 
 | ID | Title | Status | Verification | Unit tests | E2E tests | Manual |
 |---|---|---|---|---|---|---|
-| [MOT-01](requirements.md#mot-01) | Personal reason | implemented | e2e | — | — | — |
+| [MOT-01](requirements.md#mot-01) | Personal reason | unverified | e2e | — | — | — |
 
 ## Notifications (NOT)
 
@@ -241,7 +241,7 @@ Planned: 54. Withdrawn: 17.
 | [NOT-01](requirements.md#not-01) | On-page timer | implemented | e2e | — | time.spec.ts › NOT-01: the timer appears near the limit, names the rule, and can be hidden for the visit | — |
 | [NOT-02](requirements.md#not-02) | Toolbar badge | implemented | e2e | — | lifecycle.spec.ts › NOT-02 / SET-05: the badge can be turned off<br>time.spec.ts › NOT-02 / LIM-10: the badge shows the time left on the current site | — |
 | [NOT-03](requirements.md#not-03) | Warning | implemented | e2e | — | time.spec.ts › NOT-03: a warning comes before the restriction | — |
-| [NOT-04](requirements.md#not-04) | System notifications | implemented | e2e | — | — | — |
+| [NOT-04](requirements.md#not-04) | System notifications | unverified | e2e | — | — | — |
 | [NOT-06](requirements.md#not-06) | Motion and sound | implemented | review | — | — | — |
 
 ## Lists (LST)
@@ -250,7 +250,7 @@ Planned: 54. Withdrawn: 17.
 |---|---|---|---|---|---|---|
 | [LST-01](requirements.md#lst-01) | Ready-made lists | implemented | review | — | — | — |
 | [LST-03](requirements.md#lst-03) | Sharing a rule | implemented | e2e | — | data.spec.ts › DAT-01 / LST-03: export, import and sharing of a single rule round-trip | — |
-| [LST-05](requirements.md#lst-05) | Sensitive lists | implemented | e2e | — | — | — |
+| [LST-05](requirements.md#lst-05) | Sensitive lists | unverified | e2e | — | — | — |
 
 ## Data (DAT)
 
@@ -260,7 +260,7 @@ Planned: 54. Withdrawn: 17.
 | [DAT-02](requirements.md#dat-02) | Importing lists of sites | implemented | e2e | — | data.spec.ts › DAT-02: a plain list (hosts file, uBlock syntax) becomes a rule from the import dialog, with a report | — |
 | [DAT-03](requirements.md#dat-03) | Automatic backups | implemented | unit, e2e | store.test.ts › store integrity (DAT-03, DAT-07) | data.spec.ts › DAT-03: every change keeps a backup, and a backup can be restored<br>data.spec.ts › DAT-03: a damaged configuration is restored from the last backup at start-up, with a warning | — |
 | [DAT-04](requirements.md#dat-04) | File names | implemented | e2e | — | data.spec.ts › DAT-01 / DAT-04: the export is a timestamped JSON file, secrets only when asked | — |
-| [DAT-05](requirements.md#dat-05) | Export and import on Android | unverified | manual | — | — | — |
+| [DAT-05](requirements.md#dat-05) | Export and import on Android | unverified | manual | — | — | DAT-05 On Firefox for Android, export and import work, including **Copy as text**. |
 | [DAT-06](requirements.md#dat-06) | Protected reset | implemented | e2e | — | protection.spec.ts › PRO-12 / DAT-06: importing a looser configuration or resetting is protected like any change | — |
 | [DAT-07](requirements.md#dat-07) | Schema migrations | partial | unit, e2e | store.test.ts › store integrity (DAT-03, DAT-07) | data.spec.ts › DAT-07: fields unknown to this version are kept across a restart | — |
 | [DAT-09](requirements.md#dat-09) | Data model ready for sync | implemented | review | — | — | — |
@@ -275,9 +275,9 @@ Planned: 54. Withdrawn: 17.
 | [ONB-04](requirements.md#onb-04) | Validation | implemented | review | — | — | — |
 | [ONB-05](requirements.md#onb-05) | Advanced mode | implemented | review | — | — | — |
 | [ONB-06](requirements.md#onb-06) | Offline help | partial | review | — | — | — |
-| [ONB-07](requirements.md#onb-07) | Explanation before strict choices | implemented | e2e | — | — | — |
-| [ONB-08](requirements.md#onb-08) | Rule wizard | implemented | e2e | — | — | — |
-| [ONB-09](requirements.md#onb-09) | Active choice | implemented | e2e | — | — | — |
+| [ONB-07](requirements.md#onb-07) | Explanation before strict choices | unverified | e2e | — | — | — |
+| [ONB-08](requirements.md#onb-08) | Rule wizard | unverified | e2e | — | — | — |
+| [ONB-09](requirements.md#onb-09) | Active choice | unverified | e2e | — | — | — |
 
 ## Diagnostics (DIA)
 
@@ -326,8 +326,8 @@ Planned: 54. Withdrawn: 17.
 | [SEC-04](requirements.md#sec-04) | Import validation | implemented | review | — | — | — |
 | [SEC-05](requirements.md#sec-05) | Messages | implemented | e2e | — | lifecycle.spec.ts › SEC-05: web pages cannot reach the extension | — |
 | [SEC-06](requirements.md#sec-06) | Supply chain | partial | review | — | — | — |
-| [SEC-07](requirements.md#sec-07) | Cost tickets | implemented | e2e, review | — | — | — |
-| [SEC-08](requirements.md#sec-08) | No framing | implemented | e2e | — | — | — |
+| [SEC-07](requirements.md#sec-07) | Cost tickets | unverified | e2e, review | — | — | — |
+| [SEC-08](requirements.md#sec-08) | No framing | unverified | e2e | — | — | — |
 
 ## Performance (PERF)
 
@@ -346,8 +346,8 @@ Planned: 54. Withdrawn: 17.
 |---|---|---|---|---|---|---|
 | [REL-01](requirements.md#rel-01) | Storage is the source of truth | implemented | unit, e2e | background.test.ts › rule installation (REL-01) | lifecycle.spec.ts › REL-01 / ENF-08: rules, state and blocking survive a restart, and apply before the first page<br>lifecycle.spec.ts › REL-01: a stopped service worker or a suspended event page loses nothing (regression)<br>lifecycle.spec.ts › Firefox event page › REL-01: the event page is suspended when idle and wakes up on events | — |
 | [REL-02](requirements.md#rel-02) | Feature detection | implemented | review | — | — | — |
-| [REL-03](requirements.md#rel-03) | Automated tests | partial | ci, manual | — | — | — |
-| [REL-04](requirements.md#rel-04) | No silent failure | implemented | e2e | — | — | — |
+| [REL-03](requirements.md#rel-03) | Automated tests | partial | ci, manual | — | — | REL-03 A smoke test on Firefox for Android with `npx web-ext run -t firefox-android`: block a site, take a break, start a focus session. |
+| [REL-04](requirements.md#rel-04) | No silent failure | unverified | e2e | — | — | — |
 
 ## Compatibility (COMP)
 
@@ -355,18 +355,18 @@ Planned: 54. Withdrawn: 17.
 |---|---|---|---|---|---|---|
 | [COMP-01](requirements.md#comp-01) | Supported browsers | implemented | ci | — | — | — |
 | [COMP-02](requirements.md#comp-02) | One Manifest V3 code base | implemented | ci | — | — | — |
-| [COMP-03](requirements.md#comp-03) | Firefox for Android | unverified | manual | — | — | — |
+| [COMP-03](requirements.md#comp-03) | Firefox for Android | unverified | manual | — | — | COMP-03 On Firefox for Android, the dashboard works by touch and nothing depends on shortcuts or the context menu. |
 
 ## Accessibility (A11Y)
 
 | ID | Title | Status | Verification | Unit tests | E2E tests | Manual |
 |---|---|---|---|---|---|---|
-| [A11Y-01](requirements.md#a11y-01) | WCAG 2.2 level AA | unverified | e2e, manual | — | a11y.spec.ts › A11Y-01: WCAG 2.2 AA on every dashboard page and state (…)<br>a11y.spec.ts › A11Y-01: the popup and the intervention pages pass WCAG checks | — |
-| [A11Y-02](requirements.md#a11y-02) | Keyboard | implemented | e2e | — | a11y.spec.ts › A11Y-02: the dashboard works with the keyboard (skip link, radio groups, dialogs)<br>a11y.spec.ts › A11Y-02/03: the intervention page takes the focus and announces the countdown at a moderate pace | — |
-| [A11Y-03](requirements.md#a11y-03) | Labels and announcements | implemented | e2e | — | — | — |
+| [A11Y-01](requirements.md#a11y-01) | WCAG 2.2 level AA | unverified | e2e, manual | — | a11y.spec.ts › A11Y-01: WCAG 2.2 AA on every dashboard page and state (…)<br>a11y.spec.ts › A11Y-01: the popup and the intervention pages pass WCAG checks | A11Y-01 A keyboard-only pass and a screen-reader pass (NVDA with Firefox, VoiceOver with Chrome) over the popup, the intervention page and the rule wizard. |
+| [A11Y-02](requirements.md#a11y-02) | Keyboard | implemented | e2e | — | a11y.spec.ts › A11Y-02: the dashboard works with the keyboard (skip link, radio groups, dialogs)<br>a11y.spec.ts › A11Y-02 / A11Y-03: the intervention page takes the focus and announces the countdown at a moderate pace | — |
+| [A11Y-03](requirements.md#a11y-03) | Labels and announcements | implemented | e2e | — | a11y.spec.ts › A11Y-02 / A11Y-03: the intervention page takes the focus and announces the countdown at a moderate pace | — |
 | [A11Y-04](requirements.md#a11y-04) | Contrast, colour, motion and targets | unverified | review | — | — | — |
 | [A11Y-05](requirements.md#a11y-05) | Accessible challenge | implemented | e2e | — | interventions.spec.ts › challenges (INT-04) › A11Y-05: a screen reader user can type a sentence instead | — |
-| [A11Y-06](requirements.md#a11y-06) | Narrow screens | implemented | e2e | — | — | — |
+| [A11Y-06](requirements.md#a11y-06) | Narrow screens | unverified | e2e | — | — | — |
 
 ## Internationalisation (I18N)
 
@@ -382,7 +382,7 @@ Planned: 54. Withdrawn: 17.
 | ID | Title | Status | Verification | Unit tests | E2E tests | Manual |
 |---|---|---|---|---|---|---|
 | [USAB-01](requirements.md#usab-01) | First rule in two minutes | unverified | study | — | — | — |
-| [USAB-02](requirements.md#usab-02) | Why in two interactions | implemented | e2e | — | — | — |
+| [USAB-02](requirements.md#usab-02) | Why in two interactions | unverified | e2e | — | — | — |
 | [USAB-03](requirements.md#usab-03) | SUS score | unverified | study | — | — | — |
 | [USAB-04](requirements.md#usab-04) | No jargon | implemented | ci, review | — | — | — |
 
@@ -426,7 +426,7 @@ Planned: 54. Withdrawn: 17.
 | [CIR-15](threat-model.md#cir-15) | The site embedded in another page | in place | — |
 | [CIR-16](threat-model.md#cir-16) | The back button and the back-forward cache | in place | — |
 | [CIR-17](threat-model.md#cir-17) | Navigation inside a single-page app | in place | — |
-| [CIR-18](threat-model.md#cir-18) | Copying the address from the intervention page | partial | — |
+| [CIR-18](threat-model.md#cir-18) | Copying the address from the intervention page | partial | interventions.spec.ts › block page (INT-01) › the address can be hidden (INT-01, CIR-18) |
 | [CIR-19](threat-model.md#cir-19) | Changing the time zone | none | — |
 | [CIR-20](threat-model.md#cir-20) | Revoking access to sites | in place | — |
 | [CIR-21](threat-model.md#cir-21) | Reader view and `view-source:` | in place | — |
@@ -463,4 +463,31 @@ Planned: 54. Withdrawn: 17.
 
 ### Other verification
 
+- [SEM-10](requirements.md#sem-10) Conditions with a limit: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [SEM-11](requirements.md#sem-11) No condition applies: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [SEM-13](requirements.md#sem-13) Cool-downs and focus sessions: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [SEM-14](requirements.md#sem-14) Breaks: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [SEM-15](requirements.md#sem-15) Access after a question, wait or challenge: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [SEM-16](requirements.md#sem-16) Pages never restricted: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [MAT-08](requirements.md#mat-08) Comments and notes: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [MAT-09](requirements.md#mat-09) Local files and browser pages: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [MAT-16](requirements.md#mat-16) Explanations: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [MAT-23](requirements.md#mat-23) Every country domain: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [TIM-06](requirements.md#tim-06) Special pages: no end-to-end test opens an error page or reader view.
+- [INT-18](requirements.md#int-18) Reminder: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [INT-19](requirements.md#int-19) Only count time: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [FOC-11](requirements.md#foc-11) Session length: the cap is applied by `startSession()` and `extendSession()` in `src/background/sessions.ts`.
+- [PRO-04](requirements.md#pro-04) Settings locked while a rule restricts: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [PRO-20](requirements.md#pro-20) First run: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [MOT-01](requirements.md#mot-01) Personal reason: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [NOT-04](requirements.md#not-04) System notifications: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [LST-05](requirements.md#lst-05) Sensitive lists: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [ONB-07](requirements.md#onb-07) Explanation before strict choices: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [ONB-08](requirements.md#onb-08) Rule wizard: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [ONB-09](requirements.md#onb-09) Active choice: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [SEC-07](requirements.md#sec-07) Cost tickets: `src/background/tickets.ts`; no test lets a ticket expire.
+- [SEC-08](requirements.md#sec-08) No framing: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- [REL-04](requirements.md#rel-04) No silent failure: implemented, but no test title cites this ID yet, so it is not traced to a test.
 - [A11Y-04](requirements.md#a11y-04) Contrast, colour, motion and targets: `src/ui/styles/index.css` (the `--target` token). The axe-core contrast and target-size rules run with the A11Y-01 scenarios; no manual evaluation has been done.
+- [A11Y-06](requirements.md#a11y-06) Narrow screens: Firefox keeps a wider minimum window, so the test checks it at the narrowest width it allows.
+- [USAB-02](requirements.md#usab-02) Why in two interactions: implemented, but no test title cites this ID yet, so it is not traced to a test.

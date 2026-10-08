@@ -13,7 +13,7 @@ import { describeUnit } from '../shared/summary';
 import { Banner, Button, Dialog } from './components';
 import { useNow } from './hooks';
 
-/** Draws text on a canvas so it cannot be copied from the DOM (Appendix A #12). */
+/** Draws text on a canvas so it cannot be copied from the DOM (CIR-12). */
 export function CanvasText({ text }: { text: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {

@@ -127,8 +127,9 @@ export default {
           message: `${item.id} is ${item.status}: add a Note that says what is missing.`,
         });
       const ev = evidence.get(item.id) ?? { unit: [], e2e: [] };
+      // An unverified requirement says so by its status; it may name the verification it still needs.
       for (const kind of ['unit', 'e2e'])
-        if (v.includes(kind) && !ev[kind].length)
+        if (v.includes(kind) && !ev[kind].length && item.status !== 'unverified')
           problems.push({
             ...at,
             message: `${item.id} is ${item.status} with verification ${kind}, but no ${kind} test title cites it.`,

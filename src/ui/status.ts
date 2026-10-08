@@ -1,5 +1,5 @@
 /**
- * One visual language for the friction ladder (G1, docs/ux-redesign.md §5.1): every intervention
+ * One visual language for the friction ladder (principle G1, docs/design.md): every intervention
  * has a fixed icon and one of a few tones, used identically on every surface. Tones always come
  * with an icon and words (WCAG 1.4.1).
  */

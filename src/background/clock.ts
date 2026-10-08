@@ -86,7 +86,7 @@ function report(e: TamperEvent) {
   void store.saveState();
 }
 
-/** Observes Date headers of responses to detect a clock set forward (Appendix A #6). */
+/** Observes Date headers of responses to detect a clock set forward (CIR-06). */
 export function initClockObserver() {
   if (!features.webRequest) return;
   try {

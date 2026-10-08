@@ -1,5 +1,5 @@
 /**
- * Creating a rule, step by step (docs/ux-redesign.md §10): which sites → when → what happens →
+ * Creating a rule, step by step (docs/design.md): which sites → when → what happens →
  * review. Creating is an infrequent task done by people who are new to the concepts, so it is a
  * short wizard (NN/g); editing stays on the one-page editor. The steps build an if-then plan
  * ("When I open these sites…, then…"), and the review states it in a sentence.

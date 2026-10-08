@@ -1,4 +1,4 @@
-/** Dashboard (§8.2, §8.3): full page management UI, responsive, keyboard accessible. */
+/** Dashboard: full page management UI, responsive, keyboard accessible. */
 
 import { render } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
@@ -25,7 +25,7 @@ import { TodayPage } from './pages/today';
 import { WelcomePage } from './pages/welcome';
 import { navigate, useRoute } from './router';
 
-// Primary destinations first, then the less frequent ones (§8.3, docs/ux-redesign.md §6.2).
+// Primary destinations first, then the less frequent ones (docs/design.md).
 const NAV_PRIMARY = [
   { id: 'today', icon: 'home', key: 'nav.today' },
   { id: 'groups', icon: 'layers', key: 'nav.groups' },
@@ -240,7 +240,7 @@ function SideStatus({ o }: { o: Overview }) {
   );
 }
 
-/** Badge with the number of pending changes on "Protection" (§8.3). */
+/** Badge with the number of pending changes on "Protection". */
 function PendingCount({ id, count }: { id: string; count: number }) {
   if (id !== 'protection' || !count) return null;
   return (
