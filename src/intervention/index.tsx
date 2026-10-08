@@ -1,6 +1,6 @@
 /**
- * Intervention page (§8.4.5, §8.4.6): block, delay, intention question, challenge, session,
- * cool-down and protected browser pages. Calm design, healthy choice first (G3, INT-01).
+ * Intervention page: block, delay, intention question, challenge, session,
+ * cool-down and protected browser pages. Calm design, healthy choice first (principle G3, INT-01).
  * The page always re-checks with the background, which has the last word (ENF-09).
  */
 
@@ -109,7 +109,7 @@ function headline(m: InterventionModel): string {
   }
 }
 
-/** The icon at the top of the page: what kind of pause this is (docs/ux-redesign.md §6.6). */
+/** The icon at the top of the page: what kind of pause this is (docs/design.md). */
 function emblem(m: InterventionModel): string {
   switch (m.kind) {
     case 'session':

@@ -123,18 +123,20 @@ How WebHandbrake decides what happens to an address at a given moment. The engin
   A day starts at the time set in **Days start at**
   (<!-- fact: defaults.settings.dayStart|hhmm -->00:00<!-- /fact --> by default). Time windows, daily
   limits and daily statistics use this day: a window belongs to the day on which it starts.
-- <a id="sem-10"></a>**SEM-10 Conditions with a limit** · implemented · unit
+- <a id="sem-10"></a>**SEM-10 Conditions with a limit** · unverified · unit
   A condition with a limit applies only while its schedule is active and its limit is used up.
   Until then, the next condition is checked.
-- <a id="sem-11"></a>**SEM-11 No condition applies** · implemented · unit
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- <a id="sem-11"></a>**SEM-11 No condition applies** · unverified · unit
   When a rule matches an address but none of its conditions applies, the rule's result is Only
   count time: the time is counted and nothing else happens.
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
 - <a id="sem-12"></a>**SEM-12 Ties between rules** · implemented · review
   Between results of equal severity the stronger one wins: the longer wait, the longer challenge,
   a block before a redirect; then the rule that comes first in the list. The winning rule supplies
   the message, the reason and the **Why?** explanation.
   Note: `better()` and `strength()` in `src/engine/decide.ts`.
-- <a id="sem-13"></a>**SEM-13 Cool-downs and focus sessions** · implemented · unit, e2e
+- <a id="sem-13"></a>**SEM-13 Cool-downs and focus sessions** · unverified · unit, e2e
   - When the time chosen at an **Ask what I want to do** question is over, a cool-down set on that
     condition blocks the rule's sites, unless the result is already as severe ([LIM-06](#lim-06)).
   - During a cool-down after continuous use ([LIM-05](#lim-05)), the condition itself applies.
@@ -142,18 +144,22 @@ How WebHandbrake decides what happens to an address at a given moment. The engin
     the tab.
   - A focus session that allows only listed sites blocks every web page that is not on its list or
     in Always allowed, unless something at least as severe applies.
-- <a id="sem-14"></a>**SEM-14 Breaks** · implemented · unit
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- <a id="sem-14"></a>**SEM-14 Breaks** · unverified · unit
   A break lowers the result of each rule it covers to Only count time, unless that result is
   Allowed. It has no effect on a rule that does not allow breaks, nor on a rule included in a
   running focus session when the session forbids breaks or the rule does not allow them during
   sessions. It never lifts the block of a session that allows only listed sites.
-- <a id="sem-15"></a>**SEM-15 Access after a question, wait or challenge** · implemented · unit
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- <a id="sem-15"></a>**SEM-15 Access after a question, wait or challenge** · unverified · unit
   The access given after an Ask question, a wait or a challenge lifts only Ask, Wait and Challenge
   results that come from a condition and are no more severe than the one passed. It never lifts a
   focus session or a cool-down.
-- <a id="sem-16"></a>**SEM-16 Pages never restricted** · implemented · unit
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- <a id="sem-16"></a>**SEM-16 Pages never restricted** · unverified · unit
   The extension's own pages and the destination page of a Redirect are never restricted. For the
   destination, this covers that page with any query, not the rest of its site.
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
 
 ### Decision procedure
 
@@ -241,12 +247,14 @@ upwards, the intervention page replaces the page (`NAV_SEVERITY` in `src/engine/
 - <a id="mat-07"></a>**MAT-07 Query parameters and fragments** · implemented · unit, e2e
   An entry can require query parameters, with a given value or with any value. The fragment of an
   address is ignored unless the entry names one.
-- <a id="mat-08"></a>**MAT-08 Comments and notes** · implemented · unit
+- <a id="mat-08"></a>**MAT-08 Comments and notes** · unverified · unit
   Lists accept comment lines and a note on each entry. The note stays with the entry.
-- <a id="mat-09"></a>**MAT-09 Local files and browser pages** · implemented · unit
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- <a id="mat-09"></a>**MAT-09 Local files and browser pages** · unverified · unit
   An entry can cover local files (`file://`) and browser pages (`about:`, `chrome:` and the like).
   The browser blocking filters do not see these pages, so they are checked when they open. In
   Chrome, local files need **Allow access to file URLs** on the extension's details page.
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
 - <a id="mat-13"></a>**MAT-13 Embedded content** · implemented · e2e
   With **Also block embedded content**, a rule that blocks also blocks its sites when they are
   embedded in frames of other pages.
@@ -254,10 +262,11 @@ upwards, the intervention page replaces the page (`NAV_SEVERITY` in `src/engine/
   Ready-made lists include alternative and short domains of the platforms they cover.
   Note: the lists are in `src/data/templates.ts`. There are no curated lists of mirrors, proxies,
   caches, translation proxies or alternative front ends.
-- <a id="mat-16"></a>**MAT-16 Explanations** · implemented · e2e
+- <a id="mat-16"></a>**MAT-16 Explanations** · unverified · e2e
   For an address, **Test a URL** in the rule editor and **Why?** in the popup and on the
   intervention page show the rules and conditions that match, the result and its reason, what is
   left of a limit and the next change.
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
 - <a id="mat-17"></a>**MAT-17 Add the current page** · implemented · e2e
   The popup, the context menu and a keyboard shortcut add the current page to a rule, or to a new
   rule. The popup offers the whole site, this host, this section or this page; the context menu
@@ -272,9 +281,10 @@ upwards, the intervention page replaces the page (`NAV_SEVERITY` in `src/engine/
   once, counted, and edited as text in Advanced mode. There is no fixed cap on the number of rules
   or entries.
   Note: `src/dashboard/components/targets.tsx`.
-- <a id="mat-23"></a>**MAT-23 Every country domain** · implemented · unit, e2e
+- <a id="mat-23"></a>**MAT-23 Every country domain** · unverified · unit, e2e
   A `*` label matches one or more labels, so `name.*` covers the site under every country domain
   (`amazon.*` covers `amazon.de` and `amazon.co.uk`).
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
 
 ## Schedules (SCH)
 
@@ -369,7 +379,7 @@ upwards, the intervention page replaces the page (`NAV_SEVERITY` in `src/engine/
   Counted time is written to storage within
   <!-- fact: limits.USAGE_FLUSH_MS|seconds -->10<!-- /fact --> seconds, so a restart, a crash or a
   stopped background loses at most 15 seconds of counting.
-- <a id="tim-06"></a>**TIM-06 Special pages** · implemented · unit
+- <a id="tim-06"></a>**TIM-06 Special pages** · unverified · unit
   Error pages, unloaded and discarded tabs are not counted. Reader view and `view-source:`
   addresses are matched as the page they show.
   Note: no end-to-end test opens an error page or reader view.
@@ -436,11 +446,13 @@ upwards, the intervention page replaces the page (`NAV_SEVERITY` in `src/engine/
 - <a id="int-14"></a>**INT-14 Access for one page** · implemented · e2e
   The access given after a wait or a challenge can cover only the page, so that leaving it
   restricts the site again.
-- <a id="int-18"></a>**INT-18 Reminder** · implemented · e2e
+- <a id="int-18"></a>**INT-18 Reminder** · unverified · e2e
   Reminder shows an on-page message with the rule's reason and the reminder's own text, once per
   visit, only in the tab in use, in an overlay isolated from the page.
-- <a id="int-19"></a>**INT-19 Only count time** · implemented · e2e
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- <a id="int-19"></a>**INT-19 Only count time** · unverified · e2e
   Only count time counts the time on the rule's sites and does nothing else.
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
 
 ## Enforcement (ENF)
 
@@ -547,7 +559,7 @@ upwards, the intervention page replaces the page (`NAV_SEVERITY` in `src/engine/
   times WebHandbrake stepped in.
 - <a id="foc-09"></a>**FOC-09 No breaks during a session** · implemented · e2e
   A session can forbid breaks for the rules it includes (**No breaks during the session**).
-- <a id="foc-11"></a>**FOC-11 Session length** · implemented · e2e, review
+- <a id="foc-11"></a>**FOC-11 Session length** · unverified · e2e, review
   A session lasts <!-- fact: limits.DEFAULT_SESSION_MINUTES -->25<!-- /fact --> minutes by default
   and at most <!-- fact: limits.MAX_SESSION_MS|days -->7<!-- /fact --> days from its start. The
   popup, the Focus page and the context menu offer
@@ -577,10 +589,11 @@ upwards, the intervention page replaces the page (`NAV_SEVERITY` in `src/engine/
   otherwise it expires. Pending changes are listed under **Pending changes**, can be cancelled at
   once, and are dropped when the configuration has changed meanwhile.
   Note: the ranges are in `normalizeSettings()` in `src/engine/schema.ts`.
-- <a id="pro-04"></a>**PRO-04 Settings locked while a rule restricts** · implemented · e2e
+- <a id="pro-04"></a>**PRO-04 Settings locked while a rule restricts** · unverified · e2e
   At Strict, a loosening of a rule is refused while that rule restricts browsing (for a change of
   the whole configuration, while any rule does), and the interface says so. At Locked, every
   loosening is refused until the level's date.
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
 - <a id="pro-05"></a>**PRO-05 Access requirements** · implemented · e2e
   A **Settings password**, a **Random code to type** of a chosen length, and **Times when settings
   cannot be loosened** can be combined. The password and the code are asked before every change
@@ -641,9 +654,10 @@ upwards, the intervention page replaces the page (`NAV_SEVERITY` in `src/engine/
   opens no page when it is uninstalled.
   Note: no code under `src/` calls `setUninstallURL`; wording rules are in
   [Writing](design.md#writing).
-- <a id="pro-20"></a>**PRO-20 First run** · implemented · unit
+- <a id="pro-20"></a>**PRO-20 First run** · unverified · unit
   While there are no rules and no running or planned focus session, lowering the protection level
   is a neutral change, except from Locked.
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
 
 ### Change classification
 
@@ -719,9 +733,10 @@ routed by `proposeConfig()` in `src/background/protection.ts`, and ending a sess
 
 ## Motivation (MOT)
 
-- <a id="mot-01"></a>**MOT-01 Personal reason** · implemented · e2e
+- <a id="mot-01"></a>**MOT-01 Personal reason** · unverified · e2e
   A rule can carry a personal reason ("why this matters to me"), shown on the intervention page,
   in reminders and in the editor. Reminders appear at most once per visit.
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
 
 ## Notifications (NOT)
 
@@ -739,10 +754,11 @@ routed by `proposeConfig()` in `src/background/protection.ts`, and ending a sess
   A warning appears on the page before a restriction starts
   (<!-- fact: defaults.settings.warningSeconds -->60<!-- /fact --> seconds before, by default; 0
   turns it off), and as a system notification when notifications are on.
-- <a id="not-04"></a>**NOT-04 System notifications** · implemented · e2e
+- <a id="not-04"></a>**NOT-04 System notifications** · unverified · e2e
   System notifications are off by default. Turning them on asks for the `notifications`
   permission. They cover the end of a focus session, a pending change ready to confirm, warnings
   before a restriction and saved pages that became available.
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
 - <a id="not-06"></a>**NOT-06 Motion and sound** · implemented · review
   Animations follow the system's reduced-motion preference. There is no sound by default;
   **Sound at the end of a break** is optional.
@@ -757,10 +773,11 @@ routed by `proposeConfig()` in `src/background/protection.ts`, and ending a sess
   Note: `src/data/templates.ts`.
 - <a id="lst-03"></a>**LST-03 Sharing a rule** · implemented · e2e
   A rule, with the shared lists it uses, can be exported as a file and imported elsewhere.
-- <a id="lst-05"></a>**LST-05 Sensitive lists** · implemented · e2e
+- <a id="lst-05"></a>**LST-05 Sensitive lists** · unverified · e2e
   The addresses of the sensitive ready-made lists
   (<!-- fact: templates.sensitive -->Gambling, Adult<!-- /fact -->) stay hidden unless the person
   asks to see them; only their number is shown.
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
 
 ## Data (DAT)
 
@@ -834,15 +851,18 @@ routed by `proposeConfig()` in `src/background/protection.ts`, and ending a sess
   The Help page inside the extension works offline and is the user guide.
   Note: `src/dashboard/help-content.ts`. There is no documentation website, so the option to always
   allow it does not exist.
-- <a id="onb-07"></a>**ONB-07 Explanation before strict choices** · implemented · e2e
+- <a id="onb-07"></a>**ONB-07 Explanation before strict choices** · unverified · e2e
   Before a focus session that cannot be interrupted or allows only listed sites, and before the
   Locked level, a preview states what will not be possible and asks for confirmation.
-- <a id="onb-08"></a>**ONB-08 Rule wizard** · implemented · e2e
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- <a id="onb-08"></a>**ONB-08 Rule wizard** · unverified · e2e
   New rules are created in a four-step wizard (Sites, When, What happens, Review) that ends with a
   one-sentence plan. The full editor can take over the draft.
-- <a id="onb-09"></a>**ONB-09 Active choice** · implemented · e2e
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
+- <a id="onb-09"></a>**ONB-09 Active choice** · unverified · e2e
   In first run and in the rule wizard, nothing that depends on the person (the goal, what happens)
   is pre-selected or labelled as recommended ([ADR 0008](adr/0008-active-choice.md)).
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
 
 ## Diagnostics (DIA)
 
@@ -954,14 +974,15 @@ routed by `proposeConfig()` in `src/background/protection.ts`, and ending a sess
   One runtime dependency, a lockfile and Dependabot updates for npm packages and GitHub Actions.
   Note: `package.json`, `package-lock.json` and `.github/dependabot.yml`. No release exists, so no
   SBOM has been produced; the release checklist produces one ([releasing](releasing.md#release-checklist)).
-- <a id="sec-07"></a>**SEC-07 Cost tickets** · implemented · e2e, review
+- <a id="sec-07"></a>**SEC-07 Cost tickets** · unverified · e2e, review
   Every cost is a ticket kept and verified in the background. A ticket expires after
   <!-- fact: limits.TICKET_TTL_MS|minutes -->60<!-- /fact --> minutes, and
   <!-- fact: limits.TICKET_MAX_FAILURES -->5<!-- /fact --> wrong answers lock it for
   <!-- fact: limits.TICKET_LOCK_MS|seconds -->30<!-- /fact --> seconds.
   Note: `src/background/tickets.ts`; no test lets a ticket expire.
-- <a id="sec-08"></a>**SEC-08 No framing** · implemented · e2e
+- <a id="sec-08"></a>**SEC-08 No framing** · unverified · e2e
   The intervention page refuses to render inside a frame.
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
 
 ## Performance (PERF)
 
@@ -1011,10 +1032,11 @@ routed by `proposeConfig()` in `src/background/protection.ts`, and ending a sess
   real Chromium and Firefox on every change.
   Note: `npm run check` and the end-to-end jobs of `.github/workflows/ci.yml`. Firefox for Android
   is checked only by hand, before a release ([COMP-03](#comp-03)).
-- <a id="rel-04"></a>**REL-04 No silent failure** · implemented · e2e
+- <a id="rel-04"></a>**REL-04 No silent failure** · unverified · e2e
   When enforcement is weakened (access to sites revoked, browser blocking filters that fail or
   exceed the browser's limits), a warning appears on Today and in Protection, and in the popup for
   missing access and failing filters.
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
 - <a id="rel-05"></a>**REL-05 Updates keep data** · planned · Should
   Updates always keep the data ([DAT-07](#dat-07)), and a public beta channel precedes stable
   releases.
@@ -1062,7 +1084,7 @@ routed by `proposeConfig()` in `src/background/protection.ts`, and ending a sess
 - <a id="a11y-05"></a>**A11Y-05 Accessible challenge** · implemented · e2e
   A code drawn on a canvas offers an alternative for screen-reader users: typing a longer, fixed
   sentence instead, which keeps the cost.
-- <a id="a11y-06"></a>**A11Y-06 Narrow screens** · implemented · e2e
+- <a id="a11y-06"></a>**A11Y-06 Narrow screens** · unverified · e2e
   No page needs horizontal scrolling at a width of 390 CSS pixels.
   Note: Firefox keeps a wider minimum window, so the test checks it at the narrowest width it
   allows.
@@ -1091,9 +1113,10 @@ routed by `proposeConfig()` in `src/background/protection.ts`, and ending a sess
 - <a id="usab-01"></a>**USAB-01 First rule in two minutes** · unverified · study
   A new user creates a first working rule in under two minutes without documentation.
   Note: no usability test has been run ([roadmap](roadmap.md#verification-debt)).
-- <a id="usab-02"></a>**USAB-02 Why in two interactions** · implemented · e2e
+- <a id="usab-02"></a>**USAB-02 Why in two interactions** · unverified · e2e
   "Why is this site (not) restricted?" is answered in at most two interactions: opening the popup
   and choosing **Why?**.
+  Note: implemented, but no test title cites this ID yet, so it is not traced to a test.
 - <a id="usab-03"></a>**USAB-03 SUS score** · unverified · study
   A System Usability Scale score of at least 80 in usability tests.
   Note: no usability test has been run.

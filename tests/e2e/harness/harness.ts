@@ -322,7 +322,7 @@ export class Tab {
     return this.driver.viewport(width, height);
   }
 
-  /** Horizontal overflow of the page in pixels (0 for a layout that fits, §8.1). */
+  /** Horizontal overflow of the page in pixels (0 for a layout that fits). */
   overflowX(): Promise<number> {
     return this.eval(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   }

@@ -1,5 +1,5 @@
 /**
- * The dashboard in a real browser (§8, ONB, SET, SCH-02, MAT-22, STA-02): every page, the rule
+ * The dashboard in a real browser (ONB, SET, SCH-02, MAT-22, STA-02): every page, the rule
  * wizard, the first run, the rule editor, the rule list, shared lists, settings and insights.
  */
 
@@ -73,7 +73,7 @@ for (const width of [1280, 390]) {
         location.hash = `#/groups/${id}`;
       }, g.id);
       await p.get('.section-nav').waitFor('visible');
-      // One page with a section nav (docs/ux-redesign.md §6.5): every section is reachable.
+      // One page with a section nav (docs/design.md): every section is reachable.
       const ids: Record<string, string> = { 'When & how': 'rules', 'Block page': 'page' };
       for (const section of ['Sites', 'When & how', 'Breaks', 'Block page', 'Protection', 'Advanced']) {
         await p.button(section, { exact: true, within: '.section-nav' }).click();

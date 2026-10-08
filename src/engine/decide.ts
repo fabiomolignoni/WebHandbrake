@@ -1,5 +1,5 @@
 /**
- * Normative evaluation semantics (§6.2): what happens to a URL at a given instant.
+ * Normative evaluation semantics: what happens to a URL at a given instant.
  *
  * - SEM-02: inside a group the most specific entry decides (exceptions), then the first policy
  *   whose condition is true applies.

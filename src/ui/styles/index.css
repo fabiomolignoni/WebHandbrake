@@ -1,5 +1,5 @@
 /*
- * WebHandbrake design system (§8.6, docs/ux-redesign.md): semantic tokens, state tones for the
+ * WebHandbrake design system (docs/design.md): semantic tokens, state tones for the
  * friction ladder, 4 px spacing scale, system fonts only (PRIV-06), light / dark / high contrast.
  * Calm by default: neutral chrome, colour for state and primary actions, red only for destructive
  * actions. Text ≥ 4.5:1, component boundaries ≥ 3:1 (WCAG 1.4.3, 1.4.11).
@@ -27,7 +27,7 @@
   --accent-soft: #e9eeff;
   --focus: #1f6fd1;
 
-  /* State tones (docs/ux-redesign.md §5.1). */
+  /* State tones (docs/design.md). */
   --free: #2b6f47;
   --free-soft: #e2f2e7;
   --gentle: #00697b;
@@ -3239,7 +3239,7 @@ input[type="radio"] {
   accent-color: var(--accent);
 }
 
-/* Creation wizard (docs/ux-redesign.md §10) */
+/* Creation wizard (docs/design.md) */
 .wizard-page {
   max-width: 820px;
 }
@@ -3350,7 +3350,7 @@ input[type="radio"] {
   overflow-y: auto;
 }
 
-/* First run (docs/ux-redesign.md §11) */
+/* First run (docs/design.md) */
 .onb {
   max-width: 780px;
   margin: 0 auto;

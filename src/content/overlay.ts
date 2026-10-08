@@ -1,5 +1,5 @@
 /**
- * In-page overlay in a closed shadow root, isolated from the site's styles (§8.2).
+ * In-page overlay in a closed shadow root, isolated from the site's styles.
  * Accessible: role=timer with polite announcements once per minute (A11Y-03), visible focus,
  * reduced motion respected (NOT-06), draggable with mouse, touch and keyboard (NOT-01).
  */

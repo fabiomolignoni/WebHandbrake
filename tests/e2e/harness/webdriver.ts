@@ -153,7 +153,7 @@ export class WebDriverSession {
   }
 }
 
-/** WebDriver key codes for named keys (W3C WebDriver §17.4.2). */
+/** WebDriver key codes for named keys (W3C WebDriver). */
 export const KEYS: Record<string, string> = {
   Backspace: '',
   Tab: '',

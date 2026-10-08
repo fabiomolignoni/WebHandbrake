@@ -1,4 +1,4 @@
-/** Pause dialog (§8.4.7, BRK-02…BRK-06). The cost is shown before starting. */
+/** Pause dialog (BRK-02…BRK-06). The cost is shown before starting. */
 
 import { useState } from 'preact/hooks';
 import type { Cost, PauseScope } from '../engine/types';

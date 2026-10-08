@@ -1,5 +1,5 @@
 /**
- * Protection centre (PRO-01, PRO-03…PRO-05, PRO-08, PRO-09, PRO-13, PRO-15, PRO-18, §8.4.8, §8.4.9).
+ * Protection centre (PRO-01, PRO-03…PRO-05, PRO-08, PRO-09, PRO-13, PRO-15, PRO-18).
  */
 
 import { useState } from 'preact/hooks';

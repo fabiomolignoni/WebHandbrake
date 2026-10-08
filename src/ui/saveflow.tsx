@@ -1,6 +1,6 @@
 /**
  * Presents the outcome of a configuration change (PRO-02, PRO-03): applied at once, waiting for a
- * cost, queued for cooling-off, or refused while locked — always with a plain explanation (§8.5).
+ * cost, queued for cooling-off, or refused while locked — always with a plain explanation.
  */
 
 import { useState } from 'preact/hooks';

@@ -1,6 +1,6 @@
 /**
  * The plan of a new rule as one if-then sentence ("When you open …, WebHandbrake …"), shared by
- * the rule wizard and onboarding (docs/ux-redesign.md §10.2: implementation intentions).
+ * the rule wizard and onboarding (docs/design.md: implementation intentions).
  */
 
 import { isSensitiveSite } from '../data/templates';

@@ -1,5 +1,5 @@
 /**
- * Group editor (§8.4.4, docs/ux-redesign.md §6.5): everything about a group on one page — identity,
+ * Group editor (docs/design.md): everything about a group on one page — identity,
  * sites, rules, breaks, block page, protection and advanced options — with a section nav, a live
  * "In brief" summary, "Test a URL" and a sticky save bar.
  */
@@ -156,7 +156,7 @@ function takeHandoff(): Group | null {
   return g;
 }
 
-/** "In brief": each condition as a sentence with the tone of what happens (G5, SCH-04). */
+/** "In brief": each condition as a sentence with the tone of what happens (principle G5, SCH-04). */
 export function InBrief({ g }: { g: Group }) {
   const last = g.policies[g.policies.length - 1];
   const catchAll = last && last.schedule.mode === 'always' && !last.budget;

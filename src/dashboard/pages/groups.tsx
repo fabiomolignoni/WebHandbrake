@@ -1,5 +1,5 @@
 /**
- * Groups list (§8.4.3, SET-04; docs/ux-redesign.md §6.4): clickable rows with status, switch and an
+ * Groups list (SET-04; docs/design.md): clickable rows with status, switch and an
  * overflow menu for rare actions; search, filter, reorder (drag and drop or menu), duplicate,
  * archive, share, templates.
  */

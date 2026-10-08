@@ -141,7 +141,7 @@ test('A11Y-02: the dashboard works with the keyboard (skip link, radio groups, d
   await p.role('dialog', 'Before you start').expectCount(0);
 });
 
-test('A11Y-02/03: the intervention page takes the focus and announces the countdown at a moderate pace', async ({
+test('A11Y-02 / A11Y-03: the intervention page takes the focus and announces the countdown at a moderate pace', async ({
   h,
 }) => {
   await h.configure((c) => {

@@ -1,5 +1,5 @@
 /**
- * The toolbar popup in a real browser (§8.4.1, MAT-17, INT-12, LIM-10/11, ENF-04): status of the
+ * The toolbar popup in a real browser (MAT-17, INT-12, LIM-10/11, ENF-04): status of the
  * current site, quick actions and their effect on the open tab.
  */
 

@@ -1,4 +1,4 @@
-/** Focus sessions and lockdown (FOC-01…FOC-05, FOC-09, ONB-07; docs/ux-redesign.md §6.7). */
+/** Focus sessions and lockdown (FOC-01…FOC-05, FOC-09, ONB-07; docs/design.md). */
 
 import { useState } from 'preact/hooks';
 import { DEFAULT_SESSION_MINUTES, QUICK_SESSION_MINUTES } from '../../engine/limits';

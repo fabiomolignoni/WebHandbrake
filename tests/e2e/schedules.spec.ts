@@ -72,7 +72,7 @@ test('ENF-02 / ENF-04: open tabs follow the start and the end of a window', asyn
   await p.expectReal('social.test/feed');
 });
 
-test('SCH-03 / US-06: "allowed only in these windows" (news at lunch time)', async ({ h }) => {
+test('SCH-03: "allowed only in these windows" (news at lunch time)', async ({ h }) => {
   await h.configure((c) => {
     c.groups = [
       group(

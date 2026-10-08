@@ -46,7 +46,7 @@ test.describe('block page (INT-01)', () => {
     await p.get('.message').expectText('Line one Line two');
     await p.get('.meta').expectText('social.test');
     await p.get('.meta').expectText('Social');
-    // The primary action is closing the tab (G3).
+    // The primary action is closing the tab (principle G3).
     await p.get('.actions .primary, .actions button').expectText('Close the tab');
     await p.button('Why?').click();
     await p.get('.why').expectText('Social');
@@ -78,7 +78,7 @@ test.describe('block page (INT-01)', () => {
     await p.expectReal('start.test/');
   });
 
-  test('the address can be hidden (INT-01, Appendix A #18)', async ({ h }) => {
+  test('the address can be hidden (INT-01, CIR-18)', async ({ h }) => {
     await h.configure((c) => {
       c.settings.interventions.hideUrl = true;
       c.groups = [group('Social', ['secret.test'], [policy(BLOCK)])];

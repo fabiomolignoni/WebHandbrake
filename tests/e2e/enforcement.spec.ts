@@ -146,7 +146,7 @@ test.describe('evaluation semantics', () => {
     const p = await expectBlocked(h, 'http://both.test/');
     await p.get('.meta').expectText('Hard');
     await p.button('Continue').expectCount(0);
-    // Reordering the groups changes nothing (Appendix A #11).
+    // Reordering the groups changes nothing (CIR-11).
     await h.configure((c) => {
       c.groups.reverse();
     });
