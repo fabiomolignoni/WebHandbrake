@@ -29,6 +29,8 @@
     "lint:firefox": "node scripts/build.mjs --target=firefox && web-ext lint --source-dir dist/firefox",
     "check": "npm run typecheck && npm run lint && npm run i18n && npm run test",
     "i18n": "node scripts/check-i18n.mjs",
+    "docs": "node scripts/docs/run.mjs",
+    "docs:check": "node scripts/docs/run.mjs --check",
     "icons": "node scripts/icons.mjs"
   },
   "dependencies": {
