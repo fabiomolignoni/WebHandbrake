@@ -110,11 +110,14 @@ function incognitoHelp(): string {
   );
 }
 
+/** The checklist reports the clock changes of this many recent days. */
+const RECENT_EVENT_DAYS = 30;
+
 function Checklist() {
   const { data: diag } = useModel('diag.get', {});
   const { model } = useDashboard();
   if (!diag) return <Spinner />;
-  const recentTamper = diag.tamper.filter((e) => Date.now() - e.at < 30 * 86_400_000);
+  const recentTamper = diag.tamper.filter((e) => Date.now() - e.at < RECENT_EVENT_DAYS * 86_400_000);
   const clockIssues = recentTamper.filter((e) => e.kind === 'clock-backward' || e.kind === 'clock-skew');
   const internal = model.config.settings.protection.internalPages;
   const items: {
@@ -153,8 +156,8 @@ function Checklist() {
     {
       ok: clockIssues.length === 0,
       text: clockIssues.length
-        ? t('checklist.clock.no', { count: clockIssues.length })
-        : t('checklist.clock.ok'),
+        ? t('checklist.clock.no', { count: clockIssues.length, days: RECENT_EVENT_DAYS })
+        : t('checklist.clock.ok', { days: RECENT_EVENT_DAYS }),
     },
     {
       ok: !diag.rules.lastError && diag.rules.overflow.length === 0,

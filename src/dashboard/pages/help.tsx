@@ -3,7 +3,7 @@
 import { Fragment } from 'preact';
 import { t } from '../../i18n/i18n';
 import { api, features } from '../../platform/api';
-import { NEW_ISSUE_URL, REPO_URL } from '../../shared/links';
+import { ACCESSIBILITY_URL, CHANGELOG_URL, NEW_ISSUE_URL, PRIVACY_URL, REPO_URL } from '../../shared/links';
 import { Icon } from '../../ui/icons';
 import {
   defaultShortcut,
@@ -85,6 +85,23 @@ function Block({ block, facts }: { block: HelpBlock; facts: HelpFacts }) {
   return <Shortcuts facts={facts} />;
 }
 
+/** A link of the About section; it opens in a new tab and the extension never fetches it. */
+function AboutLink({ href, icon, title, sub }: { href: string; icon: string; title: string; sub?: string }) {
+  return (
+    <li>
+      <a class="link-row" href={href} target="_blank" rel="noopener noreferrer">
+        <Icon name={icon} />
+        <span class="stack stack-xs grow">
+          <strong>{title}</strong>
+          {sub && <span class="small muted">{sub}</span>}
+        </span>
+        <Icon name="external" />
+        <span class="sr-only">{t('common.newTab')}</span>
+      </a>
+    </li>
+  );
+}
+
 export function HelpPage() {
   const version = api.runtime.getManifest().version;
   const facts = helpFacts();
@@ -127,28 +144,16 @@ export function HelpPage() {
         <h2>{t('help.about')}</h2>
         <p>{t('help.aboutBody', { version })}</p>
         <ul class="list link-list">
-          <li>
-            <a class="link-row" href={REPO_URL} target="_blank" rel="noopener noreferrer">
-              <Icon name="code" />
-              <span class="stack stack-xs grow">
-                <strong>{t('help.source')}</strong>
-                <span class="small muted">{REPO_URL.replace('https://', '')}</span>
-              </span>
-              <Icon name="external" />
-              <span class="sr-only">{t('common.newTab')}</span>
-            </a>
-          </li>
-          <li>
-            <a class="link-row" href={NEW_ISSUE_URL} target="_blank" rel="noopener noreferrer">
-              <Icon name="chat" />
-              <span class="stack stack-xs grow">
-                <strong>{t('help.issue')}</strong>
-                <span class="small muted">{t('help.issueHelp')}</span>
-              </span>
-              <Icon name="external" />
-              <span class="sr-only">{t('common.newTab')}</span>
-            </a>
-          </li>
+          <AboutLink
+            href={REPO_URL}
+            icon="code"
+            title={t('help.source')}
+            sub={REPO_URL.replace('https://', '')}
+          />
+          <AboutLink href={NEW_ISSUE_URL} icon="chat" title={t('help.issue')} sub={t('help.issueHelp')} />
+          <AboutLink href={PRIVACY_URL} icon="shield" title={t('help.privacyPolicy')} />
+          <AboutLink href={ACCESSIBILITY_URL} icon="eye" title={t('help.accessibilityStatement')} />
+          <AboutLink href={CHANGELOG_URL} icon="list" title={t('help.changelog')} />
         </ul>
         <p class="small muted">{t('help.license')}</p>
       </section>

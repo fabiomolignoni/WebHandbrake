@@ -9,6 +9,10 @@
  * A default or a limit that a Help string mentions is an ICU parameter filled from helpFacts(),
  * never a number typed in the string. A block whose messages have placeholders declares them in
  * `params` (tests/unit/help-content.test.ts checks both directions).
+ *
+ * A question block is a heading and its answer, keyed `help.faq.<id>.q` and `help.faq.<id>.a`
+ * whatever its topic. The topics are documented in this order in docs/user-guide.md, which
+ * `npm run docs` generates from this module.
  */
 
 import { defaultConfig } from '../engine/defaults';
@@ -101,7 +105,7 @@ export const HELP_TOPICS: HelpTopic[] = [
   {
     id: 'start',
     title: 'help.start.title',
-    blocks: [{ p: 'help.start.p1' }, { p: 'help.start.p2' }, { p: 'help.start.p3' }],
+    blocks: [{ p: 'help.start.p1' }, { p: 'help.start.p2' }, { p: 'help.start.p3' }, { p: 'help.start.p4' }],
   },
   {
     id: 'groups',
@@ -116,12 +120,27 @@ export const HELP_TOPICS: HelpTopic[] = [
       { p: 'help.rules.p2' },
       { p: 'help.rules.p3', params: (f) => ({ minutes: f.visitGapMinutes }) },
       { p: 'help.rules.p4' },
+      { q: 'help.faq.reset.q', a: 'help.faq.reset.a', params: (f) => ({ dayStart: f.dayStart }) },
     ],
   },
   {
     id: 'interventions',
     title: 'help.interventions.title',
-    blocks: [{ p: 'help.interventions.p1' }, { p: 'help.interventions.p2' }, { p: 'help.interventions.p3' }],
+    blocks: [
+      { p: 'help.interventions.p1' },
+      { p: 'help.interventions.p2' },
+      { p: 'help.interventions.p3', params: (f) => ({ seconds: f.graceSeconds }) },
+    ],
+  },
+  {
+    id: 'choosing',
+    title: 'help.choosing.title',
+    blocks: [
+      { p: 'help.choosing.p1' },
+      { p: 'help.choosing.p2' },
+      { p: 'help.choosing.p3' },
+      { p: 'help.choosing.p4' },
+    ],
   },
   {
     id: 'pauses',
@@ -131,16 +150,24 @@ export const HELP_TOPICS: HelpTopic[] = [
   {
     id: 'focus',
     title: 'help.focus.title',
-    blocks: [{ p: 'help.focus.p1' }, { p: 'help.focus.p2' }],
+    blocks: [{ p: 'help.focus.p1' }, { p: 'help.focus.p2', params: (f) => ({ seconds: f.balancedSeconds }) }],
   },
   {
     id: 'protection',
     title: 'help.protection.title',
     blocks: [
       { p: 'help.protection.p1' },
-      { p: 'help.protection.p2', params: (f) => ({ hours: f.coolingOffHours }) },
+      {
+        p: 'help.protection.p2',
+        params: (f) => ({
+          seconds: f.balancedSeconds,
+          hours: f.coolingOffHours,
+          confirmHours: f.confirmHours,
+        }),
+      },
       { p: 'help.protection.p3' },
       { p: 'help.protection.p4' },
+      { q: 'help.faq.clock.q', a: 'help.faq.clock.a' },
     ],
   },
   {
@@ -152,26 +179,75 @@ export const HELP_TOPICS: HelpTopic[] = [
     ],
   },
   {
+    id: 'insights',
+    title: 'help.insights.title',
+    blocks: [{ p: 'help.insights.p1' }, { p: 'help.insights.p2' }],
+  },
+  {
+    id: 'data',
+    title: 'help.data.title',
+    blocks: [
+      { p: 'help.data.p1' },
+      { p: 'help.data.p2' },
+      { p: 'help.data.p3', params: (f) => ({ recent: f.backupsRecent, daily: f.backupsDaily }) },
+      { p: 'help.data.p4' },
+      { q: 'help.faq.sync.q', a: 'help.faq.sync.a' },
+      { q: 'help.faq.restored.q', a: 'help.faq.restored.a' },
+    ],
+  },
+  {
     id: 'privacy',
     title: 'help.privacy.title',
-    blocks: [{ p: 'help.privacy.p1' }, { p: 'help.privacy.p2' }],
+    blocks: [
+      { p: 'help.privacy.p1' },
+      { p: 'help.privacy.p2', params: (f) => ({ days: f.retentionDays, keepDays: f.budgetKeepDays }) },
+      { p: 'help.privacy.p3' },
+      { p: 'help.privacy.p4' },
+    ],
+  },
+  {
+    id: 'limits',
+    title: 'help.limits.title',
+    blocks: [
+      { p: 'help.limits.p1' },
+      {
+        list: [
+          'help.limits.item1',
+          'help.limits.item2',
+          'help.limits.item3',
+          'help.limits.item4',
+          'help.limits.item5',
+          'help.limits.item6',
+          'help.limits.item7',
+        ],
+      },
+      { p: 'help.limits.p2' },
+      { q: 'help.faq.uninstall.q', a: 'help.faq.uninstall.a' },
+      { q: 'help.faq.harden.q', a: 'help.faq.harden.a' },
+    ],
+  },
+  {
+    id: 'troubleshooting',
+    title: 'help.troubleshooting.title',
+    blocks: [
+      { p: 'help.troubleshooting.p1' },
+      { p: 'help.troubleshooting.p2' },
+      { q: 'help.faq.notApplied.q', a: 'help.faq.notApplied.a' },
+      { q: 'help.faq.private.q', a: 'help.faq.private.a' },
+      { q: 'help.faq.flash.q', a: 'help.faq.flash.a' },
+      { q: 'help.faq.notCounted.q', a: 'help.faq.notCounted.a', params: (f) => ({ seconds: f.idleSeconds }) },
+      { q: 'help.faq.locked.q', a: 'help.faq.locked.a' },
+    ],
+  },
+  {
+    id: 'accessibility',
+    title: 'help.accessibility.title',
+    blocks: [{ p: 'help.accessibility.p1' }, { p: 'help.accessibility.p2' }, { p: 'help.accessibility.p3' }],
   },
   {
     id: 'mobile',
     title: 'help.mobile.title',
     blocks: [{ p: 'help.mobile.p1' }, { p: 'help.mobile.p2' }],
-  },
-  {
-    id: 'faq',
-    title: 'help.faq',
-    blocks: [
-      { q: 'help.faq.private.q', a: 'help.faq.private.a' },
-      { q: 'help.faq.flash.q', a: 'help.faq.flash.a' },
-      { q: 'help.faq.locked.q', a: 'help.faq.locked.a' },
-      { q: 'help.faq.android.q', a: 'help.faq.android.a' },
-      { q: 'help.faq.sync.q', a: 'help.faq.sync.a' },
-      { q: 'help.faq.uninstall.q', a: 'help.faq.uninstall.a' },
-    ],
   },
   {
     id: 'shortcuts',

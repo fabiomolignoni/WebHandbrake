@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'preact/hooks';
+import { BUDGET_KEEP_DAYS } from '../../engine/limits';
 import { addDays, dayKey, logicalDayOf, parseDayKey, weekdayOf } from '../../engine/time';
 import { t } from '../../i18n/i18n';
 import { formatDate, formatDateTime, formatDuration, formatPercent } from '../../shared/format';
@@ -211,7 +212,7 @@ function DeleteDialog({
             ))}
           </select>
         )}
-        <p class="small muted">{t('insights.deleteNote')}</p>
+        <p class="small muted">{t('insights.deleteNote', { days: BUDGET_KEEP_DAYS })}</p>
       </div>
     </Dialog>
   );

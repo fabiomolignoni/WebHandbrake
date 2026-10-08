@@ -9,13 +9,18 @@ that it can be read without installing it. Where a number depends on a setting, 
 - [Rules and sites](#rules-and-sites)
 - [Conditions, limits and visits](#conditions-limits-and-visits)
 - [Interventions](#interventions)
+- [Choosing friction and firmness](#choosing-friction-and-firmness)
 - [Breaks](#breaks)
 - [Focus sessions](#focus-sessions)
 - [Protection levels](#protection-levels)
 - [Emergency exit](#emergency-exit)
+- [Insights](#insights)
+- [Your data](#your-data)
 - [Privacy](#privacy)
+- [What WebHandbrake cannot do](#what-webhandbrake-cannot-do)
+- [Troubleshooting](#troubleshooting)
+- [Accessibility](#accessibility)
 - [Firefox for Android](#firefox-for-android)
-- [Questions](#questions)
 - [Keyboard shortcuts](#keyboard-shortcuts)
 
 ## Getting started
@@ -24,7 +29,9 @@ WebHandbrake is a handbrake for the web: it helps you use the sites you choose w
 
 You organise sites in rules (for example Social or Video). Each rule says when and how it slows you down: a reminder, a filter, a question, a wait, a short challenge or a block.
 
-The popup shows what applies to the current site and offers quick actions: start a focus session, block the site, save the page for later, take a break. The dashboard (this page) is where you manage everything.
+The popup shows what applies to the current site and offers quick actions: take a break, save the page for later and block the site. It also starts a focus session when at least one rule has "Include in quick focus sessions" on. The dashboard (this page) is where you manage everything.
+
+Quick start: open Rules › New rule, choose the sites, when the rule applies and what happens, then review it and choose "Create rule". Open one of those sites to see it work. The setup shown when WebHandbrake is installed does the same for your first rule.
 
 ## Rules and sites
 
@@ -56,83 +63,159 @@ Each rule has one or more conditions with what happens, such as "Mon–Fri 09:00
 
 A condition can use time windows (also overnight, like 22:00–02:00), and optionally a limit: time per hour, day, week, month or custom period, visits per period, or continuous use followed by a mandatory stop.
 
-Time is counted only while the page is visible, the window has the focus and you are active (or a video is playing). Several tabs of the same rule never count twice. A visit starts when you come back after a few minutes away (5 by default).
+Time is counted only while the page is visible, its window has the focus and you are active (or audio or video is playing). Several tabs of the same rule never count twice. A visit starts when you come back after a few minutes away (5 by default).
 
 When several rules apply to the same site, the strictest result wins, whatever their order. "Test a URL" in the rule editor and "Why?" in the popup show exactly which condition applies and when it will change.
 
+### When do limits start again?
+
+Hourly limits start again at the start of each hour, daily limits when your day starts (00:00 by default, Settings › General › Days start at), weekly limits on the first day of your week (Settings › General › Weeks start on) and monthly limits on the first day of the month. Limits for every few minutes or every few days start again when each period ends. Limits "in any" number of minutes always count the last minutes, so time comes back gradually. After continuous use, the stop lasts as long as the condition says.
+
 ## Interventions
 
-From the gentlest to the strictest: only count time, show a reminder, apply a filter (grayscale, blur…), ask what you want to do and for how long, make you wait, ask you to type a short challenge, block the page, close the tab or redirect elsewhere.
+From the gentlest: only count time, show a reminder, apply a filter (grayscale, blur…), ask what you want to do and for how long, make you wait, or ask you to type a short challenge. Blocking the page and redirecting it elsewhere are equally strict; closing the tab is the strictest.
 
-On every intervention page the healthy choice comes first: close the tab or go back. You can save the page for later and find it in "Later" when it is allowed again.
+On every intervention page the main button closes the tab, and you can also go back. You can save the page for later and find it in "Later" when it is allowed again.
 
-If a restriction starts while you are typing in a page, you get a short grace period to finish or copy your text before the page is replaced.
+If a restriction starts while you are typing in a page, you get a grace period (45 seconds by default) to finish or copy your text before the page is replaced.
+
+## Choosing friction and firmness
+
+No setting suits everyone. A question or a wait leaves the decision to you each time you open a site; a block makes it in advance. Stricter options can feel frustrating on the days you do need a site.
+
+Strict interventions and protection levels help some people and put pressure on others. Start with what feels right and make your rules firmer when you need to: making rules stricter is always immediate, while loosening them follows your protection level.
+
+Taking a break or loosening a rule now and then is normal. You can make your rules firmer again at any time.
+
+Insights shows where your time goes. Seeing it seldom changes habits on its own, so pair it with a rule.
 
 ## Breaks
 
 A break suspends the interventions of a page, a site, a rule or all rules for a few minutes. Each rule decides whether breaks are allowed, how long they last, how many you can take and what they cost (a confirmation, a wait, a typed challenge or your password).
 
-Breaks end by themselves and the restriction comes back immediately on every open tab. You can end a break early at any time.
+Breaks end by themselves and the restriction comes back at once. You can end a break early at any time.
 
 ## Focus sessions
 
-A focus session blocks the sites of the chosen rules, or every site except a short list, for a while. Start one in two taps from the popup, or with Alt+Shift+F.
+A focus session blocks the sites of the chosen rules, or every site except a short list, for a while. On the Focus page you choose the rules, the length and when it starts. The popup, the right-click menu on a computer and the focus shortcut (see Keyboard shortcuts) start a session at once with the rules that have "Include in quick focus sessions" on.
 
-Extending a session is always possible. Ending it early follows your protection level; sessions marked "cannot be interrupted" can only end early through the emergency exit.
+You can always extend a session. Ending it early asks for a confirmation at the Soft protection level and a wait at Balanced (30 seconds by default); at Strict and Locked it is not possible. A session that cannot be interrupted ends early only through the emergency exit.
 
 ## Protection levels
 
 Making your rules stricter is always immediate. Loosening them (removing a site, raising a limit, turning a rule off…) depends on the protection level of the rule or of the whole extension.
 
-Soft asks for a confirmation. Balanced makes you wait a little. Strict puts the change in a queue for a cooling-off period (24 hours by default): after the wait you confirm it with a short challenge, or it expires; while a strict rule is active, it cannot be loosened at all. Locked refuses every loosening until a date you choose.
+Soft asks for a confirmation. Balanced makes you wait (30 seconds by default). Strict puts the change in Pending changes for a cooling-off period (24 hours by default); after it, you confirm the change with a typed challenge within 48 hours, or it expires. While a strict rule is active, it cannot be loosened at all. Locked refuses every loosening until a date you choose; after that date the level becomes Strict.
 
-Pending changes are listed in Protection, where you can confirm or cancel them. A password and random codes can be added for every change that is not a strengthening.
+Pending changes are listed in Protection, where you can confirm or cancel them. A settings password and a random code to type can be required for every change that does not make your rules stricter. You can also set times when settings cannot be loosened: during them, loosening is refused.
 
-The protection centre also checks the known ways around a blocker (private windows, browser settings pages, the system clock…) and records signs of tampering.
+The Protection page also checks the usual ways around your rules (private windows, the browser's extension and settings pages, the system clock…) under "How solid is your protection?", and lists signs of tampering under Events.
+
+### What if I change the system clock?
+
+Time never goes back for WebHandbrake: if the clock is set back, restrictions last longer and limits do not refill early. With "Detect a manipulated system clock" on (Settings › Time, on by default), a wrong clock is noticed from the date that the pages you load send, and WebHandbrake uses the corrected time. Each change is listed under Events. Changing the time zone moves your schedules.
 
 ## Emergency exit
 
-If your settings turn out to be too strict, the emergency exit always works and needs nobody else: request it, wait (24 hours by default), then type a sentence.
+The emergency exit is on the Protection page, for when your settings turn out to be too strict. It always works and needs nobody else: request it, wait (24 hours by default), then type a sentence. You can cancel the request during the wait.
 
-It ends all sessions, sets every protection level to Soft and removes the password. Your rules stay as they are. The exit is recorded.
+It ends every focus session, including those that cannot be interrupted; sets every protection level to Soft, puts every rule back on the global level and clears Locked dates; and removes the settings password, the random code and the times when settings cannot be loosened. Your rules and pending changes stay as they are. Each step is listed under Events.
 
-## Privacy
+## Insights
 
-WebHandbrake has no account, no server and no telemetry. It makes no network requests. Your settings and statistics stay in your browser profile.
+Insights shows the time and visits on the sites of your rules, day by day, by rule and by site. With "Track time on all sites" on (Settings › Time), it also measures sites outside your rules.
 
-Statistics are daily totals per site and per rule; full addresses are never stored, and no site detail is kept for private windows. You can export or delete everything at any time.
+"Times WebHandbrake stepped in" counts the intervention pages shown; "times you chose not to go in" counts those you did not continue past. Insights also lists your breaks with their reasons, focus sessions and the intentions you typed.
 
-## Firefox for Android
+## Your data
 
-Everything essential works on Firefox for Android. Open the popup from the Extensions menu and the dashboard from the add-on settings.
+Export (Settings › Data) saves your rules, shared lists, Always allowed, settings and pages saved for later to a file. Statistics and the password hash are included only if you tick them. Insights can also export statistics as CSV or JSON.
 
-Keyboard shortcuts and the context menu do not exist on Android. Time is counted only while Firefox is in the foreground and the page is visible.
+Import accepts a WebHandbrake file, a rule shared with "Share" in its menu, or a plain list of addresses (including hosts files and uBlock Origin, AdGuard and uBlacklist lines). It shows a preview and can add to your rules or replace everything; replacing also restores the pages saved for later from the file. An import follows your protection level like any other change. Statistics in a file are never imported.
 
-## Questions
+Automatic backups (Settings › Data) keep a copy of your rules and settings, including the password hash, before each of the last 20 changes and once a day for 30 days. Restoring one follows your protection level. Backups are removed only when newer copies replace them or when you uninstall WebHandbrake: Reset and the emergency exit do not remove them.
 
-### Why is a site not blocked in private windows?
-
-Browsers do not run extensions in private windows unless you allow it. Protection › checklist explains how to turn it on for your browser.
-
-### Why did a page appear for a moment before being blocked?
-
-Most pages are stopped before they load. Some cases (rules limited to private or normal windows, very complex patterns, pages already open when a restriction starts) are checked right after the page starts loading.
-
-### I made my rules too strict. What can I do?
-
-Use the emergency exit in Protection. It takes a long wait on purpose, but it always works and needs nobody else.
-
-### Does it work on Firefox for Android?
-
-Yes. Keyboard shortcuts and the context menu are not available there; everything else is.
+Reset (Settings › Data) replaces your rules and settings with the defaults; it follows your protection level like any loosening. Statistics are deleted separately, in Insights or Settings › Privacy. Uninstalling WebHandbrake deletes everything it stored, so export first.
 
 ### Are my settings synchronised between devices?
 
-Not in this version: everything stays on this device. Use export and import to move your settings.
+No. Everything stays on this device. To move your rules and settings, export them and import the file on the other device (Settings › Data).
+
+### Why does Today say that my settings were restored from a backup?
+
+When the stored rules and settings are damaged, WebHandbrake replaces them with the most recent automatic backup that is intact, or with the defaults if none is, and lists this under Events. Check your rules: changes made after that backup are missing.
+
+## Privacy
+
+WebHandbrake has no account, no server and no telemetry. It makes no network requests of its own: a redirect address you set and the links you click are opened by the browser. Your rules, settings and statistics stay in your browser profile.
+
+Statistics are daily totals per rule, per site of a rule and per site; they never contain full addresses. Sites outside your rules are measured only with "Track time on all sites". In private windows only the totals your limits need are kept. Statistics are kept 730 days by default, and deleting them never refills a limit: the totals your limits use are kept for 92 days.
+
+A small script in the page shows the timer, reminders, filters and the grace period, and tells WebHandbrake the page's address, whether you are active and whether media is playing. It runs on the sites of your rules, and on every site when "Track time on all sites" is on or when a rule has a regular expression or a site name with \*, such as amazon.\* (several ready-made lists have them). The text you type is read only inside the page, for the grace period. Apart from the time counted per site, nothing the script reads is stored.
+
+Pages saved for later keep their address and title, also from private windows, until you remove them. "Recent decisions" (Settings › Diagnostics) keeps the addresses of restricted pages until the browser closes; "Keep a log" turns it off. Settings › Privacy lists what is saved on this device, with sizes; what is kept only until the browser closes is not listed there.
+
+## What WebHandbrake cannot do
+
+WebHandbrake works inside this browser profile. It can make getting around your rules slower and more deliberate; it cannot make it impossible. It does not cover:
+
+- Other browsers, other apps and other devices.
+- New browser profiles, guest mode and Firefox troubleshoot mode, which start without extensions.
+- Private windows, unless you allow WebHandbrake there.
+- Its own removal. On a computer it can block the browser's extension and settings pages while strict protection is active, but it cannot prevent uninstalling; on Android it cannot block those pages. Uninstalling deletes all its data.
+- Pages where extensions cannot run, such as the browser's own pages, its PDF viewer and the add-on stores: no time is counted there.
+- Changes of the device's time zone, which move your schedules.
+- Someone in full control of the device, who can always get around it.
+
+"How solid is your protection?" on the Protection page shows which of these ways are open in this browser.
 
 ### Can WebHandbrake prevent its own uninstallation?
 
-No, and it does not try to. It can block the browser's extension pages while strict protections are active, and system policies can make it harder to remove, but you always stay in control.
+No, and it does not try to. On a computer it can block the browser's extension pages while strict protection is active, and enterprise policies can make it harder to remove, but you always stay in control.
+
+### Can I make it harder to get around WebHandbrake?
+
+Yes, with your browser's enterprise policies, which you set up outside WebHandbrake. They can install it so that it cannot be removed, and turn off private windows, guest mode, new profiles, troubleshoot mode or the developer tools. Chrome: ExtensionInstallForcelist, IncognitoModeAvailability, BrowserGuestModeEnabled, BrowserAddPersonEnabled, DeveloperToolsAvailability. Firefox: ExtensionSettings (installation mode force\_installed), PrivateBrowsingModeAvailability, DisableSafeMode (Windows and macOS), BlockAboutProfiles, DisableDeveloperTools.
+
+## Troubleshooting
+
+Start with "Why?" in the popup, or "Test a URL" in the rule editor: they show which condition applies and when that changes.
+
+Settings › Diagnostics runs a self-test, shows recent decisions and copies a diagnostic report to paste into an issue on GitHub. The report leaves out addresses unless you tick "Include addresses (off by default)".
+
+### Why is a site not restricted?
+
+Check that the rule is on and not archived; that one of its conditions applies right now (its time window or limit); that the site is not in Always allowed and no exception of the rule covers it; that no break is running and you did not just continue past a question, wait or challenge; that WebHandbrake is allowed in private windows; and that it has access to websites (see "How solid is your protection?"). In Chrome, local files also need the browser's "Allow access to file URLs". If a site is restricted more than you expect, another rule may be stricter: the strictest result wins.
+
+### Why is a site not blocked in private windows?
+
+Browsers do not run extensions in private windows unless you allow it. Protection › How solid is your protection? explains how to allow it in your browser.
+
+### Why did a page appear for a moment before being blocked?
+
+Most pages are stopped before they load. Some are checked right after the page starts loading, so they can appear for a moment: rules limited to private or normal windows, exceptions written as regular expressions that overlap other rules, entries the browser's filters cannot express or that exceed their limits, and pages already open when a restriction starts.
+
+### Why was my time not counted?
+
+Time counts on the sites of your rules while the page is visible and its window has the focus. After 120 seconds without keyboard, mouse or touch input you count as inactive, unless audio or video is playing (Settings › Time › Stop counting when I am inactive). Background tabs and background media count only with "Count tabs that are open but not active" and "Count background audio and video". No time is counted on pages where extensions cannot run.
+
+### I made my rules too strict. What can I do?
+
+Use the emergency exit in Protection. It takes a long wait on purpose, but it always works and needs nobody else. It also removes a settings password you have forgotten.
+
+## Accessibility
+
+Settings › General offers light and dark themes, "High contrast" and an accent colour. Animations follow your system's reduced-motion setting. The pages are designed for keyboard and screen-reader use and are checked automatically; the accessibility statement (linked from Help › About) says what has and has not been evaluated.
+
+A challenge drawn as an image offers "I use a screen reader: type a sentence instead". If typing or waiting is hard for you, choose interventions and break costs that need neither, such as a reminder, a filter, a block or a confirmation.
+
+To report a barrier, use the accessibility form on GitHub ("Report a problem or suggest an idea" in Help › About).
+
+## Firefox for Android
+
+WebHandbrake runs on Firefox for Android. Open the popup from the Extensions menu and the dashboard from the add-on's settings.
+
+Keyboard shortcuts and the right-click menu do not exist on Android, and the browser's extension and settings pages cannot be protected there. Time is counted only while Firefox is in the foreground and the page is visible.
 
 ## Keyboard shortcuts
 
