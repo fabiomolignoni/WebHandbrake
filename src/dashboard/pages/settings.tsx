@@ -2,6 +2,12 @@
 
 import { useState } from 'preact/hooks';
 import { newId } from '../../engine/defaults';
+import {
+  BUDGET_KEEP_DAYS,
+  DAILY_SNAPSHOTS,
+  MINUTE_RETENTION_MINUTES,
+  RECENT_SNAPSHOTS,
+} from '../../engine/limits';
 import type { Alternative, Config, Settings } from '../../engine/types';
 import { AVAILABLE_LOCALES, t } from '../../i18n/i18n';
 import { api } from '../../platform/api';
@@ -403,7 +409,7 @@ function TimeSettings() {
           label={t('settings.allSites')}
           help={t('settings.allSitesHelp')}
         />
-        <Field label={t('settings.retention')} help={t('settings.retentionHelp')}>
+        <Field label={t('settings.retention')} help={t('settings.retentionHelp', { days: BUDGET_KEEP_DAYS })}>
           {() => (
             <NumberInput
               commitOnBlur
@@ -803,7 +809,7 @@ function DataSettings() {
       </div>
       <div class="card stack">
         <h2>{t('data.backups')}</h2>
-        <p class="help">{t('data.backupsHelp')}</p>
+        <p class="help">{t('data.backupsHelp', { recent: RECENT_SNAPSHOTS, daily: DAILY_SNAPSHOTS })}</p>
         {!backups ? (
           <Spinner />
         ) : backups.length === 0 ? (
@@ -885,7 +891,13 @@ function Privacy() {
             </tbody>
           </table>
         )}
-        <p class="small muted">{t('privacy.retention')}</p>
+        <p class="small muted">
+          {t('privacy.retention', {
+            hours: MINUTE_RETENTION_MINUTES / 60,
+            recent: RECENT_SNAPSHOTS,
+            daily: DAILY_SNAPSHOTS,
+          })}
+        </p>
       </div>
       <div class="card stack">
         <h2>{t('privacy.network')}</h2>
@@ -893,7 +905,7 @@ function Privacy() {
       </div>
       <div class="card stack">
         <h2>{t('privacy.deleteAll')}</h2>
-        <p class="help">{t('privacy.deleteAllHelp')}</p>
+        <p class="help">{t('privacy.deleteAllHelp', { days: BUDGET_KEEP_DAYS })}</p>
         <div class="row">
           <Button variant="danger" icon="trash" onClick={() => setConfirmDel(true)}>
             {t('privacy.deleteStats')}
@@ -926,7 +938,7 @@ function Privacy() {
             </>
           }
         >
-          <p>{t('privacy.deleteStatsBody')}</p>
+          <p>{t('privacy.deleteStatsBody', { days: BUDGET_KEEP_DAYS })}</p>
         </Dialog>
       )}
     </div>

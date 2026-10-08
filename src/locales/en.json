@@ -264,10 +264,10 @@
     "message": "Needs attention"
   },
   "checklist.clock.no": {
-    "message": "The system clock was changed {count, plural, one {once} other {# times}} in the last 30 days."
+    "message": "The system clock was changed {count, plural, one {once} other {# times}} in the last {days} days."
   },
   "checklist.clock.ok": {
-    "message": "No changes of the system clock detected in the last 30 days."
+    "message": "No changes of the system clock detected in the last {days} days."
   },
   "checklist.host.no": {
     "message": "Access to all sites is missing: pages can only be blocked with a browser error page."
@@ -315,7 +315,7 @@
     "message": "New browser profiles and guest mode start without WebHandbrake."
   },
   "checklist.profilesHelp": {
-    "message": "Enterprise policies can disable guest mode and new profiles. A guided setup will come in a future version."
+    "message": "Enterprise policies can turn off guest mode and new profiles. See Help › What WebHandbrake cannot do."
   },
   "checklist.rules.error": {
     "message": "Blocking could not be set up completely in the browser. See Diagnostics."
@@ -330,7 +330,7 @@
     "message": "Firefox troubleshoot mode starts without extensions."
   },
   "checklist.safeModeHelp": {
-    "message": "The DisableSafeMode enterprise policy turns it off. A guided setup will come in a future version."
+    "message": "The DisableSafeMode enterprise policy turns it off on Windows and macOS. See Help › What WebHandbrake cannot do."
   },
   "checklist.score": {
     "message": "{passed} of {total} checks passed"
@@ -414,7 +414,7 @@
     "message": "Automatic backups"
   },
   "data.backupsHelp": {
-    "message": "A copy is kept before every change (last 20) and once a day (30 days). Restoring a copy that loosens your rules follows your protection level."
+    "message": "A copy of your rules and settings is kept before each change (the last {recent}) and once a day (for {daily} days). Restoring a copy that loosens your rules follows your protection level."
   },
   "data.copied": {
     "message": "Copied to the clipboard."
@@ -432,7 +432,7 @@
     "message": "Export"
   },
   "data.exportHelp": {
-    "message": "Saves your rules, lists and settings to a JSON file you can import later or on another device."
+    "message": "Saves your rules, shared lists, Always allowed, settings and pages saved for later to a JSON file you can import later or on another device."
   },
   "data.groupsCount": {
     "message": "{count, plural, one {# rule} other {# rules}}"
@@ -459,13 +459,13 @@
     "message": "Reset"
   },
   "data.resetAction": {
-    "message": "Reset everything…"
+    "message": "Reset rules and settings…"
   },
   "data.resetConfirm": {
     "message": "Reset all rules and settings? Anything that loosens them follows your protection level."
   },
   "data.resetHelp": {
-    "message": "Removes all rules, lists and settings. Statistics are kept (delete them in Privacy)."
+    "message": "Replaces your rules, shared lists, Always allowed and settings with the defaults. Statistics and pages saved for later are kept (delete statistics in Privacy)."
   },
   "data.restore": {
     "message": "Restore"
@@ -834,7 +834,7 @@
     "message": "After {hours} hours you will be able to complete the exit by typing a sentence. You can cancel at any time during the wait. Nothing changes until you complete it."
   },
   "emergency.description": {
-    "message": "If your settings are too strict, the emergency exit always works: request it, wait {hours} hours, then type a sentence. Sessions end, every protection level becomes Soft and the password is removed. It is recorded in the log."
+    "message": "If your settings are too strict, the emergency exit always works and needs nobody else: request it, wait {hours} hours, then type a sentence. It ends every focus session, sets every protection level to Soft, and removes the settings password, the random code and the times when settings cannot be loosened. Your rules stay as they are. Each step is listed under Events."
   },
   "emergency.done": {
     "message": "Emergency exit completed: protections are now Soft."
@@ -981,7 +981,7 @@
     "message": "Before you start"
   },
   "focus.shortcutHelp": {
-    "message": "Alt+Shift+F starts a 25-minute session on desktop browsers. You can change it in the browser's shortcut settings."
+    "message": "On a computer, the focus shortcut starts a {minutes}-minute session with the rules included in quick focus sessions. Help › Keyboard shortcuts shows its key, which you can change in the browser."
   },
   "focus.start": {
     "message": "Start focus session"
@@ -1143,64 +1143,144 @@
     "message": "About"
   },
   "help.aboutBody": {
-    "message": "WebHandbrake {version} — free and open-source software. No data leaves your device."
+    "message": "WebHandbrake {version} — free and open-source software."
+  },
+  "help.accessibility.p1": {
+    "message": "Settings › General offers light and dark themes, \"High contrast\" and an accent colour. Animations follow your system's reduced-motion setting. The pages are designed for keyboard and screen-reader use and are checked automatically; the accessibility statement (linked from Help › About) says what has and has not been evaluated."
+  },
+  "help.accessibility.p2": {
+    "message": "A challenge drawn as an image offers \"I use a screen reader: type a sentence instead\". If typing or waiting is hard for you, choose interventions and break costs that need neither, such as a reminder, a filter, a block or a confirmation."
+  },
+  "help.accessibility.p3": {
+    "message": "To report a barrier, use the accessibility form on GitHub (\"Report a problem or suggest an idea\" in Help › About)."
+  },
+  "help.accessibility.title": {
+    "message": "Accessibility"
+  },
+  "help.accessibilityStatement": {
+    "message": "Accessibility statement"
+  },
+  "help.changelog": {
+    "message": "What changed",
+    "description": "Help › About: link to the list of changes in each version."
+  },
+  "help.choosing.p1": {
+    "message": "No setting suits everyone. A question or a wait leaves the decision to you each time you open a site; a block makes it in advance. Stricter options can feel frustrating on the days you do need a site."
+  },
+  "help.choosing.p2": {
+    "message": "Strict interventions and protection levels help some people and put pressure on others. Start with what feels right and make your rules firmer when you need to: making rules stricter is always immediate, while loosening them follows your protection level."
+  },
+  "help.choosing.p3": {
+    "message": "Taking a break or loosening a rule now and then is normal. You can make your rules firmer again at any time."
+  },
+  "help.choosing.p4": {
+    "message": "Insights shows where your time goes. Seeing it seldom changes habits on its own, so pair it with a rule."
+  },
+  "help.choosing.title": {
+    "message": "Choosing friction and firmness"
   },
   "help.contents": {
     "message": "Contents"
   },
+  "help.data.p1": {
+    "message": "Export (Settings › Data) saves your rules, shared lists, Always allowed, settings and pages saved for later to a file. Statistics and the password hash are included only if you tick them. Insights can also export statistics as CSV or JSON."
+  },
+  "help.data.p2": {
+    "message": "Import accepts a WebHandbrake file, a rule shared with \"Share\" in its menu, or a plain list of addresses (including hosts files and uBlock Origin, AdGuard and uBlacklist lines). It shows a preview and can add to your rules or replace everything; replacing also restores the pages saved for later from the file. An import follows your protection level like any other change. Statistics in a file are never imported.",
+    "description": "Help, Your data. uBlock Origin, AdGuard and uBlacklist are product names."
+  },
+  "help.data.p3": {
+    "message": "Automatic backups (Settings › Data) keep a copy of your rules and settings, including the password hash, before each of the last {recent} changes and once a day for {daily} days. Restoring one follows your protection level. Backups are removed only when newer copies replace them or when you uninstall WebHandbrake: Reset and the emergency exit do not remove them."
+  },
+  "help.data.p4": {
+    "message": "Reset (Settings › Data) replaces your rules and settings with the defaults; it follows your protection level like any loosening. Statistics are deleted separately, in Insights or Settings › Privacy. Uninstalling WebHandbrake deletes everything it stored, so export first."
+  },
+  "help.data.title": {
+    "message": "Your data"
+  },
   "help.emergency.p1": {
-    "message": "If your settings turn out to be too strict, the emergency exit always works and needs nobody else: request it, wait ({hours} hours by default), then type a sentence."
+    "message": "The emergency exit is on the Protection page, for when your settings turn out to be too strict. It always works and needs nobody else: request it, wait ({hours} hours by default), then type a sentence. You can cancel the request during the wait."
   },
   "help.emergency.p2": {
-    "message": "It ends all sessions, sets every protection level to Soft and removes the password. Your rules stay as they are. The exit is recorded."
+    "message": "It ends every focus session, including those that cannot be interrupted; sets every protection level to Soft, puts every rule back on the global level and clears Locked dates; and removes the settings password, the random code and the times when settings cannot be loosened. Your rules and pending changes stay as they are. Each step is listed under Events."
   },
   "help.emergency.title": {
     "message": "Emergency exit"
   },
-  "help.faq": {
-    "message": "Questions"
+  "help.faq.clock.a": {
+    "message": "Time never goes back for WebHandbrake: if the clock is set back, restrictions last longer and limits do not refill early. With \"Detect a manipulated system clock\" on (Settings › Time, on by default), a wrong clock is noticed from the date that the pages you load send, and WebHandbrake uses the corrected time. Each change is listed under Events. Changing the time zone moves your schedules."
   },
-  "help.faq.android.a": {
-    "message": "Yes. Keyboard shortcuts and the context menu are not available there; everything else is."
-  },
-  "help.faq.android.q": {
-    "message": "Does it work on Firefox for Android?"
+  "help.faq.clock.q": {
+    "message": "What if I change the system clock?"
   },
   "help.faq.flash.a": {
-    "message": "Most pages are stopped before they load. Some cases (rules limited to private or normal windows, very complex patterns, pages already open when a restriction starts) are checked right after the page starts loading."
+    "message": "Most pages are stopped before they load. Some are checked right after the page starts loading, so they can appear for a moment: rules limited to private or normal windows, exceptions written as regular expressions that overlap other rules, entries the browser's filters cannot express or that exceed their limits, and pages already open when a restriction starts."
   },
   "help.faq.flash.q": {
     "message": "Why did a page appear for a moment before being blocked?"
   },
+  "help.faq.harden.a": {
+    "message": "Yes, with your browser's enterprise policies, which you set up outside WebHandbrake. They can install it so that it cannot be removed, and turn off private windows, guest mode, new profiles, troubleshoot mode or the developer tools. Chrome: ExtensionInstallForcelist, IncognitoModeAvailability, BrowserGuestModeEnabled, BrowserAddPersonEnabled, DeveloperToolsAvailability. Firefox: ExtensionSettings (installation mode force_installed), PrivateBrowsingModeAvailability, DisableSafeMode (Windows and macOS), BlockAboutProfiles, DisableDeveloperTools.",
+    "description": "Help question. Policy names and force_installed are not translated."
+  },
+  "help.faq.harden.q": {
+    "message": "Can I make it harder to get around WebHandbrake?"
+  },
   "help.faq.locked.a": {
-    "message": "Use the emergency exit in Protection. It takes a long wait on purpose, but it always works and needs nobody else."
+    "message": "Use the emergency exit in Protection. It takes a long wait on purpose, but it always works and needs nobody else. It also removes a settings password you have forgotten."
   },
   "help.faq.locked.q": {
     "message": "I made my rules too strict. What can I do?"
   },
+  "help.faq.notApplied.a": {
+    "message": "Check that the rule is on and not archived; that one of its conditions applies right now (its time window or limit); that the site is not in Always allowed and no exception of the rule covers it; that no break is running and you did not just continue past a question, wait or challenge; that WebHandbrake is allowed in private windows; and that it has access to websites (see \"How solid is your protection?\"). In Chrome, local files also need the browser's \"Allow access to file URLs\". If a site is restricted more than you expect, another rule may be stricter: the strictest result wins."
+  },
+  "help.faq.notApplied.q": {
+    "message": "Why is a site not restricted?"
+  },
+  "help.faq.notCounted.a": {
+    "message": "Time counts on the sites of your rules while the page is visible and its window has the focus. After {seconds} seconds without keyboard, mouse or touch input you count as inactive, unless audio or video is playing (Settings › Time › Stop counting when I am inactive). Background tabs and background media count only with \"Count tabs that are open but not active\" and \"Count background audio and video\". No time is counted on pages where extensions cannot run."
+  },
+  "help.faq.notCounted.q": {
+    "message": "Why was my time not counted?"
+  },
   "help.faq.private.a": {
-    "message": "Browsers do not run extensions in private windows unless you allow it. Protection › checklist explains how to turn it on for your browser."
+    "message": "Browsers do not run extensions in private windows unless you allow it. Protection › How solid is your protection? explains how to allow it in your browser."
   },
   "help.faq.private.q": {
     "message": "Why is a site not blocked in private windows?"
   },
+  "help.faq.reset.a": {
+    "message": "Hourly limits start again at the start of each hour, daily limits when your day starts ({dayStart} by default, Settings › General › Days start at), weekly limits on the first day of your week (Settings › General › Weeks start on) and monthly limits on the first day of the month. Limits for every few minutes or every few days start again when each period ends. Limits \"in any\" number of minutes always count the last minutes, so time comes back gradually. After continuous use, the stop lasts as long as the condition says.",
+    "description": "Help question. {dayStart} is a time of day such as 00:00."
+  },
+  "help.faq.reset.q": {
+    "message": "When do limits start again?"
+  },
+  "help.faq.restored.a": {
+    "message": "When the stored rules and settings are damaged, WebHandbrake replaces them with the most recent automatic backup that is intact, or with the defaults if none is, and lists this under Events. Check your rules: changes made after that backup are missing."
+  },
+  "help.faq.restored.q": {
+    "message": "Why does Today say that my settings were restored from a backup?"
+  },
   "help.faq.sync.a": {
-    "message": "Not in this version: everything stays on this device. Use export and import to move your settings."
+    "message": "No. Everything stays on this device. To move your rules and settings, export them and import the file on the other device (Settings › Data)."
   },
   "help.faq.sync.q": {
     "message": "Are my settings synchronised between devices?"
   },
   "help.faq.uninstall.a": {
-    "message": "No, and it does not try to. It can block the browser's extension pages while strict protections are active, and system policies can make it harder to remove, but you always stay in control."
+    "message": "No, and it does not try to. On a computer it can block the browser's extension pages while strict protection is active, and enterprise policies can make it harder to remove, but you always stay in control."
   },
   "help.faq.uninstall.q": {
     "message": "Can WebHandbrake prevent its own uninstallation?"
   },
   "help.focus.p1": {
-    "message": "A focus session blocks the sites of the chosen rules, or every site except a short list, for a while. Start one in two taps from the popup, or with Alt+Shift+F."
+    "message": "A focus session blocks the sites of the chosen rules, or every site except a short list, for a while. On the Focus page you choose the rules, the length and when it starts. The popup, the right-click menu on a computer and the focus shortcut (see Keyboard shortcuts) start a session at once with the rules that have \"Include in quick focus sessions\" on.",
+    "description": "Help, Focus sessions. \"Include in quick focus sessions\" is the label of a rule option."
   },
   "help.focus.p2": {
-    "message": "Extending a session is always possible. Ending it early follows your protection level; sessions marked \"cannot be interrupted\" can only end early through the emergency exit."
+    "message": "You can always extend a session. Ending it early asks for a confirmation at the Soft protection level and a wait at Balanced ({seconds} seconds by default); at Strict and Locked it is not possible. A session that cannot be interrupted ends early only through the emergency exit."
   },
   "help.focus.title": {
     "message": "Focus sessions"
@@ -1217,14 +1297,23 @@
   "help.groups.title": {
     "message": "Rules and sites"
   },
+  "help.insights.p1": {
+    "message": "Insights shows the time and visits on the sites of your rules, day by day, by rule and by site. With \"Track time on all sites\" on (Settings › Time), it also measures sites outside your rules."
+  },
+  "help.insights.p2": {
+    "message": "\"Times WebHandbrake stepped in\" counts the intervention pages shown; \"times you chose not to go in\" counts those you did not continue past. Insights also lists your breaks with their reasons, focus sessions and the intentions you typed."
+  },
+  "help.insights.title": {
+    "message": "Insights"
+  },
   "help.interventions.p1": {
-    "message": "From the gentlest to the strictest: only count time, show a reminder, apply a filter (grayscale, blur…), ask what you want to do and for how long, make you wait, ask you to type a short challenge, block the page, close the tab or redirect elsewhere."
+    "message": "From the gentlest: only count time, show a reminder, apply a filter (grayscale, blur…), ask what you want to do and for how long, make you wait, or ask you to type a short challenge. Blocking the page and redirecting it elsewhere are equally strict; closing the tab is the strictest."
   },
   "help.interventions.p2": {
-    "message": "On every intervention page the healthy choice comes first: close the tab or go back. You can save the page for later and find it in \"Later\" when it is allowed again."
+    "message": "On every intervention page the main button closes the tab, and you can also go back. You can save the page for later and find it in \"Later\" when it is allowed again."
   },
   "help.interventions.p3": {
-    "message": "If a restriction starts while you are typing in a page, you get a short grace period to finish or copy your text before the page is replaced."
+    "message": "If a restriction starts while you are typing in a page, you get a grace period ({seconds} seconds by default) to finish or copy your text before the page is replaced."
   },
   "help.interventions.title": {
     "message": "Interventions"
@@ -1233,16 +1322,46 @@
     "message": "Report a problem or suggest an idea"
   },
   "help.issueHelp": {
-    "message": "On GitHub. A diagnostic report (Settings → Diagnostics) helps to find the cause."
+    "message": "On GitHub. A diagnostic report (Settings › Diagnostics) helps to find the cause; it leaves out addresses unless you include them."
   },
   "help.license": {
     "message": "Licensed under the GNU General Public License v3.0 or later."
   },
+  "help.limits.item1": {
+    "message": "Other browsers, other apps and other devices."
+  },
+  "help.limits.item2": {
+    "message": "New browser profiles, guest mode and Firefox troubleshoot mode, which start without extensions."
+  },
+  "help.limits.item3": {
+    "message": "Private windows, unless you allow WebHandbrake there."
+  },
+  "help.limits.item4": {
+    "message": "Its own removal. On a computer it can block the browser's extension and settings pages while strict protection is active, but it cannot prevent uninstalling; on Android it cannot block those pages. Uninstalling deletes all its data."
+  },
+  "help.limits.item5": {
+    "message": "Pages where extensions cannot run, such as the browser's own pages, its PDF viewer and the add-on stores: no time is counted there."
+  },
+  "help.limits.item6": {
+    "message": "Changes of the device's time zone, which move your schedules."
+  },
+  "help.limits.item7": {
+    "message": "Someone in full control of the device, who can always get around it."
+  },
+  "help.limits.p1": {
+    "message": "WebHandbrake works inside this browser profile. It can make getting around your rules slower and more deliberate; it cannot make it impossible. It does not cover:"
+  },
+  "help.limits.p2": {
+    "message": "\"How solid is your protection?\" on the Protection page shows which of these ways are open in this browser."
+  },
+  "help.limits.title": {
+    "message": "What WebHandbrake cannot do"
+  },
   "help.mobile.p1": {
-    "message": "Everything essential works on Firefox for Android. Open the popup from the Extensions menu and the dashboard from the add-on settings."
+    "message": "WebHandbrake runs on Firefox for Android. Open the popup from the Extensions menu and the dashboard from the add-on's settings."
   },
   "help.mobile.p2": {
-    "message": "Keyboard shortcuts and the context menu do not exist on Android. Time is counted only while Firefox is in the foreground and the page is visible."
+    "message": "Keyboard shortcuts and the right-click menu do not exist on Android, and the browser's extension and settings pages cannot be protected there. Time is counted only while Firefox is in the foreground and the page is visible."
   },
   "help.mobile.title": {
     "message": "Firefox for Android"
@@ -1251,31 +1370,40 @@
     "message": "A break suspends the interventions of a page, a site, a rule or all rules for a few minutes. Each rule decides whether breaks are allowed, how long they last, how many you can take and what they cost (a confirmation, a wait, a typed challenge or your password)."
   },
   "help.pauses.p2": {
-    "message": "Breaks end by themselves and the restriction comes back immediately on every open tab. You can end a break early at any time."
+    "message": "Breaks end by themselves and the restriction comes back at once. You can end a break early at any time."
   },
   "help.pauses.title": {
     "message": "Breaks"
   },
   "help.privacy.p1": {
-    "message": "WebHandbrake has no account, no server and no telemetry. It makes no network requests. Your settings and statistics stay in your browser profile."
+    "message": "WebHandbrake has no account, no server and no telemetry. It makes no network requests of its own: a redirect address you set and the links you click are opened by the browser. Your rules, settings and statistics stay in your browser profile."
   },
   "help.privacy.p2": {
-    "message": "Statistics are daily totals per site and per rule; full addresses are never stored, and no site detail is kept for private windows. You can export or delete everything at any time."
+    "message": "Statistics are daily totals per rule, per site of a rule and per site; they never contain full addresses. Sites outside your rules are measured only with \"Track time on all sites\". In private windows only the totals your limits need are kept. Statistics are kept {days} days by default, and deleting them never refills a limit: the totals your limits use are kept for {keepDays} days."
+  },
+  "help.privacy.p3": {
+    "message": "A small script in the page shows the timer, reminders, filters and the grace period, and tells WebHandbrake the page's address, whether you are active and whether media is playing. It runs on the sites of your rules, and on every site when \"Track time on all sites\" is on or when a rule has a regular expression or a site name with *, such as amazon.* (several ready-made lists have them). The text you type is read only inside the page, for the grace period. Apart from the time counted per site, nothing the script reads is stored."
+  },
+  "help.privacy.p4": {
+    "message": "Pages saved for later keep their address and title, also from private windows, until you remove them. \"Recent decisions\" (Settings › Diagnostics) keeps the addresses of restricted pages until the browser closes; \"Keep a log\" turns it off. Settings › Privacy lists what is saved on this device, with sizes; what is kept only until the browser closes is not listed there."
   },
   "help.privacy.title": {
     "message": "Privacy"
+  },
+  "help.privacyPolicy": {
+    "message": "Privacy policy"
   },
   "help.protection.p1": {
     "message": "Making your rules stricter is always immediate. Loosening them (removing a site, raising a limit, turning a rule off…) depends on the protection level of the rule or of the whole extension."
   },
   "help.protection.p2": {
-    "message": "Soft asks for a confirmation. Balanced makes you wait a little. Strict puts the change in a queue for a cooling-off period ({hours} hours by default): after the wait you confirm it with a short challenge, or it expires; while a strict rule is active, it cannot be loosened at all. Locked refuses every loosening until a date you choose."
+    "message": "Soft asks for a confirmation. Balanced makes you wait ({seconds} seconds by default). Strict puts the change in Pending changes for a cooling-off period ({hours} hours by default); after it, you confirm the change with a typed challenge within {confirmHours} hours, or it expires. While a strict rule is active, it cannot be loosened at all. Locked refuses every loosening until a date you choose; after that date the level becomes Strict."
   },
   "help.protection.p3": {
-    "message": "Pending changes are listed in Protection, where you can confirm or cancel them. A password and random codes can be added for every change that is not a strengthening."
+    "message": "Pending changes are listed in Protection, where you can confirm or cancel them. A settings password and a random code to type can be required for every change that does not make your rules stricter. You can also set times when settings cannot be loosened: during them, loosening is refused."
   },
   "help.protection.p4": {
-    "message": "The protection centre also checks the known ways around a blocker (private windows, browser settings pages, the system clock…) and records signs of tampering."
+    "message": "The Protection page also checks the usual ways around your rules (private windows, the browser's extension and settings pages, the system clock…) under \"How solid is your protection?\", and lists signs of tampering under Events."
   },
   "help.protection.title": {
     "message": "Protection levels"
@@ -1287,7 +1415,7 @@
     "message": "A condition can use time windows (also overnight, like 22:00–02:00), and optionally a limit: time per hour, day, week, month or custom period, visits per period, or continuous use followed by a mandatory stop."
   },
   "help.rules.p3": {
-    "message": "Time is counted only while the page is visible, the window has the focus and you are active (or a video is playing). Several tabs of the same rule never count twice. A visit starts when you come back after a few minutes away ({minutes} by default)."
+    "message": "Time is counted only while the page is visible, its window has the focus and you are active (or audio or video is playing). Several tabs of the same rule never count twice. A visit starts when you come back after a few minutes away ({minutes} by default)."
   },
   "help.rules.p4": {
     "message": "When several rules apply to the same site, the strictest result wins, whatever their order. \"Test a URL\" in the rule editor and \"Why?\" in the popup show exactly which condition applies and when it will change."
@@ -1320,7 +1448,11 @@
     "message": "You organise sites in rules (for example Social or Video). Each rule says when and how it slows you down: a reminder, a filter, a question, a wait, a short challenge or a block."
   },
   "help.start.p3": {
-    "message": "The popup shows what applies to the current site and offers quick actions: start a focus session, block the site, save the page for later, take a break. The dashboard (this page) is where you manage everything."
+    "message": "The popup shows what applies to the current site and offers quick actions: take a break, save the page for later and block the site. It also starts a focus session when at least one rule has \"Include in quick focus sessions\" on. The dashboard (this page) is where you manage everything."
+  },
+  "help.start.p4": {
+    "message": "Quick start: open Rules › New rule, choose the sites, when the rule applies and what happens, then review it and choose \"Create rule\". Open one of those sites to see it work. The setup shown when WebHandbrake is installed does the same for your first rule.",
+    "description": "Help, Getting started. \"Rules\", \"New rule\" and \"Create rule\" are interface labels."
   },
   "help.start.title": {
     "message": "Getting started"
@@ -1375,6 +1507,15 @@
   },
   "help.title": {
     "message": "Help"
+  },
+  "help.troubleshooting.p1": {
+    "message": "Start with \"Why?\" in the popup, or \"Test a URL\" in the rule editor: they show which condition applies and when that changes."
+  },
+  "help.troubleshooting.p2": {
+    "message": "Settings › Diagnostics runs a self-test, shows recent decisions and copies a diagnostic report to paste into an issue on GitHub. The report leaves out addresses unless you tick \"Include addresses (off by default)\"."
+  },
+  "help.troubleshooting.title": {
+    "message": "Troubleshooting"
   },
   "icon.cart": {
     "message": "Shopping"
@@ -1434,7 +1575,7 @@
     "message": "No sites were found."
   },
   "import.error.tooLarge": {
-    "message": "The file is too large (10 MB at most)."
+    "message": "The file is too large ({mb} MB at most)."
   },
   "import.format": {
     "message": "Detected format: {format}"
@@ -1509,7 +1650,7 @@
     "message": "One site"
   },
   "insights.deleteNote": {
-    "message": "Totals needed by your time limits are kept for up to 90 days, so deleting statistics never refills a limit. Everything else is deleted."
+    "message": "The totals your limits need are kept for {days} days, so deleting statistics never refills a limit. Intentions and break reasons are deleted only with \"Everything\"."
   },
   "insights.deleteTitle": {
     "message": "Delete statistics"
@@ -1563,7 +1704,7 @@
     "message": "Previous period"
   },
   "insights.privacy": {
-    "message": "Only daily totals are stored on this device. Nothing is ever sent anywhere."
+    "message": "Statistics are daily totals kept on this device. Nothing is sent anywhere."
   },
   "insights.sessions": {
     "message": "{count, plural, one {focus session} other {focus sessions}}"
@@ -2505,7 +2646,7 @@
   },
   "popup.forfeit": {
     "message": "Stop for today",
-    "description": "LIM-11: give up the remaining time of the current period"
+    "description": "Popup link under a limit: gives up the time left in the current period of the limit."
   },
   "popup.forfeitConfirm": {
     "message": "Give up the remaining time of {group} for this period?"
@@ -2526,7 +2667,7 @@
     "message": "{count, plural, one {# page saved for later} other {# pages saved for later}}"
   },
   "popup.levelTitle": {
-    "message": "Protection level — open the protection centre"
+    "message": "Protection level — open Protection"
   },
   "popup.notSetUp": {
     "message": "WebHandbrake is not set up yet."
@@ -2577,13 +2718,13 @@
     "message": "Delete your data"
   },
   "privacy.deleteAllHelp": {
-    "message": "Deletes statistics, break reasons and intentions at once (totals needed by your time limits are kept for up to 90 days). Rules and settings can be reset in Settings › Data."
+    "message": "Deletes statistics, break reasons and intentions at once. The totals your limits need are kept for {days} days. Rules and settings can be reset in Settings › Data."
   },
   "privacy.deleteStats": {
     "message": "Delete all statistics"
   },
   "privacy.deleteStatsBody": {
-    "message": "Site details, counters, break reasons and intentions will be deleted. Totals needed by your time limits are kept for up to 90 days. This cannot be undone."
+    "message": "Site details, counters, break reasons and intentions will be deleted. The totals your limits need are kept for {days} days. This cannot be undone."
   },
   "privacy.key.activity": {
     "message": "Visit tracking"
@@ -2595,7 +2736,7 @@
     "message": "Rules and settings"
   },
   "privacy.key.intentions": {
-    "message": "Intentions and break reasons"
+    "message": "Intentions"
   },
   "privacy.key.later": {
     "message": "Pages saved for later"
@@ -2604,10 +2745,10 @@
     "message": "Technical information"
   },
   "privacy.key.state": {
-    "message": "Breaks, sessions, pending changes"
+    "message": "Breaks, sessions, pending changes and protection events"
   },
   "privacy.key.u:min": {
-    "message": "Recent minute counters (last 48 hours)"
+    "message": "Recent minute counters"
   },
   "privacy.key.usage": {
     "message": "Daily statistics"
@@ -2619,10 +2760,10 @@
     "message": "None. WebHandbrake does not contact any server. If you set a redirect to an address of your choice, only your browser opens it, as with any link."
   },
   "privacy.point.aggregates": {
-    "message": "Statistics are daily totals per site and per rule; full addresses are not stored."
+    "message": "Statistics are daily totals per rule and per site; they never contain full addresses."
   },
   "privacy.point.content": {
-    "message": "Page content is read only to show the timer and filters, in memory, and is never stored."
+    "message": "Pages are read only in memory, to show the timer, reminders, filters and the grace period and to tell whether you are active or media is playing. This happens on the sites of your rules, and on every site with Track time on all sites, a regular expression or a site name with * such as amazon.*. The text you type stays in the page. Nothing from a page's content is stored."
   },
   "privacy.point.local": {
     "message": "No account, no server, no telemetry, no analytics."
@@ -2631,13 +2772,13 @@
     "message": "It never makes network requests of its own."
   },
   "privacy.point.private": {
-    "message": "For private windows only the totals needed for your time limits are kept, never the sites."
+    "message": "In private windows only the totals your limits need are kept, per rule and per site of a rule; no other site detail."
   },
   "privacy.resetLink": {
     "message": "Reset rules and settings…"
   },
   "privacy.retention": {
-    "message": "Daily statistics are kept for the period chosen in Settings › Time; minute counters for 48 hours; backups for 30 days."
+    "message": "Daily statistics are kept for the period chosen in Settings › Time; minute counters for {hours} hours; automatic backups are the last {recent} changes and one copy a day for {daily} days."
   },
   "privacy.stored": {
     "message": "What is stored"
@@ -2655,7 +2796,7 @@
     "message": "Access requirements"
   },
   "protection.accessHelp": {
-    "message": "Asked before any change that does not make your rules stricter. Strengthening is always immediate."
+    "message": "Asked before any change that does not make your rules stricter. Making rules stricter is always immediate."
   },
   "protection.balancedDelay": {
     "message": "Wait (Balanced)"
@@ -2688,7 +2829,7 @@
     "message": "Fine-tune the levels"
   },
   "protection.hardeningNote": {
-    "message": "For stronger protection, your system's enterprise policies can force the installation of WebHandbrake and disable private windows, guest mode or troubleshoot mode."
+    "message": "For stronger protection, your system's enterprise policies can force the installation of WebHandbrake and turn off private windows, guest mode or troubleshoot mode. See Help › What WebHandbrake cannot do."
   },
   "protection.internal.always": {
     "message": "Always"
@@ -3108,7 +3249,7 @@
     "message": "Detect a manipulated system clock"
   },
   "settings.dateHeadersHelp": {
-    "message": "Compares your clock with the date of web pages you already load. No extra requests are made and nothing is stored."
+    "message": "Compares your clock with the date that web pages you already load send. No extra requests are made; only a detected difference is kept, and it is listed under Events."
   },
   "settings.dayStart": {
     "message": "Days start at"
@@ -3159,7 +3300,7 @@
     "message": "Same as the browser"
   },
   "settings.languageHelp": {
-    "message": "More languages will come from the community. The page reloads after a change."
+    "message": "Other languages can be added by translators. The page reloads after a change."
   },
   "settings.mode": {
     "message": "Interface"
@@ -3189,13 +3330,13 @@
     "message": "Keep daily statistics for"
   },
   "settings.retentionHelp": {
-    "message": "Older days are deleted automatically (totals needed by time limits are kept for up to 90 days)."
+    "message": "Older days are deleted automatically; the totals your limits need are kept for {days} days."
   },
   "settings.sections": {
     "message": "Settings sections"
   },
   "settings.shortcuts": {
-    "message": "Keyboard shortcuts: Alt+Shift+H (popup), Alt+Shift+F (focus session), Alt+Shift+B (block the site). Change them in the browser's extension shortcut settings."
+    "message": "Keyboard shortcuts are listed in Help › Keyboard shortcuts. You can change them in the browser's extension shortcut settings."
   },
   "settings.size.large": {
     "message": "Large"
@@ -4036,7 +4177,7 @@
     "message": "How firm should it be?"
   },
   "welcome.firmnessHelp": {
-    "message": "Making rules stricter is always immediate. This is how hard it is to loosen them later. A stricter \"Locked\" level is available in Protection."
+    "message": "Making rules stricter is always immediate. This is how hard it is to loosen them later. A stricter \"Locked\" level is available in Protection. Whatever you choose, the emergency exit in Protection always works, after a wait of {hours} hours."
   },
   "welcome.goal.block": {
     "message": "Block some sites completely"
@@ -4087,7 +4228,7 @@
     "message": "Loosening a rule asks for a confirmation."
   },
   "welcome.level.strict": {
-    "message": "Loosening a rule waits {hours} h, then needs a typed confirmation."
+    "message": "Loosening a rule waits {hours} h, then needs a typed confirmation; while the rule is active, it cannot be loosened."
   },
   "welcome.mySites": {
     "message": "My sites"
@@ -4102,7 +4243,7 @@
     "message": "Optional. You will see it on the page that stops you: a personal reason helps."
   },
   "welcome.perm.body": {
-    "message": "To slow down the sites you chose, WebHandbrake needs to act on them. It reads nothing else and sends nothing anywhere."
+    "message": "To slow down the sites you chose, WebHandbrake needs access to websites: it checks the address of each page you open against your rules, and the date that pages send, to notice a changed clock. It sends nothing anywhere."
   },
   "welcome.perm.grant": {
     "message": "Allow access"
@@ -4228,7 +4369,7 @@
     "message": "Gentle by default"
   },
   "welcome.value.private.text": {
-    "message": "No account, no tracking. Everything stays on this device."
+    "message": "No account. Nothing leaves this device."
   },
   "welcome.value.private.title": {
     "message": "Private"

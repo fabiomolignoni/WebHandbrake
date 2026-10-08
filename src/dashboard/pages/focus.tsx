@@ -353,7 +353,7 @@ export function FocusPage() {
       <QuickSession sessions={o?.sessions ?? []} groups={model.config.groups} onChange={reload} />
       <p class="small muted row nowrap" style={{ gap: '8px', alignItems: 'flex-start' }}>
         <Icon name="keyboard" />
-        <span>{t('focus.shortcutHelp')}</span>
+        <span>{t('focus.shortcutHelp', { minutes: DEFAULT_SESSION_MINUTES })}</span>
       </p>
     </div>
   );

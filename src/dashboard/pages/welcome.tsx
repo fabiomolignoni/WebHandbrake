@@ -741,7 +741,9 @@ export function WelcomePage() {
                     </>
                   )}
                 />
-                <span class="help">{t('welcome.firmnessHelp')}</span>
+                <span class="help">
+                  {t('welcome.firmnessHelp', { hours: settings.protection.emergencyHours })}
+                </span>
               </div>
             )}
             {hostAccess === false && (

@@ -4,7 +4,7 @@
     "description": "Extension name. Do not translate."
   },
   "extDescription": {
-    "message": "A handbrake for the web: limit, slow down or block distracting sites with gentle friction and serious protection. Local-first, no tracking.",
+    "message": "A handbrake for the web: slow down, limit or block the sites you choose, on your own schedules. Nothing leaves your device.",
     "description": "Extension description shown in the browser and in the stores (132 characters at most)."
   },
   "cmdOpenPopup": {

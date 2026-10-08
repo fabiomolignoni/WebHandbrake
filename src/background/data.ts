@@ -51,7 +51,11 @@ function translateWarnings(w: { key: string; params?: Record<string, string | nu
 
 function buildNext(text: string, mode: 'merge' | 'replace') {
   if (text.length > MAX_IMPORT_BYTES) {
-    return { imp: null, next: null, errors: [t('import.error.tooLarge')] };
+    return {
+      imp: null,
+      next: null,
+      errors: [t('import.error.tooLarge', { mb: MAX_IMPORT_BYTES / 1024 / 1024 })],
+    };
   }
   const imp = detectAndImport(text);
   if (imp.format === 'unknown' || (!imp.config && !imp.groups.length)) {
