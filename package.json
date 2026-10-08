@@ -27,7 +27,7 @@
     "test:e2e:firefox": "node scripts/build.mjs --test --target=firefox && playwright test --project=firefox",
     "browsers": "node scripts/browsers.mjs",
     "lint:firefox": "node scripts/build.mjs --target=firefox && web-ext lint --source-dir dist/firefox",
-    "check": "npm run typecheck && npm run lint && npm run i18n && npm run test",
+    "check": "npm run typecheck && npm run lint && npm run i18n && npm run test && npm run docs:check",
     "i18n": "node scripts/check-i18n.mjs",
     "docs": "node scripts/docs/run.mjs",
     "docs:check": "node scripts/docs/run.mjs --check",
