@@ -1,0 +1,26 @@
+name: Accessibility problem
+description: Something you cannot see, reach, read or operate
+labels: [accessibility]
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for reporting a barrier. What WebHandbrake supports and the known gaps are in docs/accessibility.md.
+  - type: textarea
+    id: what
+    attributes:
+      label: What is the barrier?
+      description: Which page or control, what you tried to do and what stopped you.
+    validations:
+      required: true
+  - type: input
+    id: technology
+    attributes:
+      label: Assistive technology and settings
+      placeholder: NVDA 2025.1, keyboard only, 200% zoom, Windows high contrast
+  - type: input
+    id: browser
+    attributes:
+      label: Browser, version and system
+      placeholder: Firefox 140 on Windows 11
+    validations:
+      required: true

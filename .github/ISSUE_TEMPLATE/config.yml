@@ -1,8 +1,11 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Ideas and questions
-    url: https://github.com/fabiomolignoni/WebHandbrake/discussions
-    about: Discuss ideas and ask questions before opening an issue.
+  - name: Questions
+    url: https://github.com/fabiomolignoni/WebHandbrake/discussions/categories/q-a
+    about: Ask how something works or how to set it up.
+  - name: Ideas
+    url: https://github.com/fabiomolignoni/WebHandbrake/discussions/categories/ideas
+    about: Suggest a feature or a change, so it can be discussed before it is built.
   - name: Security vulnerability
     url: https://github.com/fabiomolignoni/WebHandbrake/security/advisories/new
-    about: Report security issues privately.
+    about: Report a vulnerability privately, never in a public issue.
