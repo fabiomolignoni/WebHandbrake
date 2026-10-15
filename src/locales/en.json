@@ -1163,7 +1163,7 @@
     "message": "WebHandbrake {version} — free and open-source software."
   },
   "help.accessibility.p1": {
-    "message": "Settings › General offers light and dark themes and \"High contrast\". Animations follow your system's reduced-motion setting. The pages are designed for keyboard and screen-reader use and are checked automatically; the accessibility statement (linked from Help › About) says what has and has not been evaluated."
+    "message": "Settings › General offers light and dark themes and \"High contrast\". Animations follow your system's reduced-motion setting. The pages are designed for keyboard and screen-reader use and are checked automatically."
   },
   "help.accessibility.p2": {
     "message": "A challenge drawn as an image offers \"I use a screen reader: type a sentence instead\". If typing or waiting is hard for you, choose interventions and break costs that need neither, such as a filter, a block or a confirmation."
@@ -1173,9 +1173,6 @@
   },
   "help.accessibility.title": {
     "message": "Accessibility"
-  },
-  "help.accessibilityStatement": {
-    "message": "Accessibility statement"
   },
   "help.changelog": {
     "message": "What changed",
