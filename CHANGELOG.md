@@ -6,6 +6,8 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-15
+
 The first version of WebHandbrake.
 
 ### Added
@@ -46,4 +48,5 @@ The first version of WebHandbrake.
   screen-reader support.
 - Firefox, Firefox for Android and Chrome from one code base.
 
-[Unreleased]: https://github.com/fabiomolignoni/WebHandbrake/commits/main
+[Unreleased]: https://github.com/fabiomolignoni/WebHandbrake/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/fabiomolignoni/WebHandbrake/releases/tag/v1.0.0
