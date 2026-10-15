@@ -1,34 +1,36 @@
 # WebHandbrake
 
-**A handbrake for the web.** WebHandbrake is a browser extension that helps you use the sites you
-choose when and as much as you decided. Before a site is blocked it can add gentler friction: a
-filter, a question, a short wait or a typed challenge. Loosening your own rules takes time, so a
-moment of impulse cannot undo them. Everything stays on your device: no account, no server, no
-analytics.
+**Block distracting websites, or slow them down so that you go in only when you mean to.**
+
+WebHandbrake is a free, open-source browser extension for Chrome, Firefox and Firefox for Android.
+Choose the sites, when each rule applies and what happens. Making a rule stricter is instant;
+loosening it takes what you chose for it, so a moment of impulse cannot undo it. No account, no
+tracking: everything stays on your device.
+
+![The block page of a social media rule: "This space is protected until 18:00", with a break that costs a 60-second wait](store/images/screenshots/1-block.png)
 
 ## What it does
 
-- **Rules for the sites you choose**: whole domains, single hosts, paths, exact pages, wildcards,
-  regular expressions and exceptions. Paste addresses, lists, hosts files or uBlock Origin, AdGuard
-  and uBlacklist filters, or start from a ready-made list.
-- **Conditions that read like sentences**: "Mon–Fri 09:00–17:00 → Block", "Always, after 45 min a
-  day → Wait 30 s". Time windows (overnight too), time and visit limits per hour, day, week or
-  month, and limits on continuous use.
-- **Graduated interventions**: count only, visual filter, a question about what you want to do, a
-  wait, a typed challenge, block, close or redirect. Pages can be saved for later.
-- **Blocking before the page loads**, from the moment the browser starts, including single-page
-  applications and pages restored from the back/forward cache.
-- **Breaks and focus sessions** that end by themselves.
-- **A protection per rule**: a stricter rule applies at once; loosening one takes what you chose
-  for it: a confirmation, a wait of the length you choose, a password, a partner's code from their
-  phone, nothing until a date, or nothing at all. An emergency exit always exists.
-- **"Why?"** on every intervention: which rule and condition apply, and when that changes.
-- **Statistics on your device**, with export and deletion in one click.
-- **Export, import and automatic backups.**
-- **Accessible and translatable**: keyboard and screen-reader support, light, dark and
-  high-contrast themes, layouts down to phone size.
+- **Block** during work hours, after a daily time limit or for a focus session. Most pages are
+  stopped before they load, from the moment the browser starts. Need a site for a minute? Take a
+  break, with the length, number and cost you set.
+- **Slow down instead of blocking**: say what you want to do before the site opens, wait for a
+  short countdown, type a random text, or use a visual filter, a redirect or a closed tab.
+- **Rules that fit your day**: time windows (overnight too), time and visit limits per hour, day,
+  week or month, and limits on continuous use. Start from a ready-made list or paste your own
+  domains, pages, wildcards, regular expressions and exceptions. **Why?** tells you which rule
+  applies and when that changes.
+- **Easy to tighten, hard to undo**: each rule has its protection: a reminder, a wait of the length
+  you choose, a password, a code from a trusted person's authenticator app, a lock until a date, or
+  permanent. An emergency exit always works: you wait (24 hours by default), then type a sentence.
+- **Your numbers stay on your device**: **Insights** shows your time and visits by day, rule and
+  site. Export or delete them at any time.
+- **Also**: pages saved for later; export, import and automatic backups; light, dark and
+  high-contrast themes; **Help** inside the extension, available offline.
 
-**Help**, in the dashboard, explains every feature and works offline.
+WebHandbrake works inside one browser profile: it makes getting around your rules slower and more
+deliberate, not impossible. It does not cover other browsers, other devices or new profiles, and it
+runs in private windows only if you allow it.
 
 ## Supported browsers
 
@@ -38,12 +40,12 @@ analytics.
 | Firefox | 140 |
 | Firefox for Android | 142 |
 
-Keyboard shortcuts and the context menu are not available on Firefox for Android.
+Keyboard shortcuts and the right-click menu are not available on Firefox for Android.
 
 ## Install
 
-WebHandbrake is not published in the browser stores. To try it, build it from source with Node.js
-(the version in `.nvmrc` is 24.14.0):
+WebHandbrake is not in the browser stores yet. To try it, build it with Node.js (the version in
+`.nvmrc`):
 
 ```bash
 npm ci
@@ -53,53 +55,28 @@ npm run build          # writes dist/chrome and dist/firefox
 - **Chrome**: open `chrome://extensions`, turn on **Developer mode**, choose **Load unpacked** and
   select `dist/chrome`.
 - **Firefox**: open `about:debugging#/runtime/this-firefox`, choose **Load Temporary Add-on…** and
-  select `dist/firefox/manifest.json`. Firefox removes temporary add-ons when it closes.
+  select `dist/firefox/manifest.json`. Firefox removes it when it closes.
 - **Firefox for Android**: `npx web-ext run -t firefox-android --source-dir dist/firefox
   --android-device <id>`.
 
 ## Privacy
 
-WebHandbrake makes no network requests of its own and keeps all its data in your browser profile.
-[PRIVACY.md](PRIVACY.md) lists what it stores, why it needs each permission and how to delete
-everything.
-
-## Accessibility
-
-WebHandbrake aims at level AA of the Web Content Accessibility Guidelines (WCAG) 2.2: keyboard use
-with a visible focus, screen readers, browser zoom, light, dark and high-contrast themes, and
-layouts down to phone width. It has not been evaluated for conformance. Automated checks (axe-core)
-run on every change over the dashboard, the popup and the intervention pages, and keyboard
-scenarios are tested; there has been no manual evaluation and no test with a screen reader, and
-Firefox for Android has not been evaluated.
-
-Known limitations:
-
-- The panels inside web pages (timer, warnings, grace period) follow the system's light or dark
-  appearance, not the theme or **High contrast** chosen in **Settings › General**.
-- Animations are reduced only through the system's reduced-motion setting.
-- A wait, challenge or confirmation that you have started expires
-  60 minutes after its wait ends, and a
-  pending change must be confirmed within
-  48 hours after its wait is
-  over.
-- Completing the emergency exit needs a sentence to be typed.
-- A challenge drawn as an image offers **I use a screen reader: type a sentence instead**. Every
-  intervention and break cost can be one that needs no typing or waiting, and the **Reminder**
-  protection asks only for a confirmation.
-
-Report a barrier with the **Accessibility problem** form on the
-[issue page](https://github.com/fabiomolignoni/WebHandbrake/issues/new/choose).
+No account, no server, no analytics, no ads: WebHandbrake makes no network requests of its own and
+keeps its data in your browser profile. It asks for access to all websites because it checks the
+address of each page you open against your rules and stops a restricted page before it loads;
+nothing it reads is sent anywhere. [PRIVACY.md](PRIVACY.md) lists what it stores, why it needs each
+permission and how to delete everything.
 
 ## Help and feedback
 
 - Questions and ideas:
   [GitHub Discussions](https://github.com/fabiomolignoni/WebHandbrake/discussions).
-- Something does not work: the
-  [bug report form](https://github.com/fabiomolignoni/WebHandbrake/issues/new/choose).
-- Security problems: the
-  [private reporting form](https://github.com/fabiomolignoni/WebHandbrake/security/advisories/new);
-  please do not open a public issue.
-- Accessibility: [what is supported and the known gaps](#accessibility).
+- Something does not work:
+  [report a problem](https://github.com/fabiomolignoni/WebHandbrake/issues/new/choose). A
+  diagnostic report from **Settings › Diagnostics** helps.
+- Security problems:
+  [report them privately](https://github.com/fabiomolignoni/WebHandbrake/security/advisories/new),
+  never in a public issue.
 
 ## Contributing
 

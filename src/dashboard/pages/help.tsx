@@ -4,7 +4,7 @@ import { Fragment } from 'preact';
 import { useEffect } from 'preact/hooks';
 import { t } from '../../i18n/i18n';
 import { api, features } from '../../platform/api';
-import { ACCESSIBILITY_URL, CHANGELOG_URL, NEW_ISSUE_URL, PRIVACY_URL, REPO_URL } from '../../shared/links';
+import { CHANGELOG_URL, NEW_ISSUE_URL, PRIVACY_URL, REPO_URL } from '../../shared/links';
 import { Icon } from '../../ui/icons';
 import {
   defaultShortcut,
@@ -160,7 +160,6 @@ export function HelpPage({ topic: openAt = null }: { topic?: string | null }) {
           />
           <AboutLink href={NEW_ISSUE_URL} icon="chat" title={t('help.issue')} sub={t('help.issueHelp')} />
           <AboutLink href={PRIVACY_URL} icon="shield" title={t('help.privacyPolicy')} />
-          <AboutLink href={ACCESSIBILITY_URL} icon="eye" title={t('help.accessibilityStatement')} />
           <AboutLink href={CHANGELOG_URL} icon="list" title={t('help.changelog')} />
         </ul>
         <p class="small muted">{t('help.license')}</p>

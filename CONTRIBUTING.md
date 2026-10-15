@@ -49,7 +49,7 @@ Load `dist/chrome` as an unpacked extension, or `dist/firefox` as a temporary ad
   terms (rule, condition, limit, browser blocking filters), never the code words (group, policy,
   budget, DNR).
 - Keep the interface accessible: keyboard use, labels, contrast, no meaning carried by colour
-  alone, reduced motion respected ([accessibility](README.md#accessibility)).
+  alone, reduced motion respected.
 - A new behaviour comes with tests: unit tests for logic, an end-to-end scenario for a flow.
   Background modules are unit tested against the fake browser of `tests/unit/fake-browser.ts`;
   end-to-end scenarios are for what only a real browser shows: blocking filters, content

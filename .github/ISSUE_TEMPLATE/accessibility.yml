@@ -4,7 +4,7 @@ labels: [accessibility]
 body:
   - type: markdown
     attributes:
-      value: Thank you for reporting a barrier. What WebHandbrake supports and the known gaps are in the Accessibility section of README.md.
+      value: Thank you for reporting a barrier.
   - type: textarea
     id: what
     attributes:
