@@ -1,0 +1,41 @@
+name: Bug report
+description: Something does not work as the Help describes it
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Please search the existing issues first. Do not paste addresses or other browsing data you want to keep private.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected and what you saw.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Create a rule with …
+        2. Open …
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser, version and system
+      placeholder: Firefox 140 on Windows 11, Firefox for Android 142, Chrome 130 on macOS
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: WebHandbrake version
+      description: Help › About.
+  - type: textarea
+    id: report
+    attributes:
+      label: Diagnostic report
+      description: Settings › Diagnostics › Copy diagnostic report. Addresses are left out unless you include them.
+      render: text

@@ -1,0 +1,26 @@
+{
+  "extName": {
+    "message": "WebHandbrake – Website Blocker & Time Limits",
+    "description": "Extension name shown in the browser and in the stores (75 characters at most). \"WebHandbrake\" is not translated; the words after the dash say what it does."
+  },
+  "extDescription": {
+    "message": "Block distracting websites or slow them down: schedules, daily limits, focus sessions. Privacy-focused and open source.",
+    "description": "Extension description shown in the browser and in the stores (132 characters at most)."
+  },
+  "cmdOpenPopup": {
+    "message": "Open WebHandbrake",
+    "description": "Keyboard shortcut description"
+  },
+  "cmdStartSession": {
+    "message": "Start a 25-minute focus session",
+    "description": "Keyboard shortcut description"
+  },
+  "cmdBlockSite": {
+    "message": "Block the current site",
+    "description": "Keyboard shortcut description"
+  },
+  "cmdOpenDashboard": {
+    "message": "Open the dashboard",
+    "description": "Keyboard shortcut description"
+  }
+}

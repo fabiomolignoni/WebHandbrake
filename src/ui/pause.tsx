@@ -1,0 +1,210 @@
+/** Pause dialog. The cost is shown before starting. */
+
+import { useState } from 'preact/hooks';
+import type { Cost, PauseScope, Period } from '../engine/types';
+import { t } from '../i18n/i18n';
+import type { PauseOptions, TicketView } from '../shared/models';
+import { call } from '../shared/rpc';
+import { Banner, Button, Chips, Dialog, NumberInput, toast } from './components';
+import { TicketDialog } from './ticket';
+
+export function costLabel(c: Cost): string {
+  switch (c.type) {
+    case 'none':
+      return t('cost.none');
+    case 'confirm':
+      return t('cost.confirm');
+    case 'delay':
+      return t('cost.delay', { seconds: c.seconds });
+    case 'challenge':
+      return c.kind === 'phrase'
+        ? t('cost.phrase')
+        : c.kind === 'math'
+          ? t('cost.math')
+          : t('cost.random', { length: c.length ?? 24 });
+    case 'password':
+      return t('cost.password');
+  }
+}
+
+/** Every cost to pay, e.g. "Wait 30 s + Type a code". */
+export function costsLabel(costs: Cost[]): string {
+  return costs.length ? costs.map(costLabel).join(' + ') : t('cost.none');
+}
+
+/** "today", "this week"…: the period that the breaks left belong to. */
+function periodLeft(p: Period | null): string {
+  switch (p?.kind) {
+    case 'hour':
+      return t('pause.period.hour');
+    case 'day':
+      return t('pause.period.day');
+    case 'week':
+      return t('pause.period.week');
+    case 'month':
+      return t('pause.period.month');
+    default:
+      return t('pause.period.other');
+  }
+}
+
+/** The breaks still available, with their period: "3 breaks left today, 30 min in total". */
+export function pauseBudgetLabel(o: PauseOptions): string | null {
+  const count = o.remainingCount;
+  const minutes = o.remainingMinutes === null ? null : Math.round(o.remainingMinutes);
+  if (count !== null && minutes !== null && JSON.stringify(o.countPeriod) === JSON.stringify(o.minutesPeriod))
+    return t('pause.left.both', { count, minutes, period: periodLeft(o.countPeriod) });
+  const parts: string[] = [];
+  if (count !== null) parts.push(t('pause.left.count', { count, period: periodLeft(o.countPeriod) }));
+  if (minutes !== null) parts.push(t('pause.left.minutes', { minutes, period: periodLeft(o.minutesPeriod) }));
+  return parts.length ? parts.join(' · ') : null;
+}
+
+/** The line next to "Take a break": what a break costs and how many are left. */
+export function pauseSummary(o: PauseOptions): string {
+  const cost = o.costs.length
+    ? t('pause.summary.cost', { cost: costsLabel(o.costs) })
+    : t('pause.summary.free');
+  return [cost, pauseBudgetLabel(o)].filter(Boolean).join(' · ');
+}
+
+export function PauseDialog({
+  options,
+  url,
+  onClose,
+  onStarted,
+}: {
+  options: PauseOptions;
+  url?: string;
+  onClose: () => void;
+  onStarted?: () => void;
+}) {
+  const [scope, setScope] = useState<PauseScope>(
+    options.scopes.includes('site') ? 'site' : options.scopes[0],
+  );
+  // A pause of everything has its own rules (the strictest of every group).
+  const o = scope === 'all' && options.all ? options.all : options;
+  const d = o.duration;
+  const [chosen, setMinutes] = useState<number>(
+    d.mode === 'choices' ? (d.choices?.[0] ?? d.minutes) : d.minutes,
+  );
+  const minutes = Math.min(chosen, d.minutes);
+  const [reason, setReason] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [ticket, setTicket] = useState<TicketView | null>(null);
+
+  const start = async () => {
+    setError(null);
+    if (o.reasonMode === 'required' && !reason.trim()) {
+      setError(t('ticket.error.reasonRequired'));
+      return;
+    }
+    const r = await call('pause.start', {
+      url: url ?? options.url ?? undefined,
+      groupId: !url && options.groups.length === 1 ? options.groups[0].id : undefined,
+      scope,
+      minutes,
+      incognito: options.incognito,
+      reason: o.reasonMode === 'none' ? undefined : reason,
+    });
+    if (r.error) setError(t(r.error));
+    else if (r.ticket) setTicket(r.ticket);
+    else done();
+  };
+  const done = () => {
+    toast(t('pause.started', { minutes }));
+    onStarted?.();
+    onClose();
+  };
+
+  if (ticket) {
+    return (
+      <TicketDialog ticket={ticket} title={t('pause.title')} onDone={done} onCancel={() => setTicket(null)} />
+    );
+  }
+  const scopeLabel: Record<PauseScope, string> = {
+    page: t('pause.scope.page'),
+    site: options.site ? t('pause.scope.siteNamed', { site: options.site }) : t('pause.scope.site'),
+    group:
+      options.groups.length === 1
+        ? t('pause.scope.groupNamed', { group: options.groups[0].name })
+        : t('pause.scope.group'),
+    all: t('pause.scope.all'),
+  };
+  const budget = pauseBudgetLabel(o);
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={t('pause.title')}
+      actions={
+        <>
+          <Button variant="primary" onClick={onClose}>
+            {t('pause.cancel')}
+          </Button>
+          <Button onClick={start}>{t('pause.start')}</Button>
+        </>
+      }
+    >
+      <div class="stack">
+        <div class="field">
+          <span class="label">{t('pause.for')}</span>
+          <Chips
+            value={scope}
+            onChange={setScope}
+            label={t('pause.for')}
+            options={options.scopes.map((s) => ({ value: s, label: scopeLabel[s] }))}
+          />
+        </div>
+        <div class="field">
+          <span class="label">{t('pause.duration')}</span>
+          {d.mode === 'fixed' && <p>{t('common.minutes', { n: d.minutes })}</p>}
+          {d.mode === 'choices' && (
+            <Chips
+              value={minutes}
+              onChange={setMinutes}
+              label={t('pause.duration')}
+              options={(d.choices?.length ? d.choices : [d.minutes]).map((m) => ({
+                value: m,
+                label: t('common.minutes', { n: m }),
+              }))}
+            />
+          )}
+          {d.mode === 'upTo' && (
+            <div class="row">
+              <NumberInput
+                value={minutes}
+                onChange={setMinutes}
+                min={1}
+                max={d.minutes}
+                label={t('pause.duration')}
+                suffix={t('common.minutesUnit')}
+              />
+              <span class="help">{t('pause.max', { minutes: d.minutes })}</span>
+            </div>
+          )}
+          {o.metered && <span class="help">{t('pause.metered')}</span>}
+        </div>
+        {o.reasonMode !== 'none' && (
+          <div class="field">
+            <label for="pause-reason">
+              {o.reasonMode === 'required' ? t('pause.reasonRequired') : t('pause.reasonOptional')}
+            </label>
+            <input
+              id="pause-reason"
+              class="input"
+              value={reason}
+              maxLength={300}
+              onInput={(e) => setReason((e.target as HTMLInputElement).value)}
+            />
+          </div>
+        )}
+        <p class="small">
+          <strong>{t('pause.cost')}:</strong> {costsLabel(o.costs)}
+          {budget && <> · {budget}</>}
+        </p>
+        {error && <Banner kind="danger">{error}</Banner>}
+      </div>
+    </Dialog>
+  );
+}

@@ -1,0 +1,57 @@
+# Release: pushing a tag vX.Y.Z (npm run release) runs the CI jobs on the tagged commit,
+# then builds the store packages and the source archive, writes a software bill of materials and
+# SHA-256 checksums, attests the build provenance of every file and opens a draft GitHub release
+# with the changelog entry. The maintainer publishes the draft after submitting the packages to
+# the stores.
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # the draft release
+      id-token: write # the Sigstore certificate that signs the attestation
+      attestations: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Check the tag and the changelog
+        run: node scripts/release-notes.mjs "$GITHUB_REF_NAME" > "$RUNNER_TEMP/notes.md"
+      - run: npm run build
+      - run: npm run package
+      - run: npm run package:source
+      - name: Software bill of materials
+        run: npm sbom --omit dev --sbom-format cyclonedx --sbom-type application > "web-ext-artifacts/webhandbrake-sbom-${GITHUB_REF_NAME#v}.cdx.json"
+      - name: Checksums
+        working-directory: web-ext-artifacts
+        run: sha256sum -- * > SHA256SUMS
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: web-ext-artifacts/*
+      - name: Draft the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "$GITHUB_REF_NAME" web-ext-artifacts/*
+          --repo "$GITHUB_REPOSITORY" --draft --verify-tag
+          --title "WebHandbrake ${GITHUB_REF_NAME#v}" --notes-file "$RUNNER_TEMP/notes.md"

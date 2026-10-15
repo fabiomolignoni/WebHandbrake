@@ -1,0 +1,55 @@
+{
+  "name": "webhandbrake",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A handbrake for the web: local-first, privacy-respecting browser extension to regulate your browsing with graduated friction.",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "engines": {
+    "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:chrome": "node scripts/build.mjs --target=chrome",
+    "build:firefox": "node scripts/build.mjs --target=firefox",
+    "build:test": "node scripts/build.mjs --test",
+    "watch": "node scripts/build.mjs --watch",
+    "build:verify": "node scripts/verify-build.mjs",
+    "package": "node scripts/build.mjs && node scripts/package.mjs",
+    "package:source": "node scripts/package.mjs --source",
+    "release": "node scripts/release.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tests/e2e/tsconfig.json",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "node scripts/build.mjs --test && playwright test",
+    "test:e2e:chromium": "node scripts/build.mjs --test --target=chrome && playwright test --project=chromium",
+    "test:e2e:firefox": "node scripts/build.mjs --test --target=firefox && playwright test --project=firefox",
+    "browsers": "node scripts/browsers.mjs",
+    "lint:firefox": "node scripts/build.mjs --target=firefox && web-ext lint --source-dir dist/firefox",
+    "check": "npm run typecheck && npm run lint && npm run i18n && npm run test:coverage",
+    "i18n": "node scripts/check-i18n.mjs",
+    "icons": "node scripts/icons.mjs"
+  },
+  "dependencies": {
+    "preact": "^11.0.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.15",
+    "@playwright/test": "^1.64.0",
+    "@types/chrome": "^0.3.4",
+    "@types/node": "^26.6.4",
+    "@vitest/coverage-v8": "^5.0.3",
+    "axe-core": "^4.14.0",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3",
+    "web-ext": "^10.7.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fabiomolignoni/WebHandbrake.git"
+  }
+}

@@ -1,0 +1,128 @@
+import { describe, expect, it } from 'vitest';
+import { delayIntervention } from '../../src/engine/defaults';
+import type { Group, Policy } from '../../src/engine/types';
+import { hasErrors, isRedirectUrl, validateGroup, validateTargets } from '../../src/engine/validate';
+import { BLOCK, config, group, t } from './helpers';
+
+const keys = (g: Group, c = config([g])) => validateGroup(g, c).map((i) => i.key);
+const valid = (policies: Partial<Policy>[], lines = ['a.test']) => group('A', lines, policies);
+
+describe('rule validation', () => {
+  it('a rule with a name, sites and a condition has nothing to report', () => {
+    const g = valid([{ intervention: BLOCK }]);
+    expect(validateGroup(g, config([g]))).toEqual([]);
+  });
+
+  it('a rule needs a name and a site that it restricts, its own or from a shared list', () => {
+    const g = valid([{ intervention: BLOCK }], ['+a.test']);
+    g.name = '  ';
+    expect(keys(g)).toEqual(['validate.noName', 'validate.noTargets', 'validate.unusedException']);
+    // Exceptions only: a rule that restricts nothing.
+    const listed = valid([{ intervention: BLOCK }], []);
+    listed.lists = ['L'];
+    const c = config([listed], (c) => {
+      c.lists = [{ id: 'L', rev: 1, updatedAt: 0, name: 'List', targets: [t('b.test')] }];
+    });
+    expect(validateGroup(listed, c)).toEqual([]);
+    expect(hasErrors(validateGroup(g, config([g])))).toBe(true);
+  });
+
+  it('a rule over every website is allowed, with a warning', () => {
+    const issues = validateGroup(valid([{ intervention: BLOCK }], ['*']), config([]));
+    expect(issues).toEqual([{ level: 'warning', key: 'validate.allSites' }]);
+    expect(hasErrors(issues)).toBe(false);
+  });
+
+  it('times: no window, no day, a window that starts and ends at the same time', () => {
+    expect(keys(valid([{ schedule: { mode: 'during', windows: [] }, intervention: BLOCK }]))).toEqual([
+      'validate.noWindows',
+    ]);
+    expect(keys(valid([{ schedule: { mode: 'outside', windows: [] }, intervention: BLOCK }]))).toEqual([
+      'validate.outsideNoWindows',
+    ]);
+    const odd = { mode: 'during' as const, windows: [{ days: [], start: 600, end: 600 }] };
+    const issues = validateGroup(valid([{ schedule: odd, intervention: BLOCK }]), config([]));
+    expect(issues.map((i) => [i.level, i.key, i.policy])).toEqual([
+      ['error', 'validate.noDays', 0],
+      ['warning', 'validate.emptyWindow', 0],
+    ]);
+    // 00:00–00:00 is a whole day, not an empty window.
+    const allDay = { mode: 'during' as const, windows: [{ days: [1], start: 0, end: 0 }] };
+    expect(keys(valid([{ schedule: allDay, intervention: BLOCK }]))).toEqual([]);
+  });
+
+  it('limits of nothing, and what happens: redirect address, phrase, durations', () => {
+    expect(
+      keys(valid([{ budget: { type: 'time', minutes: 0, period: { kind: 'day' } }, intervention: BLOCK }])),
+    ).toContain('validate.zeroBudget');
+    expect(
+      keys(valid([{ budget: { type: 'visits', count: 0, period: { kind: 'day' } }, intervention: BLOCK }])),
+    ).toContain('validate.zeroVisits');
+    expect(keys(valid([{ intervention: { type: 'redirect', url: 'javascript:alert(1)' } }]))).toContain(
+      'validate.redirectUrl',
+    );
+    expect(
+      keys(
+        valid([
+          {
+            intervention: {
+              type: 'challenge',
+              kind: 'phrase',
+              phrase: ' ',
+              grant: { scope: 'site', mode: 'visit' },
+            },
+          },
+        ]),
+      ),
+    ).toContain('validate.phrase');
+    expect(keys(valid([{ intervention: { type: 'ask', choices: [30], maxMinutes: 10 } }]))).toContain(
+      'validate.askChoices',
+    );
+  });
+
+  it('conditions after one that always applies are never reached', () => {
+    const issues = validateGroup(
+      valid([{ intervention: delayIntervention(10) }, { intervention: BLOCK }, { intervention: BLOCK }]),
+      config([]),
+    );
+    expect(issues.filter((i) => i.key === 'validate.unreachable').map((i) => i.params)).toEqual([
+      { n: 2, m: 1 },
+      { n: 3, m: 1 },
+    ]);
+  });
+
+  it('notes a rule without conditions, or one that only counts time', () => {
+    expect(keys(valid([]))).toEqual(['validate.noPolicies']);
+    expect(keys(valid([{ intervention: { type: 'track' } }]))).toEqual(['validate.onlyTracking']);
+  });
+
+  it('a break of no minutes is an error', () => {
+    const g = valid([{ intervention: BLOCK }]);
+    g.pause = { ...g.pause, allowed: true, duration: { mode: 'upTo', minutes: 0 } };
+    expect(keys(g)).toEqual(['validate.pauseDuration']);
+    // A rule that never blocks has no breaks: their settings are not checked.
+    const asks = valid([{ intervention: delayIntervention(30) }]);
+    asks.pause = g.pause;
+    expect(keys(asks)).toEqual([]);
+  });
+
+  it('regular expressions are checked for safety', () => {
+    expect(validateTargets([{ id: 'r', type: 'regex', value: '(a+)+' }])).toEqual([
+      { level: 'error', key: 'targets.error.regexNested', params: { value: '(a+)+' } },
+    ]);
+    expect(validateTargets([t('a.test'), { id: 'r', type: 'regex', value: '^https://a\\.test/' }])).toEqual(
+      [],
+    );
+  });
+});
+
+describe('redirect addresses', () => {
+  it('only web pages, with placeholders allowed', () => {
+    expect(isRedirectUrl('https://example.com/focus')).toBe(true);
+    expect(isRedirectUrl(' http://example.com/?from={url}&rule={group} ')).toBe(true);
+    expect(isRedirectUrl('https://')).toBe(false);
+    expect(isRedirectUrl('data:text/html,hi')).toBe(false);
+    expect(isRedirectUrl('file:///etc/passwd')).toBe(false);
+    expect(isRedirectUrl('not a url')).toBe(false);
+  });
+});
