@@ -45,7 +45,7 @@ jobs:
       - name: Checksums
         working-directory: web-ext-artifacts
         run: sha256sum -- * > SHA256SUMS
-      - uses: actions/attest-build-provenance@v2
+      - uses: actions/attest-build-provenance@v4
         with:
           subject-path: web-ext-artifacts/*
       - name: Draft the release
