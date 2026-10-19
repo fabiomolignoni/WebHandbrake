@@ -34,6 +34,8 @@ describe('durations', () => {
     expect(formatDuration(48 * 3600)).toBe('2 days');
     expect(formatDuration(7 * 86_400)).toBe('7 days');
     expect(formatDuration(48 * 3600 + 60)).toBe('48 h 1 min');
+    expect(formatDuration(50 * 3600)).toBe('50 h');
+    expect(formatDuration(71 * 3600)).toBe('71 h');
   });
 
   it('the badge holds four characters at most', () => {

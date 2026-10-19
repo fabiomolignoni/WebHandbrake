@@ -29,6 +29,8 @@ All notable changes to WebHandbrake are documented here. The format follows
   a quick session (Today, the keyboard shortcut, the context menu) no longer starts when no rule is
   in quick sessions, since it would block nothing: Today says how to add rules to them, and the
   shortcut opens the Focus page.
+- Durations of more than two days that are not whole days, such as 50 hours, were shown as
+  2 days.
 
 ## [1.0.0] - 2026-10-15
 
