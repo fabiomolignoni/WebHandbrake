@@ -93,7 +93,7 @@ test.describe('Firefox event page', () => {
     const tab = await h.open('http://blocked.test/');
     await tab.expectIntervention();
     // The intervention page needed the background: it woke up with everything it had.
-    await tab.role('heading', /protected/).expectVisible();
+    await tab.role('heading', /blocked/).expectVisible();
     expect((await h.state()).bootId).not.toBe(first);
     expect((await h.rpc('config.get')).config.groups).toHaveLength(2);
     expect((await h.state()).meta.restored).toBeNull();

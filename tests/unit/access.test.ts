@@ -132,7 +132,6 @@ describe('the protection of each rule', () => {
       (c: Config) => (c.groups[0].targets = []),
       (c: Config) => (c.groups[0].enabled = false),
       (c: Config) => (c.groups[0].protection = lockedUntil(Date.now() + HOUR)),
-      (c: Config) => c.allowlist.push({ id: 'x', type: 'domain', value: 'www.bets.test' }),
       (c: Config) => (c.settings.dayStart = 240),
     ]) {
       const r = await t.propose(loosen);
@@ -142,9 +141,6 @@ describe('the protection of each rule', () => {
     }
     t.store.state.clockOffset = 10 * 365 * 24 * HOUR;
     expect((await t.propose((c) => (c.groups[0].targets = []))).refused?.reason).toBe('permanent');
-    // A site that the rule does not restrict is not its business.
-    const bank = await t.propose((c) => c.allowlist.push({ id: 'z', type: 'domain', value: 'bank.test' }));
-    expect(bank.applied).toHaveLength(1);
   });
 
   it('a change to several rules takes what each asks: a refusal first, then secrets and the longest wait', async () => {
@@ -159,9 +155,6 @@ describe('the protection of each rule', () => {
       { type: 'rulePassword', groups: ['C'], names: ['C'] },
       { type: 'wait', seconds: 30 },
     ]);
-    // Always allowed: only the rules whose sites the entry opens.
-    const allow = await t.propose((c) => c.allowlist.push({ id: 'x', type: 'domain', value: 'c.test' }));
-    expect(allow.ticket?.step).toEqual({ type: 'rulePassword', names: ['C'] });
     // A long wait among them: a pending change.
     t.store.config.groups[1].protection = wait(86_400);
     const pending = await t.propose((c) => (c.settings.dayStart = 240));
@@ -497,26 +490,24 @@ describe('costs are checked again when they are paid', () => {
   });
   afterEach(() => vi.doUnmock('../../src/background/reconcile'));
 
-  const LIST = { id: 'L', name: 'List', rev: 1, updatedAt: 0, targets: [] as Group['targets'] };
-
   it('a cost paid for one rule does not apply a change that now loosens a Locked rule (regression)', async () => {
     const t = await setup([
-      group('S', ['s.test'], [{ intervention: BLOCK }], { protection: REMINDER, lists: ['L'] }),
-      group('R', ['r.test'], [{ intervention: BLOCK }], { protection: lockedUntil(Date.now() + HOUR) }),
+      group('S', ['s.test'], [{ intervention: BLOCK }], { protection: REMINDER }),
+      group('R', ['r.test'], [{ intervention: BLOCK }], {
+        protection: lockedUntil(Date.now() + HOUR),
+        enabled: false,
+      }),
     ]);
-    t.store.config.lists = [{ ...LIST, targets: [{ id: 'b', type: 'domain', value: 'list.test' }] }];
-    // An exception in the list touches S only: a confirmation.
-    const r = await t.propose((c) =>
-      c.lists[0].targets.push({ id: 'x', type: 'path', value: 'r.test/watch', allow: true }),
-    );
+    // A setting touches the active rules, S only: a confirmation.
+    const r = await t.propose((c) => (c.settings.dayStart = 240));
     expect(r.ticket?.step.type).toBe('confirm');
-    // Meanwhile, in another tab, the list is linked to the Locked rule (a list of blocks: stricter).
-    expect((await t.propose((c) => c.groups[1].lists.push('L'))).applied).toHaveLength(1);
+    // Meanwhile, in another tab, the Locked rule is turned on (stricter).
+    expect((await t.propose((c) => (c.groups[1].enabled = true))).applied).toHaveLength(1);
     expect(await t.tickets.answerTicket(r.ticket?.id ?? '', '')).toMatchObject({
       status: 'error',
       error: 'ticket.error.changed',
     });
-    expect(t.store.config.lists[0].targets).toHaveLength(1);
+    expect(t.store.config.settings.dayStart).toBe(0);
   });
 
   it('a requirement added after the cost was shown is asked before anything applies', async () => {

@@ -154,7 +154,7 @@ function Hero({ m, reload }: { m: PopupModel; reload: () => void }) {
           </Button>
         </div>
       )}
-      {d && (d.groups.length > 0 || d.excepted.length > 0 || d.allowlisted) && (
+      {d && (d.groups.length > 0 || d.excepted.length > 0) && (
         <div class="hero-foot">
           <div class="row" style={{ gap: '4px 10px' }}>
             {d.groups.map((g) => (

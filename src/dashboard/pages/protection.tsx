@@ -5,6 +5,7 @@
 import { useState } from 'preact/hooks';
 import { isGroupActive } from '../../engine/compile';
 import { clone } from '../../engine/json';
+import { WAIT_IN_DIALOG_SECONDS } from '../../engine/limits';
 import type { Group, PendingChange, Protection, TamperEvent } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { api, browserName } from '../../platform/api';
@@ -426,7 +427,10 @@ export function ProtectionPage() {
       <section class="card stack" aria-labelledby="checklist-title">
         <h2 id="checklist-title">{t('protection.checklist')}</h2>
         <Checklist />
-        <Field label={t('protection.internalPages')} help={t('protection.internalPagesHelp')}>
+        <Field
+          label={t('protection.internalPages')}
+          help={t('protection.internalPagesHelp', { minutes: WAIT_IN_DIALOG_SECONDS / 60 })}
+        >
           {(id) => (
             <Select
               id={id}

@@ -85,13 +85,17 @@ function load(store: string): State | null {
     // A wizard started by an earlier version kept only the kind of intervention.
     const intervention =
       s.intervention !== undefined ? s.intervention : s.how ? quickIntervention(s.how, s.redirectUrl) : null;
+    const protection = s.protection ?? null;
     return {
       ...s,
       id: s.id ?? newId(),
+      // A password or a partner code was not kept: past the protection step, the review would
+      // show (and create) the default protection instead of the one chosen.
+      step: protection ? s.step : Math.min(s.step, STEPS.indexOf('protection')),
       intervention,
       kept: s.kept ?? {},
       customMinutes: Boolean(s.customMinutes),
-      protection: s.protection ?? null,
+      protection,
       breaks: s.breaks ?? null,
       // A ready-made list may have been removed since.
       templates: (s.templates ?? []).filter((id) => TEMPLATES.some((x) => x.id === id)),

@@ -41,7 +41,7 @@ test.describe('block page', () => {
       ];
     });
     const p = await expectBlocked(h, 'http://social.test/feed');
-    await p.role('heading', 'This space is protected right now.').expectVisible();
+    await p.role('heading', 'This page is blocked right now.').expectVisible();
     await p.get('blockquote.note').expectText('Evenings with friends');
     await p.get('.message').expectText('Line one Line two');
     await p.get('.meta').expectText('social.test');
@@ -102,7 +102,7 @@ test.describe('block page', () => {
       c.groups = [group('Social', ['social.test'], [policy(BLOCK)])];
     });
     const p = await expectBlocked(h, 'http://social.test/');
-    await p.role('heading', /protected/).expectVisible();
+    await p.role('heading', /blocked/).expectVisible();
     expect(await p.eval(() => getComputedStyle(document.querySelector('h1')!).color)).toBe('rgb(1, 2, 3)');
     await sleep(500);
     expect(h.server.hits('evil.test')).toEqual([]);

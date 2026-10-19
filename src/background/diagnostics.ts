@@ -60,7 +60,7 @@ export async function diagReport(includeUrls: boolean): Promise<string> {
   const lines = [
     `WebHandbrake ${m.version} on ${m.browser}`,
     `User agent: ${navigator.userAgent}`,
-    `Groups: ${cfg.groups.length} (${cfg.groups.filter(isGroupActive).length} active), targets: ${cfg.groups.reduce((n, g) => n + g.targets.length, 0)}, lists: ${cfg.lists.length}, allowlist: ${cfg.allowlist.length}`,
+    `Groups: ${cfg.groups.length} (${cfg.groups.filter(isGroupActive).length} active), targets: ${cfg.groups.reduce((n, g) => n + g.targets.length, 0)}`,
     `Protection: ${cfg.groups.map((g) => g.protection.kind).join(', ') || 'no rules'}`,
     `Rules: ${m.rules.dynamic} dynamic, ${m.rules.regex} regex, ${m.rules.redirects} redirects; limits ${JSON.stringify(m.rules.limits)}`,
     `Rules overflow: ${m.rules.overflow.length}; last error: ${m.rules.lastError ?? 'none'}; compile ${m.rules.lastCompileMs} ms`,

@@ -4,7 +4,7 @@
  */
 
 import { expect, test } from './harness';
-import { group, PERMANENT, policy, REMINDER, TRACK, target } from './harness/config';
+import { group, PERMANENT, policy, REMINDER, TRACK } from './harness/config';
 import { expectAllowed, expectBlocked } from './helpers';
 
 const session = (more: Record<string, unknown> = {}) => ({
@@ -171,14 +171,4 @@ test('the keyboard shortcut starts a 25-minute session; so does the context menu
   expect(commands.map((c) => c.name)).toEqual(
     expect.arrayContaining(['_execute_action', 'start-session', 'block-site', 'open-dashboard']),
   );
-});
-
-test('the global allowlist stays open during an allowlist session', async ({ h }) => {
-  await h.configure((c) => {
-    c.allowlist = [target('bank.test')];
-  });
-  await h.rpc('session.start', session({ kind: 'allowlist', allow: [target('docs.test')] }));
-  await expectAllowed(h, 'http://bank.test/');
-  await expectAllowed(h, 'http://docs.test/');
-  await expectBlocked(h, 'http://other.test/');
 });

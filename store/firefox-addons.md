@@ -111,8 +111,8 @@ WebHandbrake blocks the websites that pull you in, or slows them down so that yo
 
 - **Ask first**: say what you want to do, and for how long, before the site opens.
 - **Wait**: a short countdown that lets the impulse pass.
-- **Challenge**: type a random text to continue.
-- Or a visual filter such as grayscale, a redirect to a page you choose, or closing the tab.
+- **Challenge**: type random characters, a phrase or the result of a small calculation to continue.
+- Or a visual filter such as greyscale, a redirect to a page you choose, or closing the tab.
 
 **Rules that fit your day**
 
@@ -186,7 +186,7 @@ stesso Markdown della descrizione, ma non le tabelle di `PRIVACY.md`):
 
 **What it stores**
 
-- Your rules, lists and settings, and automatic backups of them. Rule passwords are kept only as salted hashes.
+- Your rules and settings, and automatic backups of them. Rule passwords are kept only as salted hashes.
 - Daily statistics per rule and per site name (never full addresses), kept 730 days by default.
 - Breaks and their reasons, focus sessions, pending changes, protection events, the pages you save for later, and the reasons you type when WebHandbrake asks what you want to do.
 - Until the browser closes: a log of the last 200 restricted pages, which you can turn off in Settings › Diagnostics.

@@ -112,7 +112,7 @@ export const HELP_TOPICS: HelpTopic[] = [
   {
     id: 'groups',
     title: 'help.groups.title',
-    blocks: [{ p: 'help.groups.p1' }, { p: 'help.groups.p2' }, { p: 'help.groups.p3' }, { syntax: true }],
+    blocks: [{ p: 'help.groups.p1' }, { p: 'help.groups.p2' }, { syntax: true }],
   },
   {
     id: 'rules',
@@ -279,8 +279,9 @@ export const SYNTAX: [entry: string, meaningKey: string][] = [
 
 /**
  * The keyboard shortcuts listed in Help: a command of the manifest (`commands`) and the message key
- * that describes it. The key shown is the command's default (`suggested_key`), read from the
- * manifest; a command without a default key is not listed.
+ * that describes it. Help shows the key the browser gave each command, which is not always the
+ * default (`suggested_key`): the user may have changed it, and the browser leaves out a key that is
+ * already taken.
  */
 export const SHORTCUTS: { command: string; description: string; params?: HelpParams }[] = [
   { command: '_execute_action', description: 'help.shortcut.popup' },
@@ -290,13 +291,5 @@ export const SHORTCUTS: { command: string; description: string; params?: HelpPar
     params: (f) => ({ minutes: f.sessionMinutes }),
   },
   { command: 'block-site', description: 'help.shortcut.block' },
+  { command: 'open-dashboard', description: 'help.shortcut.dashboard' },
 ];
-
-/** The default key of a manifest command (`suggested_key`), or null when it has none. */
-export function defaultShortcut(
-  commands: Record<string, { suggested_key?: string | { default?: string } }> | undefined,
-  command: string,
-): string | null {
-  const key = commands?.[command]?.suggested_key;
-  return (typeof key === 'string' ? key : key?.default) || null;
-}

@@ -90,8 +90,6 @@ export function defaultConfig(): Config {
   return {
     schema: SCHEMA_VERSION,
     groups: [],
-    lists: [],
-    allowlist: [],
     settings: defaultSettings(),
     tombstones: [],
   };
@@ -203,7 +201,6 @@ export function newGroup(partial: Partial<Group> = {}, now = Date.now()): Group 
     enabled: true,
     archived: false,
     targets: [],
-    lists: [],
     policies: [],
     pause: pausePolicyFor(DEFAULT_PROTECTION),
     protection: { ...DEFAULT_PROTECTION },

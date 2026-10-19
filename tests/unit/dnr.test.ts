@@ -24,13 +24,8 @@ function browser(rules: DnrRuleData[], url: string, type: DnrResource = 'main_fr
   return top.action.type;
 }
 
-function compile(
-  groups: Group[],
-  state: RuntimeState = defaultState(),
-  opts = OPTS,
-  patch = (_: ReturnType<typeof config>) => {},
-) {
-  return compileDnr(ctx(config(groups, patch), at(0, 10), state), opts);
+function compile(groups: Group[], state: RuntimeState = defaultState(), opts = OPTS) {
+  return compileDnr(ctx(config(groups), at(0, 10), state), opts);
 }
 
 describe('browser filters', () => {
@@ -55,7 +50,7 @@ describe('browser filters', () => {
     expect(browser(rules, 'https://other.test/')).toBe('none');
   });
 
-  it('Always allowed and the sites a focus session allows win over the rules', () => {
+  it('an allowlist session redirects every website but the ones it allows', () => {
     const state = defaultState();
     const session: FocusSession = {
       id: 's',
@@ -69,10 +64,7 @@ describe('browser filters', () => {
       noPauses: false,
     };
     state.sessions.push(session);
-    const { rules } = compile([group('A', ['news.test'], [{ intervention: BLOCK }])], state, OPTS, (c) => {
-      c.allowlist = [t('news.test/weather')];
-    });
-    expect(browser(rules, 'https://news.test/weather/today')).toBe('allow');
+    const { rules } = compile([group('A', ['news.test'], [{ intervention: BLOCK }])], state);
     expect(browser(rules, 'https://news.test/')).toBe('redirect');
     // Every other website is redirected during the session, the allowed ones are not.
     expect(browser(rules, 'https://anything.test/')).toBe('redirect');

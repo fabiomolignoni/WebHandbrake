@@ -1,6 +1,6 @@
 /**
  * The dashboard in a real browser: every page, the rule
- * wizard, the first run, the rule editor, the rule list, shared lists, settings and insights.
+ * wizard, the first run, the rule editor, the rule list, settings and insights.
  */
 
 import { timeStep, totp } from '../../src/background/totp';
@@ -23,8 +23,6 @@ const ROUTES = [
   'today',
   'groups',
   'groups/new',
-  'lists',
-  'allowlist',
   'focus',
   'later',
   'insights',
@@ -170,7 +168,7 @@ test('a rule is created step by step: sites → when → what happens → protec
   await p.button('Next: review').click();
   // The review states the plan: when (the schedule) and what happens.
   await p.get('.plan-text').expectText('Mon–Fri');
-  await p.get('.plan-text').expectText('WebHandbrake blocks them.');
+  await p.get('.plan-text').expectText('WebHandbrake blocks the page.');
   await p.button('Create rule').click();
   await p.role('heading', 'Rules', { exact: true }).expectVisible();
   const cfg = (await h.rpc('config.get')).config;
@@ -217,6 +215,18 @@ test("the wizard's Password protection is hashed in the background and never kep
   expect(await wizardState(p)).not.toContain('pbkdf2');
   await p.button('Next: review').click();
   await p.text(/Loosening this rule later takes: Password/).expectVisible();
+  // Resumed without the password (here after a reload), the wizard asks for the protection again
+  // instead of creating the rule with the default one.
+  await p.reload();
+  await p.role('heading', 'What should loosening this rule take?').expectVisible();
+  await p.get('.choice[aria-checked="true"]').expectCount(0);
+  await p.button('Next: review').expectEnabled(false);
+  await p.role('radio', /^Password/).click();
+  await p.label('New password').type('only my sister knows');
+  await p.label('Repeat the password').type('only my sister knows');
+  await p.button('Save', { exact: true, within: 'dialog' }).click();
+  await p.button('Next: review').click();
+  await p.text(/Loosening this rule later takes: Password/).expectVisible();
   await p.button('Create rule').click();
   await p.role('heading', 'Rules', { exact: true }).expectVisible();
   const created = (await h.rpc('config.get')).config.groups.find((g: any) => g.name === 'Gambling');
@@ -237,12 +247,12 @@ test("the wizard's Partner code protection is set up with a code from the partne
   await p.role('radio', /^Partner code/).click();
   await p.role('heading', 'Set up a partner code for Casino').expectVisible();
   const secret = (await p.get('.partner-key').text()).replace(/\s/g, '');
-  await p.label("Code from your partner's app").fill('000000');
+  await p.label('Code from your partner’s app').fill('000000');
   await p.button('Confirm', { exact: true, within: 'dialog' }).click();
-  await p.text(/not the code that your partner's app shows/).expectVisible();
-  await p.label("Code from your partner's app").fill(await totp(secret, timeStep(await h.clock.now())));
+  await p.text(/not the code that your partner’s app shows/).expectVisible();
+  await p.label('Code from your partner’s app').fill(await totp(secret, timeStep(await h.clock.now())));
   await p.button('Confirm', { exact: true, within: 'dialog' }).click();
-  await p.text("Your partner's app shows the codes for this rule.").expectVisible();
+  await p.text('Your partner’s app shows the codes for this rule.').expectVisible();
   expect(await wizardState(p)).not.toContain(secret);
   await p.button('Next: review').click();
   await p.button('Create rule').click();
@@ -280,11 +290,17 @@ test('the wizard takes wildcards and every website, and the editor warns (#20, #
   await editor.text('This rule applies to every website.', { exact: false }).expectVisible();
 });
 
-test('the address guide shows the four common forms and links to every address type (#11)', async ({ h }) => {
+test('the address guide shows the five common forms and links to every address type (#11)', async ({ h }) => {
   const p = await h.page('dashboard.html#/groups/new');
   await p.text('How to write an address').click();
-  await p.get('.guide-example').expectCount(4);
-  for (const example of ['youtube.com', 'example.com/page$', '*news*', '+youtube.com/feed/subscriptions'])
+  await p.get('.guide-example').expectCount(5);
+  for (const example of [
+    'youtube.com',
+    'example.com/page$',
+    '*news*',
+    '*',
+    '+youtube.com/feed/subscriptions',
+  ])
     await p.button(`Use the example ${example}`).expectVisible();
   await p.button('Use the example *news*').click();
   await p.placeholder('Add a site, or paste a list…').expectValue('*news*');
@@ -307,6 +323,20 @@ test('the address guide shows the four common forms and links to every address t
   ).toBe(true);
   // The rule being created is still there.
   await p.placeholder('Add a site, or paste a list…').expectValue('*news*');
+});
+
+test('Help lists the keys the browser gave the shortcuts, and opens its shortcut settings', async ({ h }) => {
+  const p = await h.page('dashboard.html#/help/shortcuts');
+  const items = p.get('#help-shortcuts li');
+  await items.expectCount(4);
+  expect(await items.texts()).toEqual([
+    'Alt+Shift+1 — open the popup',
+    'Alt+Shift+2 — start a 25-minute focus session',
+    'Alt+Shift+3 — block the current site',
+    'No key — open the dashboard',
+  ]);
+  const settings = await h.newTab(() => p.button('Change shortcuts').click());
+  await settings.expectUrl(h.browser === 'firefox' ? /^about:addons/ : 'chrome://extensions/shortcuts');
 });
 
 test('"count only" at certain times counts nothing outside them (#21)', async ({ h }) => {
@@ -516,7 +546,7 @@ test("first run, welcome → the rule wizard's steps → done", async ({ h }) =>
   await p.get('.plan-text').expectText('After 45 min a day on');
   await p.label('Why does this rule matter to you?').fill('More evenings outside');
   await p.button('Create rule').click();
-  await p.role('heading', "You're set").expectVisible();
+  await p.role('heading', 'You’re set').expectVisible();
   await p.text('“Video” is active.', { exact: false }).expectVisible();
   const cfg = (await h.rpc('config.get')).config;
   expect(cfg.groups).toHaveLength(1);
@@ -557,7 +587,7 @@ test('Back from the first step returns to the welcome and keeps the draft; the r
   await p.role('radio', '24 h').click();
   await p.button('Next: review').click();
   await p.button('Create rule').click();
-  await p.role('heading', "You're set").expectVisible();
+  await p.role('heading', 'You’re set').expectVisible();
   await expectBlocked(h, 'http://casino.test/');
   expect((await h.rpc('config.get')).config.groups.map((g: any) => g.protection)).toEqual([wait(86_400)]);
 });
@@ -629,46 +659,21 @@ test('the rule list turns rules on and off, duplicates, archives and searches', 
   await p.text('Video', { exact: true, within: 'main' }).expectVisible();
 });
 
-test('a shared list is created and used by a rule', async ({ h }) => {
+test('a list of sites pasted into a rule becomes one entry per line', async ({ h }) => {
   await h.configure((c) => {
     c.groups = [group('Weekdays', ['weekday.test'], [policy(BLOCK)])];
   });
-  const p = await h.page('dashboard.html#/lists');
-  await p.button('New list').click();
-  await p.label('Name').fill('Social media');
+  const id = (await h.rpc('config.get')).config.groups[0].id;
+  const p = await h.page(`dashboard.html#/groups/${id}?step=sites`);
   // A list is pasted: the field becomes a text area with every line.
   await p.placeholder('Add a site, or paste a list…').paste('one.test\ntwo.test');
   await p.get('textarea.textarea').expectValue('one.test\ntwo.test');
   await p.button('Add', { exact: true }).click();
-  await p.button(/Save|Create/).click();
+  await p.button('Save changes').click();
   await expect
-    .poll(async () => (await h.rpc('config.get')).config.lists.map((l: any) => l.name))
-    .toEqual(['Social media']);
-  const list = (await h.rpc('config.get')).config.lists[0];
-  expect(list.targets.map((t: any) => t.value)).toEqual(['one.test', 'two.test']);
-  await h.configure((c) => {
-    c.groups[0].lists = [list.id];
-  });
+    .poll(async () => (await h.rpc('config.get')).config.groups[0].targets.map((t: any) => t.value))
+    .toEqual(['weekday.test', 'one.test', 'two.test']);
   await expectBlocked(h, 'http://two.test/');
-  await p.eval(() => {
-    location.hash = '#/lists';
-  });
-  await p.text(/used by Weekdays/).expectVisible();
-});
-
-test('a site added to "Always allowed" from its page loosens the rules with their cost', async ({ h }) => {
-  await h.configure((c) => {
-    c.groups = [group('Block', ['bank.test'], [policy(BLOCK)])];
-    for (const g of c.groups) g.protection = REMINDER;
-  });
-  const p = await h.page('dashboard.html#/allowlist');
-  await p.placeholder('Add a site, or paste a list…').fill('bank.test/login');
-  await p.button('Add', { exact: true }).click();
-  await p.button(/Save/).click();
-  await p.button('Yes, continue').click();
-  await expect.poll(async () => (await h.rpc('config.get')).config.allowlist.length).toBe(1);
-  await expectAllowed(h, 'http://bank.test/login');
-  await expectBlocked(h, 'http://bank.test/');
 });
 
 test('the theme applies to every page of the extension', async ({ h }) => {
@@ -683,7 +688,7 @@ test('the theme applies to every page of the extension', async ({ h }) => {
   // The accent is the brand colour, not a setting (#22).
   await p.get('input[type="color"]').expectCount(0);
   const blocked = await expectBlocked(h, 'http://blocked.test/');
-  await blocked.role('heading', /protected/).expectVisible();
+  await blocked.role('heading', /blocked/).expectVisible();
   expect(await blocked.eval(() => document.documentElement.dataset.theme)).toBe('dark');
   const popup = await h.popup(blocked);
   await popup.get('.popup-head').expectVisible();

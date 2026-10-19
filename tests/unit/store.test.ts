@@ -65,6 +65,34 @@ describe('store integrity', () => {
     const s = await freshStore();
     expect((s.config as unknown as Record<string, unknown>).futureField).toEqual({ x: 1 });
   });
+
+  it('migrates a configuration of an earlier schema once, keeping the previous one', async () => {
+    const { configChecksum, CHECKSUM_VERSION } = await import('../../src/engine/schema');
+    const { defaultConfig, newGroup } = await import('../../src/engine/defaults');
+    const { SCHEMA_VERSION } = await import('../../src/engine/types');
+    const site = (id: string, value: string, type = 'domain') => ({ id, type, value });
+    const data = {
+      ...defaultConfig(),
+      schema: 1,
+      groups: [{ ...newGroup({ name: 'Social' }), targets: [site('a', 'a.test')], lists: ['L'] }],
+      lists: [{ id: 'L', name: 'List', rev: 1, updatedAt: 0, targets: [site('l', 'l.test')] }],
+      allowlist: [site('w', 'a.test/docs', 'path')],
+    };
+    storage.local.set('config', { data, sum: configChecksum(data), v: CHECKSUM_VERSION });
+    const s = await freshStore();
+    const sites = s.config.groups[0].targets.map((t) => `${t.allow ? '+' : ''}${t.value}`);
+    expect(sites).toEqual(['a.test', 'l.test', '+a.test/docs']);
+    const stored = storage.local.get('config') as { data: Record<string, unknown> };
+    expect(stored.data.schema).toBe(SCHEMA_VERSION);
+    expect(stored.data).not.toHaveProperty('lists');
+    expect(storage.local.get('config:pre-migration')).toMatchObject({
+      from: 1,
+      data: { lists: [{ id: 'L' }] },
+    });
+    // Read again, it stays as it was written: the copies keep their ids.
+    vi.resetModules();
+    expect((await freshStore()).config.groups[0].targets).toEqual(s.config.groups[0].targets);
+  });
 });
 
 describe('integrity with Chrome storage, which sorts object keys (regression)', () => {

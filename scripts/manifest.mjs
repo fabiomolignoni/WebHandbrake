@@ -50,10 +50,14 @@ export function manifest(target, version) {
         matches: ['<all_urls>'],
       },
     ],
+    // Alt+Shift with a digit works in both browsers. With a letter it does not: Firefox on Windows and
+    // Linux ignores Shift for the menu bar's access keys, so Alt+Shift+F opens the File menu (and the
+    // letters change with the browser's language); Chrome does not assign a key that is one of its
+    // own (Alt+Shift+B focuses the bookmarks bar).
     commands: {
-      _execute_action: { suggested_key: { default: 'Alt+Shift+H' }, description: '__MSG_cmdOpenPopup__' },
-      'start-session': { suggested_key: { default: 'Alt+Shift+F' }, description: '__MSG_cmdStartSession__' },
-      'block-site': { suggested_key: { default: 'Alt+Shift+B' }, description: '__MSG_cmdBlockSite__' },
+      _execute_action: { suggested_key: { default: 'Alt+Shift+1' }, description: '__MSG_cmdOpenPopup__' },
+      'start-session': { suggested_key: { default: 'Alt+Shift+2' }, description: '__MSG_cmdStartSession__' },
+      'block-site': { suggested_key: { default: 'Alt+Shift+3' }, description: '__MSG_cmdBlockSite__' },
       'open-dashboard': { description: '__MSG_cmdOpenDashboard__' },
     },
     content_security_policy: {

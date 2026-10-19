@@ -64,7 +64,8 @@ export function formatDuration(seconds: number): string {
   if (totalMin < 60) return t('duration.m', { m: totalMin });
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
-  if (h >= 48 && m === 0) return t('duration.d', { d: Math.round(h / 24) });
+  // Whole days only: 50 h is not "2 days".
+  if (h >= 48 && m === 0 && h % 24 === 0) return t('duration.d', { d: h / 24 });
   return m ? t('duration.hm', { h, m }) : t('duration.h', { h });
 }
 

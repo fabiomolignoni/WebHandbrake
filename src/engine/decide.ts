@@ -7,7 +7,6 @@
  *   group still applies: an access lifts only its own group, so the next one shows, and
  *   the filters of all of them add up (`pageFilters`).
  * - Exceptions only affect their own group.
- * - The global "Always allowed" list prevails over everything.
  */
 
 import {
@@ -106,8 +105,6 @@ export interface Decision {
   groups: GroupResult[];
   /** Groups where an exception matched the URL. */
   excepted: { group: Group; entry: CompiledPattern }[];
-  /** Entry of the global allowlist that matched. */
-  allowlisted: CompiledPattern | null;
   /** True for URLs that are never evaluated (extension pages, redirect destinations). */
   exempt: boolean;
 }
@@ -377,7 +374,6 @@ function exemptDecision(url: string, parsed: ParsedUrl | null): Decision {
     session: null,
     groups: [],
     excepted: [],
-    allowlisted: null,
     exempt: true,
   };
 }
@@ -416,15 +412,8 @@ function decideOnce(ctx: EngineContext, url: string, uctx: UrlContext): Decision
     session: null,
     groups: [],
     excepted: [],
-    allowlisted: null,
     exempt: false,
   };
-
-  const allowed = ctx.cc.allowlist.match(parsed);
-  if (allowed.length) {
-    decision.allowlisted = allowed.reduce((a, b) => (b.spec > a.spec ? b : a));
-    return decision;
-  }
 
   for (const cg of ctx.cc.groups) {
     const privacy = cg.group.options.privacy;
@@ -441,7 +430,7 @@ function decideOnce(ctx: EngineContext, url: string, uctx: UrlContext): Decision
     }
     const r = evaluateGroup(ctx, cg, winner, parsed);
     // A rule never intervenes on the page it redirects to, which may be inside its own
-    // sites; the other rules, Always allowed and focus sessions still apply there.
+    // sites; the other rules and focus sessions still apply there.
     if (r.intervention.type === 'redirect' && redirectsHere(r, (key ??= redirectKey(url)))) continue;
     decision.groups.push(r);
     if (!decision.primary || better(r, decision.primary, ctx.cc)) decision.primary = r;

@@ -1,20 +1,13 @@
 /** Offline help: everything needed to use WebHandbrake, available without network. */
 
 import { Fragment } from 'preact';
-import { useEffect } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { t } from '../../i18n/i18n';
-import { api, features } from '../../platform/api';
+import { api, features, openShortcutSettings, quiet } from '../../platform/api';
 import { CHANGELOG_URL, NEW_ISSUE_URL, PRIVACY_URL, REPO_URL } from '../../shared/links';
+import { Button } from '../../ui/components';
 import { Icon } from '../../ui/icons';
-import {
-  defaultShortcut,
-  HELP_TOPICS,
-  type HelpBlock,
-  type HelpFacts,
-  helpFacts,
-  SHORTCUTS,
-  SYNTAX,
-} from '../help-content';
+import { HELP_TOPICS, type HelpBlock, type HelpFacts, helpFacts, SHORTCUTS, SYNTAX } from '../help-content';
 
 function SyntaxTable() {
   return (
@@ -39,29 +32,60 @@ function SyntaxTable() {
   );
 }
 
-/** The default keys of the commands (`suggested_key` in the manifest); hidden without the commands API. */
+/** The keys the browser gave the commands, by command name; null until it answers. */
+function useCommandKeys(): Record<string, string> | null {
+  const [keys, setKeys] = useState<Record<string, string> | null>(null);
+  useEffect(() => {
+    const read = async () => {
+      const all = (await quiet(api.commands.getAll())) ?? [];
+      setKeys(Object.fromEntries(all.map((c) => [c.name ?? '', c.shortcut ?? ''])));
+    };
+    // Read again when the user comes back from the browser's shortcut settings.
+    const onVisible = () => document.visibilityState === 'visible' && void read();
+    void read();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, []);
+  return keys;
+}
+
+/** The commands with the keys the browser gave them; hidden without the commands API. */
 function Shortcuts({ facts }: { facts: HelpFacts }) {
   if (!features.commands) return null;
-  const commands = api.runtime.getManifest().commands;
-  const rows = SHORTCUTS.flatMap((s) => {
-    const combo = defaultShortcut(commands, s.command);
-    return combo ? [{ ...s, combo }] : [];
-  });
-  if (!rows.length) return null;
+  return <ShortcutList facts={facts} />;
+}
+
+function ShortcutList({ facts }: { facts: HelpFacts }) {
+  const keys = useCommandKeys();
+  if (!keys) return null;
   return (
-    <ul class="small" style={{ margin: 0, paddingInlineStart: '18px' }}>
-      {rows.map((r) => (
-        <li key={r.command}>
-          {r.combo.split('+').map((k, i) => (
-            <Fragment key={k}>
-              {i > 0 && '+'}
-              <kbd>{k}</kbd>
-            </Fragment>
-          ))}{' '}
-          — {t(r.description, r.params?.(facts))}
-        </li>
-      ))}
-    </ul>
+    <div class="stack stack-sm">
+      <ul class="small" style={{ margin: 0, paddingInlineStart: '18px' }}>
+        {SHORTCUTS.map((s) => {
+          const combo = keys[s.command];
+          return (
+            <li key={s.command}>
+              {combo ? (
+                combo.split('+').map((k, i) => (
+                  <Fragment key={k}>
+                    {i > 0 && '+'}
+                    <kbd>{k}</kbd>
+                  </Fragment>
+                ))
+              ) : (
+                <span class="muted">{t('help.shortcutNone')}</span>
+              )}{' '}
+              — {t(s.description, s.params?.(facts))}
+            </li>
+          );
+        })}
+      </ul>
+      <div>
+        <Button size="small" icon="keyboard" onClick={() => void quiet(openShortcutSettings())}>
+          {t('help.shortcutsChange')}
+        </Button>
+      </div>
+    </div>
   );
 }
 

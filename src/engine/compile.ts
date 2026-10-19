@@ -16,7 +16,6 @@ export interface CompiledConfig {
   config: Config;
   groups: CompiledGroup[];
   byId: Map<string, CompiledGroup>;
-  allowlist: PatternIndex;
   cal: CalendarSettings;
   /** Targets that failed to compile (invalid regex…), for diagnostics. */
   invalid: Target[];
@@ -37,15 +36,6 @@ export function isGroupActive(g: Pick<Group, 'enabled' | 'archived'>): boolean {
   return g.enabled && !g.archived;
 }
 
-export function groupTargets(config: Config, g: Group): Target[] {
-  const out = [...g.targets];
-  for (const listId of g.lists) {
-    const list = config.lists.find((l) => l.id === listId);
-    if (list) out.push(...list.targets);
-  }
-  return out;
-}
-
 export function compileTargets(targets: Target[], invalid?: Target[]): PatternIndex {
   const index = new PatternIndex();
   for (const t of targets) {
@@ -61,17 +51,12 @@ export function compileConfig(config: Config): CompiledConfig {
   const groups: CompiledGroup[] = [];
   config.groups.forEach((group, order) => {
     if (!isGroupActive(group)) return;
-    groups.push({ group, index: compileTargets(groupTargets(config, group), invalid), order });
+    groups.push({ group, index: compileTargets(group.targets, invalid), order });
   });
-  const allowlist = compileTargets(
-    config.allowlist.map((t) => ({ ...t, allow: true })),
-    invalid,
-  );
   return {
     config,
     groups,
     byId: new Map(groups.map((g) => [g.group.id, g])),
-    allowlist,
     cal: { dayStart: config.settings.dayStart, weekStart: config.settings.weekStart },
     invalid,
   };

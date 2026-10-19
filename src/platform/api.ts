@@ -69,6 +69,17 @@ export function blockedUrlFrom(url: string | undefined): string | null {
   return i === -1 ? null : url.slice(i + 1);
 }
 
+/**
+ * Opens the browser's page where the extension's keyboard shortcuts are changed: through the API
+ * where there is one (Firefox, which does not let an extension open about:addons), by its address
+ * elsewhere.
+ */
+export async function openShortcutSettings(): Promise<void> {
+  const commands = api.commands as typeof api.commands & { openShortcutSettings?: () => Promise<void> };
+  if (commands.openShortcutSettings) await commands.openShortcutSettings();
+  else await api.tabs.create({ url: 'chrome://extensions/shortcuts' });
+}
+
 /** Session storage with an in-memory fallback (Firefox < 115). */
 const memorySession = new Map<string, unknown>();
 

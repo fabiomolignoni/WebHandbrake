@@ -108,6 +108,22 @@ describe('statistics', () => {
     expect(s.intentions).toEqual([]);
   });
 
+  it('breaks and reasons belong to the logical day, as the totals do', async () => {
+    const { store, stats } = await setup();
+    store.config.settings.dayStart = 240;
+    store.cc = { ...store.cc, cal: { ...store.cc.cal, dayStart: 240 } };
+    // 02:00 on 8 October is still the day of 7 October when days start at 04:00.
+    const night = new Date(2026, 9, 8, 2).getTime();
+    store.state.pauses = [{ at: night, groups: '*', scope: 'all', minutes: 5, grantId: 'n' }];
+    store.intentions = [{ at: night, groupId: 'G', text: 'late', minutes: 5 }];
+    const seventh = await stats.getStats('2026-10-07', '2026-10-07');
+    expect(seventh.pauses.map((p) => p.at)).toEqual([night]);
+    expect(seventh.intentions.map((i) => i.text)).toEqual(['late']);
+    const eighth = await stats.getStats('2026-10-08', '2026-10-08');
+    expect(eighth.pauses).toEqual([]);
+    expect(eighth.intentions).toEqual([]);
+  });
+
   it('exports every day as CSV or JSON', async () => {
     const { stats } = await setup();
     const csv = await stats.exportStats('csv');

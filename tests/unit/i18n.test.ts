@@ -70,7 +70,7 @@ describe('translation', () => {
     expect(await initI18n('auto')).toBe('en');
     expect(locale()).toBe('en');
     expect(textDirection()).toBe('ltr');
-    expect(t('allowlist.title')).toBe('Always allowed');
+    expect(t('groups.title')).toBe('Rules');
     expect(t('groups.sites', { count: 3 })).toMatch(/3/);
     expect(t('no.such.key')).toBe('no.such.key');
     // Templates keep their placeholders, for the overlay to fill in.

@@ -10,9 +10,9 @@ import {
   mergeImport,
   withoutSecrets,
 } from '../engine/importers';
-import { clone } from '../engine/json';
+import { clone, isObj } from '../engine/json';
 import { MAX_IMPORT_BYTES, MAX_LATER_ITEMS } from '../engine/limits';
-import type { Config } from '../engine/types';
+import type { Config, LaterItem } from '../engine/types';
 import { t } from '../i18n/i18n';
 import { api } from '../platform/api';
 import { timestampSuffix } from '../shared/format';
@@ -91,6 +91,26 @@ export async function previewImport(text: string, mode: 'merge' | 'replace'): Pr
   };
 }
 
+/**
+ * The pages saved for later in a file, with the fields that the list reads: web pages only, as
+ * "Save for later" keeps them (a file may have been edited, and the list opens its addresses).
+ */
+function importedLater(raw: unknown[]): LaterItem[] {
+  const items: LaterItem[] = [];
+  for (const i of raw) {
+    if (!isObj(i) || typeof i.url !== 'string' || !/^https?:\/\//i.test(i.url)) continue;
+    items.push({
+      ...i,
+      id: typeof i.id === 'string' && i.id ? i.id : crypto.randomUUID(),
+      url: i.url,
+      title: typeof i.title === 'string' ? i.title.slice(0, 300) : '',
+      groupId: typeof i.groupId === 'string' ? i.groupId : undefined,
+      savedAt: typeof i.savedAt === 'number' && Number.isFinite(i.savedAt) ? i.savedAt : Date.now(),
+    });
+  }
+  return items.slice(0, MAX_LATER_ITEMS);
+}
+
 /** Whatever an import loosens follows the emergency exit, for this import only. */
 export async function applyImport(text: string, mode: 'merge' | 'replace'): Promise<SaveResult> {
   await store.ready();
@@ -99,9 +119,7 @@ export async function applyImport(text: string, mode: 'merge' | 'replace'): Prom
   if (imp.format === 'webhandbrake' && imp.config && mode === 'replace') {
     const raw = JSON.parse(text);
     if (Array.isArray(raw.later)) {
-      store.later = raw.later
-        .filter((i: unknown) => typeof i === 'object' && i !== null)
-        .slice(0, MAX_LATER_ITEMS);
+      store.later = importedLater(raw.later);
       await store.saveLater();
     }
   }

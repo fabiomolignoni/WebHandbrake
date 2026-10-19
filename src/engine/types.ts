@@ -6,7 +6,7 @@
  * update timestamp, and deletions leave tombstones.
  */
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export interface Versioned {
   id: string;
@@ -250,8 +250,6 @@ export interface Group extends Versioned {
   enabled: boolean;
   archived: boolean;
   targets: Target[];
-  /** Shared lists linked to this group. */
-  lists: string[];
   policies: Policy[];
   pause: PausePolicy;
   /** What loosening the rule takes (#12: there is no global level any more). */
@@ -259,14 +257,9 @@ export interface Group extends Versioned {
   options: GroupOptions;
 }
 
-export interface SharedList extends Versioned {
-  name: string;
-  targets: Target[];
-}
-
 export interface Tombstone {
   id: string;
-  kind: 'group' | 'list';
+  kind: 'group';
   deletedAt: number;
 }
 
@@ -341,8 +334,6 @@ export interface Settings {
 export interface Config {
   schema: number;
   groups: Group[];
-  lists: SharedList[];
-  allowlist: Target[];
   settings: Settings;
   tombstones: Tombstone[];
 }

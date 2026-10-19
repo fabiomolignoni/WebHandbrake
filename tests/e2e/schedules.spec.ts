@@ -48,7 +48,7 @@ test('weekday hours block during the window only', async ({ h }) => {
   await at(h, on(MON, 10));
   const p = await expectBlocked(h, 'http://social.test/');
   // The page says until when.
-  await p.role('heading', /This space is protected until .*17:00/).expectVisible();
+  await p.role('heading', /This page is blocked until .*17:00/).expectVisible();
   await at(h, on(MON, 8, 30));
   await expectAllowed(h, 'http://social.test/early');
   await at(h, on(SAT, 10));
@@ -68,7 +68,7 @@ test('open tabs follow the start and the end of a window', async ({ h }) => {
   await h.clock.advance(2 * 60_000);
   await p.expectIntervention(true, 5000);
   await p.expectUrl('#http://social.test/feed');
-  await p.role('heading', /protected until/).expectVisible();
+  await p.role('heading', /blocked until/).expectVisible();
   await at(h, on(MON, 17, 1));
   await p.button('Reopen the page').click();
   await p.expectReal('social.test/feed');

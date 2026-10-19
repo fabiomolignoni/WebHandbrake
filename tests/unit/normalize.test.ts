@@ -211,7 +211,7 @@ describe('normalising what is read from storage or a file', () => {
     });
     expect(g?.color).toMatch(/^#[0-9a-f]{6}$/i);
     expect(g?.targets).toHaveLength(1);
-    expect(errors).toEqual(['group "": invalid entry {"value":""}']);
+    expect(errors).toEqual(['Rule “”: an entry that could not be read was left out: {"value":""}']);
     expect(normalizeGroup([], [])).toBeNull();
   });
 
@@ -235,24 +235,52 @@ describe('normalising what is read from storage or a file', () => {
     expect(normalizeSettings({ theme: 3, timer: 'big' }).timer.enabled).toBe(true);
   });
 
-  it('a configuration: unique rule ids, links to existing lists only', () => {
+  it('a configuration: unique rule ids', () => {
     const { config, errors } = normalizeConfig(
-      {
-        groups: [{ id: 'same', lists: ['L', 'gone'] }, { id: 'same' }, 'junk'],
-        lists: [{ id: 'L', name: 'L', targets: [] }, null],
-        allowlist: [{ type: 'domain', value: 'bank.test' }],
-        tombstones: [{ id: 'x' }, 3],
-      },
+      { groups: [{ id: 'same' }, { id: 'same' }, 'junk'], tombstones: [{ id: 'x' }, 3] },
       7,
     );
     expect(config.schema).toBe(SCHEMA_VERSION);
     expect(new Set(config.groups.map((g) => g.id)).size).toBe(2);
-    expect(config.groups[0].lists).toEqual(['L']);
-    expect(config.lists.map((l) => l.id)).toEqual(['L']);
-    expect(config.allowlist.map((t) => t.value)).toEqual(['bank.test']);
     expect(config.tombstones).toEqual([{ id: 'x' }]);
-    expect(errors).toEqual(['invalid group']);
+    expect(errors).toEqual(['A rule that could not be read was left out.']);
     expect(normalizeConfig('nope')).toMatchObject({ errors: ['not an object'] });
+  });
+
+  it('schema 1: shared lists move into their rules, Always allowed becomes exceptions', () => {
+    const { config } = normalizeConfig({
+      schema: 1,
+      groups: [
+        { id: 'A', targets: [{ id: 'a1', type: 'domain', value: 'a.test' }], lists: ['L', 'gone'] },
+        { id: 'B', targets: [{ id: 'b1', type: 'domain', value: 'news.test' }], lists: ['L'] },
+        { id: 'C', targets: [{ id: 'c1', type: 'domain', value: 'c.test' }] },
+      ],
+      lists: [{ id: 'L', name: 'L', targets: [{ id: 'l1', type: 'domain', value: 'news.test' }] }, null],
+      allowlist: [
+        { id: 'w', type: 'path', value: 'news.test/weather' },
+        { type: 'domain', value: 'bank.test' },
+      ],
+      tombstones: [
+        { id: 'L0', kind: 'list' },
+        { id: 'G0', kind: 'group' },
+      ],
+      settings: {},
+    });
+    const sites = (id: string) =>
+      config.groups.find((g) => g.id === id)?.targets.map((t) => `${t.allow ? '+' : ''}${t.value}`);
+    expect(sites('A')).toEqual(['a.test', 'news.test', '+news.test/weather']);
+    // An entry the rule already has is not added twice.
+    expect(sites('B')).toEqual(['news.test', '+news.test/weather']);
+    // Always allowed reaches only the rules whose sites it may open.
+    expect(sites('C')).toEqual(['c.test']);
+    // The rule's own entries keep their ids, and every copy has one of its own.
+    const ids = config.groups.flatMap((g) => g.targets.map((t) => t.id));
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(config.groups[0].targets[0].id).toBe('a1');
+    expect(config.groups[0]).not.toHaveProperty('lists');
+    expect(config).not.toHaveProperty('lists');
+    expect(config).not.toHaveProperty('allowlist');
+    expect(config.tombstones).toEqual([{ id: 'G0', kind: 'group' }]);
   });
 });
 
@@ -272,12 +300,41 @@ describe('integrity and versions', () => {
     expect(checksum('a')).not.toBe(checksum('b'));
   });
 
+  it('schema 1: an Always allowed entry goes to the rules whose sites it may open', () => {
+    const sites = ['news.example', 'video.example', 'bet.example', 'social.example'];
+    const reached = (value: string, type = 'domain') =>
+      normalizeConfig({
+        schema: 1,
+        groups: sites.map((site, i) => ({
+          id: site,
+          enabled: i < 3,
+          targets: [{ id: site, type: 'domain', value: site }],
+        })),
+        allowlist: [{ type, value }],
+      }).config.groups.flatMap((g) => (g.targets.some((x) => x.allow) ? [g.id] : []));
+    expect(reached('m.video.example')).toEqual(['video.example']);
+    expect(reached('example')).toEqual(sites);
+    expect(reached('bank.example')).toEqual([]);
+    // A rule that is off takes it too, for when it is on again.
+    expect(reached('social.example')).toEqual(['social.example']);
+    // Wildcards are widened to what follows them; anything else may open every rule's sites.
+    expect(reached('*.bet.example')).toEqual(['bet.example']);
+    expect(reached('casino.*')).toEqual(sites);
+    expect(reached('news.example/today*', 'wildcard')).toEqual(['news.example']);
+    expect(reached('*news*', 'wildcard')).toEqual(sites);
+    expect(reached('^https://bank\\.example/', 'regex')).toEqual(sites);
+  });
+
   it('migrations: the current schema stays, a newer one is kept as it is', () => {
     const current = { schema: SCHEMA_VERSION, groups: [] };
     expect(migrate(current)).toEqual({ data: current, from: SCHEMA_VERSION, migrated: false });
     const newer = { schema: SCHEMA_VERSION + 1, groups: [] };
     expect(migrate(newer).data).toBe(newer);
-    expect(migrate({ groups: [] })).toMatchObject({ from: 1 });
+    expect(migrate({ groups: [] })).toMatchObject({
+      from: 1,
+      migrated: true,
+      data: { schema: SCHEMA_VERSION },
+    });
     expect(migrate('x')).toEqual({ data: 'x', from: 0, migrated: false });
   });
 });

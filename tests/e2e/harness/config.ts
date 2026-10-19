@@ -125,7 +125,6 @@ export function group(
     enabled: true,
     archived: false,
     targets: sites.map((s) => target(s)),
-    lists: [],
     policies,
     pause: pauseFree,
     protection: wait(30),

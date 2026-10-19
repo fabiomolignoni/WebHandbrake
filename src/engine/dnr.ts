@@ -91,7 +91,6 @@ export function collectRegions(ctx: EngineContext): Region[] {
       if (p.intervention.type === 'redirect')
         add(patternFromUrl(redirectDestination(p.intervention.url).replace(/[?#].*$/, '')));
   }
-  for (const cp of cc.allowlist.all) if (!cp.regex) add(cp);
   for (const s of state.sessions) {
     if (s.endAt <= now) continue;
     for (const t of s.allow) add(compilePattern({ ...t, allow: true }));

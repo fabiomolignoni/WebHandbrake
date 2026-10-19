@@ -144,9 +144,6 @@ export function decisionView(d: Decision, uctx: UrlContext, c = ctx()): Decision
       name: e.group.name,
       entry: entryView(e.entry.target),
     })),
-    allowlisted: d.allowlisted
-      ? { type: d.allowlisted.target.type, value: d.allowlisted.target.value }
-      : null,
     until: until.until,
     next: until.next,
     restriction,

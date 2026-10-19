@@ -11,7 +11,7 @@ import {
   unitGroups,
 } from '../../src/engine/changes';
 import { delayIntervention, newPolicy, pausePolicyFor } from '../../src/engine/defaults';
-import type { Config, Group, Policy, Target } from '../../src/engine/types';
+import type { Config, Group, Policy } from '../../src/engine/types';
 import { BLOCK, config, group, lockedUntil, PERMANENT, REMINDER, t, wait } from './helpers';
 
 const office = { mode: 'during' as const, windows: [{ days: [1, 2, 3, 4, 5], start: 540, end: 1020 }] };
@@ -56,17 +56,11 @@ describe('change classification', () => {
     expect(classifyAll(base, d)).toEqual([['group.add', 'strengthen']]);
   });
 
-  it('allowlist additions are weakening', () => {
-    const b = clone(base);
-    b.allowlist.push(t('bank.example'));
-    expect(classifyAll(base, b)).toEqual([['target.add', 'weaken']]);
-  });
-
   it('settings', () => {
     const b = clone(base);
     b.settings.theme = 'dark';
     b.settings.protection.emergencyHours = 48;
-    b.settings.tracking.idleSeconds = 600;
+    b.settings.tracking.idleSeconds = 60;
     expect(classifyAll(base, b)).toEqual([
       ['setting', 'neutral'],
       ['setting', 'weaken'],
@@ -232,27 +226,6 @@ describe('applying units', () => {
   });
 });
 
-describe('shared lists created in the same save', () => {
-  it('linking a new list with exceptions is a weakening (protection bypass regression)', () => {
-    const a = config([group('Social', ['reddit.com'], [{ intervention: BLOCK }])]);
-    const b = clone(a);
-    b.lists.push({ id: 'L', rev: 1, updatedAt: 0, name: 'Loophole', targets: [t('+reddit.com')] });
-    b.groups[0].lists.push('L');
-    const res = diffConfig(a, b).map((u) => [u.kind, classify(u, a)]);
-    expect(res).toContainEqual(['group.link', 'weaken']);
-  });
-
-  it('linking an existing list edited in the same save is judged by its new entries', () => {
-    const a = config([group('Social', ['reddit.com'], [{ intervention: BLOCK }])]);
-    a.lists.push({ id: 'L', rev: 1, updatedAt: 0, name: 'List', targets: [t('x.com')] });
-    const b = clone(a);
-    b.lists[0].targets.push(t('+reddit.com'));
-    b.groups[0].lists.push('L');
-    const res = diffConfig(a, b).map((u) => [u.kind, classify(u, a)]);
-    expect(res).toContainEqual(['group.link', 'weaken']);
-  });
-});
-
 describe('pause policy normalisation', () => {
   it('keeps "no limit" when the limit is absent', async () => {
     const { normalizePause } = await import('../../src/engine/schema');
@@ -290,36 +263,11 @@ describe('the rules a change follows', () => {
     mutate(next);
     return diffConfig(base, next).map((u) => unitGroups(u, base));
   };
-  const allow =
-    (value: string, type: Target['type'] = 'domain') =>
-    (c: Config) =>
-      c.allowlist.push({ id: `a-${value}`, type, value });
-
-  it('an Always allowed entry follows the active rules whose sites it may open', () => {
-    expect(touched(allow('m.video.example'))).toEqual([['Balanced']]);
-    expect(touched(allow('example'))).toEqual([['Soft', 'Balanced', 'Strict', 'Locked']]);
-    expect(touched(allow('bank.example'))).toEqual([[]]);
-    // A rule that is off restricts nothing.
-    expect(touched(allow('social.example'))).toEqual([[]]);
-    // Wildcards are widened to what follows them; anything else may open every rule's sites.
-    expect(touched(allow('*.bet.example'))).toEqual([['Strict']]);
-    expect(touched(allow('casino.*'))).toEqual([['Soft', 'Balanced', 'Strict', 'Locked']]);
-    expect(touched(allow('news.example/today*', 'wildcard'))).toEqual([['Soft']]);
-    expect(touched(allow('*news*', 'wildcard'))).toEqual([['Soft', 'Balanced', 'Strict', 'Locked']]);
-    expect(touched(allow('^https://bank\\.example/', 'regex'))).toEqual([
-      ['Soft', 'Balanced', 'Strict', 'Locked'],
-    ]);
-  });
-
-  it('a setting that concerns every rule follows every active rule; a shared list, the active rules using it', () => {
+  it('a site follows its own rule; a setting that concerns every rule, every active rule', () => {
+    expect(touched((c) => c.groups[1].targets.push({ id: 'x', type: 'domain', value: 'x.example' }))).toEqual(
+      [['Balanced']],
+    );
     expect(touched((c) => (c.settings.dayStart = 240))).toEqual([['Soft', 'Balanced', 'Strict', 'Locked']]);
-    const withList = clone(rules);
-    withList.lists = [{ id: 'L', name: 'List', rev: 1, updatedAt: 0, targets: [] }];
-    withList.groups[0].lists = ['L'];
-    withList.groups[4].lists = ['L'];
-    expect(
-      touched((c) => c.lists[0].targets.push({ id: 'x', type: 'domain', value: 'x.example' }), withList),
-    ).toEqual([['Soft']]);
   });
 });
 

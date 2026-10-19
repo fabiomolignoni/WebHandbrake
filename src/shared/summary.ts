@@ -195,28 +195,18 @@ export function describeUnit(u: ChangeUnit): string {
       return t('unit.groupRemove', { name: u.name });
     case 'group.field':
       return t(`unit.field.${u.field}`, { name: u.name });
-    case 'group.link':
-      return t(u.link ? 'unit.linkList' : 'unit.unlinkList', { name: u.name, list: u.listName });
     case 'target.add':
-      if (u.owner.kind === 'allowlist') return t('unit.allowlistAdd', { value: u.target.value });
       return t(u.target.allow ? 'unit.exceptionAdd' : 'unit.targetAdd', {
         value: u.target.value,
         owner: u.ownerName,
       });
     case 'target.remove':
-      if (u.owner.kind === 'allowlist') return t('unit.allowlistRemove', { value: u.target.value });
       return t(u.target.allow ? 'unit.exceptionRemove' : 'unit.targetRemove', {
         value: u.target.value,
         owner: u.ownerName,
       });
     case 'target.note':
       return t('unit.targetNote', { value: u.target.value });
-    case 'list.add':
-      return t('unit.listAdd', { name: u.list.name });
-    case 'list.remove':
-      return t('unit.listRemove', { name: u.name });
-    case 'list.name':
-      return t('unit.listName', { name: u.value });
     case 'order':
       return t('unit.order');
     case 'setting':

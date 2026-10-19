@@ -15,7 +15,7 @@ tracking: everything stays on your device.
   stopped before they load, from the moment the browser starts. Need a site for a minute? Take a
   break, with the length, number and cost you set.
 - **Slow down instead of blocking**: say what you want to do before the site opens, wait for a
-  short countdown, type a random text, or use a visual filter, a redirect or a closed tab.
+  short countdown, type random characters, or use a visual filter, a redirect or a closed tab.
 - **Rules that fit your day**: time windows (overnight too), time and visit limits per hour, day,
   week or month, and limits on continuous use. Start from a ready-made list or paste your own
   domains, pages, wildcards, regular expressions and exceptions. **Why?** tells you which rule

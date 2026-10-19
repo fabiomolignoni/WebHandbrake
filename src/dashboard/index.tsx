@@ -10,7 +10,6 @@ import { Banner, Spinner, Toasts } from '../ui/components';
 import { applyAppearance, bootPage, useModel, useNow } from '../ui/hooks';
 import { BrakeLogo, Icon } from '../ui/icons';
 import { Ctx } from './context';
-import { AllowlistPage } from './pages/allowlist';
 import { FocusPage } from './pages/focus';
 import { GroupEditorPage } from './pages/group-editor';
 import { GroupWizardPage } from './pages/group-wizard';
@@ -18,7 +17,6 @@ import { GroupsPage } from './pages/groups';
 import { HelpPage } from './pages/help';
 import { InsightsPage } from './pages/insights';
 import { LaterPage } from './pages/later';
-import { ListEditorPage, ListsPage } from './pages/lists';
 import { ProtectionPage } from './pages/protection';
 import { SettingsPage } from './pages/settings';
 import { TodayPage } from './pages/today';
@@ -101,12 +99,6 @@ function App() {
           <GroupsPage />
         );
       break;
-    case 'lists':
-      page = route.path[1] ? <ListEditorPage id={route.path[1]} /> : <ListsPage />;
-      break;
-    case 'allowlist':
-      page = <AllowlistPage />;
-      break;
     case 'focus':
       page = <FocusPage />;
       break;
@@ -131,10 +123,7 @@ function App() {
     default:
       page = <TodayPage />;
   }
-  const isCurrent = (id: string) =>
-    section === id || (id === 'groups' && (section === 'lists' || section === 'allowlist'))
-      ? 'page'
-      : undefined;
+  const isCurrent = (id: string) => (section === id ? 'page' : undefined);
 
   if (section === 'welcome') {
     return (
@@ -177,7 +166,7 @@ function App() {
           {overview && <SideStatus o={overview} />}
         </aside>
         <main
-          class={`main${['protection', 'settings', 'help', 'focus', 'later', 'lists', 'allowlist'].includes(section) ? ' narrow' : ''}`}
+          class={`main${['protection', 'settings', 'help', 'focus', 'later'].includes(section) ? ' narrow' : ''}`}
           id="main"
           tabIndex={-1}
         >

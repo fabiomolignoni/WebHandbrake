@@ -58,8 +58,8 @@ BLOCK THE SITES THAT PULL YOU IN
 SLOW DOWN INSTEAD OF BLOCKING
 • Ask first: say what you want to do, and for how long, before the site opens.
 • Wait: a short countdown that lets the impulse pass.
-• Challenge: type a random text to continue.
-• Or a visual filter such as grayscale, a redirect to a page you choose, or closing the tab.
+• Challenge: type random characters, a phrase or the result of a small calculation to continue.
+• Or a visual filter such as greyscale, a redirect to a page you choose, or closing the tab.
 
 RULES THAT FIT YOUR DAY
 • Time windows (overnight too), daily, weekly or monthly time limits, visit limits and limits on continuous use.

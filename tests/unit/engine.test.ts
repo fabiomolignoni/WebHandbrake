@@ -78,15 +78,6 @@ describe('decisions', () => {
     expect(d.excepted.map((e) => e.group.id)).toEqual(['A']);
   });
 
-  it('the global allowlist prevails', () => {
-    const a = group('A', ['example.com'], [{ intervention: BLOCK }]);
-    const c = config([a], (cfg) => {
-      cfg.allowlist = [{ id: 'x', type: 'path', value: 'example.com/docs' }];
-    });
-    expect(decide(ctx(c, at(0, 10)), 'https://example.com/docs/a').intervention.type).toBe('allow');
-    expect(decide(ctx(c, at(0, 10)), 'https://example.com/').intervention.type).toBe('block');
-  });
-
   it('first matching policy wins; budget escalation', () => {
     const g = group(
       'V',
@@ -421,18 +412,12 @@ describe('rules over every website and address wildcards', () => {
   };
   const FILTER = { type: 'filter', filter: 'grayscale', intensity: 100 } as const;
 
-  it('a rule over every website applies everywhere but its exceptions and Always allowed', () => {
+  it('a rule over every website applies everywhere but its exceptions', () => {
     const all = group('All', ['*', '+*work*', '+bank.test'], [{ intervention: BLOCK }]);
-    const c = ctx(
-      config([all], (cfg) => {
-        cfg.allowlist = [{ id: 'x', type: 'domain', value: 'docs.test' }];
-      }),
-      at(0, 9),
-    );
+    const c = ctx(config([all]), at(0, 9));
     expect(decide(c, 'https://video.test/').intervention.type).toBe('block');
     expect(decide(c, 'https://intranet.test/my-work/today').intervention.type).toBe('allow');
     expect(decide(c, 'https://www.bank.test/login').intervention.type).toBe('allow');
-    expect(decide(c, 'https://docs.test/').intervention.type).toBe('allow');
     // The extension's own pages are never restricted.
     expect(decide(c, 'chrome-extension://id/dashboard.html').intervention.type).toBe('allow');
   });
@@ -495,7 +480,7 @@ describe('rules over every website and address wildcards', () => {
 describe('validation of rules with wildcards', () => {
   it('warns about a rule over every website, and never calls a wildcard exception unused', async () => {
     const { validateGroup } = await import('../../src/engine/validate');
-    const keys = (g: ReturnType<typeof group>) => validateGroup(g, config([g])).map((i) => i.key);
+    const keys = (g: ReturnType<typeof group>) => validateGroup(g).map((i) => i.key);
     expect(keys(group('All', ['*'], [{ intervention: BLOCK }]))).toContain('validate.allSites');
     expect(keys(group('Some', ['*news*'], [{ intervention: BLOCK }]))).not.toContain('validate.allSites');
     expect(keys(group('Video', ['video.test', '+*help*'], [{ intervention: BLOCK }]))).not.toContain(

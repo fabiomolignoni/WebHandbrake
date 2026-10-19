@@ -158,12 +158,7 @@ describe('protection per rule (#12)', () => {
     await store.ready();
     store.config = { ...store.config, groups };
     store.cc = compileConfig(store.config);
-    const allow = (value: string) => {
-      const next = structuredClone(store.config);
-      next.allowlist.push({ id: value, type: 'domain', value });
-      return protection.proposeConfig(next, 'test');
-    };
-    return { store, protection, sessions, allow };
+    return { store, protection, sessions };
   }
 
   it('a loosening of one rule follows that rule only', async () => {
@@ -178,19 +173,6 @@ describe('protection per rule (#12)', () => {
     next.groups = structuredClone(store.config.groups);
     next.groups[1].targets = [];
     expect((await protection.proposeConfig(next, 'test')).refused?.reason).toBe('permanent');
-  });
-
-  it('an Always allowed entry follows the active rules whose sites it opens', async () => {
-    const t = await setup([
-      group('Soft', ['soft.test'], [{ intervention: BLOCK }], { protection: REMINDER }),
-      group('Locked', ['locked.test'], [{ intervention: BLOCK }], { protection: PERMANENT }),
-      group('Off', ['off.test'], [{ intervention: BLOCK }], { protection: PERMANENT, enabled: false }),
-    ]);
-    expect((await t.allow('locked.test')).refused?.reason).toBe('permanent');
-    expect((await t.allow('www.soft.test')).ticket?.step.type).toBe('confirm');
-    // A site that no active rule restricts loosens nothing that is protected.
-    expect((await t.allow('bank.test')).applied).toHaveLength(1);
-    expect((await t.allow('off.test')).applied).toHaveLength(1);
   });
 
   it('a setting follows every active rule; without any it applies at once', async () => {

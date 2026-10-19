@@ -25,29 +25,6 @@ import { navigate } from '../router';
 
 type Filter = 'all' | 'active' | 'disabled' | 'archived';
 
-/** Groups, shared lists and "Always allowed" are siblings: navigation links, not tabs (NN/g). */
-export function GroupsNav({ current }: { current: 'groups' | 'lists' | 'allowlist' }) {
-  const { model } = useDashboard();
-  const cfg = model.config;
-  const items: { id: typeof current; label: string; count: number }[] = [
-    { id: 'groups', label: t('nav.groups'), count: cfg.groups.filter((g) => !g.archived).length },
-    { id: 'lists', label: t('nav.lists'), count: cfg.lists.length },
-    { id: 'allowlist', label: t('nav.allowlist'), count: cfg.allowlist.length },
-  ];
-  return (
-    <nav class="subnav" aria-label={t('groups.sections')}>
-      {items.map((i) => (
-        <a key={i.id} href={`#/${i.id}`} aria-current={i.id === current ? 'page' : undefined}>
-          {i.label}
-          <span class="count-chip" aria-hidden="true">
-            {i.count}
-          </span>
-        </a>
-      ))}
-    </nav>
-  );
-}
-
 /** The first few sites. */
 function sitesPreview(g: Group): string {
   const sites = g.targets.filter((x) => !x.allow).map((x) => x.value);
@@ -114,7 +91,6 @@ export function GroupsPage() {
           {t('groups.new')}
         </Button>
       </div>
-      <GroupsNav current="groups" />
       <div class="toolbar">
         <div class="search input-icon">
           <Icon name="search" />

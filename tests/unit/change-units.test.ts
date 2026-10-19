@@ -14,18 +14,16 @@ import {
   diffConfig,
   getPath,
   isStale,
+  scheduleBitmap,
   unusedExceptions,
 } from '../../src/engine/changes';
 import { defaultOptions, delayIntervention, newPolicy, pausePolicyFor } from '../../src/engine/defaults';
-import type { Budget, Config, Intervention, PausePolicy, Policy, SharedList } from '../../src/engine/types';
+import { scheduleActive } from '../../src/engine/time';
+import type { Budget, Config, Intervention, PausePolicy, Policy, Schedule } from '../../src/engine/types';
 import { BLOCK, config, group, t } from './helpers';
 
 const NOW = 1_000_000;
 const day = { kind: 'day' as const };
-
-function list(id: string, lines: string[]): SharedList {
-  return { id, rev: 1, updatedAt: 0, name: `List ${id}`, targets: lines.map(t) };
-}
 
 /** The direction of a change of the only condition of a rule. */
 function conditionChange(before: Partial<Policy>, after: Partial<Policy>) {
@@ -61,6 +59,50 @@ describe('helpers', () => {
     expect(
       compareSchedules({ mode: 'during', windows: [{ days: [1], start: 1380, end: 1440 }] }, night),
     ).toBe('superset');
+  });
+
+  it('schedules are compared on the logical days that the engine applies them on', () => {
+    const schedules: Schedule[] = [
+      { mode: 'during', windows: [{ days: [1, 2, 3, 4, 5], start: 540, end: 1020 }] },
+      { mode: 'during', windows: [{ days: [1], start: 60, end: 1380 }] },
+      { mode: 'during', windows: [{ days: [6], start: 1380, end: 120 }] },
+      { mode: 'during', windows: [{ days: [0, 3], start: 0, end: 1440 }] },
+      { mode: 'outside', windows: [{ days: [2], start: 200, end: 200 }] },
+    ];
+    // A week without a change of the clocks, from Sunday 4 October 2026 at midnight.
+    const sunday = new Date(2026, 9, 4).getTime();
+    for (const dayStart of [0, 300]) {
+      const cal = { dayStart, weekStart: 1 };
+      for (const s of schedules) {
+        const bits = scheduleBitmap(s, dayStart);
+        for (let m = 0; m < 7 * 1440; m += 15)
+          expect([dayStart, m, bits[m] === 1]).toEqual([
+            dayStart,
+            m,
+            scheduleActive(s, sunday + m * 60_000, cal),
+          ]);
+      }
+    }
+  });
+
+  it('a window that starts before the day start belongs to the night after its day', () => {
+    // With days starting at 05:00, "Monday 01:00–23:00" runs on Tuesday: Monday daytime is left free.
+    const monday = { mode: 'during' as const, windows: [{ days: [1], start: 360, end: 1320 }] };
+    const early = { mode: 'during' as const, windows: [{ days: [1], start: 60, end: 1380 }] };
+    expect(compareSchedules(monday, early)).toBe('superset');
+    expect(compareSchedules(monday, early, 300)).toBe('other');
+    const c = config([group('g', ['a.com'], [{ schedule: monday }])], (x) => {
+      x.settings.dayStart = 300;
+    });
+    const unit: ChangeUnit = {
+      kind: 'group.field',
+      groupId: 'g',
+      name: 'g',
+      field: 'policies',
+      base: c.groups[0].policies,
+      value: [{ ...c.groups[0].policies[0], schedule: early }],
+    };
+    expect(classify(unit, c)).toBe('weaken');
   });
 });
 
@@ -213,7 +255,9 @@ describe('settings', () => {
   it('appearance and notices are neutral; what counts time and what protects is not', () => {
     expect(classifySetting('theme', 'light', 'dark')).toBe('neutral');
     expect(classifySetting('timer.corner', 'top-left', 'bottom-left')).toBe('neutral');
-    expect(classifySetting('tracking.idleSeconds', 120, 60)).toBe('strengthen');
+    // A shorter inactivity delay stops counting sooner: less time is counted.
+    expect(classifySetting('tracking.idleSeconds', 120, 60)).toBe('weaken');
+    expect(classifySetting('tracking.idleSeconds', 120, 600)).toBe('strengthen');
     expect(classifySetting('tracking.visitGapMinutes', 5, 30)).toBe('weaken');
     expect(classifySetting('tracking.idleEnabled', true, false)).toBe('strengthen');
     expect(classifySetting('tracking.countAudio', false, true)).toBe('strengthen');
@@ -233,16 +277,10 @@ describe('settings', () => {
 
 describe('every kind of change, from the diff to the configuration', () => {
   function initial(): Config {
-    return config(
-      [
-        group('A', ['a.test', '+a.test/help'], [{ intervention: BLOCK }], { lists: ['L'] }),
-        group('B', ['b.test'], [{ intervention: BLOCK }]),
-      ],
-      (c) => {
-        c.lists = [list('L', ['l.test']), list('M', ['m.test'])];
-        c.allowlist = [t('bank.test')];
-      },
-    );
+    return config([
+      group('A', ['a.test', '+a.test/help'], [{ intervention: BLOCK }]),
+      group('B', ['b.test'], [{ intervention: BLOCK }]),
+    ]);
   }
 
   it('finds, classifies and applies each change; applied changes are stale', () => {
@@ -252,80 +290,54 @@ describe('every kind of change, from the diff to the configuration', () => {
     const ga = b.groups.find((g) => g.id === 'A')!;
     ga.targets[0].note = 'work'; // target.note
     ga.targets.push(t('a2.test')); // target.add
-    ga.lists = ['M']; // unlink L, link M
-    b.lists[0].name = 'Renamed'; // list.name
-    b.lists[0].targets.push(t('l2.test')); // target.add in a list
-    b.lists = b.lists.concat(list('N', ['n.test'])); // list.add
-    b.allowlist = []; // target.remove from Always allowed
+    ga.targets = ga.targets.filter((x) => !x.allow); // target.remove of an exception
+    b.groups.find((g) => g.id === 'B')!.targets = []; // target.remove
     b.settings.theme = 'dark'; // setting
 
     const units = diffConfig(a, b);
-    const kinds = units.map((u) => `${u.kind}${u.kind === 'group.link' ? (u.link ? '+' : '-') : ''}`);
-    expect(kinds.sort()).toEqual(
-      [
-        'group.link+',
-        'group.link-',
-        'list.add',
-        'list.name',
-        'order',
-        'setting',
-        'target.add',
-        'target.add',
-        'target.note',
-        'target.remove',
-      ].sort(),
+    expect(units.map((u) => u.kind).sort()).toEqual(
+      ['order', 'setting', 'target.add', 'target.note', 'target.remove', 'target.remove'].sort(),
     );
     const direction = Object.fromEntries(
       units.map((u) => [`${u.kind}:${JSON.stringify(u).length}`, classify(u, a)]),
     );
     expect(Object.values(direction)).not.toContain(undefined);
-    // Unlinking a list of blocking entries loosens; removing an Always allowed entry tightens.
-    const unlink = units.find((u) => u.kind === 'group.link' && !u.link)!;
-    expect(classify(unlink, a)).toBe('weaken');
-    const allow = units.find((u) => u.kind === 'target.remove')!;
-    expect(classify(allow, a)).toBe('strengthen');
-    for (const u of units.filter((x) => ['target.note', 'list.add', 'list.name', 'order'].includes(x.kind)))
+    // Removing a site loosens; removing an exception tightens.
+    const removed = units.filter((u) => u.kind === 'target.remove');
+    expect(removed.map((u) => classify(u, a)).sort()).toEqual(['strengthen', 'weaken']);
+    for (const u of units.filter((x) => ['target.note', 'order'].includes(x.kind)))
       expect(classify(u, a)).toBe('neutral');
 
     const applied = applyUnits(a, units, NOW);
     expect(diffConfig(applied, b)).toEqual([]);
     expect(applied.groups.find((g) => g.id === 'A')!.rev).toBeGreaterThan(1);
-    expect(applied.lists.find((l) => l.id === 'L')!.rev).toBe(3); // renamed and an entry added
-    // A note, a name and the order can be applied again (they are neutral); every other change is done.
-    for (const u of units.filter((x) => !['order', 'target.note', 'list.name'].includes(x.kind)))
+    // A note and the order can be applied again (they are neutral); every other change is done.
+    for (const u of units.filter((x) => !['order', 'target.note'].includes(x.kind)))
       expect(isStale(u, applied), u.kind).toBe(true);
     // The input is never changed.
     expect(a.groups.map((g) => g.id)).toEqual(['A', 'B']);
   });
 
-  it('removing a rule or a list leaves a tombstone; adding a rule back removes it', () => {
+  it('removing a rule leaves a tombstone; adding it back removes it', () => {
     const a = initial();
     const b = structuredClone(a);
     b.groups = b.groups.filter((g) => g.id !== 'B');
-    b.lists = b.lists.filter((l) => l.id !== 'L');
     const units = diffConfig(a, b);
-    // Removing a list unlinks it from its rules, without a change of its own.
-    expect(units.map((u) => u.kind).sort()).toEqual(['group.remove', 'list.remove']);
-    expect(classify(units.find((u) => u.kind === 'group.remove')!, a)).toBe('weaken');
-    expect(classify(units.find((u) => u.kind === 'list.remove')!, a)).toBe('weaken');
+    expect(units.map((u) => u.kind)).toEqual(['group.remove']);
+    expect(classify(units[0], a)).toBe('weaken');
     const applied = applyUnits(a, units, NOW);
-    expect(applied.tombstones.map((x) => [x.kind, x.id]).sort()).toEqual([
-      ['group', 'B'],
-      ['list', 'L'],
-    ]);
-    expect(applied.groups[0].lists).toEqual([]);
+    expect(applied.tombstones.map((x) => [x.kind, x.id])).toEqual([['group', 'B']]);
     const add: ChangeUnit = { kind: 'group.add', group: a.groups[1] };
     const back = applyUnits(applied, [add], NOW);
-    expect(back.tombstones.map((x) => x.id)).toEqual(['L']);
+    expect(back.tombstones).toEqual([]);
     expect(isStale(add, back)).toBe(true);
     // Adding twice does nothing more.
     expect(applyUnits(back, [add], NOW).groups).toHaveLength(2);
   });
 
-  it('changes to rules that are off, archived or unused are neutral', () => {
+  it('changes to rules that are off or archived are neutral', () => {
     const a = initial();
     a.groups[1].enabled = false;
-    a.lists.push(list('U', ['u.test']));
     const off = a.groups[1];
     const units: ChangeUnit[] = [
       { kind: 'group.remove', groupId: 'B', name: 'B', base: off },
@@ -333,14 +345,6 @@ describe('every kind of change, from the diff to the configuration', () => {
       { kind: 'group.field', groupId: 'B', name: 'B', field: 'pause', value: {}, base: off.pause },
       { kind: 'group.field', groupId: 'B', name: 'B', field: 'archived', value: true, base: false },
       { kind: 'target.remove', owner: { kind: 'group', id: 'B' }, ownerName: 'B', target: off.targets[0] },
-      {
-        kind: 'target.remove',
-        owner: { kind: 'list', id: 'U' },
-        ownerName: 'U',
-        target: a.lists[2].targets[0],
-      },
-      { kind: 'list.remove', listId: 'U', name: 'U', base: a.lists[2] },
-      { kind: 'group.link', groupId: 'B', name: 'B', listId: 'U', listName: 'U', link: false },
     ];
     for (const u of units) expect(classify(u, a), u.kind).toBe('neutral');
   });
@@ -362,13 +366,10 @@ describe('every kind of change, from the diff to the configuration', () => {
     expect(isStale({ ...field, groupId: 'gone' }, a)).toBe(true);
     // A field of an earlier version is never applied.
     expect(isStale({ ...field, field: 'level' as never }, a)).toBe(true);
-    expect(
-      isStale(
-        { kind: 'target.add', owner: { kind: 'list', id: 'gone' }, ownerName: '', target: t('x.test') },
-        a,
-      ),
-    ).toBe(true);
-    expect(isStale({ kind: 'list.name', listId: 'gone', value: 'x', base: 'y' }, a)).toBe(true);
+    // Nor are the shared lists and Always allowed of earlier versions.
+    const listed = { kind: 'list', id: 'L' } as never;
+    expect(isStale({ kind: 'target.add', owner: listed, ownerName: '', target: t('x.test') }, a)).toBe(true);
+    expect(isStale({ kind: 'list.name', listId: 'L', value: 'x', base: 'y' } as never, a)).toBe(true);
     expect(isStale({ kind: 'order', ids: [] }, a)).toBe(false);
   });
 

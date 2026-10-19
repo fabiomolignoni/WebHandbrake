@@ -131,17 +131,17 @@ export function QuickSession({
   /** #18: a length of the person's choice, in minutes. */
   const [customMinutes, setCustomMinutes] = useState(120);
   const [untilTime, setUntilTime] = useState('17:00');
+  const active = groups.filter(isGroupActive);
+  /** The rules of a quick session, as the popup and the keyboard shortcut start it. */
+  const quick = active.filter((g) => g.options.quickSession).map((g) => g.id);
   const [mode, setMode] = useState<'groups' | 'allowlist'>('groups');
-  const [selected, setSelected] = useState<string[]>(() =>
-    groups.filter((g) => isGroupActive(g) && g.options.quickSession).map((g) => g.id),
-  );
+  const [selected, setSelected] = useState<string[]>(() => quick);
   const [allow, setAllow] = useState<Target[]>([]);
   const [delay, setDelay] = useState(0);
   const [locked, setLocked] = useState(false);
   const [noPauses, setNoPauses] = useState(true);
   const [preview, setPreview] = useState(false);
   const now = useNow(1000);
-  const active = groups.filter(isGroupActive);
 
   const until = (): number | undefined => {
     if (minutes !== 'until') return undefined;
@@ -151,13 +151,16 @@ export function QuickSession({
     if (d.getTime() <= Date.now()) d.setDate(d.getDate() + 1);
     return d.getTime();
   };
+  /** The length chosen, in minutes; undefined when the session lasts until a time of day. */
+  const length = minutes === 'until' ? undefined : minutes === 'custom' ? customMinutes : minutes;
   const start = async () => {
     setPreview(false);
     await call('session.start', {
       kind: mode,
-      groups: mode === 'groups' ? selected : [],
+      // The compact form has no choice of rules: those of quick sessions, as they are now.
+      groups: mode === 'groups' ? (compact ? quick : selected) : [],
       allow: mode === 'allowlist' ? allow : [],
-      minutes: minutes === 'until' ? undefined : minutes === 'custom' ? customMinutes : minutes,
+      minutes: length,
       until: until(),
       startInMinutes: delay || undefined,
       locked,
@@ -218,7 +221,9 @@ export function QuickSession({
           {durations}
           {untilField}
           {customField}
-          <Button variant="primary" icon="play" onClick={() => void start()}>
+          {/* Without a rule, a session would look active and block nothing. */}
+          {!quick.length && <p class="small muted">{t('focus.noQuickRules')}</p>}
+          <Button variant="primary" icon="play" disabled={!quick.length} onClick={() => void start()}>
             {t('focus.start')}
           </Button>
         </div>
@@ -341,9 +346,7 @@ export function QuickSession({
           <div class="stack">
             <p>
               {t('focus.previewBody', {
-                end: until()
-                  ? formatWhen(until()!)
-                  : formatWhen(Date.now() + (delay + (typeof minutes === 'number' ? minutes : 0)) * 60_000),
+                end: formatWhen(until() ?? Date.now() + (delay + (length ?? 0)) * 60_000),
               })}
             </p>
             {mode === 'allowlist' && (

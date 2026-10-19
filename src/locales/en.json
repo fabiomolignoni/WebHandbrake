@@ -18,15 +18,6 @@
     "message": "Blocked sites",
     "description": "Default name of a group created from the popup or the context menu"
   },
-  "allowlist.note": {
-    "message": "Use this for tools you need for work or essential services such as your bank. Adding a site here loosens the rules that restrict it, so it follows their protection."
-  },
-  "allowlist.subtitle": {
-    "message": "Sites that are never restricted, whatever your rules and focus sessions say."
-  },
-  "allowlist.title": {
-    "message": "Always allowed"
-  },
   "ask.choices": {
     "message": "Durations offered (minutes)"
   },
@@ -34,7 +25,7 @@
     "message": "Then block for"
   },
   "ask.help": {
-    "message": "A reason is always asked. On the page, another number of minutes up to the maximum can also be typed."
+    "message": "A reason is always required. On the page, you can also type another number of minutes, up to the maximum."
   },
   "ask.max": {
     "message": "up to"
@@ -109,7 +100,7 @@
     "message": "After continuous use"
   },
   "budget.choice.session.desc": {
-    "message": "When one stretch of use lasts too long, until you take a pause."
+    "message": "When one stretch of use lasts too long. A few minutes away from these sites start a new stretch."
   },
   "budget.choice.time": {
     "message": "After some time"
@@ -213,7 +204,7 @@
     "message": "A commitment phrase"
   },
   "challenge.kind.random": {
-    "message": "Random text"
+    "message": "Random characters"
   },
   "challenge.length": {
     "message": "Length"
@@ -222,7 +213,7 @@
     "message": "Phrase to type"
   },
   "challenge.phraseHelp": {
-    "message": "Write a sentence that reminds you of your intention, for example \"I choose to spend this time on purpose.\""
+    "message": "Write a sentence that reminds you of your intention, for example “I choose to spend this time on purpose.”"
   },
   "checklist.allGood": {
     "message": "Your protection covers the usual ways around it."
@@ -234,7 +225,7 @@
     "message": "The system clock was changed {count, plural, one {once} other {# times}} in the last {days} days."
   },
   "checklist.clock.ok": {
-    "message": "No changes of the system clock detected in the last {days} days."
+    "message": "No changes to the system clock in the last {days} days."
   },
   "checklist.host.no": {
     "message": "Access to all sites is missing: pages can only be blocked with a browser error page."
@@ -243,13 +234,13 @@
     "message": "Access to all sites granted."
   },
   "checklist.incognito.android": {
-    "message": "In Firefox, open Settings › Add-ons, choose WebHandbrake and turn on \"Run in private browsing\"."
+    "message": "In Firefox, open Settings › Add-ons, choose WebHandbrake and turn on “Run in private browsing”."
   },
   "checklist.incognito.chrome": {
-    "message": "Open chrome://extensions, choose Details under WebHandbrake and turn on \"Allow in Incognito\"."
+    "message": "Open chrome://extensions, choose Details under WebHandbrake and turn on “Allow in Incognito”."
   },
   "checklist.incognito.firefox": {
-    "message": "Open the Add-ons manager (about:addons), choose WebHandbrake and set \"Run in Private Windows\" to Allow."
+    "message": "Open the Add-ons manager (about:addons), choose WebHandbrake and set “Run in Private Windows” to Allow."
   },
   "checklist.incognito.no": {
     "message": "Not active in private windows."
@@ -261,7 +252,7 @@
     "message": "Browser extension and settings pages are always blocked."
   },
   "checklist.internal.auto": {
-    "message": "Browser extension and settings pages are blocked while strictly protected rules are active."
+    "message": "Browser extension and settings pages are blocked while a firmly protected rule restricts sites or a focus session that cannot be interrupted is running."
   },
   "checklist.internal.no": {
     "message": "Browser extension and settings pages are never blocked."
@@ -351,7 +342,7 @@
     "message": "typing a phrase"
   },
   "cost.random": {
-    "message": "typing {length} characters"
+    "message": "typing {length} random characters"
   },
   "dailyMinutes.custom": {
     "message": "Minutes a day"
@@ -364,7 +355,7 @@
     "message": "Automatic backups"
   },
   "data.backupsHelp": {
-    "message": "A copy of your rules and settings is kept before each change (the last {recent}) and once a day (for {daily} days). Whatever restoring a copy loosens waits {hours} hours, as the emergency exit does, and is then confirmed in Protection."
+    "message": "A copy of your rules and settings is kept before each change (the last {recent}) and once a day (for {daily} days). If restoring a copy loosens an active rule, the change waits {hours} hours, like the emergency exit, and you then confirm it in Protection."
   },
   "data.copied": {
     "message": "Copied to the clipboard."
@@ -382,7 +373,7 @@
     "message": "Export"
   },
   "data.exportHelp": {
-    "message": "Saves your rules, shared lists, Always allowed, settings and pages saved for later to a JSON file you can import later or on another device."
+    "message": "Saves your rules, settings and pages saved for later to a JSON file that you can import again, here or on another device."
   },
   "data.groupsCount": {
     "message": "{count, plural, one {# rule} other {# rules}}"
@@ -394,7 +385,7 @@
     "message": "Import a file or a list…"
   },
   "data.importHelp": {
-    "message": "WebHandbrake exports, shared rules and plain lists of sites (one per line, hosts files, uBlock Origin, AdGuard and uBlacklist syntax)."
+    "message": "Accepts WebHandbrake exports, shared rules and plain lists of sites (one per line, hosts files, uBlock Origin, AdGuard and uBlacklist syntax)."
   },
   "data.includeSecrets": {
     "message": "Include the passwords and the partner codes of the rules"
@@ -412,10 +403,10 @@
     "message": "Reset rules and settings…"
   },
   "data.resetConfirm": {
-    "message": "Reset all rules and settings? Whatever this loosens waits {hours} hours, as the emergency exit does, and is then confirmed in Protection."
+    "message": "Reset all rules and settings? If this loosens an active rule, the change waits {hours} hours, like the emergency exit, and you then confirm it in Protection."
   },
   "data.resetHelp": {
-    "message": "Replaces your rules, shared lists, Always allowed and settings with the defaults. Statistics and pages saved for later are kept (delete statistics in Privacy)."
+    "message": "Replaces your rules and settings with the defaults. Statistics and pages saved for later are kept (delete statistics in Privacy)."
   },
   "data.restore": {
     "message": "Restore"
@@ -424,7 +415,7 @@
     "message": "Every day"
   },
   "days.none": {
-    "message": "No day"
+    "message": "No days"
   },
   "days.weekdays": {
     "message": "Mon–Fri"
@@ -565,7 +556,7 @@
     "message": "{s} s"
   },
   "editor.addAlways": {
-    "message": "Always, with friction"
+    "message": "Add a condition for all times"
   },
   "editor.addLimit": {
     "message": "Add a time limit"
@@ -586,7 +577,7 @@
     "message": "Can you take a break from this rule?"
   },
   "editor.breaksHelp": {
-    "message": "A break lifts this rule's block for a while. Decide here what a break costs and how many you get."
+    "message": "A break lifts this rule’s block for a while. Decide here what a break costs and how many you get."
   },
   "editor.change": {
     "message": "Change"
@@ -754,25 +745,19 @@
     "message": "Only private windows"
   },
   "editor.privacyHelp": {
-    "message": "Rules limited to one kind of window are checked when a page starts loading instead of before (a short flash is possible)."
+    "message": "Rules limited to one kind of window are checked as a page starts loading, not before, so the page may appear for a moment."
   },
   "editor.quickSession": {
     "message": "Include in quick focus sessions"
   },
   "editor.quickSessionHelp": {
-    "message": "Quick sessions started from the popup or the keyboard block the sites of the rules that have this option on."
+    "message": "Quick sessions (started from the popup, Today, the right-click menu or the keyboard shortcut) block the sites of the rules that have this option on."
   },
   "editor.save": {
     "message": "Save changes"
   },
   "editor.sections": {
     "message": "Parts of the rule"
-  },
-  "editor.sharedLists": {
-    "message": "Shared lists"
-  },
-  "editor.sharedListsHelp": {
-    "message": "Lists of sites reused by several rules. Manage them from Rules › Shared lists."
   },
   "editor.sitesHint": {
     "message": "Paste addresses or whole lists. Subdomains are included: youtube.com also covers m.youtube.com."
@@ -799,7 +784,7 @@
     "message": "Sites"
   },
   "editor.tabs": {
-    "message": "When the state changes, apply to"
+    "message": "When a restriction starts, apply it to"
   },
   "editor.tabs.active": {
     "message": "Only the active tab (others when you switch to them)"
@@ -844,7 +829,7 @@
     "message": "If your settings are too strict, the emergency exit always works and needs nobody else: request it, wait {hours} hours, then type a sentence. It ends every focus session, and sets the protection of every rule to Reminder, which also removes the passwords and the partner codes of the rules. Your rules stay as they are. Each step is listed under Events."
   },
   "emergency.done": {
-    "message": "Emergency exit completed: every rule now asks only for a reminder."
+    "message": "Emergency exit completed: every rule now has the Reminder protection."
   },
   "emergency.error.notReady": {
     "message": "The waiting period is not over yet."
@@ -877,13 +862,13 @@
     "message": "Custom filter"
   },
   "filter.customHelp": {
-    "message": "CSS filter functions only, e.g. \"grayscale(60%) contrast(80%)\"."
+    "message": "CSS filter functions only, e.g. “grayscale(60%) contrast(80%)”."
   },
   "filter.fade": {
     "message": "Fade"
   },
   "filter.grayscale": {
-    "message": "Grayscale"
+    "message": "Greyscale"
   },
   "filter.intensity": {
     "message": "Intensity"
@@ -907,7 +892,7 @@
     "message": "Focus session until {when}"
   },
   "focus.allowlistHelp": {
-    "message": "During the session only these sites (and the \"Always allowed\" list) can be opened."
+    "message": "During the session only these sites can be opened."
   },
   "focus.allowlistMode": {
     "message": "Only allowed sites"
@@ -959,7 +944,7 @@
     "message": "Everything except a few sites"
   },
   "focus.mode.allowlist.desc": {
-    "message": "Only the sites you list stay open. Everything else waits."
+    "message": "Only the sites you list stay open; every other site is blocked."
   },
   "focus.mode.groups": {
     "message": "Some of my rules"
@@ -974,7 +959,7 @@
     "message": "New session"
   },
   "focus.noGroups": {
-    "message": "No rules yet: create one first or choose \"Everything except a few sites\"."
+    "message": "No rules yet: create one first or choose “Everything except a few sites”."
   },
   "focus.noPauses": {
     "message": "No breaks during the session"
@@ -982,8 +967,11 @@
   "focus.noPausesHelp": {
     "message": "Breaks of the blocked rules are not available until the session ends."
   },
+  "focus.noQuickRules": {
+    "message": "No rule is in quick focus sessions yet: turn on “Include in quick focus sessions” in a rule, or choose the rules under More options."
+  },
   "focus.previewAllowlist": {
-    "message": "Every website except {count, plural, =0 {the \"Always allowed\" list} one {# site and the \"Always allowed\" list} other {# sites and the \"Always allowed\" list}} will be blocked."
+    "message": "{count, plural, =0 {Every website will be blocked.} one {Every website except # site will be blocked.} other {Every website except # sites will be blocked.}}"
   },
   "focus.previewBody": {
     "message": "The session will last until {end}."
@@ -1079,10 +1067,10 @@
     "message": "Delete rule"
   },
   "groups.deleteBody": {
-    "message": "The rule and its conditions will be removed. Deleting a rule that restricts sites is a loosening, so it follows the rule's protection."
+    "message": "The rule and its conditions will be removed. Deleting a rule that restricts sites is a loosening, so it follows the rule’s protection."
   },
   "groups.deleteTitle": {
-    "message": "Delete \"{name}\"?"
+    "message": "Delete “{name}”?"
   },
   "groups.disabled": {
     "message": "Off"
@@ -1138,9 +1126,6 @@
   "groups.search": {
     "message": "Search rules and sites"
   },
-  "groups.sections": {
-    "message": "Rules and lists"
-  },
   "groups.sites": {
     "message": "{count, plural, one {# site} other {# sites}}"
   },
@@ -1163,13 +1148,13 @@
     "message": "WebHandbrake {version} — free and open-source software."
   },
   "help.accessibility.p1": {
-    "message": "Settings › General offers light and dark themes and \"High contrast\". Animations follow your system's reduced-motion setting. The pages are designed for keyboard and screen-reader use and are checked automatically."
+    "message": "Settings › General offers light and dark themes and “High contrast”. Animations follow your system’s reduced-motion setting. The pages are designed for keyboard and screen-reader use and are checked automatically."
   },
   "help.accessibility.p2": {
-    "message": "A challenge drawn as an image offers \"I use a screen reader: type a sentence instead\". If typing or waiting is hard for you, choose interventions and break costs that need neither, such as a filter, a block or a confirmation."
+    "message": "A challenge drawn as an image offers “I use a screen reader: type a sentence instead”. If typing or waiting is hard for you, choose interventions and break costs that need neither, such as a filter, a block or a confirmation."
   },
   "help.accessibility.p3": {
-    "message": "To report a barrier, use the accessibility form on GitHub (\"Report a problem or suggest an idea\" in Help › About)."
+    "message": "To report a barrier, use the accessibility form on GitHub (“Report a problem or suggest an idea” in Help › About)."
   },
   "help.accessibility.title": {
     "message": "Accessibility"
@@ -1197,17 +1182,17 @@
     "message": "Contents"
   },
   "help.data.p1": {
-    "message": "Export (Settings › Data) saves your rules, shared lists, Always allowed, settings and pages saved for later to a file. Statistics, the password hashes and the partner codes of the rules are included only if you tick them. Insights can also export statistics as CSV or JSON."
+    "message": "Export (Settings › Data) saves your rules, settings and pages saved for later to a file. Statistics, the password hashes and the partner codes of the rules are included only if you tick them. Insights can also export statistics as CSV or JSON."
   },
   "help.data.p2": {
-    "message": "Import accepts a WebHandbrake file, a rule shared with \"Share\" in its menu, or a plain list of addresses (including hosts files and uBlock Origin, AdGuard and uBlacklist lines). It shows a preview and can add to your rules or replace everything; replacing also restores the pages saved for later from the file. Whatever an import loosens follows the emergency exit, for that import only: it waits as long as the emergency exit, then you confirm it in Protection by typing a sentence. Statistics in a file are never imported.",
+    "message": "Import accepts a WebHandbrake file, a rule shared with “Share” in its menu, or a plain list of addresses (including hosts files and uBlock Origin, AdGuard and uBlacklist lines). It shows a preview and can add to your rules or replace everything; replacing also restores the pages saved for later from the file. If an import loosens an active rule, it follows the emergency exit, for that import only: the change waits as long as the emergency exit, then you confirm it in Protection by typing a sentence. Statistics in a file are never imported.",
     "description": "Help, Your data. uBlock Origin, AdGuard and uBlacklist are product names."
   },
   "help.data.p3": {
-    "message": "Automatic backups (Settings › Data) keep a copy of your rules and settings, including the password hashes and the partner codes, before each of the last {recent} changes and once a day for {daily} days. Whatever restoring one loosens follows the emergency exit, for that restore only: it waits as long as the emergency exit, then you confirm it in Protection by typing a sentence. Backups are removed only when newer copies replace them or when you uninstall WebHandbrake: Reset and the emergency exit do not remove them."
+    "message": "Automatic backups (Settings › Data) keep a copy of your rules and settings, including the password hashes and the partner codes, before each of the last {recent} changes and once a day for {daily} days. If restoring one loosens an active rule, it follows the emergency exit, for that restore only: the change waits as long as the emergency exit, then you confirm it in Protection by typing a sentence. Backups are removed only when newer copies replace them or when you uninstall WebHandbrake: Reset and the emergency exit do not remove them."
   },
   "help.data.p4": {
-    "message": "Reset (Settings › Data) replaces your rules and settings with the defaults; whatever it loosens follows the emergency exit, for that reset only: it waits as long as the emergency exit, then you confirm it in Protection by typing a sentence. Statistics are deleted separately, in Insights or Settings › Privacy. Uninstalling WebHandbrake deletes everything it stored, so export first."
+    "message": "Reset (Settings › Data) replaces your rules and settings with the defaults. If it loosens an active rule, it follows the emergency exit, for that reset only: the change waits as long as the emergency exit, then you confirm it in Protection by typing a sentence. Statistics are deleted separately, in Insights or Settings › Privacy. Uninstalling WebHandbrake deletes everything it stored, so export first."
   },
   "help.data.title": {
     "message": "Your data"
@@ -1222,19 +1207,19 @@
     "message": "Emergency exit"
   },
   "help.faq.clock.a": {
-    "message": "Time never goes back for WebHandbrake: if the clock is set back, restrictions last longer and limits do not refill early. With \"Detect a manipulated system clock\" on (Settings › Time, on by default), a wrong clock is noticed from the date that the pages you load send, and WebHandbrake uses the corrected time. Each change is listed under Events. Changing the time zone moves your schedules."
+    "message": "Time never goes back for WebHandbrake: if the clock is set back, restrictions last longer and limits do not refill early. With “Detect a manipulated system clock” on (Settings › Time, on by default), WebHandbrake notices a wrong clock from the date that the pages you load send, and uses the corrected time. Each change is listed under Events. Changing the time zone moves your schedules."
   },
   "help.faq.clock.q": {
     "message": "What if I change the system clock?"
   },
   "help.faq.flash.a": {
-    "message": "Most pages are stopped before they load. Some are checked right after the page starts loading, so they can appear for a moment: rules limited to private or normal windows, exceptions written as regular expressions that overlap other rules, entries the browser's filters cannot express or that exceed their limits, and pages already open when a restriction starts."
+    "message": "Most pages are stopped before they load. Some are checked right after the page starts loading, so they can appear for a moment: rules limited to private or normal windows, exceptions written as regular expressions that overlap other rules, entries the browser’s filters cannot express or that exceed their limits, and pages already open when a restriction starts."
   },
   "help.faq.flash.q": {
     "message": "Why did a page appear for a moment before being blocked?"
   },
   "help.faq.harden.a": {
-    "message": "Yes, with your browser's enterprise policies, which you set up outside WebHandbrake. They can install it so that it cannot be removed, and turn off private windows, guest mode, new profiles, troubleshoot mode or the developer tools. Chrome: ExtensionInstallForcelist, IncognitoModeAvailability, BrowserGuestModeEnabled, BrowserAddPersonEnabled, DeveloperToolsAvailability. Firefox: ExtensionSettings (installation mode force_installed), PrivateBrowsingModeAvailability, DisableSafeMode (Windows and macOS), BlockAboutProfiles, DisableDeveloperTools.",
+    "message": "Yes, with your browser’s enterprise policies, which you set up outside WebHandbrake. They can install it so that it cannot be removed, and turn off private windows, guest mode, new profiles, troubleshoot mode or the developer tools. Chrome: ExtensionInstallForcelist, IncognitoModeAvailability, BrowserGuestModeEnabled, BrowserAddPersonEnabled, DeveloperToolsAvailability. Firefox: ExtensionSettings (installation mode force_installed), PrivateBrowsingModeAvailability, DisableSafeMode (Windows and macOS), BlockAboutProfiles, DisableDeveloperTools.",
     "description": "Help question. Policy names and force_installed are not translated."
   },
   "help.faq.harden.q": {
@@ -1247,13 +1232,13 @@
     "message": "I made my rules too strict. What can I do?"
   },
   "help.faq.notApplied.a": {
-    "message": "Check that the rule is on and not archived; that one of its conditions applies right now (its time window or limit); that the site is not in Always allowed and no exception of the rule covers it; that no break is running and you did not just continue past a question, wait or challenge; that WebHandbrake is allowed in private windows; and that it has access to websites (see \"How solid is your protection?\"). In Chrome, local files also need the browser's \"Allow access to file URLs\". If a site is restricted more than you expect, another rule may be stricter: the strictest result wins."
+    "message": "Check that the rule is on and not archived; that one of its conditions applies right now (its time window or limit); that no exception of the rule covers the site; that no break is running and you did not just continue past a question, wait or challenge; that WebHandbrake is allowed in private windows; and that it has access to websites (see “How solid is your protection?”). In Chrome, local files also need the browser’s “Allow access to file URLs”. If a site is restricted more than you expect, another rule may cover it too: every rule that covers a page applies, the strictest first."
   },
   "help.faq.notApplied.q": {
     "message": "Why is a site not restricted?"
   },
   "help.faq.notCounted.a": {
-    "message": "Time counts on the sites of your rules while the page is visible and its window has the focus. After {seconds} seconds without keyboard, mouse or touch input you count as inactive, unless audio or video is playing (Settings › Time › Stop counting when I am inactive). Background tabs and background media count only with \"Count tabs that are open but not active\" and \"Count background audio and video\". No time is counted on pages where extensions cannot run."
+    "message": "Time counts on the sites of your rules while the page is visible and its window has the focus. After {seconds} seconds without keyboard, mouse or touch input you count as inactive, unless audio or video is playing (Settings › Time › Stop counting when I am inactive). Background tabs and background media count only with “Count tabs that are open but not active” and “Count background audio and video”. No time is counted on pages where extensions cannot run."
   },
   "help.faq.notCounted.q": {
     "message": "Why was my time not counted?"
@@ -1265,7 +1250,7 @@
     "message": "Why is a site not blocked in private windows?"
   },
   "help.faq.reset.a": {
-    "message": "Hourly limits start again at the start of each hour, daily limits when your day starts ({dayStart} by default, Settings › General › Days start at), weekly limits on the first day of your week (Settings › General › Weeks start on) and monthly limits on the first day of the month. Limits for every few minutes or every few days start again when each period ends. Limits \"in any\" number of minutes always count the last minutes, so time comes back gradually. After continuous use, the stop lasts as long as the condition says.",
+    "message": "Hourly limits start again at the start of each hour, daily limits when your day starts ({dayStart} by default, Settings › General › Days start at), weekly limits on the first day of your week (Settings › General › Weeks start on) and monthly limits on the first day of the month. Limits for every few minutes or every few days start again when each period ends. Limits “in any” number of minutes always count the last minutes, so time comes back gradually. After continuous use, the stop lasts as long as the condition says.",
     "description": "Help question. {dayStart} is a time of day such as 00:00."
   },
   "help.faq.reset.q": {
@@ -1284,13 +1269,13 @@
     "message": "Are my settings synchronised between devices?"
   },
   "help.faq.uninstall.a": {
-    "message": "No, and it does not try to. On a computer it can block the browser's extension pages while strict protection is active, and enterprise policies can make it harder to remove, but you always stay in control."
+    "message": "No, and it does not try to. On a computer it can block the browser’s extension and settings pages (see “Block the browser’s extension and settings pages” in Protection), and enterprise policies can make it harder to remove, but you always stay in control."
   },
   "help.faq.uninstall.q": {
     "message": "Can WebHandbrake prevent its own uninstallation?"
   },
   "help.focus.p1": {
-    "message": "A focus session blocks the sites of the chosen rules, or every site except a short list, for a while. On the Focus page you choose the rules, the length (a usual one, an end time or any number of minutes with \"Other…\") and when it starts. The popup, the right-click menu on a computer and the focus shortcut (see Keyboard shortcuts) start a session at once with the rules that have \"Include in quick focus sessions\" on.",
+    "message": "A focus session blocks the sites of the chosen rules, or every site except a short list, for a while. On the Focus page you choose the rules, the length (a usual one, an end time or any number of minutes with “Other…”) and when it starts. The popup, the right-click menu on a computer and the focus shortcut (see Keyboard shortcuts) start a session at once with the rules that have “Include in quick focus sessions” on.",
     "description": "Help, Focus sessions. \"Include in quick focus sessions\" is the label of a rule option."
   },
   "help.focus.p2": {
@@ -1303,28 +1288,25 @@
     "message": "Add sites by typing or pasting addresses; whole lists work too. A domain always includes its subdomains. You can be more precise with paths, single pages, the home page only, wildcards, query parameters and, in advanced mode, regular expressions."
   },
   "help.groups.p2": {
-    "message": "Exceptions (\"+\") allow parts of a blocked site. The most specific entry wins: with reddit.com blocked and +reddit.com/r/*/comments/* allowed, single discussions open while the rest of Reddit stays blocked. When an exception and a block are equally specific, the block wins. Exceptions only apply to their own rule."
-  },
-  "help.groups.p3": {
-    "message": "Shared lists let several rules reuse the same sites, and \"Always allowed\" lists sites that are never restricted, whatever the rules and sessions say."
+    "message": "Exceptions (“+”) allow parts of a blocked site. The most specific entry wins: with reddit.com blocked and +reddit.com/r/*/comments/* allowed, single discussions open while the rest of Reddit stays blocked. When an exception and a block are equally specific, the block wins. Exceptions only apply to their own rule."
   },
   "help.groups.title": {
     "message": "Rules and sites"
   },
   "help.insights.p1": {
-    "message": "Insights shows the time and visits on the sites of your rules, day by day, by rule and by site. With \"Track time on all sites\" on (Settings › Time), it also measures sites outside your rules."
+    "message": "Insights shows the time and visits on the sites of your rules, day by day, by rule and by site. With “Track time on all sites” on (Settings › Time), it also measures sites outside your rules."
   },
   "help.insights.p2": {
-    "message": "\"Times WebHandbrake stepped in\" counts the intervention pages shown; \"times you chose not to go in\" counts those you did not continue past. Insights also lists your breaks with their reasons, focus sessions and the reasons you gave for going in."
+    "message": "“Times WebHandbrake stepped in” counts the intervention pages shown; “times you chose not to go in” counts those you did not continue past. Insights also lists your breaks with their reasons, focus sessions and the reasons you gave for going in."
   },
   "help.insights.title": {
     "message": "Insights"
   },
   "help.interventions.p1": {
-    "message": "From the gentlest: only count time, apply a filter (grayscale, blur…), ask what you want to do and for how long, make you wait, or ask you to type a short challenge. Blocking the page and redirecting it elsewhere are equally strict; closing the tab is the strictest. In the full editor, \"Don’t count\" leaves the sites alone and counts nothing, for example to count your time only during working hours."
+    "message": "From the gentlest: only count time, apply a filter (greyscale, blur…), ask what you want to do and for how long, make you wait, or set a short challenge (typing or a small calculation). Blocking the page and redirecting it elsewhere are equally strict; closing the tab is the strictest. In the full editor, “Don’t count” leaves the sites alone and counts nothing, for example to count your time only during working hours."
   },
   "help.interventions.p2": {
-    "message": "On every intervention page the main button closes the tab, and you can also go back. You can save the page for later and find it in \"Later\" when it is allowed again."
+    "message": "On every intervention page the main button closes the tab, and you can also go back. You can save the page for later and find it in “Later” when it is allowed again."
   },
   "help.interventions.p3": {
     "message": "If a restriction starts while you are typing in a page, you get a grace period ({seconds} seconds by default) to finish or copy your text before the page is replaced."
@@ -1354,13 +1336,13 @@
     "message": "Private windows, unless you allow WebHandbrake there."
   },
   "help.limits.item4": {
-    "message": "Its own removal. On a computer it can block the browser's extension and settings pages while strict protection is active, but it cannot prevent uninstalling; on Android it cannot block those pages. Uninstalling deletes all its data."
+    "message": "Its own removal. On a computer it can block the browser’s extension and settings pages, but it cannot prevent uninstalling; on Android it cannot block those pages. Uninstalling deletes all its data."
   },
   "help.limits.item5": {
-    "message": "Pages where extensions cannot run, such as the browser's own pages, its PDF viewer and the add-on stores: no time is counted there."
+    "message": "Pages where extensions cannot run, such as the browser’s own pages, its PDF viewer and the add-on stores: no time is counted there."
   },
   "help.limits.item6": {
-    "message": "Changes of the device's time zone, which move your schedules."
+    "message": "Changes to the device’s time zone, which move your schedules."
   },
   "help.limits.item7": {
     "message": "Someone in full control of the device, who can always get around it."
@@ -1369,22 +1351,22 @@
     "message": "WebHandbrake works inside this browser profile. It can make getting around your rules slower and more deliberate; it cannot make it impossible. It does not cover:"
   },
   "help.limits.p2": {
-    "message": "\"How solid is your protection?\" on the Protection page shows which of these ways are open in this browser."
+    "message": "“How solid is your protection?” on the Protection page shows which of these ways are open in this browser."
   },
   "help.limits.title": {
     "message": "What WebHandbrake cannot do"
   },
   "help.mobile.p1": {
-    "message": "WebHandbrake runs on Firefox for Android. Open the popup from the Extensions menu and the dashboard from the add-on's settings."
+    "message": "WebHandbrake runs on Firefox for Android. Open the popup from the Extensions menu and the dashboard from the add-on’s settings."
   },
   "help.mobile.p2": {
-    "message": "Keyboard shortcuts and the right-click menu do not exist on Android, and the browser's extension and settings pages cannot be protected there. Time is counted only while Firefox is in the foreground and the page is visible."
+    "message": "Keyboard shortcuts and the right-click menu do not exist on Android, and the browser’s extension and settings pages cannot be protected there. Time is counted only while Firefox is in the foreground and the page is visible."
   },
   "help.mobile.title": {
     "message": "Firefox for Android"
   },
   "help.pauses.p1": {
-    "message": "A break lifts a block from a page, a site, a rule or all rules for a few minutes. Only a block has breaks: a question, a wait and a challenge have their own way in, and the other interventions leave the page open or leave it at once. Each rule that blocks decides whether breaks are allowed, how long they last, how many you can take and what they cost (a confirmation, a wait, a typed challenge or your password)."
+    "message": "A break lifts a block from a page, a site, a rule or all rules for a few minutes. Only a block has breaks: a question, a wait and a challenge have their own way in, and the other interventions either leave the page open or take you away from it at once. Each rule that blocks decides whether breaks are allowed, how long they last, how many you can take and what they cost (nothing, a confirmation, a wait, a challenge or the rule’s password)."
   },
   "help.pauses.p2": {
     "message": "Breaks end by themselves and the restriction comes back at once. You can end a break early at any time."
@@ -1396,13 +1378,13 @@
     "message": "WebHandbrake has no account, no server and no telemetry. It makes no network requests of its own: a redirect address you set and the links you click are opened by the browser. Your rules, settings and statistics stay in your browser profile."
   },
   "help.privacy.p2": {
-    "message": "Statistics are daily totals per rule, per site of a rule and per site; they never contain full addresses. Sites outside your rules are measured only with \"Track time on all sites\". In private windows only the totals your limits need are kept. Statistics are kept {days} days by default, and deleting them never refills a limit: the totals your limits use are kept for {keepDays} days."
+    "message": "Statistics are daily totals per rule, per site of a rule and per site; they never contain full addresses. Sites outside your rules are measured only with “Track time on all sites”. In private windows only the totals your limits need are kept. Statistics are kept {days} days by default, and deleting them never refills a limit: the totals your limits use are kept for {keepDays} days."
   },
   "help.privacy.p3": {
-    "message": "A small script in the page shows the timer, filters and the grace period, and tells WebHandbrake the page's address, whether you are active and whether media is playing. It runs on the sites of your rules, and on every site when \"Track time on all sites\" is on or when a rule has a regular expression, a site name with *, such as amazon.* (several ready-made lists have them), or an entry without a site name, such as *news*. The text you type is read only inside the page, for the grace period. Apart from the time counted per site, nothing the script reads is stored."
+    "message": "A small script in the page shows the timer, filters and the grace period, and tells WebHandbrake the page’s address, whether you are active and whether media is playing. It runs on the sites of your rules, and on every site when “Track time on all sites” is on or when a rule has a regular expression, a site name with *, such as amazon.* (several ready-made lists have them), or an entry without a site name, such as *news*. The text you type is read only inside the page, for the grace period. Apart from the time counted per site, nothing the script reads is stored."
   },
   "help.privacy.p4": {
-    "message": "Pages saved for later keep their address and title, also from private windows, until you remove them. \"Recent decisions\" (Settings › Diagnostics) keeps the addresses of restricted pages until the browser closes; \"Keep a log\" turns it off. Settings › Privacy lists what is saved on this device, with sizes; what is kept only until the browser closes is not listed there."
+    "message": "Pages saved for later keep their address and title, also from private windows, until you remove them. “Recent decisions” (Settings › Diagnostics) keeps the addresses of restricted pages until the browser closes; “Keep a log” turns it off. Settings › Privacy lists what is saved on this device, with sizes; what is kept only until the browser closes is not listed there."
   },
   "help.privacy.title": {
     "message": "Privacy"
@@ -1411,16 +1393,16 @@
     "message": "Privacy policy"
   },
   "help.protection.p1": {
-    "message": "Making your rules stricter is always immediate, and so is a change that loosens nothing, such as a new name or colour. Loosening a rule (removing a site, raising a limit, turning it off…) takes what its protection asks, which you choose when you create it. A change that concerns several rules, such as a site in Always allowed or a setting, takes what each active rule it loosens asks: a site in Always allowed loosens the rules that restrict it, a setting all of them. A change that loosens no active rule applies at once."
+    "message": "Making your rules stricter is always immediate, and so is a change that loosens nothing, such as a new name or colour. Loosening a rule (removing a site, raising a limit, turning it off…) takes what its protection asks, which you choose when you create it. A setting concerns all your rules: loosening it takes what each active rule asks. A change that loosens no active rule applies at once."
   },
   "help.protection.p2": {
-    "message": "Each rule has one of six protections. Reminder asks you to confirm. Wait makes you wait for the time you choose: up to {minutes} minutes in the dialog, while a longer wait turns the change into a pending change that you confirm once the time is over, within {confirmHours} hours, or it expires. Password asks for the rule's password, and Partner code for the code that your partner's app shows. Locked refuses every loosening until a date you choose; after it, a confirmation is enough. Permanent refuses every loosening with no end date: only the emergency exit removes it."
+    "message": "Each rule has one of six protections. Reminder asks you to confirm. Wait makes you wait for the time you choose: up to {minutes} minutes in the dialog, while a longer wait turns the change into a pending change that you confirm once the time is over, within {confirmHours} hours, or it expires. Password asks for the rule’s password, and Partner code for the code that your partner’s app shows. Locked refuses every loosening until a date you choose; after it, a confirmation is enough. Permanent refuses every loosening with no end date: only the emergency exit removes it."
   },
   "help.protection.p3": {
     "message": "Pending changes are listed in Protection, where you can confirm or cancel them."
   },
   "help.protection.p4": {
-    "message": "The Protection page also checks the usual ways around your rules (private windows, the browser's extension and settings pages, the system clock…) under \"How solid is your protection?\", and lists signs of tampering under Events."
+    "message": "The Protection page also checks the usual ways around your rules (private windows, the browser’s extension and settings pages, the system clock…) under “How solid is your protection?”, and lists signs of tampering under Events."
   },
   "help.protection.p5": {
     "message": "With the Password protection, loosening the rule needs its password, and so does a break of the rule that costs a password. Give the password to someone you trust, or keep it where you cannot reach it at once; only a salted hash is stored. A change to several rules asks for the password of each rule it loosens, once for rules that share one."
@@ -1429,13 +1411,13 @@
     "message": "With the Partner code protection, someone you trust holds the key: they add the rule to an authenticator app on their phone by scanning a QR code once. From then on, loosening the rule and confirming its pending changes need the six-digit code that their app shows, and so do its breaks unless you turn that off. Each code works once, nothing is sent anywhere, and the emergency exit still works without your partner. The clocks of both devices must be right."
   },
   "help.protection.p7": {
-    "message": "Some changes follow the emergency exit instead of the protections of your rules, for that change only: loosening the settings of the protection itself (blocking the browser's extension and settings pages, the emergency exit's waiting time, detecting a manipulated clock), and whatever a restore, an import or a reset loosens. Such a change waits as long as the emergency exit, then you confirm it in Protection by typing a sentence. It applies at once when no rule is active."
+    "message": "Some changes follow the emergency exit instead of the protections of your rules, for that change only: loosening the settings of the protection itself (blocking the browser’s extension and settings pages, the emergency exit’s waiting time, detecting a manipulated clock), and whatever a restore, an import or a reset loosens. Such a change waits as long as the emergency exit, then you confirm it in Protection by typing a sentence. It applies at once when no rule is active."
   },
   "help.protection.title": {
     "message": "Protecting your rules"
   },
   "help.rules.p1": {
-    "message": "Each rule has one or more conditions with what happens, such as \"Mon–Fri 09:00–17:00 → Block\" or \"Always, after 45 min per day → Wait 30 s\". Conditions are checked from top to bottom and the first true one applies. If none applies, time is only counted."
+    "message": "Each rule has one or more conditions with what happens, such as “Mon–Fri 09:00–17:00 → Block” or “Always, after 45 min per day → Wait 30 s”. Conditions are checked from top to bottom and the first true one applies. If none applies, time is only counted."
   },
   "help.rules.p2": {
     "message": "A condition can use time windows (also overnight, like 22:00–02:00), and optionally a limit: time per hour, day, week, month or custom period, visits per period, or continuous use followed by a mandatory stop."
@@ -1444,7 +1426,7 @@
     "message": "Time is counted only while the page is visible, its window has the focus and you are active (or audio or video is playing). Several tabs of the same rule never count twice. A visit starts when you come back after a few minutes away ({minutes} by default)."
   },
   "help.rules.p4": {
-    "message": "When several rules apply to the same site, each of them applies, whatever their order. The strictest comes first, and the page opens only once every rule lets you in: after the wait, question or challenge of one rule, the next rule asks its own, and a block keeps the page closed. Their filters apply together. \"Test a URL\" in the rule editor and \"Why?\" in the popup show exactly which condition applies and when it will change."
+    "message": "When several rules apply to the same site, each of them applies, whatever their order. The strictest comes first, and the page opens only once every rule lets you in: after the wait, question or challenge of one rule, the next rule asks its own, and a block keeps the page closed. Their filters apply together. “Test a URL” in the rule editor and “Why?” in the popup show exactly which condition applies and when it will change."
   },
   "help.rules.title": {
     "message": "Conditions, limits and visits"
@@ -1452,32 +1434,41 @@
   "help.shortcut.block": {
     "message": "block the current site"
   },
+  "help.shortcut.dashboard": {
+    "message": "open the dashboard"
+  },
   "help.shortcut.focus": {
     "message": "start a {minutes}-minute focus session"
   },
   "help.shortcut.popup": {
     "message": "open the popup"
   },
+  "help.shortcutNone": {
+    "message": "No key"
+  },
   "help.shortcuts": {
     "message": "Keyboard shortcuts"
   },
+  "help.shortcutsChange": {
+    "message": "Change shortcuts"
+  },
   "help.shortcutsNote": {
-    "message": "Shortcuts can be changed in the browser's extension shortcut settings. They are not available on Android."
+    "message": "These are the keys your browser has given WebHandbrake. When a key is already used by the browser or by another extension, the browser may give none: choose one with Change shortcuts. Shortcuts are not available on Android."
   },
   "help.source": {
     "message": "Source code"
   },
   "help.start.p1": {
-    "message": "WebHandbrake is a handbrake for the web: it helps you use the sites you choose when and as much as you decided, with as little friction as needed. Everything stays on this device."
+    "message": "WebHandbrake is a handbrake for the web: it helps you use the sites you choose only when and as much as you intend, with as little friction as needed. Everything stays on this device."
   },
   "help.start.p2": {
     "message": "You organise sites in rules (for example Social or Video). Each rule says when and how it slows you down: a filter, a question, a wait, a short challenge or a block."
   },
   "help.start.p3": {
-    "message": "The popup shows what applies to the current site and offers quick actions: take a break, save the page for later and block the site. It also starts a focus session when at least one rule has \"Include in quick focus sessions\" on. The dashboard (this page) is where you manage everything."
+    "message": "The popup shows what applies to the current site and offers quick actions: take a break, save the page for later and block the site. It also starts a focus session when at least one rule has “Include in quick focus sessions” on. The dashboard (this page) is where you manage everything."
   },
   "help.start.p4": {
-    "message": "Quick start: open Rules › New rule, choose the sites, when the rule applies and what happens, then review it and choose \"Create rule\". Open one of those sites to see it work. The setup shown when WebHandbrake is installed does the same for your first rule.",
+    "message": "Quick start: open Rules › New rule, choose the sites, when the rule applies and what happens, then review it and choose “Create rule”. Open one of those sites to see it work. The setup shown when WebHandbrake is installed does the same for your first rule.",
     "description": "Help, Getting started. \"Rules\", \"New rule\" and \"Create rule\" are interface labels."
   },
   "help.start.title": {
@@ -1490,10 +1481,10 @@
     "message": "Every website. Add exceptions for the sites you need."
   },
   "help.syntax.comment": {
-    "message": "Lines starting with # are comments; \"entry  # note\" adds a note."
+    "message": "Lines starting with # are comments; “entry  # note” adds a note."
   },
   "help.syntax.contains": {
-    "message": "Without a site name, * matches any characters in the whole address: every address that contains \"news\", in the site, the path or the search."
+    "message": "Without a site name, * matches any characters in the whole address: every address that contains “news”, in the site, the path or the search."
   },
   "help.syntax.countries": {
     "message": "The site in every country: amazon.com, amazon.it, amazon.co.uk…"
@@ -1502,7 +1493,7 @@
     "message": "The domain and all its subdomains."
   },
   "help.syntax.doubleWildcard": {
-    "message": "** matches across segments; * in a host matches one or more labels."
+    "message": "** stands for any text across several parts of the path, slashes included; * in a site name stands for one or more of its parts (news.com, news.co.uk…)."
   },
   "help.syntax.entry": {
     "message": "Entry"
@@ -1514,7 +1505,7 @@
     "message": "Only the home page."
   },
   "help.syntax.host": {
-    "message": "Only this host (www. is ignored)."
+    "message": "Only this host, without its subdomains (www. is ignored)."
   },
   "help.syntax.import": {
     "message": "Imported formats from uBlock Origin, AdGuard and uBlacklist are converted automatically."
@@ -1535,16 +1526,16 @@
     "message": "A regular expression on the whole address (advanced). Unsafe patterns are refused."
   },
   "help.syntax.wildcard": {
-    "message": "* matches anything inside one segment of the address."
+    "message": "* stands for any text within one part of the path, between two slashes."
   },
   "help.title": {
     "message": "Help"
   },
   "help.troubleshooting.p1": {
-    "message": "Start with \"Why?\" in the popup, or \"Test a URL\" in the rule editor: they show which condition applies and when that changes."
+    "message": "Start with “Why?” in the popup, or “Test a URL” in the rule editor: they show which condition applies and when that changes."
   },
   "help.troubleshooting.p2": {
-    "message": "Settings › Diagnostics runs a self-test, shows recent decisions and copies a diagnostic report to paste into an issue on GitHub. The report leaves out addresses unless you tick \"Include addresses (off by default)\"."
+    "message": "Settings › Diagnostics runs a self-test, shows recent decisions and copies a diagnostic report to paste into an issue on GitHub. The report leaves out addresses unless you tick “Include addresses (off by default)”."
   },
   "help.troubleshooting.title": {
     "message": "Troubleshooting"
@@ -1589,7 +1580,7 @@
     "message": "Import"
   },
   "import.changes": {
-    "message": "{count, plural, one {# change} other {# changes}} ({weakening} loosening)"
+    "message": "{count, plural, one {# change} other {# changes}} · {weakening, plural, =0 {none loosens your rules} one {# loosens your rules} other {# loosen your rules}}"
   },
   "import.chooseFile": {
     "message": "Choose a file…"
@@ -1622,10 +1613,10 @@
     "message": "WebHandbrake"
   },
   "import.groupLine": {
-    "message": "{name}: {sites} sites, {policies} conditions"
+    "message": "{name}: {sites, plural, one {# site} other {# sites}}, {policies, plural, one {# condition} other {# conditions}}"
   },
   "import.help": {
-    "message": "Choose a file or paste its content. Whatever the import loosens waits {hours} hours, as the emergency exit does, and is then confirmed in Protection."
+    "message": "Choose a file or paste its content. If the import loosens an active rule, the change waits {hours} hours, like the emergency exit, and you then confirm it in Protection."
   },
   "import.merge": {
     "message": "Add to my rules"
@@ -1682,7 +1673,7 @@
     "message": "One site"
   },
   "insights.deleteNote": {
-    "message": "The totals your limits need are kept for {days} days, so deleting statistics never refills a limit. The reasons you gave for going in and for breaks are deleted only with \"Everything\"."
+    "message": "The totals your limits need are kept for {days} days, so deleting statistics never refills a limit. The reasons you gave for going in and for breaks are deleted only with “Everything”."
   },
   "insights.deleteTitle": {
     "message": "Delete statistics"
@@ -1787,16 +1778,16 @@
     "message": "{change} compared with the previous period"
   },
   "intervention.allow": {
-    "message": "Allowed"
+    "message": "Don’t count"
   },
   "intervention.allow.summary": {
     "message": "Allowed, time not counted"
   },
   "intervention.ask": {
-    "message": "Ask what I want to do"
+    "message": "Ask first"
   },
   "intervention.ask.summary": {
-    "message": "Ask what I want to do (up to {max})"
+    "message": "Ask first (up to {max})"
   },
   "intervention.block": {
     "message": "Block"
@@ -1835,25 +1826,25 @@
     "message": "Nothing happens and the time is not counted, for example to count only during working hours."
   },
   "intervention.help.ask": {
-    "message": "Asks what you want to do, in your own words, and for how long; without a reason you cannot go in. Access lasts the chosen time. A gentle default for tempting sites."
+    "message": "Asks what you want to do, in your own words, and for how long: without a reason you cannot go in. Access lasts the time you choose. A gentle option for tempting sites."
   },
   "intervention.help.block": {
-    "message": "The page does not open. You can save it for later or take a break if allowed."
+    "message": "The page does not open. You can save it for later, or take a break if the rule allows breaks."
   },
   "intervention.help.challenge": {
-    "message": "Continue after typing a random text, a phrase of your choice or solving a calculation."
+    "message": "You continue after typing random characters or a phrase of your choice, or after solving a small calculation."
   },
   "intervention.help.close": {
     "message": "The tab closes immediately."
   },
   "intervention.help.delay": {
-    "message": "A pause of a few seconds before continuing. Often enough to let an impulse pass."
+    "message": "A wait of a few seconds before you can continue: often enough to let an impulse pass."
   },
   "intervention.help.filter": {
-    "message": "The page stays usable but less attractive: grayscale, blur, fade… The tab can also be muted."
+    "message": "The page stays usable but less attractive: greyscale, blur, fade… The tab can also be muted."
   },
   "intervention.help.redirect": {
-    "message": "Opens another address instead, for example your to-do list. '{url}', '{group}' (the rule's name) and '{until}' are replaced in the address."
+    "message": "Opens another address instead, for example your to-do list. In the address, '{url}' becomes the address you were opening, '{group}' the rule’s name and '{until}' the time the restriction ends."
   },
   "intervention.help.track": {
     "message": "Nothing happens: time is counted for limits and statistics."
@@ -1895,7 +1886,7 @@
     "message": "Count only"
   },
   "intervention.track": {
-    "message": "Only count time"
+    "message": "Count only"
   },
   "iv.ask": {
     "message": "What do you want to do on {host}?"
@@ -1929,10 +1920,10 @@
     "message": "Go back"
   },
   "iv.block": {
-    "message": "This space is protected right now."
+    "message": "This page is blocked right now."
   },
   "iv.block.until": {
-    "message": "This space is protected until {when}."
+    "message": "This page is blocked until {when}."
   },
   "iv.challenge": {
     "message": "Type to continue"
@@ -1980,7 +1971,7 @@
     "message": "{group}"
   },
   "iv.internal": {
-    "message": "Browser settings are protected while your blocks are active."
+    "message": "The browser’s extension and settings pages are blocked right now."
   },
   "iv.loop": {
     "message": "This page keeps being redirected. Open Diagnostics in WebHandbrake to check the blocking filters."
@@ -2000,7 +1991,7 @@
     "description": "After iv.others, when the rule shown can be passed (wait, question, challenge)."
   },
   "iv.redirect": {
-    "message": "Taking you somewhere better…"
+    "message": "Taking you to the page you chose instead…"
   },
   "iv.reopen": {
     "message": "Reopen the page"
@@ -2009,7 +2000,7 @@
     "message": "Save for later"
   },
   "iv.saved": {
-    "message": "Saved in \"Later\". You will find it when it is available."
+    "message": "Saved in “Later”: you will find it there when the page is available again."
   },
   "iv.savedShort": {
     "message": "Saved"
@@ -2040,7 +2031,7 @@
     "message": "Why?"
   },
   "iv.yourNote": {
-    "message": "your note"
+    "message": "your reason for this rule"
   },
   "later.available": {
     "message": "available now"
@@ -2049,7 +2040,7 @@
     "message": "Nothing saved for later."
   },
   "later.emptyHelp": {
-    "message": "When a page is blocked, choose \"Save for later\" to find it here."
+    "message": "When a page is blocked, choose “Save for later” to find it here."
   },
   "later.notYet": {
     "message": "not yet available"
@@ -2103,10 +2094,10 @@
     "message": "Loosening the rule needs the code of someone you trust."
   },
   "level.partner.pauses": {
-    "message": "Breaks need your partner's code too, unless you turn that off, and are few."
+    "message": "Breaks also need your partner’s code, unless you turn that off, and only a few are allowed each day."
   },
   "level.partner.weaken": {
-    "message": "Loosening the rule needs the code that your partner's authenticator app shows. Each code works once."
+    "message": "Loosening the rule needs the code that your partner’s authenticator app shows. Each code works once."
   },
   "level.password": {
     "message": "Password"
@@ -2115,7 +2106,7 @@
     "message": "Loosening the rule needs its password."
   },
   "level.password.pauses": {
-    "message": "Breaks cost the password and are few."
+    "message": "Breaks cost the password, and only a few are allowed each day."
   },
   "level.password.weaken": {
     "message": "Loosening the rule needs its password. Give it to someone you trust, or keep it where you cannot reach it at once."
@@ -2136,7 +2127,7 @@
     "message": "Reminder"
   },
   "level.reminder.desc": {
-    "message": "Changing the rule only asks you to confirm."
+    "message": "Loosening the rule only asks you to confirm."
   },
   "level.reminder.pauses": {
     "message": "Breaks cost a confirmation."
@@ -2148,58 +2139,22 @@
     "message": "Wait"
   },
   "level.wait.desc": {
-    "message": "Loosening the rule waits for a time you choose."
+    "message": "Loosening the rule means waiting for a time you choose."
   },
   "level.wait.pauses": {
-    "message": "Breaks cost a wait, or a typed code when the wait is long, and are limited per day."
+    "message": "Breaks cost the same wait, or typing random characters when the wait is long, and are limited per day."
   },
   "level.wait.tag": {
     "message": "Wait · {duration}"
   },
   "level.wait.weaken": {
-    "message": "Loosening the rule waits for the time you chose: a short wait in the dialog, a longer one as a pending change that you confirm once it is over."
+    "message": "Loosening the rule means waiting for the time you chose: a short wait in the dialog, a longer one as a pending change that you confirm once it is over."
   },
   "level.wait.weakenLong": {
     "message": "Loosening the rule becomes a pending change, which you can confirm {duration} later in Protection."
   },
   "level.wait.weakenShort": {
     "message": "Loosening the rule makes you wait {duration} first."
-  },
-  "lists.delete": {
-    "message": "Delete list"
-  },
-  "lists.deleteBody": {
-    "message": "Rules using this list will no longer include its sites. If they restrict access, this is a loosening."
-  },
-  "lists.deleteTitle": {
-    "message": "Delete the list \"{name}\"?"
-  },
-  "lists.empty": {
-    "message": "No shared lists yet."
-  },
-  "lists.entries": {
-    "message": "{count, plural, one {# entry} other {# entries}}"
-  },
-  "lists.name": {
-    "message": "Name"
-  },
-  "lists.new": {
-    "message": "New list"
-  },
-  "lists.newTitle": {
-    "message": "New list"
-  },
-  "lists.subtitle": {
-    "message": "The same sites, reused by several rules with different conditions."
-  },
-  "lists.title": {
-    "message": "Shared lists"
-  },
-  "lists.unused": {
-    "message": "not used by any rule"
-  },
-  "lists.usedBy": {
-    "message": "used by {groups}"
   },
   "locked.ack": {
     "message": "I understand and want to lock this rule."
@@ -2211,7 +2166,7 @@
     "message": "Lock"
   },
   "locked.point1": {
-    "message": "You will still be able to add sites, make rules stricter and start sessions."
+    "message": "You will still be able to add sites, make the rule stricter and start focus sessions."
   },
   "locked.point2": {
     "message": "Removing sites, raising limits, turning the rule off or choosing a gentler protection will be refused."
@@ -2226,7 +2181,7 @@
     "message": "Locked until"
   },
   "menu.blockLink": {
-    "message": "Block the link's site in"
+    "message": "Block the link’s site in"
   },
   "menu.blockPage": {
     "message": "Block this page in"
@@ -2242,9 +2197,6 @@
   },
   "menu.newGroup": {
     "message": "New rule…"
-  },
-  "nav.allowlist": {
-    "message": "Always allowed"
   },
   "nav.focus": {
     "message": "Focus"
@@ -2263,9 +2215,6 @@
   },
   "nav.later": {
     "message": "Later"
-  },
-  "nav.lists": {
-    "message": "Shared lists"
   },
   "nav.more": {
     "message": "More"
@@ -2301,13 +2250,13 @@
     "message": "Saved pages available"
   },
   "notify.pending.body": {
-    "message": "{count, plural, one {The change you requested can now be confirmed.} other {The # changes you requested can now be confirmed.}} If you do nothing, it expires."
+    "message": "{count, plural, one {The change you requested can now be confirmed in Protection. If you do nothing, it expires.} other {The # changes you requested can now be confirmed in Protection. If you do nothing, they expire.}}"
   },
   "notify.pending.title": {
-    "message": "A change is ready to confirm"
+    "message": "Ready to confirm"
   },
   "notify.sessionEnd.body": {
-    "message": "{duration} of focus. WebHandbrake stepped in {stopped, plural, =0 {no times} one {once} other {# times}}."
+    "message": "{duration} of focus. {stopped, plural, =0 {WebHandbrake did not need to step in.} one {WebHandbrake stepped in once.} other {WebHandbrake stepped in # times.}}"
   },
   "notify.sessionEnd.title": {
     "message": "Focus session over"
@@ -2349,16 +2298,16 @@
     "message": "Partner code"
   },
   "partner.breaks": {
-    "message": "Breaks of this rule also need the partner's code"
+    "message": "Breaks of this rule also need the partner’s code"
   },
   "partner.change": {
     "message": "Change partner"
   },
   "partner.codeHelp": {
-    "message": "The six digits that your partner's app shows now."
+    "message": "The six digits that your partner’s app shows now."
   },
   "partner.codeLabel": {
-    "message": "Code from your partner's app"
+    "message": "Code from your partner’s app"
   },
   "partner.confirm": {
     "message": "Confirm"
@@ -2370,7 +2319,7 @@
     "message": "Partner code set."
   },
   "partner.error.code": {
-    "message": "This is not the code that your partner's app shows now. Check that the clocks of both devices are right."
+    "message": "This is not the code that your partner’s app shows now. Check that the clocks of both devices are right."
   },
   "partner.error.expired": {
     "message": "The setup took too long. Start again for a new code."
@@ -2379,10 +2328,10 @@
     "message": "Setup key, for apps where it is typed"
   },
   "partner.once": {
-    "message": "The QR code and the key are shown only now. Close this window once your partner's app shows the new account, and do not keep a copy."
+    "message": "The QR code and the key are shown only now. Close this window once your partner’s app shows the new account, and do not keep a copy."
   },
   "partner.qrLabel": {
-    "message": "QR code for your partner's authenticator app"
+    "message": "QR code for your partner’s authenticator app"
   },
   "partner.scan": {
     "message": "Ask your partner to add an account in an authenticator app on their phone, by scanning this QR code or by typing the key below. The account is named after the rule."
@@ -2500,7 +2449,7 @@
     "message": "Breaks allowed"
   },
   "pauseRules.allowedHelp": {
-    "message": "A break lifts this rule's block for a few minutes."
+    "message": "A break lifts this rule’s block for a few minutes."
   },
   "pauseRules.choices": {
     "message": "Durations (minutes)"
@@ -2527,7 +2476,7 @@
     "message": "Commitment phrase"
   },
   "pauseRules.costKind.random": {
-    "message": "Random text"
+    "message": "Random characters"
   },
   "pauseRules.duringSessions": {
     "message": "Also during focus sessions"
@@ -2557,10 +2506,10 @@
     "message": "Up to a maximum"
   },
   "pauseRules.noPassword": {
-    "message": "This rule is not protected by a password: a random code of 32 characters will be asked instead."
+    "message": "This rule is not protected by a password, so a break asks you to type 32 random characters instead."
   },
   "pauseRules.q.cost": {
-    "message": "What should a break take?"
+    "message": "What should a break cost?"
   },
   "pauseRules.q.duration": {
     "message": "How long can a break last?"
@@ -2789,20 +2738,20 @@
     "message": "Focus until {when}"
   },
   "popup.forfeit": {
-    "message": "Stop for today",
-    "description": "Popup link under a limit: gives up the time left in the current period of the limit."
+    "message": "Stop now",
+    "description": "Popup link under a limit: gives up the time left in the current period of the limit (the limit counts as used up)."
   },
   "popup.forfeitConfirm": {
-    "message": "Give up the remaining time of {group} for this period?"
+    "message": "Give up the time left on {group} for this period?"
   },
   "popup.forfeitDone": {
-    "message": "Done. The rest of this period is yours."
+    "message": "Done: the limit counts as used up for this period."
   },
   "popup.forfeitYes": {
     "message": "Yes, stop now"
   },
   "popup.impulses": {
-    "message": "{count, plural, one {Once you chose not to go in.} other {# times you chose not to go in.}}"
+    "message": "{count, plural, one {You chose not to go in once} other {You chose not to go in # times}}"
   },
   "popup.later": {
     "message": "Save for later"
@@ -2832,7 +2781,7 @@
     "message": "private"
   },
   "popup.reopen": {
-    "message": "Reopen {count, plural, one {# tab} other {# tabs}} that can be opened again"
+    "message": "{count, plural, one {Reopen # tab that is available again} other {Reopen # tabs that are available again}}"
   },
   "popup.reopened": {
     "message": "{count, plural, one {# tab reopened.} other {# tabs reopened.}}"
@@ -2904,7 +2853,7 @@
     "message": "Statistics are daily totals per rule and per site; they never contain full addresses."
   },
   "privacy.point.content": {
-    "message": "Pages are read only in memory, to show the timer, filters and the grace period and to tell whether you are active or media is playing. This happens on the sites of your rules, and on every site with Track time on all sites, a regular expression, a site name with * such as amazon.*, or an entry without a site name such as *news*. The text you type stays in the page. Nothing from a page's content is stored."
+    "message": "Pages are read only in memory, to show the timer, filters and the grace period and to tell whether you are active or media is playing. This happens on the sites of your rules, and on every site with Track time on all sites, a regular expression, a site name with * such as amazon.*, or an entry without a site name such as *news*. The text you type stays in the page. Nothing from a page’s content is stored."
   },
   "privacy.point.local": {
     "message": "No account, no server, no telemetry, no analytics."
@@ -2949,19 +2898,19 @@
     "message": "Waiting time"
   },
   "protection.emergencyWaitHelp": {
-    "message": "Shortening it waits {hours} hours, the current waiting time, and is then confirmed by typing a sentence."
+    "message": "Shortening it takes the current waiting time ({hours} hours) first; you then confirm it under Pending changes by typing a sentence."
   },
   "protection.guardNote": {
-    "message": "Loosening these settings waits {hours} hours, as the emergency exit does, and is then confirmed in Protection by typing a sentence."
+    "message": "Loosening these settings takes as long as the emergency exit ({hours} hours); you then confirm the change under Pending changes by typing a sentence."
   },
   "protection.hardeningNote": {
-    "message": "For stronger protection, your system's enterprise policies can force the installation of WebHandbrake and turn off private windows, guest mode or troubleshoot mode. See Help › What WebHandbrake cannot do."
+    "message": "For stronger protection, your system’s enterprise policies can force the installation of WebHandbrake and turn off private windows, guest mode or troubleshoot mode. See Help › What WebHandbrake cannot do."
   },
   "protection.internal.always": {
     "message": "Always"
   },
   "protection.internal.auto": {
-    "message": "While strictly protected rules or locked sessions are active"
+    "message": "While a firmly protected rule restricts sites or an uninterruptible session runs"
   },
   "protection.internal.never": {
     "message": "Never"
@@ -2970,10 +2919,10 @@
     "message": "Breaks also unlock these pages"
   },
   "protection.internalPages": {
-    "message": "Block the browser's extension and settings pages"
+    "message": "Block the browser’s extension and settings pages"
   },
   "protection.internalPagesHelp": {
-    "message": "Stops the easiest way around a blocker (disabling it). Limits: Android, and pages opened from the command line."
+    "message": "Stops the easiest way around a blocker: turning it off. A rule is firmly protected by a password, a partner code, Locked, Permanent or a wait over {minutes} min. Not available on Android, and pages opened from the command line are not covered."
   },
   "protection.level": {
     "message": "Protection"
@@ -2985,7 +2934,7 @@
     "message": "What the protections do"
   },
   "protection.levelsHelp": {
-    "message": "Each rule has its own protection, chosen when you create it and changed in its editor. A change that concerns several rules, such as a site in Always allowed or a setting, takes what each of the active rules it loosens asks."
+    "message": "Each rule has its own protection, chosen when you create it and changed in its editor. A setting that loosens your rules takes what each of the active rules asks."
   },
   "protection.lockedChange": {
     "message": "Change the date"
@@ -2997,7 +2946,7 @@
     "message": "Nothing unusual recorded."
   },
   "protection.partnerSet": {
-    "message": "Your partner's app shows the codes for this rule."
+    "message": "Your partner’s app shows the codes for this rule."
   },
   "protection.passwordSet": {
     "message": "The password is set. Only a salted hash is kept, and the emergency exit removes it."
@@ -3024,7 +2973,7 @@
     "message": "How long to wait"
   },
   "redirect.help": {
-    "message": "For example your to-do list. '{url}' (the blocked address), '{group}' (the rule's name) and '{until}' are replaced."
+    "message": "For example your to-do list. In the address, '{url}' becomes the address you were opening, '{group}' the rule’s name and '{until}' the time the restriction ends."
   },
   "redirect.url": {
     "message": "Address"
@@ -3039,7 +2988,7 @@
     "message": "{count, plural, one {Applied now:} other {# changes applied now:}}"
   },
   "save.costIntro": {
-    "message": "These changes loosen your rules. Take a moment before going ahead."
+    "message": "This loosens your rules. Take a moment before going ahead."
   },
   "save.costTitle": {
     "message": "Loosen your rules?"
@@ -3060,13 +3009,13 @@
     "message": "Waiting for confirmation"
   },
   "save.refused.locked": {
-    "message": "A rule that this loosens is locked: nothing that loosens it is possible now."
+    "message": "A rule that this change loosens is locked: nothing that loosens it is possible now."
   },
   "save.refused.lockedUntil": {
-    "message": "A rule that this loosens is locked until {until}: nothing that loosens it is possible before then."
+    "message": "A rule that this change loosens is locked until {until}: nothing that loosens it is possible before then."
   },
   "save.refused.permanent": {
-    "message": "This rule is permanent: nothing that loosens it is possible. Only the emergency exit can remove its protection."
+    "message": "A rule that this change loosens is permanent: nothing that loosens it is possible. Only the emergency exit can remove its protection."
   },
   "save.refusedHelp": {
     "message": "Making rules stricter is always possible. If you are truly stuck, the emergency exit in Protection always works."
@@ -3153,7 +3102,7 @@
     "message": "Badge threshold"
   },
   "setting.clock.useDateHeaders": {
-    "message": "Clock check"
+    "message": "Detect a manipulated system clock"
   },
   "setting.contextMenu": {
     "message": "Context menu"
@@ -3162,7 +3111,7 @@
     "message": "Date format"
   },
   "setting.dayStart": {
-    "message": "Start of the day"
+    "message": "Days start at"
   },
   "setting.diagnostics.decisionLog": {
     "message": "Decision log"
@@ -3207,22 +3156,22 @@
     "message": "Setup completed"
   },
   "setting.pauseLimit": {
-    "message": "Global break limit"
+    "message": "Breaks across all rules"
   },
   "setting.protection.confirmHours": {
-    "message": "Confirmation window"
+    "message": "Time to confirm pending changes"
   },
   "setting.protection.emergencyHours": {
-    "message": "Emergency exit wait"
+    "message": "Emergency exit waiting time"
   },
   "setting.protection.internalPages": {
-    "message": "Browser pages protection"
+    "message": "Block the browser’s extension and settings pages"
   },
   "setting.protection.internalPagesFollowPause": {
-    "message": "Breaks unlock browser pages"
+    "message": "Breaks also unlock the browser’s extension and settings pages"
   },
   "setting.sound": {
-    "message": "Sound at the end of breaks"
+    "message": "Sound at the end of a break"
   },
   "setting.theme": {
     "message": "Theme"
@@ -3243,31 +3192,31 @@
     "message": "Timer threshold"
   },
   "setting.tracking.allSites": {
-    "message": "Track all sites"
+    "message": "Track time on all sites"
   },
   "setting.tracking.countAudio": {
-    "message": "Count background media"
+    "message": "Count background audio and video"
   },
   "setting.tracking.countInactive": {
-    "message": "Count inactive tabs"
+    "message": "Count tabs that are open but not active"
   },
   "setting.tracking.idleEnabled": {
-    "message": "Inactivity detection"
+    "message": "Stop counting when I am inactive"
   },
   "setting.tracking.idleSeconds": {
-    "message": "Inactivity delay"
+    "message": "Inactive after"
   },
   "setting.tracking.retentionDays": {
-    "message": "Statistics retention"
+    "message": "Keep daily statistics for"
   },
   "setting.tracking.visitGapMinutes": {
-    "message": "Visit gap"
+    "message": "A new visit starts after"
   },
   "setting.warningSeconds": {
-    "message": "Warning before restrictions"
+    "message": "Warn before a restriction starts"
   },
   "setting.weekStart": {
-    "message": "First day of the week"
+    "message": "Weeks start on"
   },
   "settings.advanced": {
     "message": "Advanced mode"
@@ -3291,7 +3240,7 @@
     "message": "Reopen pages automatically when they become available"
   },
   "settings.autoReopenHelp": {
-    "message": "Otherwise a \"Reopen\" button appears."
+    "message": "Otherwise a “Reopen” button appears."
   },
   "settings.badge": {
     "message": "Toolbar badge"
@@ -3306,7 +3255,7 @@
     "message": "Context menu"
   },
   "settings.contextMenuHelp": {
-    "message": "\"Block this site\" and \"Start a focus session\" in the right-click menu (desktop only)."
+    "message": "“Block this site” and “Start a focus session” in the right-click menu (desktop only)."
   },
   "settings.corner.bottom-left": {
     "message": "Bottom left"
@@ -3345,13 +3294,13 @@
     "message": "Detect a manipulated system clock"
   },
   "settings.dateHeadersHelp": {
-    "message": "Compares your clock with the date that web pages you already load send. No extra requests are made; only a detected difference is kept, and it is listed under Events. Turning this off waits {hours} hours, as the emergency exit does."
+    "message": "Compares your clock with the date that the web pages you open send anyway. No extra requests are made; only a detected difference is kept, and it is listed under Events. Turning this off waits {hours} hours, like the emergency exit."
   },
   "settings.dayStart": {
     "message": "Days start at"
   },
   "settings.dayStartHelp": {
-    "message": "For night owls: with 04:00, the hours after midnight still count as the previous day for windows and daily limits."
+    "message": "For night owls: with 04:00, the hours from midnight to 04:00 still count as the previous day for time windows and daily limits."
   },
   "settings.formats": {
     "message": "Dates and times"
@@ -3372,7 +3321,7 @@
     "message": "Hide the address of blocked pages"
   },
   "settings.hideUrlHelp": {
-    "message": "Shows only the rule's name, so you are not tempted to copy the link."
+    "message": "Shows only the rule’s name, so you are not tempted to copy the link."
   },
   "settings.highContrast": {
     "message": "High contrast"
@@ -3384,7 +3333,7 @@
     "message": "Stop counting when I am inactive"
   },
   "settings.idleHelp": {
-    "message": "Without keyboard, mouse or touch input for a while, time is not counted (except while a video plays)."
+    "message": "Without keyboard, mouse or touch input for a while, time is not counted (except while audio or video plays)."
   },
   "settings.idleSeconds": {
     "message": "Inactive after"
@@ -3432,7 +3381,7 @@
     "message": "Settings sections"
   },
   "settings.shortcuts": {
-    "message": "Keyboard shortcuts are listed in Help › Keyboard shortcuts. You can change them in the browser's extension shortcut settings."
+    "message": "Keyboard shortcuts are listed in Help › Keyboard shortcuts. You can change them in the browser’s extension shortcut settings."
   },
   "settings.size.large": {
     "message": "Large"
@@ -3519,7 +3468,7 @@
     "message": "A new visit starts after"
   },
   "settings.visitGapHelp": {
-    "message": "Minutes away from a rule's sites after which coming back counts as a new visit."
+    "message": "Minutes away from a rule’s sites after which coming back counts as a new visit."
   },
   "settings.warningSeconds": {
     "message": "Warn before a restriction starts"
@@ -3553,9 +3502,6 @@
   },
   "status.sessionUntil": {
     "message": "Focus session until {when}"
-  },
-  "status.site.allowlisted": {
-    "message": "Always allowed"
   },
   "status.site.excepted": {
     "message": "Allowed by an exception"
@@ -3609,7 +3555,7 @@
     "message": "Wait {seconds} s"
   },
   "status.type.filter": {
-    "message": "Filter"
+    "message": "Filtered"
   },
   "status.type.redirect": {
     "message": "Redirected"
@@ -3643,7 +3589,7 @@
     "message": "The system clock was moved back by about {detail} min. Time used by WebHandbrake never goes backwards."
   },
   "tamper.clock-skew": {
-    "message": "The system clock differs from web servers by about {detail} min. WebHandbrake uses the corrected time."
+    "message": "The system clock differs from the time of web servers by about {detail} min. WebHandbrake uses the corrected time."
   },
   "tamper.emergency": {
     "message": "Emergency exit: {detail, select, requested {requested} cancelled {cancelled} completed {completed} other {{detail}}}."
@@ -3658,7 +3604,7 @@
     "message": "Access to private windows was removed."
   },
   "tamper.rules-mismatch": {
-    "message": "The browser's blocking filters did not match the settings and were rebuilt."
+    "message": "The browser’s blocking filters did not match the settings and were rebuilt."
   },
   "tamper.state-restored": {
     "message": "The settings were damaged and were restored from a backup."
@@ -3753,8 +3699,11 @@
   "targets.exceptionsHelp": {
     "message": "Parts of these sites that stay allowed. The most specific entry wins."
   },
+  "targets.guide.allSites": {
+    "message": "Every website. Add exceptions with + for the sites you still need."
+  },
   "targets.guide.exception": {
-    "message": "An exclusion: + at the start keeps these pages allowed while the rest of the rule applies."
+    "message": "An exception: + at the start keeps these pages allowed while the rest of the rule applies."
   },
   "targets.guide.more": {
     "message": "Sections, the home page, single subdomains, query parameters, regular expressions and lists from other blockers are described in"
@@ -3778,10 +3727,10 @@
     "message": "Use the example {example}"
   },
   "targets.guide.wildcard": {
-    "message": "A wildcard: * stands for any text. Here, every address that contains \"news\"; * alone is every website."
+    "message": "A wildcard: * stands for any text. Here, every address that contains “news”."
   },
   "targets.lineError": {
-    "message": "Line {line} \"{text}\": {error}"
+    "message": "Line {line} “{text}”: {error}"
   },
   "targets.note": {
     "message": "Note"
@@ -3796,7 +3745,7 @@
     "message": "Sort"
   },
   "targets.textHelp": {
-    "message": "One entry per line. \"+\" for exceptions, \"#\" for comments. See Help for the full syntax."
+    "message": "One entry per line. “+” for exceptions, “#” for comments. See Help for the full syntax."
   },
   "targets.textMode": {
     "message": "Edit as text"
@@ -3898,7 +3847,7 @@
     "message": "{count, plural, one {Ask the partner of the rule {names} for the code that their authenticator app shows now, and type it.} other {Ask the partner of the rules {names} for the code that their authenticator app shows now, and type it.}}"
   },
   "ticket.partner.input": {
-    "message": "Code from your partner's app"
+    "message": "Code from your partner’s app"
   },
   "ticket.phrase.body": {
     "message": "Type this sentence to continue."
@@ -3995,7 +3944,7 @@
     "message": "Right now"
   },
   "today.numbers": {
-    "message": "Today's numbers"
+    "message": "Today’s numbers"
   },
   "today.pauses": {
     "message": "{count, plural, one {break taken} other {breaks taken}}"
@@ -4019,7 +3968,7 @@
     "message": "Finish setting up"
   },
   "today.setupAction": {
-    "message": "Open the protection checklist"
+    "message": "Check how solid your protection is"
   },
   "today.summary.groups": {
     "message": "{count, plural, =0 {No active rules} one {# active rule} other {# active rules}}"
@@ -4035,12 +3984,6 @@
   },
   "today.upcoming": {
     "message": "Coming up"
-  },
-  "unit.allowlistAdd": {
-    "message": "Always allow {value}"
-  },
-  "unit.allowlistRemove": {
-    "message": "Stop always allowing {value}"
   },
   "unit.exceptionAdd": {
     "message": "Allow {value} in {owner}"
@@ -4061,7 +4004,7 @@
     "message": "Rename or restyle {name}"
   },
   "unit.field.note": {
-    "message": "Change the note of {name}"
+    "message": "Change the personal reason of {name}"
   },
   "unit.field.options": {
     "message": "Change the options of {name}"
@@ -4081,23 +4024,11 @@
   "unit.groupRemove": {
     "message": "Delete the rule {name}"
   },
-  "unit.linkList": {
-    "message": "Add the list {list} to {name}"
-  },
-  "unit.listAdd": {
-    "message": "Create the list {name}"
-  },
-  "unit.listName": {
-    "message": "Rename a list to {name}"
-  },
-  "unit.listRemove": {
-    "message": "Delete the list {name}"
-  },
   "unit.order": {
     "message": "Reorder rules"
   },
   "unit.setting": {
-    "message": "Change the setting \"{setting}\""
+    "message": "Change the setting “{setting}”"
   },
   "unit.targetAdd": {
     "message": "Add {value} to {owner}"
@@ -4108,11 +4039,8 @@
   "unit.targetRemove": {
     "message": "Remove {value} from {owner}"
   },
-  "unit.unlinkList": {
-    "message": "Remove the list {list} from {name}"
-  },
   "validate.allSites": {
-    "message": "This rule applies to every website. Add exceptions, or use Always allowed, for the sites you need."
+    "message": "This rule applies to every website. Add exceptions for the sites you need."
   },
   "validate.askChoices": {
     "message": "Condition {n}: at least one duration must be within the maximum."
@@ -4139,7 +4067,7 @@
     "message": "This rule only counts time: nothing is restricted."
   },
   "validate.outsideNoWindows": {
-    "message": "Condition {n}: \"outside these times\" without times means always."
+    "message": "Condition {n}: “outside these times” without times means always."
   },
   "validate.pauseDuration": {
     "message": "Breaks need a duration."
@@ -4175,7 +4103,7 @@
     "message": "Blocking could not be set up for some sites."
   },
   "warning.dnr-overflow": {
-    "message": "{detail} entries are enforced without browser filters: pages may appear briefly before being blocked."
+    "message": "{detail, plural, one {# entry is} other {# entries are}} enforced without browser filters: their pages may appear for a moment before being blocked."
   },
   "warning.fix": {
     "message": "Fix"
@@ -4223,7 +4151,7 @@
     "message": "Next steps (optional)"
   },
   "welcome.done.title": {
-    "message": "You're set"
+    "message": "You’re set"
   },
   "welcome.firstRule": {
     "message": "Your first rule"
@@ -4235,7 +4163,7 @@
     "message": "A gentle handbrake for the sites that pull you in."
   },
   "welcome.perm.body": {
-    "message": "To slow down the sites you chose, WebHandbrake needs access to websites: it checks the address of each page you open against your rules, and the date that pages send, to notice a changed clock. It sends nothing anywhere."
+    "message": "To slow down the sites you chose, WebHandbrake needs access to websites: it checks the address of each page you open against your rules, and reads the date that pages send to notice a changed clock. It sends nothing anywhere."
   },
   "welcome.perm.grant": {
     "message": "Allow access"
@@ -4250,7 +4178,7 @@
     "message": "Click the puzzle icon at the right of the address bar, then the pin next to WebHandbrake."
   },
   "welcome.pin.firefox": {
-    "message": "Click the extensions button (puzzle) in the toolbar, then the gear next to WebHandbrake and “Pin to toolbar”."
+    "message": "Click the extensions button (puzzle) in the toolbar, then the gear next to WebHandbrake and “Pin to Toolbar”."
   },
   "welcome.pin.title": {
     "message": "Pin WebHandbrake to the toolbar"
@@ -4289,7 +4217,7 @@
     "message": "Firm when you need it"
   },
   "welcome.value.gentle.text": {
-    "message": "A question or a short pause before you go in. Block only what you never want to see."
+    "message": "A question or a short wait before you go in. Block only what you never want to see."
   },
   "welcome.value.gentle.title": {
     "message": "Gentle by default"
@@ -4305,12 +4233,6 @@
   },
   "why.allowedUntil": {
     "message": "Allowed; then {what} · {when}."
-  },
-  "why.allowlistEntry": {
-    "message": "In \"Always allowed\" as {value}."
-  },
-  "why.allowlisted": {
-    "message": "Always allowed."
   },
   "why.applies": {
     "message": "applies now"
@@ -4443,7 +4365,7 @@
     "message": "Opens another address instead, for example your to-do list."
   },
   "wizard.how.redirectHelp": {
-    "message": "For example your to-do list or a page you would rather read. It must start with https://."
+    "message": "For example your to-do list or a page you would rather read. It must start with http:// or https://."
   },
   "wizard.how.title": {
     "message": "What should happen?"
@@ -4467,7 +4389,7 @@
     "message": "Open"
   },
   "wizard.protection.intro": {
-    "message": "Making the rule stricter is always immediate. This is what changing it to be looser will take later."
+    "message": "Making the rule stricter is always immediate. This is what loosening it will take later."
   },
   "wizard.protection.title": {
     "message": "What should loosening this rule take?"
@@ -4549,10 +4471,10 @@
     "message": "WebHandbrake first asks what you want to do, for {max} at most."
   },
   "wizard.then.block": {
-    "message": "WebHandbrake blocks them."
+    "message": "WebHandbrake blocks the page."
   },
   "wizard.then.challenge": {
-    "message": "WebHandbrake asks you to type a random text of {length} characters before going in."
+    "message": "WebHandbrake asks you to type {length} random characters before going in."
   },
   "wizard.then.challengeMath": {
     "message": "WebHandbrake asks you to solve a small calculation before going in."

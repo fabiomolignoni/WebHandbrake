@@ -7,10 +7,10 @@
  * it treats it as weakening.
  */
 
-import { compileTargets, groupTargets, isGroupActive, redirectDestination, redirectKey } from './compile';
+import { compileTargets, isGroupActive, redirectDestination, redirectKey } from './compile';
 import { clone } from './json';
-import { compilePattern, mayOverlap } from './patterns';
 import { SEVERITY, severityOf } from './severity';
+import { isFullDay } from './time';
 import type {
   Budget,
   Config,
@@ -23,13 +23,13 @@ import type {
   Policy,
   Protection,
   Schedule,
-  SharedList,
   Target,
   TimeWindow,
 } from './types';
 import { parseUrl } from './url';
 
-export type Owner = { kind: 'group'; id: string } | { kind: 'list'; id: string } | { kind: 'allowlist' };
+/** The rule whose sites a unit changes. */
+export type Owner = { kind: 'group'; id: string };
 
 /** The fields a unit of this version can change: a pending unit of an earlier version may not. */
 const GROUP_FIELDS = [
@@ -50,26 +50,9 @@ export type ChangeUnit =
   | { kind: 'group.add'; group: Group }
   | { kind: 'group.remove'; groupId: string; name: string; base: Group }
   | { kind: 'group.field'; groupId: string; name: string; field: GroupField; value: unknown; base: unknown }
-  | {
-      kind: 'group.link';
-      groupId: string;
-      name: string;
-      listId: string;
-      listName: string;
-      link: boolean;
-      /**
-       * Entries of the list as they will be once the unit applies (the proposed list for a link,
-       * the current one for an unlink): a list created or edited in the same save must be judged
-       * by its new content.
-       */
-      targets?: Target[];
-    }
   | { kind: 'target.add'; owner: Owner; ownerName: string; target: Target }
   | { kind: 'target.remove'; owner: Owner; ownerName: string; target: Target }
   | { kind: 'target.note'; owner: Owner; ownerName: string; target: Target; base: string | undefined }
-  | { kind: 'list.add'; list: SharedList }
-  | { kind: 'list.remove'; listId: string; name: string; base: SharedList }
-  | { kind: 'list.name'; listId: string; value: string; base: string }
   | { kind: 'order'; ids: string[] }
   | { kind: 'setting'; path: string; value: unknown; base: unknown };
 
@@ -154,16 +137,22 @@ function cmpLimit(oldV: number | undefined, newV: number | undefined): Direction
 
 const WEEK_MINUTES = 7 * 1440;
 
-/** Week bitmap (minute resolution) of when a schedule is active, assuming midnight day start. */
-export function scheduleBitmap(s: Schedule): Uint8Array {
+/**
+ * Week bitmap (minute resolution) of when a schedule is active, minute 0 being Sunday at midnight.
+ * The days of the windows are logical days, as the engine reads them (`windowInterval`): a whole
+ * day starts at the day start, and a window that starts before it belongs to the night after its
+ * day.
+ */
+export function scheduleBitmap(s: Schedule, dayStart = 0): Uint8Array {
   const bits = new Uint8Array(WEEK_MINUTES);
   if (s.mode === 'always') return bits.fill(1);
   const mark = (w: TimeWindow) => {
+    const whole = isFullDay(w);
+    const offset = whole ? dayStart : w.start + (w.start < dayStart ? 1440 : 0);
+    let len = whole || w.start === w.end ? 1440 : (w.end % 1440) - w.start;
+    if (len <= 0) len += 1440;
     for (const day of w.days) {
-      const start = day * 1440 + w.start;
-      const full = (w.start === 0 && w.end >= 1440) || w.start === w.end;
-      let len = full ? 1440 : (w.end % 1440) - w.start;
-      if (!full && len <= 0) len += 1440;
+      const start = day * 1440 + offset;
       for (let i = 0; i < len; i++) bits[(start + i) % WEEK_MINUTES] = 1;
     }
   };
@@ -186,9 +175,9 @@ function compareSets(a: Uint8Array, b: Uint8Array): Coverage {
   return bOnly ? 'superset' : 'subset';
 }
 
-/** Coverage of the new schedule relative to the old one. */
-export function compareSchedules(oldS: Schedule, newS: Schedule): Coverage {
-  return compareSets(scheduleBitmap(oldS), scheduleBitmap(newS));
+/** Coverage of the new schedule relative to the old one, with logical days starting at `dayStart`. */
+export function compareSchedules(oldS: Schedule, newS: Schedule, dayStart = 0): Coverage {
+  return compareSets(scheduleBitmap(oldS, dayStart), scheduleBitmap(newS, dayStart));
 }
 
 function samePeriod(a: Period, b: Period): boolean {
@@ -230,8 +219,8 @@ function compareBudgets(oldB: Budget | undefined, newB: Budget | undefined): Cov
   }
 }
 
-function compareConditions(oldP: Policy, newP: Policy): Coverage {
-  const s = compareSchedules(oldP.schedule, newP.schedule);
+function compareConditions(oldP: Policy, newP: Policy, dayStart: number): Coverage {
+  const s = compareSchedules(oldP.schedule, newP.schedule, dayStart);
   const b = compareBudgets(oldP.budget, newP.budget);
   if (s === 'other' || b === 'other') return 'other';
   if (s === 'equal') return b;
@@ -348,7 +337,8 @@ function dominates(p: Policy, later: Policy[]): boolean {
   return later.every((q) => compareInterventions(q.intervention, p.intervention) !== 'weaken');
 }
 
-export function comparePolicies(oldList: Policy[], newList: Policy[]): Direction {
+/** `dayStart`: minutes after midnight at which the logical days of the schedules begin. */
+export function comparePolicies(oldList: Policy[], newList: Policy[], dayStart = 0): Direction {
   if (deepEqual(oldList, newList)) return 'neutral';
   const oldById = new Map(oldList.map((p) => [p.id, p]));
   const newIds = new Set(newList.map((p) => p.id));
@@ -370,7 +360,7 @@ export function comparePolicies(oldList: Policy[], newList: Policy[]): Direction
     }
     if (deepEqual(old, p)) return;
     const icmp = compareInterventions(old.intervention, p.intervention);
-    const cov = compareConditions(old, p);
+    const cov = compareConditions(old, p, dayStart);
     if (cov === 'equal') dirs.push(icmp);
     else if (cov === 'superset' && icmp !== 'weaken' && dominates(p, later)) dirs.push('strengthen');
     else if (cov === 'subset' && severityOf(old.intervention) <= SEVERITY.track && icmp !== 'weaken')
@@ -394,7 +384,7 @@ function redirectsIntoOwnSites(config: Config, groupId: string, base: Policy[], 
     const old = oldById.get(p.id)?.intervention;
     if (old?.type === 'redirect' && redirectKey(old.url) === redirectKey(p.intervention.url)) return false;
     const url = parseUrl(redirectDestination(p.intervention.url));
-    index ??= compileTargets(groupTargets(config, g));
+    index ??= compileTargets(g.targets);
     const { winner } = url ? index.winner(url) : { winner: null };
     return Boolean(winner && !winner.allow);
   });
@@ -507,7 +497,9 @@ export function classifySetting(path: string, base: unknown, value: unknown): Di
   const n = (v: unknown) => (typeof v === 'number' ? v : undefined);
   const b = (v: unknown) => Boolean(v);
   switch (path) {
+    // Time stops counting after this much inactivity: a shorter delay counts less.
     case 'tracking.idleSeconds':
+      return cmpNum(n(base), n(value), true);
     case 'tracking.visitGapMinutes':
     case 'interventions.graceSeconds':
       return cmpNum(n(base), n(value), false);
@@ -578,7 +570,6 @@ export function diffConfig(a: Config, b: Config): ChangeUnit[] {
   const units: ChangeUnit[] = [];
   const oldGroups = new Map(a.groups.map((g) => [g.id, g]));
   const newGroups = new Map(b.groups.map((g) => [g.id, g]));
-  const listName = (c: Config, id: string) => c.lists.find((l) => l.id === id)?.name ?? '';
 
   for (const g of a.groups) {
     if (!newGroups.has(g.id)) units.push({ kind: 'group.remove', groupId: g.id, name: g.name, base: g });
@@ -615,49 +606,7 @@ export function diffConfig(a: Config, b: Config): ChangeUnit[] {
     field('protection', o.protection, n.protection);
     field('options', o.options, n.options);
     diffTargets({ kind: 'group', id: n.id }, n.name, o.targets, n.targets, units);
-    for (const id of o.lists) {
-      if (!n.lists.includes(id)) {
-        units.push({
-          kind: 'group.link',
-          groupId: n.id,
-          name: n.name,
-          listId: id,
-          listName: listName(a, id),
-          link: false,
-          targets: clone(a.lists.find((l) => l.id === id)?.targets ?? []),
-        });
-      }
-    }
-    for (const id of n.lists) {
-      if (!o.lists.includes(id)) {
-        units.push({
-          kind: 'group.link',
-          groupId: n.id,
-          name: n.name,
-          listId: id,
-          listName: listName(b, id),
-          link: true,
-          targets: clone(b.lists.find((l) => l.id === id)?.targets ?? []),
-        });
-      }
-    }
   }
-
-  const oldLists = new Map(a.lists.map((l) => [l.id, l]));
-  const newLists = new Map(b.lists.map((l) => [l.id, l]));
-  for (const l of a.lists)
-    if (!newLists.has(l.id)) units.push({ kind: 'list.remove', listId: l.id, name: l.name, base: l });
-  for (const l of b.lists) {
-    const o = oldLists.get(l.id);
-    if (!o) {
-      units.push({ kind: 'list.add', list: l });
-      continue;
-    }
-    if (o.name !== l.name) units.push({ kind: 'list.name', listId: l.id, value: l.name, base: o.name });
-    diffTargets({ kind: 'list', id: l.id }, l.name, o.targets, l.targets, units);
-  }
-
-  diffTargets({ kind: 'allowlist' }, '', a.allowlist, b.allowlist, units);
 
   const oldOrder = a.groups.map((g) => g.id).filter((id) => newGroups.has(id));
   const newOrder = b.groups.map((g) => g.id).filter((id) => oldGroups.has(id));
@@ -679,16 +628,6 @@ export function diffConfig(a: Config, b: Config): ChangeUnit[] {
 function groupIsActive(c: Config, id: string): boolean {
   const g = c.groups.find((x) => x.id === id);
   return Boolean(g && isGroupActive(g));
-}
-
-function listIsUsed(c: Config, listId: string): boolean {
-  return c.groups.some((g) => isGroupActive(g) && g.lists.includes(listId));
-}
-
-function ownerActive(c: Config, owner: Owner): boolean {
-  if (owner.kind === 'group') return groupIsActive(c, owner.id);
-  if (owner.kind === 'list') return listIsUsed(c, owner.id);
-  return true;
 }
 
 /** Classifies a unit against the configuration it applies to. */
@@ -717,7 +656,11 @@ export function classify(unit: ChangeUnit, config: Config): Direction {
         }
         case 'policies': {
           if (!active) return 'neutral';
-          const dir = comparePolicies(unit.base as Policy[], unit.value as Policy[]);
+          const dir = comparePolicies(
+            unit.base as Policy[],
+            unit.value as Policy[],
+            config.settings.dayStart,
+          );
           return dir !== 'weaken' &&
             redirectsIntoOwnSites(config, unit.groupId, unit.base as Policy[], unit.value as Policy[])
             ? 'weaken'
@@ -732,71 +675,35 @@ export function classify(unit: ChangeUnit, config: Config): Direction {
       }
       return 'weaken';
     }
-    case 'group.link': {
-      if (!groupIsActive(config, unit.groupId)) return 'neutral';
-      const targets = unit.targets ?? config.lists.find((l) => l.id === unit.listId)?.targets ?? [];
-      const hasBlocks = targets.some((t) => !t.allow);
-      const hasAllows = targets.some((t) => t.allow);
-      if (unit.link) return hasAllows ? 'weaken' : hasBlocks ? 'strengthen' : 'neutral';
-      return hasBlocks ? 'weaken' : hasAllows ? 'strengthen' : 'neutral';
-    }
     case 'target.add':
-      if (unit.owner.kind === 'allowlist') return 'weaken';
-      if (!ownerActive(config, unit.owner)) return 'neutral';
+      if (!groupIsActive(config, unit.owner.id)) return 'neutral';
       return unit.target.allow ? 'weaken' : 'strengthen';
     case 'target.remove':
-      if (unit.owner.kind === 'allowlist') return 'strengthen';
-      if (!ownerActive(config, unit.owner)) return 'neutral';
+      if (!groupIsActive(config, unit.owner.id)) return 'neutral';
       return unit.target.allow ? 'strengthen' : 'weaken';
     case 'target.note':
-    case 'list.add':
-    case 'list.name':
     case 'order':
       return 'neutral';
-    case 'list.remove':
-      return listIsUsed(config, unit.listId) && unit.base.targets.some((t) => !t.allow)
-        ? 'weaken'
-        : 'neutral';
     case 'setting':
       return classifySetting(unit.path, unit.base, unit.value);
   }
 }
 
-/** Whether an Always allowed entry may open some of the sites that a rule restricts. */
-function mayOpen(entry: Target, g: Group, config: Config): boolean {
-  const cp = compilePattern({ ...entry, allow: true });
-  if (!cp) return true;
-  return groupTargets(config, g).some((t) => {
-    if (t.allow) return false;
-    const other = compilePattern(t);
-    return other !== null && mayOverlap(cp, other);
-  });
-}
-
 /**
- * The rules a unit changes, whose protection governs it: its own rule; the active rules
- * that use a shared list; for an Always allowed entry, the active rules whose sites it may open;
- * for a setting, every active rule. A unit that changes no rule has no protection to follow.
+ * The rules a unit changes, whose protection governs it: its own rule, or every active rule for
+ * a setting. A unit that changes no rule has no protection to follow.
  */
 export function unitGroups(unit: ChangeUnit, config: Config): string[] {
-  const active = config.groups.filter(isGroupActive);
-  const ids = (groups: Group[]) => groups.map((g) => g.id);
-  const using = (listId: string) => ids(active.filter((g) => g.lists.includes(listId)));
   switch (unit.kind) {
     case 'group.remove':
     case 'group.field':
-    case 'group.link':
       return [unit.groupId];
     case 'target.add':
     case 'target.remove':
     case 'target.note':
-      if (unit.owner.kind === 'group') return [unit.owner.id];
-      if (unit.owner.kind === 'list') return using(unit.owner.id);
-      return ids(active.filter((g) => mayOpen(unit.target, g, config)));
-    case 'list.remove':
-      return using(unit.listId);
+      return [unit.owner.id];
     case 'setting':
-      return ids(active);
+      return config.groups.filter(isGroupActive).map((g) => g.id);
     default:
       return [];
   }
@@ -842,34 +749,23 @@ export function isStale(unit: ChangeUnit, config: Config): boolean {
           : (g as unknown as Record<string, unknown>)[unit.field];
       return !deepEqual(current, unit.base);
     }
-    case 'group.link': {
-      const g = group(unit.groupId);
-      return !g || g.lists.includes(unit.listId) === unit.link;
-    }
     case 'target.add':
     case 'target.remove':
     case 'target.note': {
-      const list = ownerTargets(config, unit.owner);
+      // A pending unit of an earlier version may change a shared list or Always allowed.
+      const list = unit.owner.kind === 'group' ? group(unit.owner.id)?.targets : undefined;
       if (!list) return true;
       const exists = list.some((t) => t.id === unit.target.id);
       return unit.kind === 'target.add' ? exists : !exists;
     }
-    case 'list.add':
-      return config.lists.some((l) => l.id === unit.list.id);
-    case 'list.remove':
-    case 'list.name':
-      return !config.lists.some((l) => l.id === unit.listId);
     case 'order':
       return false;
     case 'setting':
       return !deepEqual(getPath(config.settings, unit.path), unit.base);
+    default:
+      // The kinds of earlier versions: shared lists and their links to rules.
+      return true;
   }
-}
-
-function ownerTargets(config: Config, owner: Owner): Target[] | null {
-  if (owner.kind === 'allowlist') return config.allowlist;
-  if (owner.kind === 'group') return config.groups.find((g) => g.id === owner.id)?.targets ?? null;
-  return config.lists.find((l) => l.id === owner.id)?.targets ?? null;
 }
 
 /** Applies units to a copy of the configuration. Entity revisions are bumped. */
@@ -898,51 +794,16 @@ export function applyUnits(config: Config, units: ChangeUnit[], now: number): Co
         touchGroup(g);
         break;
       }
-      case 'group.link': {
-        const g = c.groups.find((x) => x.id === unit.groupId);
-        if (!g) break;
-        g.lists = unit.link
-          ? [...new Set([...g.lists, unit.listId])]
-          : g.lists.filter((id) => id !== unit.listId);
-        touchGroup(g);
-        break;
-      }
       case 'target.add':
       case 'target.remove':
       case 'target.note': {
-        const list = ownerTargets(c, unit.owner);
-        if (!list) break;
-        const i = list.findIndex((t) => t.id === unit.target.id);
-        if (unit.kind === 'target.add' && i === -1) list.push(clone(unit.target));
-        if (unit.kind === 'target.remove' && i !== -1) list.splice(i, 1);
-        if (unit.kind === 'target.note' && i !== -1) list[i] = clone(unit.target);
-        if (unit.owner.kind === 'group') {
-          const g = c.groups.find((x) => x.id === (unit.owner as { id: string }).id);
-          if (g) touchGroup(g);
-        } else if (unit.owner.kind === 'list') {
-          const l = c.lists.find((x) => x.id === (unit.owner as { id: string }).id);
-          if (l) {
-            l.rev += 1;
-            l.updatedAt = now;
-          }
-        }
-        break;
-      }
-      case 'list.add':
-        if (!c.lists.some((l) => l.id === unit.list.id)) c.lists.push(clone(unit.list));
-        break;
-      case 'list.remove':
-        c.lists = c.lists.filter((l) => l.id !== unit.listId);
-        for (const g of c.groups) g.lists = g.lists.filter((id) => id !== unit.listId);
-        c.tombstones.push({ id: unit.listId, kind: 'list', deletedAt: now });
-        break;
-      case 'list.name': {
-        const l = c.lists.find((x) => x.id === unit.listId);
-        if (l) {
-          l.name = unit.value;
-          l.rev += 1;
-          l.updatedAt = now;
-        }
+        const g = c.groups.find((x) => x.id === unit.owner.id);
+        if (!g) break;
+        const i = g.targets.findIndex((t) => t.id === unit.target.id);
+        if (unit.kind === 'target.add' && i === -1) g.targets.push(clone(unit.target));
+        if (unit.kind === 'target.remove' && i !== -1) g.targets.splice(i, 1);
+        if (unit.kind === 'target.note' && i !== -1) g.targets[i] = clone(unit.target);
+        touchGroup(g);
         break;
       }
       case 'order': {
