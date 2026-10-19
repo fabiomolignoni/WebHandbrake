@@ -1,7 +1,7 @@
 /** Statistics: queries, export and deletion. Only daily aggregates exist. */
 
 import { BUDGET_KEEP_DAYS } from '../engine/limits';
-import { addDays, dayKey, logicalDayOf, parseDayKey } from '../engine/time';
+import { addDays, dayKey, dayStartAt, logicalDayOf, parseDayKey } from '../engine/time';
 import type { DayRecord } from '../engine/types';
 import { api } from '../platform/api';
 import { timestampSuffix } from '../shared/format';
@@ -70,9 +70,9 @@ export async function getStats(from: string, to: string): Promise<StatsModel> {
   }
   counters.impulses = Math.max(0, counters.shown - counters.proceeded);
 
-  const fromMs = new Date(parseDayKey(from).y, parseDayKey(from).m, parseDayKey(from).d).getTime();
-  const toDay = addDays(parseDayKey(to), 1);
-  const toMs = new Date(toDay.y, toDay.m, toDay.d).getTime();
+  // The breaks and the reasons of the same logical days as the totals.
+  const fromMs = dayStartAt(parseDayKey(from), store.cc.cal);
+  const toMs = dayStartAt(addDays(parseDayKey(to), 1), store.cc.cal);
   const names = new Map(store.config.groups.map((g) => [g.id, g]));
   return {
     from,

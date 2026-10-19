@@ -31,6 +31,8 @@ All notable changes to WebHandbrake are documented here. The format follows
   shortcut opens the Focus page.
 - Durations of more than two days that are not whole days, such as 50 hours, were shown as
   2 days.
+- Insights, when days start after midnight: today's bar, and the breaks and the reasons of a
+  period, followed calendar days instead of the days of the statistics.
 
 ## [1.0.0] - 2026-10-15
 

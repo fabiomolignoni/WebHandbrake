@@ -78,11 +78,12 @@ function dayLabel(key: string, count: number): string {
   return count <= 7 ? formatDate(ms, { weekday: 'short' }) : String(d.d);
 }
 
-function Trend({ s }: { s: StatsModel }) {
+function Trend({ s, cal }: { s: StatsModel; cal: { dayStart: number; weekStart: number } }) {
   const [table, setTable] = useState(false);
   const days = s.days.length > 62 ? monthly(s) : s.days;
   const max = Math.max(1, ...days.map((d) => d.seconds));
-  const todayKey = dayKey(logicalDayOf(Date.now(), { dayStart: 0, weekStart: 1 }));
+  // Today as the statistics count it: the logical day, which may have started yesterday.
+  const todayKey = dayKey(logicalDayOf(Date.now(), cal));
   // Labels for at most ~16 columns, so they never overlap.
   const every = Math.max(1, Math.ceil(days.length / 16));
   return (
@@ -321,7 +322,7 @@ export function InsightsPage() {
               {span !== 'day' && (
                 <div class="card stack">
                   <h2>{t('insights.trend')}</h2>
-                  <Trend s={s} />
+                  <Trend s={s} cal={cal} />
                 </div>
               )}
               <div class="grid" style={{ ['--min' as string]: '320px' }}>
