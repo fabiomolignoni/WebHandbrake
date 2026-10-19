@@ -6,6 +6,11 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- The address guide of a rule shows how to cover every website (`*`), with exceptions for the
+  sites you still need.
+
 ## [1.0.0] - 2026-10-15
 
 The first version of WebHandbrake.

@@ -3753,6 +3753,9 @@
   "targets.exceptionsHelp": {
     "message": "Parts of these sites that stay allowed. The most specific entry wins."
   },
+  "targets.guide.allSites": {
+    "message": "Every website. Add exceptions with + for the sites you still need."
+  },
   "targets.guide.exception": {
     "message": "An exclusion: + at the start keeps these pages allowed while the rest of the rule applies."
   },
@@ -3778,7 +3781,7 @@
     "message": "Use the example {example}"
   },
   "targets.guide.wildcard": {
-    "message": "A wildcard: * stands for any text. Here, every address that contains \"news\"; * alone is every website."
+    "message": "A wildcard: * stands for any text. Here, every address that contains \"news\"."
   },
   "targets.lineError": {
     "message": "Line {line} \"{text}\": {error}"

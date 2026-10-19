@@ -33,7 +33,7 @@ function changeType(tg: Target, type: TargetType): Target {
 const key = (x: Pick<Target, 'type' | 'value' | 'allow'>) => `${x.type}|${x.value}|${x.allow ? 1 : 0}`;
 
 /**
- * The short guide (#11): the four things people want to do, with an example each (worked examples,
+ * The short guide (#11): the five things people want to do, with an example each (worked examples,
  * task-oriented help). Picking an example puts it in the input, ready to be edited. Every other
  * address type is in Help, which the guide opens at its address table.
  */
@@ -41,6 +41,7 @@ const GUIDE: [string, string][] = [
   ['youtube.com', 'targets.guide.site'],
   ['example.com/page$', 'targets.guide.page'],
   ['*news*', 'targets.guide.wildcard'],
+  ['*', 'targets.guide.allSites'],
   ['+youtube.com/feed/subscriptions', 'targets.guide.exception'],
 ];
 

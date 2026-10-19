@@ -280,11 +280,17 @@ test('the wizard takes wildcards and every website, and the editor warns (#20, #
   await editor.text('This rule applies to every website.', { exact: false }).expectVisible();
 });
 
-test('the address guide shows the four common forms and links to every address type (#11)', async ({ h }) => {
+test('the address guide shows the five common forms and links to every address type (#11)', async ({ h }) => {
   const p = await h.page('dashboard.html#/groups/new');
   await p.text('How to write an address').click();
-  await p.get('.guide-example').expectCount(4);
-  for (const example of ['youtube.com', 'example.com/page$', '*news*', '+youtube.com/feed/subscriptions'])
+  await p.get('.guide-example').expectCount(5);
+  for (const example of [
+    'youtube.com',
+    'example.com/page$',
+    '*news*',
+    '*',
+    '+youtube.com/feed/subscriptions',
+  ])
     await p.button(`Use the example ${example}`).expectVisible();
   await p.button('Use the example *news*').click();
   await p.placeholder('Add a site, or paste a list…').expectValue('*news*');
