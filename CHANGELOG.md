@@ -33,6 +33,8 @@ All notable changes to WebHandbrake are documented here. The format follows
   2 days.
 - Insights, when days start after midnight: today's bar, and the breaks and the reasons of a
   period, followed calendar days instead of the days of the statistics.
+- An import that replaces everything keeps only the saved pages that are web pages, so that an
+  edited file can no longer break the Later list.
 
 ## [1.0.0] - 2026-10-15
 

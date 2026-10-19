@@ -61,12 +61,18 @@ describe('data', () => {
       format: 'webhandbrake',
       version: 1,
       config: { groups: [], settings: {} },
-      later: [{ url: 'https://x.test', id: 'l' }, 3],
+      later: [
+        { url: 'https://x.test', id: 'l', savedAt: 5 },
+        3,
+        { title: 'no address' },
+        { url: 'javascript:alert(1)', id: 'js' },
+      ],
     });
     const r = await t.data.applyImport(empty, 'replace');
     expect(r.ticket).toBeNull();
     expect(r.pending).toMatchObject({ emergency: true });
-    expect(t.store.later).toEqual([{ url: 'https://x.test', id: 'l' }]);
+    // Only web pages, with the fields that the list reads.
+    expect(t.store.later).toEqual([{ url: 'https://x.test', id: 'l', title: '', savedAt: 5 }]);
     const big = await t.data.applyImport('a'.repeat(MAX_IMPORT_BYTES + 1), 'merge');
     expect(big.errors?.[0]).toMatch(/10 MB/);
   });
