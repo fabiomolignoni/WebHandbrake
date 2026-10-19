@@ -16,7 +16,7 @@ import {
 } from './defaults';
 import { clone, isObj } from './json';
 import { MAX_WAIT_SECONDS, MIN_WAIT_SECONDS, PBKDF2_MAX_ITERATIONS, PBKDF2_MIN_ITERATIONS } from './limits';
-import { checkRegex, compilePattern } from './patterns';
+import { checkRegex, compilePattern, mayOverlap } from './patterns';
 import {
   type Config,
   type Cost,
@@ -30,7 +30,6 @@ import {
   type ProtectionKind,
   SCHEMA_VERSION,
   type Settings,
-  type SharedList,
   type Target,
   type TimeWindow,
 } from './types';
@@ -443,7 +442,6 @@ export function normalizeGroup(
     enabled: bool(raw.enabled, true),
     archived: bool(raw.archived, false),
     targets: normalizeTargets(raw.targets, errors, `group "${name}"`),
-    lists: Array.isArray(raw.lists) ? raw.lists.filter((x: unknown) => typeof x === 'string') : [],
     policies: Array.isArray(raw.policies)
       ? (raw.policies.map(normalizePolicy).filter(Boolean) as Policy[])
       : [],
@@ -459,19 +457,6 @@ export function normalizeGroup(
   delete old.passwordHash;
   delete old.partner;
   return g;
-}
-
-function normalizeList(raw: unknown, errors: string[], now: number): SharedList | null {
-  if (!isObj(raw)) return null;
-  const name = str(raw.name, 'List', 200);
-  return {
-    ...raw,
-    id: str(raw.id) || newId(),
-    rev: num(raw.rev, 1, 1),
-    updatedAt: num(raw.updatedAt, now),
-    name,
-    targets: normalizeTargets(raw.targets, errors, `list "${name}"`),
-  };
 }
 
 /**
@@ -521,11 +506,13 @@ export function normalizeSettings(raw: unknown): Settings {
  * of an export without secrets.
  */
 export function normalizeConfig(
-  raw: unknown,
+  input: unknown,
   now = Date.now(),
   opts: { secretsFrom?: Config } = {},
 ): { config: Config; errors: string[] } {
   const errors: string[] = [];
+  // Imports and restored backups may come from an earlier schema.
+  const raw = migrate(input).data;
   if (!isObj(raw)) return { config: defaultConfig(), errors: ['not an object'] };
   const groups: Group[] = [];
   const ids = new Set<string>();
@@ -542,18 +529,11 @@ export function normalizeConfig(
     ids.add(n.id);
     groups.push(n);
   }
-  const lists = (Array.isArray(raw.lists) ? raw.lists : [])
-    .map((l: unknown) => normalizeList(l, errors, now))
-    .filter(Boolean) as SharedList[];
-  const listIds = new Set(lists.map((l) => l.id));
-  for (const g of groups) g.lists = g.lists.filter((id) => listIds.has(id));
   return {
     config: {
       ...raw,
       schema: SCHEMA_VERSION,
       groups,
-      lists,
-      allowlist: normalizeTargets(raw.allowlist, errors, 'allowlist'),
       settings: normalizeSettings(raw.settings),
       tombstones: Array.isArray(raw.tombstones) ? raw.tombstones.filter(isObj) : [],
     } as Config,
@@ -620,8 +600,47 @@ export function checksum(text: string): string {
 
 type Migration = (raw: Record<string, any>) => Record<string, any>;
 
+const targetKey = (t: Record<string, any>) => `${t.type}|${t.value}|${Boolean(t.allow)}`;
+
 /** migrations[n] upgrades schema n to n + 1. */
-const MIGRATIONS: Record<number, Migration> = {};
+const MIGRATIONS: Record<number, Migration> = {
+  /**
+   * Shared lists and Always allowed are gone. A rule takes the sites of the lists it used, and as
+   * exceptions the Always allowed entries that may open some of its sites.
+   */
+  1: (raw) => {
+    const lists = new Map<unknown, unknown[]>();
+    for (const l of Array.isArray(raw.lists) ? raw.lists : [])
+      if (isObj(l) && Array.isArray(l.targets)) lists.set(l.id, l.targets);
+    const allowed = (Array.isArray(raw.allowlist) ? raw.allowlist : [])
+      .map((t: unknown) => normalizeTarget(isObj(t) ? { ...t, allow: true } : t))
+      .filter((t: Target | null): t is Target => t !== null);
+    for (const g of Array.isArray(raw.groups) ? raw.groups : []) {
+      if (!isObj(g)) continue;
+      const own: unknown[] = Array.isArray(g.targets) ? g.targets : [];
+      const shared = (Array.isArray(g.lists) ? g.lists : []).flatMap((id: unknown) => lists.get(id) ?? []);
+      const restricted = [...own, ...shared]
+        .map((t) => normalizeTarget(t))
+        .flatMap((t) => (t && !t.allow ? [compilePattern(t)!] : []));
+      const opening = allowed.filter((entry) =>
+        restricted.some((cp) => mayOverlap(compilePattern(entry)!, cp)),
+      );
+      // The copies get ids of their own: a list's sites were in several rules.
+      const seen = new Set(own.filter(isObj).map(targetKey));
+      for (const t of [...shared, ...opening]) {
+        if (!isObj(t) || seen.has(targetKey(t))) continue;
+        seen.add(targetKey(t));
+        own.push({ ...t, id: newId() });
+      }
+      g.targets = own;
+      delete g.lists;
+    }
+    if (Array.isArray(raw.tombstones)) raw.tombstones = raw.tombstones.filter((t) => t?.kind !== 'list');
+    delete raw.lists;
+    delete raw.allowlist;
+    return raw;
+  },
+};
 
 export function migrate(raw: unknown): { data: unknown; from: number; migrated: boolean } {
   if (!isObj(raw)) return { data: raw, from: 0, migrated: false };

@@ -53,14 +53,13 @@ describe('export files', () => {
     expect(file.config.groups[0].protection).toEqual({ kind: 'password', hash: 'pbkdf2$hash' });
   });
 
-  it('the single-rule file has exactly format, version, group and lists', async () => {
+  it('the single-rule file has exactly format, version and group', async () => {
     const { data } = await setup();
     const file = JSON.parse((await data.exportGroupFile('Social')).text);
     expect(Object.keys(file), 'single-rule envelope changed: update this test').toEqual([
       'format',
       'version',
       'group',
-      'lists',
     ]);
     expect(file.format).toBe(EXPORT_RULE_FORMAT);
     expect(file.version).toBe(EXPORT_RULE_VERSION);

@@ -8,13 +8,13 @@ import { GROUP_COLORS, newGroup, newId, newPolicy } from './defaults';
 import { clone, isObj } from './json';
 import { parseTargetList } from './patterns';
 import { normalizeConfig } from './schema';
-import type { Config, Group, SharedList, Target } from './types';
+import type { Config, Group } from './types';
 
 /** `format` of the export file with the whole configuration. */
 export const EXPORT_FORMAT = 'webhandbrake';
 /** `version` of the export file with the whole configuration. */
 export const EXPORT_VERSION = 1;
-/** `format` of the file that shares a single rule with its shared lists. */
+/** `format` of the file that shares a single rule. */
 export const EXPORT_RULE_FORMAT = 'webhandbrake-group';
 /** `version` of the single-rule file. */
 export const EXPORT_RULE_VERSION = 1;
@@ -24,15 +24,13 @@ export interface ImportResult {
   config: Config | null;
   /** Groups to add (merge mode) — for list and group imports. */
   groups: Group[];
-  lists: SharedList[];
-  allowlist: Target[];
   /** i18n keys with parameters, shown as the import report. */
   warnings: { key: string; params?: Record<string, string | number> }[];
   errors: string[];
 }
 
 function result(format: ImportResult['format']): ImportResult {
-  return { format, config: null, groups: [], lists: [], allowlist: [], warnings: [], errors: [] };
+  return { format, config: null, groups: [], warnings: [], errors: [] };
 }
 
 /**
@@ -84,20 +82,18 @@ function importWebHandbrake(data: Record<string, any>, now: number, current?: Co
   const { config, errors } = normalizeConfig(raw, now, { secretsFrom: current });
   r.config = config;
   r.groups = config.groups;
-  r.lists = config.lists;
-  r.allowlist = config.allowlist;
   r.errors = errors;
   return r;
 }
 
 function importGroupShare(data: Record<string, any>, now: number): ImportResult {
   const r = result('group');
+  // Files of schema 1 carry the shared lists of the rule, which the migration moves into it.
   const { config, errors } = normalizeConfig(
     { schema: 1, groups: [data.group], lists: Array.isArray(data.lists) ? data.lists : [], settings: {} },
     now,
   );
   r.groups = config.groups;
-  r.lists = config.lists;
   r.errors = errors;
   return r;
 }
@@ -115,14 +111,13 @@ export function withoutSecrets(
   return g;
 }
 
-/** A single group with its shared lists, as JSON. */
+/** A single group, as JSON. */
 export function exportGroup(config: Config, groupId: string): string | null {
   const g = config.groups.find((x) => x.id === groupId);
   if (!g) return null;
-  const lists = config.lists.filter((l) => g.lists.includes(l.id));
   // A shared rule never carries its password or its partner's secret.
   const group = withoutSecrets(g);
-  return JSON.stringify({ format: EXPORT_RULE_FORMAT, version: EXPORT_RULE_VERSION, group, lists }, null, 2);
+  return JSON.stringify({ format: EXPORT_RULE_FORMAT, version: EXPORT_RULE_VERSION, group }, null, 2);
 }
 
 // ---------------------------------------------------------------------------
@@ -159,12 +154,6 @@ export function mergeImport(current: Config, imp: ImportResult, mode: 'merge' | 
     return next;
   }
   const next: Config = clone(current);
-  const idMap = new Map<string, string>();
-  for (const l of imp.lists) {
-    const id = newId();
-    idMap.set(l.id, id);
-    next.lists.push({ ...l, id });
-  }
   for (const g of imp.groups) {
     // A rule from a file never brings a password or a partner that the person does not know:
     // it asks for a reminder instead.
@@ -173,13 +162,9 @@ export function mergeImport(current: Config, imp: ImportResult, mode: 'merge' | 
       ...g,
       protection: secret ? { kind: 'reminder' } : g.protection,
       id: newId(),
-      lists: g.lists.map((id) => idMap.get(id)).filter((x): x is string => Boolean(x)),
       policies: g.policies.map((p) => ({ ...p, id: newId() })),
       targets: g.targets.map((t) => ({ ...t, id: newId() })),
     });
   }
-  const have = new Set(next.allowlist.map((t) => `${t.type}|${t.value}`));
-  for (const t of imp.allowlist)
-    if (!have.has(`${t.type}|${t.value}`)) next.allowlist.push({ ...t, id: newId() });
   return next;
 }

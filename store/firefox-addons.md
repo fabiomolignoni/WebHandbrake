@@ -186,7 +186,7 @@ stesso Markdown della descrizione, ma non le tabelle di `PRIVACY.md`):
 
 **What it stores**
 
-- Your rules, lists and settings, and automatic backups of them. Rule passwords are kept only as salted hashes.
+- Your rules and settings, and automatic backups of them. Rule passwords are kept only as salted hashes.
 - Daily statistics per rule and per site name (never full addresses), kept 730 days by default.
 - Breaks and their reasons, focus sessions, pending changes, protection events, the pages you save for later, and the reasons you type when WebHandbrake asks what you want to do.
 - Until the browser closes: a log of the last 200 restricted pages, which you can turn off in Settings › Diagnostics.

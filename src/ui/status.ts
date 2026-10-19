@@ -128,8 +128,6 @@ export interface SiteStatus extends StatusView {
 /** Status of the current site (popup hero). */
 export function siteStatus(d: DecisionView | null, now = Date.now()): SiteStatus {
   if (!d || d.exempt) return { tone: 'neutral', icon: 'globe', label: '', title: t('status.site.exempt') };
-  if (d.allowlisted)
-    return { tone: 'free', icon: 'check-circle', label: '', title: t('status.site.allowlisted') };
   if (d.session && isNav(d)) {
     return {
       tone: 'protected',

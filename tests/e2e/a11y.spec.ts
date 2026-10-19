@@ -25,8 +25,6 @@ const ROUTES = [
   'today',
   'groups',
   'groups/new',
-  'lists',
-  'allowlist',
   'focus',
   'later',
   'insights',

@@ -92,7 +92,6 @@ describe('"Why?"', () => {
   const view = (patch: Partial<DecisionView>): DecisionView =>
     ({
       exempt: false,
-      allowlisted: null,
       severity: SEVERITY.track,
       intervention: { type: 'track' },
       groups: [],
@@ -110,7 +109,6 @@ describe('"Why?"', () => {
     expect(verdict(view({ severity: SEVERITY.block, intervention: BLOCK }), NOW)).not.toMatch(/11:00/);
     const sentences = new Set(
       [
-        view({ allowlisted: { type: 'domain', value: 'a.test' } }),
         view({}),
         view({
           excepted: [{ groupId: 'A', name: 'A', entry: { type: 'domain', value: 'a.test', allow: true } }],
@@ -124,7 +122,7 @@ describe('"Why?"', () => {
         view({ groups: [{} as never] }),
       ].map((d) => verdict(d, NOW)),
     );
-    expect(sentences.size).toBe(7);
+    expect(sentences.size).toBe(6);
   });
 
   it('what a limit has used', () => {

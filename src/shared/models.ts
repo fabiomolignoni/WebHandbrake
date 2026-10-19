@@ -81,7 +81,6 @@ export interface DecisionView {
   session: Pick<FocusSession, 'id' | 'kind' | 'endAt' | 'locked'> | null;
   groups: GroupDecisionView[];
   excepted: { groupId: string; name: string; entry: Pick<Target, 'type' | 'value' | 'allow'> }[];
-  allowlisted: Pick<Target, 'type' | 'value'> | null;
   until: number | null;
   next: Intervention | null;
   restriction: RestrictionView | null;

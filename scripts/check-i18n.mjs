@@ -169,7 +169,6 @@ const keyLike = /'((?:[a-z][a-zA-Z0-9]*\.)+[a-zA-Z0-9_-]+)'/g;
 const NAMESPACES = new Set([
   'access',
   'addPage',
-  'allowlist',
   'ask',
   'backup',
   'backups',
@@ -199,7 +198,6 @@ const NAMESPACES = new Set([
   'iv',
   'later',
   'level',
-  'lists',
   'locked',
   'menu',
   'nav',

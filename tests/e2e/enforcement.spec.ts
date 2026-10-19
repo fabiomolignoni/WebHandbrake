@@ -5,18 +5,7 @@
 
 import { TEMPLATES } from '../../src/data/templates';
 import { expect, test } from './harness';
-import {
-  BLOCK,
-  CLOSE,
-  delay,
-  group,
-  PERMANENT,
-  policy,
-  REMINDER,
-  redirect,
-  TRACK,
-  target,
-} from './harness/config';
+import { BLOCK, CLOSE, delay, group, PERMANENT, policy, REMINDER, redirect, TRACK } from './harness/config';
 import { expectAllowed, expectBlocked, sleep } from './helpers';
 
 test.describe('what is blocked', () => {
@@ -92,16 +81,14 @@ test.describe('what is blocked', () => {
     await expectAllowed(h, 'http://video.test/shorts/help');
   });
 
-  test('a rule over every website, with exceptions and Always allowed (#20)', async ({ h }) => {
+  test('a rule over every website, with exceptions (#20)', async ({ h }) => {
     await h.configure((c) => {
       c.groups = [group('Everything', ['*', '+work.test'], [policy(BLOCK)])];
-      c.allowlist = [target('docs.test')];
       for (const g of c.groups) g.protection = REMINDER;
     });
     await expectBlocked(h, 'http://any.test/');
     await expectBlocked(h, 'http://other.example.test/a?b=1');
     await expectAllowed(h, 'http://work.test/today');
-    await expectAllowed(h, 'http://docs.test/');
     // The extension's own pages stay reachable.
     const dashboard = await h.page('dashboard.html#/today');
     await dashboard.role('heading', 'Today', { exact: true }).expectVisible();
@@ -189,27 +176,6 @@ test.describe('evaluation semantics', () => {
     await q.get('.meta').expectText('Hard');
   });
 
-  test('"always allowed" prevails over the groups and over focus sessions', async ({ h }) => {
-    await h.configure((c) => {
-      c.groups = [group('Block', ['bank.test'], [policy(BLOCK)])];
-      c.allowlist = [target('bank.test/login')];
-      for (const g of c.groups) g.protection = REMINDER;
-    });
-    await expectAllowed(h, 'http://bank.test/login/x');
-    await expectBlocked(h, 'http://bank.test/other');
-    await h.rpc('session.start', {
-      kind: 'allowlist',
-      groups: [],
-      allow: [target('docs.test')],
-      minutes: 30,
-      locked: false,
-      noPauses: true,
-    });
-    await expectAllowed(h, 'http://bank.test/login/y');
-    await expectAllowed(h, 'http://docs.test/manual');
-    await expectBlocked(h, 'http://anything.test/');
-  });
-
   test('disabled and archived rules do not restrict; enabling one restricts the open tabs', async ({ h }) => {
     await h.configure((c) => {
       c.groups = [
@@ -224,19 +190,6 @@ test.describe('evaluation semantics', () => {
       c.groups[0].enabled = true;
     });
     await off.expectIntervention(true, 5000);
-  });
-
-  test('a shared list blocks in every rule linked to it', async ({ h }) => {
-    const listId = 'list-social';
-    await h.configure((c) => {
-      c.lists = [
-        { id: listId, rev: 1, updatedAt: Date.now(), name: 'Social', targets: [target('social.test')] },
-      ];
-      c.groups = [group('Weekdays', [], [policy(BLOCK)], { lists: [listId] })];
-    });
-    await expectBlocked(h, 'http://social.test/feed');
-    const why = await h.rpc('explain', { url: 'http://social.test/feed' });
-    expect(why.primary.name).toBe('Weekdays');
   });
 });
 

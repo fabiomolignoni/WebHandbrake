@@ -130,14 +130,6 @@ describe('changes in words', () => {
         'Change the conditions of Social',
       ],
       [
-        { kind: 'group.link', groupId: 'Social', name: 'Social', listId: 'L', listName: 'News', link: true },
-        'Add the list News to Social',
-      ],
-      [
-        { kind: 'target.add', owner: { kind: 'allowlist' }, ownerName: '', target: entry },
-        'Always allow a.test',
-      ],
-      [
         {
           kind: 'target.add',
           owner: { kind: 'group', id: 'Social' },

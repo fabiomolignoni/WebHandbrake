@@ -1,6 +1,6 @@
 /**
  * The dashboard in a real browser: every page, the rule
- * wizard, the first run, the rule editor, the rule list, shared lists, settings and insights.
+ * wizard, the first run, the rule editor, the rule list, settings and insights.
  */
 
 import { timeStep, totp } from '../../src/background/totp';
@@ -23,8 +23,6 @@ const ROUTES = [
   'today',
   'groups',
   'groups/new',
-  'lists',
-  'allowlist',
   'focus',
   'later',
   'insights',
@@ -661,46 +659,21 @@ test('the rule list turns rules on and off, duplicates, archives and searches', 
   await p.text('Video', { exact: true, within: 'main' }).expectVisible();
 });
 
-test('a shared list is created and used by a rule', async ({ h }) => {
+test('a list of sites pasted into a rule becomes one entry per line', async ({ h }) => {
   await h.configure((c) => {
     c.groups = [group('Weekdays', ['weekday.test'], [policy(BLOCK)])];
   });
-  const p = await h.page('dashboard.html#/lists');
-  await p.button('New list').click();
-  await p.label('Name').fill('Social media');
+  const id = (await h.rpc('config.get')).config.groups[0].id;
+  const p = await h.page(`dashboard.html#/groups/${id}?step=sites`);
   // A list is pasted: the field becomes a text area with every line.
   await p.placeholder('Add a site, or paste a list…').paste('one.test\ntwo.test');
   await p.get('textarea.textarea').expectValue('one.test\ntwo.test');
   await p.button('Add', { exact: true }).click();
-  await p.button(/Save|Create/).click();
+  await p.button('Save changes').click();
   await expect
-    .poll(async () => (await h.rpc('config.get')).config.lists.map((l: any) => l.name))
-    .toEqual(['Social media']);
-  const list = (await h.rpc('config.get')).config.lists[0];
-  expect(list.targets.map((t: any) => t.value)).toEqual(['one.test', 'two.test']);
-  await h.configure((c) => {
-    c.groups[0].lists = [list.id];
-  });
+    .poll(async () => (await h.rpc('config.get')).config.groups[0].targets.map((t: any) => t.value))
+    .toEqual(['weekday.test', 'one.test', 'two.test']);
   await expectBlocked(h, 'http://two.test/');
-  await p.eval(() => {
-    location.hash = '#/lists';
-  });
-  await p.text(/used by Weekdays/).expectVisible();
-});
-
-test('a site added to "Always allowed" from its page loosens the rules with their cost', async ({ h }) => {
-  await h.configure((c) => {
-    c.groups = [group('Block', ['bank.test'], [policy(BLOCK)])];
-    for (const g of c.groups) g.protection = REMINDER;
-  });
-  const p = await h.page('dashboard.html#/allowlist');
-  await p.placeholder('Add a site, or paste a list…').fill('bank.test/login');
-  await p.button('Add', { exact: true }).click();
-  await p.button(/Save/).click();
-  await p.button('Yes, continue').click();
-  await expect.poll(async () => (await h.rpc('config.get')).config.allowlist.length).toBe(1);
-  await expectAllowed(h, 'http://bank.test/login');
-  await expectBlocked(h, 'http://bank.test/');
 });
 
 test('the theme applies to every page of the extension', async ({ h }) => {

@@ -58,7 +58,6 @@ describe('the state of the current site', () => {
       session: null,
       groups: [],
       excepted: [],
-      allowlisted: null,
       until: null,
       next: null,
       restriction: null,
@@ -69,12 +68,9 @@ describe('the state of the current site', () => {
 
   beforeAll(() => setFormatPrefs({ hour12: '24', dateFormat: 'auto' }));
 
-  it('pages the extension does not act on, Always allowed, exceptions, no rules', () => {
+  it('pages the extension does not act on, exceptions, no rules', () => {
     expect(siteStatus(null).title).toBe('WebHandbrake does not act on this page');
     expect(siteStatus(view({ exempt: true })).tone).toBe('neutral');
-    expect(siteStatus(view({ allowlisted: { type: 'domain', value: 'a.test' } })).title).toBe(
-      'Always allowed',
-    );
     expect(
       siteStatus(
         view({

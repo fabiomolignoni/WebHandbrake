@@ -112,7 +112,7 @@ export const HELP_TOPICS: HelpTopic[] = [
   {
     id: 'groups',
     title: 'help.groups.title',
-    blocks: [{ p: 'help.groups.p1' }, { p: 'help.groups.p2' }, { p: 'help.groups.p3' }, { syntax: true }],
+    blocks: [{ p: 'help.groups.p1' }, { p: 'help.groups.p2' }, { syntax: true }],
   },
   {
     id: 'rules',

@@ -14,6 +14,13 @@ All notable changes to WebHandbrake are documented here. The format follows
   the one without a default key (open the dashboard), and **Change shortcuts** opens the browser's
   shortcut settings.
 
+### Removed
+
+- Shared lists and the **Always allowed** list, with their pages under Rules: a rule's sites and
+  exceptions are now all in the rule. When you update, the sites of a shared list move into the
+  rules that used it, and an Always allowed site becomes an exception of the rules whose sites it
+  may open. Files exported by earlier versions are read the same way.
+
 ### Fixed
 
 - Keyboard shortcuts work in Firefox and Chrome: they are now Alt+Shift+1 (open the popup),

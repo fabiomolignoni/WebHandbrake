@@ -106,7 +106,7 @@ const OLD_STEPS: Record<string, StepId> = { rules: 'when' };
 /** What each step edits: a step is marked when it changed. */
 const STEP_PART: Record<StepId, (g: Group) => unknown> = {
   overview: () => null,
-  sites: (g) => [g.targets, g.lists],
+  sites: (g) => g.targets,
   when: (g) => g.policies.map((p) => [p.id, p.schedule, p.budget]),
   how: (g) => g.policies.map((p) => [p.id, p.intervention]),
   protection: (g) => g.protection,
@@ -272,7 +272,7 @@ export function GroupEditorPage({
     setStep(s);
   };
 
-  const issues = validateGroup(draft, cfg);
+  const issues = validateGroup(draft);
   const errors = issues.filter((i) => i.level === 'error').length;
   const changed = (s: StepId) => JSON.stringify(STEP_PART[s](draft)) !== JSON.stringify(STEP_PART[s](saved));
   const set = (patch: Partial<Group>) => setDraft({ ...draft, ...patch });
@@ -430,7 +430,7 @@ export function GroupEditorPage({
 
         {step !== 'overview' && stepIssues.length > 0 && <IssueList issues={stepIssues} />}
 
-        {step === 'overview' && <Overview draft={draft} issues={issues} lists={cfg.lists} onChange={go} />}
+        {step === 'overview' && <Overview draft={draft} issues={issues} onChange={go} />}
 
         {step === 'sites' && (
           <>
@@ -462,33 +462,6 @@ export function GroupEditorPage({
                 ))}
               </div>
             </div>
-            {cfg.lists.length > 0 && (
-              <div class="field">
-                <span class="label" id="editor-lists">
-                  {t('editor.sharedLists')}
-                </span>
-                <span class="help">{t('editor.sharedListsHelp')}</span>
-                <div class="chips" role="group" aria-labelledby="editor-lists">
-                  {cfg.lists.map((l) => (
-                    <button
-                      key={l.id}
-                      type="button"
-                      class="chip"
-                      aria-pressed={draft.lists.includes(l.id)}
-                      onClick={() =>
-                        set({
-                          lists: draft.lists.includes(l.id)
-                            ? draft.lists.filter((x) => x !== l.id)
-                            : [...draft.lists, l.id],
-                        })
-                      }
-                    >
-                      {l.name} <span class="muted small">({l.targets.length})</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </>
         )}
 
@@ -842,17 +815,14 @@ function IssueList({ issues }: { issues: Issue[] }) {
 function Overview({
   draft,
   issues,
-  lists: shared,
   onChange,
 }: {
   draft: Group;
   issues: Issue[];
-  lists: { id: string; name: string }[];
   onChange: (s: StepId) => void;
 }) {
   const sites = draft.targets.filter((x) => !x.allow);
   const exceptions = draft.targets.length - sites.length;
-  const lists = shared.filter((l) => draft.lists.includes(l.id)).map((l) => l.name);
   const p = draft.pause;
   const row = (id: StepId, value: preact.ComponentChildren) => (
     <div class="summary-row">
@@ -895,7 +865,6 @@ function Overview({
           <>
             {sites.length ? t('groups.sites', { count: sites.length }) : t('editor.overview.noSites')}
             {exceptions > 0 && ` · ${t('editor.exceptionsCount', { count: exceptions })}`}
-            {lists.length > 0 && ` · ${lists.join(', ')}`}
           </>,
         )}
         {row('when', t('editor.overview.conditions', { count: draft.policies.length }))}

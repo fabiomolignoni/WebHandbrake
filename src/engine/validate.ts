@@ -3,7 +3,7 @@
 import { unusedExceptions } from './changes';
 import { canHaveBreaks } from './defaults';
 import { ALL_SITES, checkRegex } from './patterns';
-import type { Config, Group, Policy, Target } from './types';
+import type { Group, Policy, Target } from './types';
 
 export interface Issue {
   level: 'error' | 'warning' | 'info';
@@ -72,11 +72,10 @@ export function validateTargets(targets: Target[]): Issue[] {
   return out;
 }
 
-export function validateGroup(g: Group, config: Config): Issue[] {
+export function validateGroup(g: Group): Issue[] {
   const out: Issue[] = [];
   if (!g.name.trim()) out.push({ level: 'error', key: 'validate.noName' });
-  const listTargets = config.lists.filter((l) => g.lists.includes(l.id)).flatMap((l) => l.targets);
-  const blocks = [...g.targets, ...listTargets].filter((t) => !t.allow);
+  const blocks = g.targets.filter((t) => !t.allow);
   if (!blocks.length) out.push({ level: 'error', key: 'validate.noTargets' });
   // #20: a rule over every website is allowed, but it should be a conscious choice.
   if (blocks.some((t) => t.type === 'wildcard' && t.value === ALL_SITES))
@@ -101,7 +100,7 @@ export function validateGroup(g: Group, config: Config): Issue[] {
   ) {
     out.push({ level: 'info', key: 'validate.onlyTracking' });
   }
-  for (const e of unusedExceptions([...g.targets, ...listTargets])) {
+  for (const e of unusedExceptions(g.targets)) {
     out.push({ level: 'info', key: 'validate.unusedException', params: { value: e.value } });
   }
   // Without a condition that blocks, the rule has no breaks (they are turned off when it is saved).

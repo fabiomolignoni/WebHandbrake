@@ -18,15 +18,6 @@
     "message": "Blocked sites",
     "description": "Default name of a group created from the popup or the context menu"
   },
-  "allowlist.note": {
-    "message": "Use this for tools you need for work or essential services such as your bank. Adding a site here loosens the rules that restrict it, so it follows their protection."
-  },
-  "allowlist.subtitle": {
-    "message": "Sites that are never restricted, whatever your rules and focus sessions say."
-  },
-  "allowlist.title": {
-    "message": "Always allowed"
-  },
   "ask.choices": {
     "message": "Durations offered (minutes)"
   },
@@ -382,7 +373,7 @@
     "message": "Export"
   },
   "data.exportHelp": {
-    "message": "Saves your rules, shared lists, Always allowed, settings and pages saved for later to a JSON file you can import later or on another device."
+    "message": "Saves your rules, settings and pages saved for later to a JSON file you can import later or on another device."
   },
   "data.groupsCount": {
     "message": "{count, plural, one {# rule} other {# rules}}"
@@ -415,7 +406,7 @@
     "message": "Reset all rules and settings? Whatever this loosens waits {hours} hours, as the emergency exit does, and is then confirmed in Protection."
   },
   "data.resetHelp": {
-    "message": "Replaces your rules, shared lists, Always allowed and settings with the defaults. Statistics and pages saved for later are kept (delete statistics in Privacy)."
+    "message": "Replaces your rules and settings with the defaults. Statistics and pages saved for later are kept (delete statistics in Privacy)."
   },
   "data.restore": {
     "message": "Restore"
@@ -768,12 +759,6 @@
   "editor.sections": {
     "message": "Parts of the rule"
   },
-  "editor.sharedLists": {
-    "message": "Shared lists"
-  },
-  "editor.sharedListsHelp": {
-    "message": "Lists of sites reused by several rules. Manage them from Rules › Shared lists."
-  },
   "editor.sitesHint": {
     "message": "Paste addresses or whole lists. Subdomains are included: youtube.com also covers m.youtube.com."
   },
@@ -907,7 +892,7 @@
     "message": "Focus session until {when}"
   },
   "focus.allowlistHelp": {
-    "message": "During the session only these sites (and the \"Always allowed\" list) can be opened."
+    "message": "During the session only these sites can be opened."
   },
   "focus.allowlistMode": {
     "message": "Only allowed sites"
@@ -986,7 +971,7 @@
     "message": "No rule is in quick focus sessions yet: turn on \"Include in quick focus sessions\" in a rule, or choose the rules under More options."
   },
   "focus.previewAllowlist": {
-    "message": "Every website except {count, plural, =0 {the \"Always allowed\" list} one {# site and the \"Always allowed\" list} other {# sites and the \"Always allowed\" list}} will be blocked."
+    "message": "{count, plural, =0 {Every website will be blocked.} one {Every website except # site will be blocked.} other {Every website except # sites will be blocked.}}"
   },
   "focus.previewBody": {
     "message": "The session will last until {end}."
@@ -1141,9 +1126,6 @@
   "groups.search": {
     "message": "Search rules and sites"
   },
-  "groups.sections": {
-    "message": "Rules and lists"
-  },
   "groups.sites": {
     "message": "{count, plural, one {# site} other {# sites}}"
   },
@@ -1200,7 +1182,7 @@
     "message": "Contents"
   },
   "help.data.p1": {
-    "message": "Export (Settings › Data) saves your rules, shared lists, Always allowed, settings and pages saved for later to a file. Statistics, the password hashes and the partner codes of the rules are included only if you tick them. Insights can also export statistics as CSV or JSON."
+    "message": "Export (Settings › Data) saves your rules, settings and pages saved for later to a file. Statistics, the password hashes and the partner codes of the rules are included only if you tick them. Insights can also export statistics as CSV or JSON."
   },
   "help.data.p2": {
     "message": "Import accepts a WebHandbrake file, a rule shared with \"Share\" in its menu, or a plain list of addresses (including hosts files and uBlock Origin, AdGuard and uBlacklist lines). It shows a preview and can add to your rules or replace everything; replacing also restores the pages saved for later from the file. Whatever an import loosens follows the emergency exit, for that import only: it waits as long as the emergency exit, then you confirm it in Protection by typing a sentence. Statistics in a file are never imported.",
@@ -1250,7 +1232,7 @@
     "message": "I made my rules too strict. What can I do?"
   },
   "help.faq.notApplied.a": {
-    "message": "Check that the rule is on and not archived; that one of its conditions applies right now (its time window or limit); that the site is not in Always allowed and no exception of the rule covers it; that no break is running and you did not just continue past a question, wait or challenge; that WebHandbrake is allowed in private windows; and that it has access to websites (see \"How solid is your protection?\"). In Chrome, local files also need the browser's \"Allow access to file URLs\". If a site is restricted more than you expect, another rule may be stricter: the strictest result wins."
+    "message": "Check that the rule is on and not archived; that one of its conditions applies right now (its time window or limit); that no exception of the rule covers the site; that no break is running and you did not just continue past a question, wait or challenge; that WebHandbrake is allowed in private windows; and that it has access to websites (see \"How solid is your protection?\"). In Chrome, local files also need the browser's \"Allow access to file URLs\". If a site is restricted more than you expect, another rule may be stricter: the strictest result wins."
   },
   "help.faq.notApplied.q": {
     "message": "Why is a site not restricted?"
@@ -1307,9 +1289,6 @@
   },
   "help.groups.p2": {
     "message": "Exceptions (\"+\") allow parts of a blocked site. The most specific entry wins: with reddit.com blocked and +reddit.com/r/*/comments/* allowed, single discussions open while the rest of Reddit stays blocked. When an exception and a block are equally specific, the block wins. Exceptions only apply to their own rule."
-  },
-  "help.groups.p3": {
-    "message": "Shared lists let several rules reuse the same sites, and \"Always allowed\" lists sites that are never restricted, whatever the rules and sessions say."
   },
   "help.groups.title": {
     "message": "Rules and sites"
@@ -1414,7 +1393,7 @@
     "message": "Privacy policy"
   },
   "help.protection.p1": {
-    "message": "Making your rules stricter is always immediate, and so is a change that loosens nothing, such as a new name or colour. Loosening a rule (removing a site, raising a limit, turning it off…) takes what its protection asks, which you choose when you create it. A change that concerns several rules, such as a site in Always allowed or a setting, takes what each active rule it loosens asks: a site in Always allowed loosens the rules that restrict it, a setting all of them. A change that loosens no active rule applies at once."
+    "message": "Making your rules stricter is always immediate, and so is a change that loosens nothing, such as a new name or colour. Loosening a rule (removing a site, raising a limit, turning it off…) takes what its protection asks, which you choose when you create it. A setting concerns all your rules: loosening it takes what each active rule asks. A change that loosens no active rule applies at once."
   },
   "help.protection.p2": {
     "message": "Each rule has one of six protections. Reminder asks you to confirm. Wait makes you wait for the time you choose: up to {minutes} minutes in the dialog, while a longer wait turns the change into a pending change that you confirm once the time is over, within {confirmHours} hours, or it expires. Password asks for the rule's password, and Partner code for the code that your partner's app shows. Locked refuses every loosening until a date you choose; after it, a confirmation is enough. Permanent refuses every loosening with no end date: only the emergency exit removes it."
@@ -2177,42 +2156,6 @@
   "level.wait.weakenShort": {
     "message": "Loosening the rule makes you wait {duration} first."
   },
-  "lists.delete": {
-    "message": "Delete list"
-  },
-  "lists.deleteBody": {
-    "message": "Rules using this list will no longer include its sites. If they restrict access, this is a loosening."
-  },
-  "lists.deleteTitle": {
-    "message": "Delete the list \"{name}\"?"
-  },
-  "lists.empty": {
-    "message": "No shared lists yet."
-  },
-  "lists.entries": {
-    "message": "{count, plural, one {# entry} other {# entries}}"
-  },
-  "lists.name": {
-    "message": "Name"
-  },
-  "lists.new": {
-    "message": "New list"
-  },
-  "lists.newTitle": {
-    "message": "New list"
-  },
-  "lists.subtitle": {
-    "message": "The same sites, reused by several rules with different conditions."
-  },
-  "lists.title": {
-    "message": "Shared lists"
-  },
-  "lists.unused": {
-    "message": "not used by any rule"
-  },
-  "lists.usedBy": {
-    "message": "used by {groups}"
-  },
   "locked.ack": {
     "message": "I understand and want to lock this rule."
   },
@@ -2255,9 +2198,6 @@
   "menu.newGroup": {
     "message": "New rule…"
   },
-  "nav.allowlist": {
-    "message": "Always allowed"
-  },
   "nav.focus": {
     "message": "Focus"
   },
@@ -2275,9 +2215,6 @@
   },
   "nav.later": {
     "message": "Later"
-  },
-  "nav.lists": {
-    "message": "Shared lists"
   },
   "nav.more": {
     "message": "More"
@@ -2997,7 +2934,7 @@
     "message": "What the protections do"
   },
   "protection.levelsHelp": {
-    "message": "Each rule has its own protection, chosen when you create it and changed in its editor. A change that concerns several rules, such as a site in Always allowed or a setting, takes what each of the active rules it loosens asks."
+    "message": "Each rule has its own protection, chosen when you create it and changed in its editor. A setting that loosens your rules takes what each of the active rules asks."
   },
   "protection.lockedChange": {
     "message": "Change the date"
@@ -3566,9 +3503,6 @@
   "status.sessionUntil": {
     "message": "Focus session until {when}"
   },
-  "status.site.allowlisted": {
-    "message": "Always allowed"
-  },
   "status.site.excepted": {
     "message": "Allowed by an exception"
   },
@@ -4051,12 +3985,6 @@
   "today.upcoming": {
     "message": "Coming up"
   },
-  "unit.allowlistAdd": {
-    "message": "Always allow {value}"
-  },
-  "unit.allowlistRemove": {
-    "message": "Stop always allowing {value}"
-  },
   "unit.exceptionAdd": {
     "message": "Allow {value} in {owner}"
   },
@@ -4096,18 +4024,6 @@
   "unit.groupRemove": {
     "message": "Delete the rule {name}"
   },
-  "unit.linkList": {
-    "message": "Add the list {list} to {name}"
-  },
-  "unit.listAdd": {
-    "message": "Create the list {name}"
-  },
-  "unit.listName": {
-    "message": "Rename a list to {name}"
-  },
-  "unit.listRemove": {
-    "message": "Delete the list {name}"
-  },
   "unit.order": {
     "message": "Reorder rules"
   },
@@ -4123,11 +4039,8 @@
   "unit.targetRemove": {
     "message": "Remove {value} from {owner}"
   },
-  "unit.unlinkList": {
-    "message": "Remove the list {list} from {name}"
-  },
   "validate.allSites": {
-    "message": "This rule applies to every website. Add exceptions, or use Always allowed, for the sites you need."
+    "message": "This rule applies to every website. Add exceptions for the sites you need."
   },
   "validate.askChoices": {
     "message": "Condition {n}: at least one duration must be within the maximum."
@@ -4320,12 +4233,6 @@
   },
   "why.allowedUntil": {
     "message": "Allowed; then {what} · {when}."
-  },
-  "why.allowlistEntry": {
-    "message": "In \"Always allowed\" as {value}."
-  },
-  "why.allowlisted": {
-    "message": "Always allowed."
   },
   "why.applies": {
     "message": "applies now"

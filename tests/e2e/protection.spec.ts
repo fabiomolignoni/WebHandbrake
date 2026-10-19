@@ -160,27 +160,13 @@ test('a Locked rule refuses every loosening until its date, then asks only for a
   await expectAllowed(h, 'http://a.test/');
 });
 
-test('a change to several rules follows the rules it loosens; one that loosens nothing applies at once', async ({
-  h,
-}) => {
+test('a change that loosens nothing applies at once, even for a Permanent rule', async ({ h }) => {
   await h.configure((c) => {
     c.groups = [
       group('News', ['news.test'], [policy(BLOCK)], { protection: REMINDER }),
       group('Gambling', ['bet.test'], [policy(BLOCK)], { protection: PERMANENT }),
     ];
   });
-  const save = async (mutate: (c: any) => void) => {
-    const c = (await h.rpc('config.get')).config;
-    mutate(c);
-    return h.rpc('config.save', { config: c });
-  };
-  // Always allowed: the Permanent rule restricts bet.test, the Reminder one news.test.
-  expect((await save((c) => c.allowlist.push(target('bet.test')))).refused?.reason).toBe('permanent');
-  const news = await save((c) => c.allowlist.push(target('www.news.test')));
-  expect(news.ticket.step.type).toBe('confirm');
-  await h.rpc('ticket.cancel', { id: news.ticket.id });
-  // A site that no rule restricts loosens nothing that is protected.
-  expect((await save((c) => c.allowlist.push(target('bank.test')))).applied).toHaveLength(1);
   // A new name loosens nothing: no cost, even for the Permanent rule.
   const id = (await h.rpc('config.get')).config.groups[1].id;
   const p = await h.page(`dashboard.html#/groups/${id}?step=details`);

@@ -7,16 +7,12 @@ import {
   mergeImport,
   withoutSecrets,
 } from '../../src/engine/importers';
-import type { Config, SharedList } from '../../src/engine/types';
+import type { Config } from '../../src/engine/types';
 import { BLOCK, config, group, t } from './helpers';
 
 const NOW = Date.UTC(2026, 9, 5);
 const HASH = `pbkdf2-sha256$1000$${'A'.repeat(22)}==$${'B'.repeat(43)}=`;
 const SECRET = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP';
-
-function list(id: string, lines: string[]): SharedList {
-  return { id, rev: 1, updatedAt: 0, name: `List ${id}`, targets: lines.map(t) };
-}
 
 describe('reading a file or a pasted text', () => {
   it('reports an empty text, broken JSON and JSON without sites', () => {
@@ -39,15 +35,17 @@ describe('reading a file or a pasted text', () => {
     }
   });
 
-  it('a shared rule comes with its lists, to be added', () => {
-    const c = config([group('A', ['a.test'], [{ intervention: BLOCK }], { lists: ['L'] })], (c) => {
-      c.lists = [list('L', ['b.test'])];
-    });
+  it('a shared rule is a rule to add; an older file brings the sites of its lists into it', () => {
+    const c = config([group('A', ['a.test'], [{ intervention: BLOCK }])]);
     const r = detectAndImport(exportGroup(c, 'A')!, NOW);
     expect(r.format).toBe('group');
     expect(r.config).toBeNull();
-    expect(r.groups.map((g) => g.lists)).toEqual([['L']]);
-    expect(r.lists.map((l) => l.name)).toEqual(['List L']);
+    expect(r.groups.map((g) => g.targets.map((x) => x.value))).toEqual([['a.test']]);
+    const old = JSON.parse(exportGroup(c, 'A')!);
+    old.group.lists = ['L'];
+    old.lists = [{ id: 'L', name: 'List', targets: [t('b.test')] }];
+    const sites = detectAndImport(JSON.stringify(old), NOW).groups[0].targets.map((x) => x.value);
+    expect(sites).toEqual(['a.test', 'b.test']);
   });
 
   it('a list of sites becomes one blocking rule; lines that are not sites are reported', () => {
@@ -87,35 +85,35 @@ describe('files never carry secrets they should not', () => {
 });
 
 describe('merging an import', () => {
-  const current = (): Config =>
-    config([group('Mine', ['mine.test'], [{ intervention: BLOCK }])], (c) => {
-      c.allowlist = [t('bank.test')];
-    });
+  const current = (): Config => config([group('Mine', ['mine.test'], [{ intervention: BLOCK }])]);
 
-  it('adds rules and lists with new ids, links kept, secrets replaced by a reminder', () => {
-    const imported = config(
-      [
-        group('Shared', ['s.test'], [{ intervention: BLOCK }], {
-          lists: ['L', 'gone'],
-          protection: { kind: 'password', hash: HASH },
-        }),
-      ],
-      (c) => {
-        c.lists = [list('L', ['l.test'])];
-        c.allowlist = [t('bank.test'), t('docs.test')];
-      },
-    );
+  it('adds rules with new ids, secrets replaced by a reminder', () => {
+    const imported = config([
+      group('Shared', ['s.test'], [{ intervention: BLOCK }], {
+        protection: { kind: 'password', hash: HASH },
+      }),
+    ]);
     const imp = detectAndImport(JSON.stringify(imported), NOW);
     const next = mergeImport(current(), imp, 'merge');
     expect(next.groups.map((g) => g.name)).toEqual(['Mine', 'Shared']);
     const added = next.groups[1];
     expect(added.id).not.toBe('Shared');
     expect(added.protection).toEqual({ kind: 'reminder' });
-    expect(added.lists).toEqual([next.lists[0].id]);
-    expect(next.lists[0].id).not.toBe('L');
     expect(added.policies[0].id).not.toBe(imported.groups[0].policies[0].id);
-    // Always allowed entries already there are not added twice.
-    expect(next.allowlist.map((x) => x.value)).toEqual(['bank.test', 'docs.test']);
+    expect(added.targets[0].id).not.toBe(imported.groups[0].targets[0].id);
+  });
+
+  it('an export of schema 1 brings its shared lists and Always allowed into its rules', () => {
+    const old: Record<string, any> = config([group('Shared', ['s.test'], [{ intervention: BLOCK }])]);
+    old.schema = 1;
+    old.groups[0].lists = ['L'];
+    old.lists = [{ id: 'L', name: 'List', targets: [t('l.test')] }];
+    old.allowlist = [t('s.test/docs')];
+    const next = mergeImport(current(), detectAndImport(JSON.stringify(old), NOW), 'merge');
+    const sites = next.groups[1].targets.map((x) => `${x.allow ? '+' : ''}${x.value}`);
+    expect(sites).toEqual(['s.test', 'l.test', '+s.test/docs']);
+    expect(next).not.toHaveProperty('lists');
+    expect(next).not.toHaveProperty('allowlist');
   });
 
   it('replacing takes the file as it is, set up', () => {

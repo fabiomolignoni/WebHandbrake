@@ -58,7 +58,7 @@ What is stored** shows, with their sizes.
 
 | Item | What it contains | Kept for | How to delete it | In exports and backups |
 |---|---|---|---|---|
-| Rules and settings | Your rules, shared lists, **Always allowed** and settings. The passwords of rules are kept only as salted hashes; the secret of a rule's partner code is kept as it is, because codes are checked on this device. After an update that changes the data format, a copy of the previous version is also kept until the next save. | Until you change them | **Settings › Data › Reset rules and settings…**, which follows the protection of your rules | Exports: yes, the password hashes and the partner codes only if you tick **Include the passwords and the partner codes of the rules**. Backups: yes, including them. |
+| Rules and settings | Your rules and settings. The passwords of rules are kept only as salted hashes; the secret of a rule's partner code is kept as it is, because codes are checked on this device. After an update that changes the data format, a copy of the previous version is also kept until the next save. | Until you change them | **Settings › Data › Reset rules and settings…**, which follows the protection of your rules | Exports: yes, the password hashes and the partner codes only if you tick **Include the passwords and the partner codes of the rules**. Backups: yes, including them. |
 | Automatic backups | Copies of your rules and settings, including the password hashes and the partner codes: one before each of the last 20 changes and one a day for 30 days. | Until newer copies replace them | Only by uninstalling WebHandbrake. **Reset** and the emergency exit do not remove them. | Not exported |
 | Breaks, sessions, pending changes and protection events | Breaks and accesses in progress (for a single page, with its address), the last 1000 breaks taken with their reasons, focus sessions, pending changes, cool-downs, an emergency exit you requested, the detected clock difference, and the last 200 protection events: clock changes, settings restored from a backup, removed access to all sites or to private windows, browser blocking filters that did not match your settings, times WebHandbrake was not running, and the steps of the emergency exit. | Until they end or newer records replace them | Deleting all statistics removes the reasons of breaks | Not in exports or backups. Insights' JSON export includes the breaks. |
 | Visit tracking | For each rule and each site of a rule that you are visiting: when the visit started, how long it lasted and when you were last active. | Until the visit ends | Ends by itself | Not exported |
@@ -100,15 +100,15 @@ In Chrome, one background process serves normal and private windows.
 
 These files are not encrypted, and what happens to them is up to you.
 
-- **Exports** (**Settings › Data › Export**): your rules, shared lists, **Always allowed**,
-  settings and pages saved for later. Statistics and the secrets (the password hashes and the
-  partner codes of the rules) are included only if you tick them.
+- **Exports** (**Settings › Data › Export**): your rules, settings and pages saved for later.
+  Statistics and the secrets (the password hashes and the partner codes of the rules) are
+  included only if you tick them.
 - **Statistics exports** (**Insights › Data**): daily statistics as CSV, or as JSON together with
   the breaks and their reasons and the reasons you gave for going in.
-- **Shared rules** (**Share** in a rule's menu): one rule with its shared lists, never its password
-  or its partner code.
+- **Shared rules** (**Share** in a rule's menu): one rule, never its password or its partner
+  code.
 - **Diagnostic reports** (**Settings › Diagnostics › Copy diagnostic report**): the version, the
-  browser and its user-agent string, the numbers of rules, sites and lists, the kind of protection
+  browser and its user-agent string, the numbers of rules and sites, the kind of protection
   of each rule (without its password hash or partner secret), the state of the browser blocking
   filters and of the permissions, the
   protection events and the recent decisions. Addresses are removed unless you tick **Include

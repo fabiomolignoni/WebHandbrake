@@ -2,33 +2,27 @@ import { describe, expect, it } from 'vitest';
 import { delayIntervention } from '../../src/engine/defaults';
 import type { Group, Policy } from '../../src/engine/types';
 import { hasErrors, isRedirectUrl, validateGroup, validateTargets } from '../../src/engine/validate';
-import { BLOCK, config, group, t } from './helpers';
+import { BLOCK, group, t } from './helpers';
 
-const keys = (g: Group, c = config([g])) => validateGroup(g, c).map((i) => i.key);
+const keys = (g: Group) => validateGroup(g).map((i) => i.key);
 const valid = (policies: Partial<Policy>[], lines = ['a.test']) => group('A', lines, policies);
 
 describe('rule validation', () => {
   it('a rule with a name, sites and a condition has nothing to report', () => {
     const g = valid([{ intervention: BLOCK }]);
-    expect(validateGroup(g, config([g]))).toEqual([]);
+    expect(validateGroup(g)).toEqual([]);
   });
 
-  it('a rule needs a name and a site that it restricts, its own or from a shared list', () => {
+  it('a rule needs a name and a site that it restricts', () => {
+    // Exceptions only: a rule that restricts nothing.
     const g = valid([{ intervention: BLOCK }], ['+a.test']);
     g.name = '  ';
     expect(keys(g)).toEqual(['validate.noName', 'validate.noTargets', 'validate.unusedException']);
-    // Exceptions only: a rule that restricts nothing.
-    const listed = valid([{ intervention: BLOCK }], []);
-    listed.lists = ['L'];
-    const c = config([listed], (c) => {
-      c.lists = [{ id: 'L', rev: 1, updatedAt: 0, name: 'List', targets: [t('b.test')] }];
-    });
-    expect(validateGroup(listed, c)).toEqual([]);
-    expect(hasErrors(validateGroup(g, config([g])))).toBe(true);
+    expect(hasErrors(validateGroup(g))).toBe(true);
   });
 
   it('a rule over every website is allowed, with a warning', () => {
-    const issues = validateGroup(valid([{ intervention: BLOCK }], ['*']), config([]));
+    const issues = validateGroup(valid([{ intervention: BLOCK }], ['*']));
     expect(issues).toEqual([{ level: 'warning', key: 'validate.allSites' }]);
     expect(hasErrors(issues)).toBe(false);
   });
@@ -41,7 +35,7 @@ describe('rule validation', () => {
       'validate.outsideNoWindows',
     ]);
     const odd = { mode: 'during' as const, windows: [{ days: [], start: 600, end: 600 }] };
-    const issues = validateGroup(valid([{ schedule: odd, intervention: BLOCK }]), config([]));
+    const issues = validateGroup(valid([{ schedule: odd, intervention: BLOCK }]));
     expect(issues.map((i) => [i.level, i.key, i.policy])).toEqual([
       ['error', 'validate.noDays', 0],
       ['warning', 'validate.emptyWindow', 0],
@@ -83,7 +77,6 @@ describe('rule validation', () => {
   it('conditions after one that always applies are never reached', () => {
     const issues = validateGroup(
       valid([{ intervention: delayIntervention(10) }, { intervention: BLOCK }, { intervention: BLOCK }]),
-      config([]),
     );
     expect(issues.filter((i) => i.key === 'validate.unreachable').map((i) => i.params)).toEqual([
       { n: 2, m: 1 },

@@ -940,7 +940,7 @@ function hostScope(cp: CompiledPattern): { scheme: string; host: string; subdoma
 
 /**
  * Whether two patterns may match a common address, compared by host only: it errs towards
- * yes, so an Always allowed entry is never judged to leave alone a rule whose sites it opens.
+ * yes, so that an Always allowed entry of schema 1 reaches every rule whose sites it opens.
  */
 export function mayOverlap(a: CompiledPattern, b: CompiledPattern): boolean {
   const x = hostScope(a);

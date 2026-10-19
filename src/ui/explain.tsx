@@ -24,7 +24,6 @@ export function budgetText(b: BudgetView): string {
 
 export function verdict(d: DecisionView, now = Date.now()): string {
   if (d.exempt) return t('why.exempt');
-  if (d.allowlisted) return t('why.allowlisted');
   const name = interventionName(d.intervention.type);
   if (isNav(d)) {
     return d.until
@@ -106,9 +105,6 @@ export function Explain({ d, groups }: { d: DecisionView; groups?: Group[] }) {
       <p>
         <strong>{verdict(d)}</strong>
       </p>
-      {d.allowlisted && (
-        <p class="small">{t('why.allowlistEntry', { value: describeTarget(d.allowlisted) })}</p>
-      )}
       {d.session && <p class="small">{t('why.session', { when: formatWhen(d.session.endAt) })}</p>}
       {d.groups.map((g) => (
         <GroupBlock key={g.groupId} g={g} groups={groups} />
