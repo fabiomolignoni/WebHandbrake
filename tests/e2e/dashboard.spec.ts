@@ -217,6 +217,18 @@ test("the wizard's Password protection is hashed in the background and never kep
   expect(await wizardState(p)).not.toContain('pbkdf2');
   await p.button('Next: review').click();
   await p.text(/Loosening this rule later takes: Password/).expectVisible();
+  // Resumed without the password (here after a reload), the wizard asks for the protection again
+  // instead of creating the rule with the default one.
+  await p.reload();
+  await p.role('heading', 'What should loosening this rule take?').expectVisible();
+  await p.get('.choice[aria-checked="true"]').expectCount(0);
+  await p.button('Next: review').expectEnabled(false);
+  await p.role('radio', /^Password/).click();
+  await p.label('New password').type('only my sister knows');
+  await p.label('Repeat the password').type('only my sister knows');
+  await p.button('Save', { exact: true, within: 'dialog' }).click();
+  await p.button('Next: review').click();
+  await p.text(/Loosening this rule later takes: Password/).expectVisible();
   await p.button('Create rule').click();
   await p.role('heading', 'Rules', { exact: true }).expectVisible();
   const created = (await h.rpc('config.get')).config.groups.find((g: any) => g.name === 'Gambling');

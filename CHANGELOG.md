@@ -23,6 +23,8 @@ All notable changes to WebHandbrake are documented here. The format follows
 - Two loosening changes took effect without the protection of the rules: a shorter inactivity
   delay, which counts less time, and, when days start after midnight, a time window moved before
   the start of the day, which then applies on the following night.
+- A new rule whose wizard was left after choosing a password or a partner code, and resumed later,
+  was created with a 30-second wait: the wizard now asks for the protection again.
 
 ## [1.0.0] - 2026-10-15
 
