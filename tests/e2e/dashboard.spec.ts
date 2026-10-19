@@ -315,6 +315,20 @@ test('the address guide shows the five common forms and links to every address t
   await p.placeholder('Add a site, or paste a list…').expectValue('*news*');
 });
 
+test('Help lists the keys the browser gave the shortcuts, and opens its shortcut settings', async ({ h }) => {
+  const p = await h.page('dashboard.html#/help/shortcuts');
+  const items = p.get('#help-shortcuts li');
+  await items.expectCount(4);
+  expect(await items.texts()).toEqual([
+    'Alt+Shift+1 — open the popup',
+    'Alt+Shift+2 — start a 25-minute focus session',
+    'Alt+Shift+3 — block the current site',
+    'No key — open the dashboard',
+  ]);
+  const settings = await h.newTab(() => p.button('Change shortcuts').click());
+  await settings.expectUrl(h.browser === 'firefox' ? /^about:addons/ : 'chrome://extensions/shortcuts');
+});
+
 test('"count only" at certain times counts nothing outside them (#21)', async ({ h }) => {
   const p = await h.page('dashboard.html#/groups/new');
   await p.placeholder('Add a site, or paste a list…').fill('work.test');

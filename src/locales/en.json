@@ -1452,17 +1452,26 @@
   "help.shortcut.block": {
     "message": "block the current site"
   },
+  "help.shortcut.dashboard": {
+    "message": "open the dashboard"
+  },
   "help.shortcut.focus": {
     "message": "start a {minutes}-minute focus session"
   },
   "help.shortcut.popup": {
     "message": "open the popup"
   },
+  "help.shortcutNone": {
+    "message": "No key"
+  },
   "help.shortcuts": {
     "message": "Keyboard shortcuts"
   },
+  "help.shortcutsChange": {
+    "message": "Change shortcuts"
+  },
   "help.shortcutsNote": {
-    "message": "Shortcuts can be changed in the browser's extension shortcut settings. They are not available on Android."
+    "message": "These are the keys your browser has given WebHandbrake. When a key is already used by the browser or by another extension, the browser may give none: choose one with Change shortcuts. Shortcuts are not available on Android."
   },
   "help.source": {
     "message": "Source code"

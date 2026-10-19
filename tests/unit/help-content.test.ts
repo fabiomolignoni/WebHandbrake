@@ -1,7 +1,7 @@
 /**
  * The structure of the Help page (src/dashboard/help-content.ts) is consistent with the messages
  * and the manifest: every key exists, every placeholder gets a value, and the shortcuts listed are
- * commands of the manifest with a default key.
+ * commands of the manifest, whose default keys both browsers give.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -9,7 +9,6 @@ import { manifest } from '../../scripts/manifest.mjs';
 import messages from '../../src/_locales/en/messages.json';
 import {
   ADDRESS_TOPIC,
-  defaultShortcut,
   HELP_TOPICS,
   type HelpBlock,
   type HelpParams,
@@ -96,14 +95,31 @@ describe('the Help structure', () => {
     }
   });
 
-  it('every shortcut listed is a command of both manifests with a default key', () => {
+  it('every shortcut listed is a command of both manifests', () => {
     for (const target of ['chrome', 'firefox'] as const) {
       const { commands } = manifest(target, '0.0.0');
-      for (const s of SHORTCUTS)
-        expect(
-          defaultShortcut(commands, s.command),
-          `${target}: command ${s.command} has no default key`,
-        ).toMatch(/^[A-Za-z]+(\+[A-Za-z0-9]+)+$/);
+      for (const s of SHORTCUTS) expect(Object.keys(commands), target).toContain(s.command);
+    }
+  });
+
+  it('the default keys are ones that both browsers give and that reach the extension', () => {
+    // Firefox on Windows and Linux ignores Shift for the menu bar's access keys: Alt+Shift+F opened
+    // the File menu instead of starting a session, and the letters change with the browser's
+    // language. Chrome does not give a key that is one of its own: Alt+Shift+B (bookmarks bar) was
+    // never assigned.
+    const CHROME_OWN = ['Alt+Shift+A', 'Alt+Shift+B', 'Alt+Shift+I', 'Alt+Shift+T', 'Alt+Shift+W'];
+    for (const target of ['chrome', 'firefox'] as const) {
+      const keys = Object.values(manifest(target, '0.0.0').commands).flatMap((c) =>
+        c.suggested_key?.default ? [c.suggested_key.default] : [],
+      );
+      expect(keys.length, target).toBeGreaterThan(0);
+      // Chrome gives at most four suggested keys.
+      expect(keys.length, target).toBeLessThanOrEqual(4);
+      expect(new Set(keys).size, target).toBe(keys.length);
+      for (const key of keys) {
+        expect(key, `${target}: ${key} opens a menu of Firefox`).not.toMatch(/^Alt\+(Shift\+)?[A-Z]$/);
+        expect(CHROME_OWN, `${target}: ${key} is a shortcut of Chrome`).not.toContain(key);
+      }
     }
   });
 

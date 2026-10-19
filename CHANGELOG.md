@@ -10,6 +10,16 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 - The address guide of a rule shows how to cover every website (`*`), with exceptions for the
   sites you still need.
+- Help lists the keyboard shortcuts with the keys the browser has actually given them, including
+  the one without a default key (open the dashboard), and **Change shortcuts** opens the browser's
+  shortcut settings.
+
+### Fixed
+
+- Keyboard shortcuts work in Firefox and Chrome: they are now Alt+Shift+1 (open the popup),
+  Alt+Shift+2 (start a focus session) and Alt+Shift+3 (block the current site). In Firefox on
+  Windows and Linux, Alt+Shift+H, Alt+Shift+F and Alt+Shift+B opened the Help, File and Bookmarks
+  menus instead; Chrome never gave Alt+Shift+B, one of its own shortcuts.
 
 ## [1.0.0] - 2026-10-15
 
