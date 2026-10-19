@@ -14,10 +14,20 @@ import {
   diffConfig,
   getPath,
   isStale,
+  scheduleBitmap,
   unusedExceptions,
 } from '../../src/engine/changes';
 import { defaultOptions, delayIntervention, newPolicy, pausePolicyFor } from '../../src/engine/defaults';
-import type { Budget, Config, Intervention, PausePolicy, Policy, SharedList } from '../../src/engine/types';
+import { scheduleActive } from '../../src/engine/time';
+import type {
+  Budget,
+  Config,
+  Intervention,
+  PausePolicy,
+  Policy,
+  Schedule,
+  SharedList,
+} from '../../src/engine/types';
 import { BLOCK, config, group, t } from './helpers';
 
 const NOW = 1_000_000;
@@ -61,6 +71,50 @@ describe('helpers', () => {
     expect(
       compareSchedules({ mode: 'during', windows: [{ days: [1], start: 1380, end: 1440 }] }, night),
     ).toBe('superset');
+  });
+
+  it('schedules are compared on the logical days that the engine applies them on', () => {
+    const schedules: Schedule[] = [
+      { mode: 'during', windows: [{ days: [1, 2, 3, 4, 5], start: 540, end: 1020 }] },
+      { mode: 'during', windows: [{ days: [1], start: 60, end: 1380 }] },
+      { mode: 'during', windows: [{ days: [6], start: 1380, end: 120 }] },
+      { mode: 'during', windows: [{ days: [0, 3], start: 0, end: 1440 }] },
+      { mode: 'outside', windows: [{ days: [2], start: 200, end: 200 }] },
+    ];
+    // A week without a change of the clocks, from Sunday 4 October 2026 at midnight.
+    const sunday = new Date(2026, 9, 4).getTime();
+    for (const dayStart of [0, 300]) {
+      const cal = { dayStart, weekStart: 1 };
+      for (const s of schedules) {
+        const bits = scheduleBitmap(s, dayStart);
+        for (let m = 0; m < 7 * 1440; m += 15)
+          expect([dayStart, m, bits[m] === 1]).toEqual([
+            dayStart,
+            m,
+            scheduleActive(s, sunday + m * 60_000, cal),
+          ]);
+      }
+    }
+  });
+
+  it('a window that starts before the day start belongs to the night after its day', () => {
+    // With days starting at 05:00, "Monday 01:00–23:00" runs on Tuesday: Monday daytime is left free.
+    const monday = { mode: 'during' as const, windows: [{ days: [1], start: 360, end: 1320 }] };
+    const early = { mode: 'during' as const, windows: [{ days: [1], start: 60, end: 1380 }] };
+    expect(compareSchedules(monday, early)).toBe('superset');
+    expect(compareSchedules(monday, early, 300)).toBe('other');
+    const c = config([group('g', ['a.com'], [{ schedule: monday }])], (x) => {
+      x.settings.dayStart = 300;
+    });
+    const unit: ChangeUnit = {
+      kind: 'group.field',
+      groupId: 'g',
+      name: 'g',
+      field: 'policies',
+      base: c.groups[0].policies,
+      value: [{ ...c.groups[0].policies[0], schedule: early }],
+    };
+    expect(classify(unit, c)).toBe('weaken');
   });
 });
 
@@ -213,7 +267,9 @@ describe('settings', () => {
   it('appearance and notices are neutral; what counts time and what protects is not', () => {
     expect(classifySetting('theme', 'light', 'dark')).toBe('neutral');
     expect(classifySetting('timer.corner', 'top-left', 'bottom-left')).toBe('neutral');
-    expect(classifySetting('tracking.idleSeconds', 120, 60)).toBe('strengthen');
+    // A shorter inactivity delay stops counting sooner: less time is counted.
+    expect(classifySetting('tracking.idleSeconds', 120, 60)).toBe('weaken');
+    expect(classifySetting('tracking.idleSeconds', 120, 600)).toBe('strengthen');
     expect(classifySetting('tracking.visitGapMinutes', 5, 30)).toBe('weaken');
     expect(classifySetting('tracking.idleEnabled', true, false)).toBe('strengthen');
     expect(classifySetting('tracking.countAudio', false, true)).toBe('strengthen');

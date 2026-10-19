@@ -66,7 +66,7 @@ describe('change classification', () => {
     const b = clone(base);
     b.settings.theme = 'dark';
     b.settings.protection.emergencyHours = 48;
-    b.settings.tracking.idleSeconds = 600;
+    b.settings.tracking.idleSeconds = 60;
     expect(classifyAll(base, b)).toEqual([
       ['setting', 'neutral'],
       ['setting', 'weaken'],

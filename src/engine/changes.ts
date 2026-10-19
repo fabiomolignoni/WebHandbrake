@@ -11,6 +11,7 @@ import { compileTargets, groupTargets, isGroupActive, redirectDestination, redir
 import { clone } from './json';
 import { compilePattern, mayOverlap } from './patterns';
 import { SEVERITY, severityOf } from './severity';
+import { isFullDay } from './time';
 import type {
   Budget,
   Config,
@@ -154,16 +155,22 @@ function cmpLimit(oldV: number | undefined, newV: number | undefined): Direction
 
 const WEEK_MINUTES = 7 * 1440;
 
-/** Week bitmap (minute resolution) of when a schedule is active, assuming midnight day start. */
-export function scheduleBitmap(s: Schedule): Uint8Array {
+/**
+ * Week bitmap (minute resolution) of when a schedule is active, minute 0 being Sunday at midnight.
+ * The days of the windows are logical days, as the engine reads them (`windowInterval`): a whole
+ * day starts at the day start, and a window that starts before it belongs to the night after its
+ * day.
+ */
+export function scheduleBitmap(s: Schedule, dayStart = 0): Uint8Array {
   const bits = new Uint8Array(WEEK_MINUTES);
   if (s.mode === 'always') return bits.fill(1);
   const mark = (w: TimeWindow) => {
+    const whole = isFullDay(w);
+    const offset = whole ? dayStart : w.start + (w.start < dayStart ? 1440 : 0);
+    let len = whole || w.start === w.end ? 1440 : (w.end % 1440) - w.start;
+    if (len <= 0) len += 1440;
     for (const day of w.days) {
-      const start = day * 1440 + w.start;
-      const full = (w.start === 0 && w.end >= 1440) || w.start === w.end;
-      let len = full ? 1440 : (w.end % 1440) - w.start;
-      if (!full && len <= 0) len += 1440;
+      const start = day * 1440 + offset;
       for (let i = 0; i < len; i++) bits[(start + i) % WEEK_MINUTES] = 1;
     }
   };
@@ -186,9 +193,9 @@ function compareSets(a: Uint8Array, b: Uint8Array): Coverage {
   return bOnly ? 'superset' : 'subset';
 }
 
-/** Coverage of the new schedule relative to the old one. */
-export function compareSchedules(oldS: Schedule, newS: Schedule): Coverage {
-  return compareSets(scheduleBitmap(oldS), scheduleBitmap(newS));
+/** Coverage of the new schedule relative to the old one, with logical days starting at `dayStart`. */
+export function compareSchedules(oldS: Schedule, newS: Schedule, dayStart = 0): Coverage {
+  return compareSets(scheduleBitmap(oldS, dayStart), scheduleBitmap(newS, dayStart));
 }
 
 function samePeriod(a: Period, b: Period): boolean {
@@ -230,8 +237,8 @@ function compareBudgets(oldB: Budget | undefined, newB: Budget | undefined): Cov
   }
 }
 
-function compareConditions(oldP: Policy, newP: Policy): Coverage {
-  const s = compareSchedules(oldP.schedule, newP.schedule);
+function compareConditions(oldP: Policy, newP: Policy, dayStart: number): Coverage {
+  const s = compareSchedules(oldP.schedule, newP.schedule, dayStart);
   const b = compareBudgets(oldP.budget, newP.budget);
   if (s === 'other' || b === 'other') return 'other';
   if (s === 'equal') return b;
@@ -348,7 +355,8 @@ function dominates(p: Policy, later: Policy[]): boolean {
   return later.every((q) => compareInterventions(q.intervention, p.intervention) !== 'weaken');
 }
 
-export function comparePolicies(oldList: Policy[], newList: Policy[]): Direction {
+/** `dayStart`: minutes after midnight at which the logical days of the schedules begin. */
+export function comparePolicies(oldList: Policy[], newList: Policy[], dayStart = 0): Direction {
   if (deepEqual(oldList, newList)) return 'neutral';
   const oldById = new Map(oldList.map((p) => [p.id, p]));
   const newIds = new Set(newList.map((p) => p.id));
@@ -370,7 +378,7 @@ export function comparePolicies(oldList: Policy[], newList: Policy[]): Direction
     }
     if (deepEqual(old, p)) return;
     const icmp = compareInterventions(old.intervention, p.intervention);
-    const cov = compareConditions(old, p);
+    const cov = compareConditions(old, p, dayStart);
     if (cov === 'equal') dirs.push(icmp);
     else if (cov === 'superset' && icmp !== 'weaken' && dominates(p, later)) dirs.push('strengthen');
     else if (cov === 'subset' && severityOf(old.intervention) <= SEVERITY.track && icmp !== 'weaken')
@@ -507,7 +515,9 @@ export function classifySetting(path: string, base: unknown, value: unknown): Di
   const n = (v: unknown) => (typeof v === 'number' ? v : undefined);
   const b = (v: unknown) => Boolean(v);
   switch (path) {
+    // Time stops counting after this much inactivity: a shorter delay counts less.
     case 'tracking.idleSeconds':
+      return cmpNum(n(base), n(value), true);
     case 'tracking.visitGapMinutes':
     case 'interventions.graceSeconds':
       return cmpNum(n(base), n(value), false);
@@ -717,7 +727,11 @@ export function classify(unit: ChangeUnit, config: Config): Direction {
         }
         case 'policies': {
           if (!active) return 'neutral';
-          const dir = comparePolicies(unit.base as Policy[], unit.value as Policy[]);
+          const dir = comparePolicies(
+            unit.base as Policy[],
+            unit.value as Policy[],
+            config.settings.dayStart,
+          );
           return dir !== 'weaken' &&
             redirectsIntoOwnSites(config, unit.groupId, unit.base as Policy[], unit.value as Policy[])
             ? 'weaken'

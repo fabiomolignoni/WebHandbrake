@@ -20,6 +20,9 @@ All notable changes to WebHandbrake are documented here. The format follows
   Alt+Shift+2 (start a focus session) and Alt+Shift+3 (block the current site). In Firefox on
   Windows and Linux, Alt+Shift+H, Alt+Shift+F and Alt+Shift+B opened the Help, File and Bookmarks
   menus instead; Chrome never gave Alt+Shift+B, one of its own shortcuts.
+- Two loosening changes took effect without the protection of the rules: a shorter inactivity
+  delay, which counts less time, and, when days start after midnight, a time window moved before
+  the start of the day, which then applies on the following night.
 
 ## [1.0.0] - 2026-10-15
 
