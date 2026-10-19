@@ -104,14 +104,14 @@ test('visits per day; a new visit starts after the visit gap', async ({ h }) => 
   await expectBlocked(h, 'http://mail.test/inbox');
 });
 
-test('"Stop for today" in the popup gives up the rest of the budget at once', async ({ h }) => {
+test('"Stop now" in the popup gives up the rest of the budget at once', async ({ h }) => {
   await h.configure((c) => {
     c.groups = [group('Video', ['video.test'], [policy(BLOCK, { budget: timeBudget(30) })])];
   });
   const site = await expectAllowed(h, 'http://video.test/');
   const popup = await h.popup(site);
-  await popup.button('Stop for today').click();
-  await popup.text('Give up the remaining time of Video for this period?').expectVisible();
+  await popup.button('Stop now').click();
+  await popup.text('Give up the time left on Video for this period?').expectVisible();
   await popup.button('Yes, stop now').click();
   await site.expectIntervention(true, 5000);
   await expectBlocked(h, 'http://video.test/later');

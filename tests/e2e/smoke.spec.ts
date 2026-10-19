@@ -11,7 +11,7 @@ test('harness: block, real page, challenge through the UI, popup', async ({ h })
   const p = await h.open('http://www.blocked.test/page?x=1');
   await p.expectIntervention();
   await p.expectUrl('#http://www.blocked.test/page?x=1');
-  await p.role('heading', /protected/).expectVisible();
+  await p.role('heading', /blocked/).expectVisible();
   expect(h.server.hits('www.blocked.test')).toEqual([]);
   const free = await h.open('http://free.test/');
   await free.expectReal('free.test/');

@@ -80,7 +80,10 @@ function normalizeTargets(raw: unknown, errors: string[], where: string): Target
   for (const r of raw) {
     const t = normalizeTarget(r);
     if (t) out.push(t);
-    else errors.push(`${where}: invalid entry ${JSON.stringify(r).slice(0, 80)}`);
+    else
+      errors.push(
+        `${where}: an entry that could not be read was left out: ${JSON.stringify(r).slice(0, 80)}`,
+      );
   }
   return out;
 }
@@ -441,7 +444,7 @@ export function normalizeGroup(
     message: str(raw.message, '', 5000),
     enabled: bool(raw.enabled, true),
     archived: bool(raw.archived, false),
-    targets: normalizeTargets(raw.targets, errors, `group "${name}"`),
+    targets: normalizeTargets(raw.targets, errors, `Rule “${name}”`),
     policies: Array.isArray(raw.policies)
       ? (raw.policies.map(normalizePolicy).filter(Boolean) as Policy[])
       : [],
@@ -522,7 +525,7 @@ export function normalizeConfig(
     const current = id ? opts.secretsFrom?.groups.find((x) => x.id === id)?.protection : undefined;
     const n = normalizeGroup(g, errors, now, legacy, current);
     if (!n) {
-      errors.push('invalid group');
+      errors.push('A rule that could not be read was left out.');
       continue;
     }
     if (ids.has(n.id)) n.id = newId();

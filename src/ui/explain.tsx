@@ -14,6 +14,7 @@ import {
 } from '../shared/summary';
 import { ColorDot } from './components';
 import { Icon } from './icons';
+import { statusName } from './status';
 
 export function budgetText(b: BudgetView): string {
   if (b.type === 'visits') return t('budget.visitsUsed', { used: b.used, limit: b.limit });
@@ -24,7 +25,8 @@ export function budgetText(b: BudgetView): string {
 
 export function verdict(d: DecisionView, now = Date.now()): string {
   if (d.exempt) return t('why.exempt');
-  const name = interventionName(d.intervention.type);
+  // A restricted page says its state, as the popup does ("Blocked until 17:00").
+  const name = statusName(d.intervention);
   if (isNav(d)) {
     return d.until
       ? t('why.restrictedUntil', { what: name, when: formatWhen(d.until, now) })

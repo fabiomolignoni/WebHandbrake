@@ -14,6 +14,15 @@ All notable changes to WebHandbrake are documented here. The format follows
   the one without a default key (open the dashboard), and **Change shortcuts** opens the browser's
   shortcut settings.
 
+### Changed
+
+- Clearer texts throughout. The block page now says "This page is blocked" instead of "This space
+  is protected", since Protection is what keeps a rule from being loosened. The kinds of
+  intervention have one name each, the one of the "What should happen?" picker (**Ask first**,
+  **Count only**, **Don't count**), and a change to a setting names it as Settings does. The popup's
+  "Stop for today" is now **Stop now**: it gives up the time left for the limit's whole period,
+  which may be an hour or a week. Quotation marks and apostrophes are typographic.
+
 ### Removed
 
 - Shared lists and the **Always allowed** list, with their pages under Rules: a rule's sites and
@@ -42,6 +51,11 @@ All notable changes to WebHandbrake are documented here. The format follows
   period, followed calendar days instead of the days of the statistics.
 - An import that replaces everything keeps only the saved pages that are web pages, so that an
   edited file can no longer break the Later list.
+- Texts that said something wrong: the rule wizard asked for a redirect address starting with
+  https:// (http:// works too); the Reminder protection said that any change asks for a
+  confirmation (only loosening does); the import preview and some warnings said "1 conditions" or
+  "1 entries are"; a notification about several pending changes said "it expires"; the privacy
+  policy said that Reset follows the protection of your rules (it follows the emergency exit).
 
 ## [1.0.0] - 2026-10-15
 

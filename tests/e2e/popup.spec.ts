@@ -97,7 +97,7 @@ test('the popup reopens the tabs that are allowed again', async ({ h }) => {
     c.groups[0].enabled = false;
   });
   const popup = await h.popup();
-  await popup.button('Reopen 2 tabs that can be opened again').click();
+  await popup.button('Reopen 2 tabs that are available again').click();
   await a.expectReal('news.test/1');
   await b.expectReal('news.test/2');
 });
@@ -112,7 +112,7 @@ test('the popup counts the impulses resisted today, and leaves pages it cannot a
   await p.button('Close the tab').click();
   const dashboard = await h.page('dashboard.html#/today');
   const popup = await h.popup(dashboard);
-  await popup.text('Once you chose not to go in.').expectVisible();
+  await popup.text('You chose not to go in once').expectVisible();
   // An extension page: nothing to block or save.
   await popup.button('Block site').expectCount(0);
   await popup.button('Save for later').expectCount(0);

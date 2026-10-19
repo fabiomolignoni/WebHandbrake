@@ -15,7 +15,7 @@ test.describe('what is blocked', () => {
     });
     const p = await expectBlocked(h, 'http://www.blocked.test/page?x=1');
     await p.expectUrl('/intervention.html#http://www.blocked.test/page?x=1');
-    await p.role('heading', /protected/).expectVisible();
+    await p.role('heading', /blocked/).expectVisible();
     await expectBlocked(h, 'http://deep.sub.blocked.test/');
     await expectAllowed(h, 'http://notblocked.test/');
     await expectAllowed(h, 'http://blocked.test.other.test/');

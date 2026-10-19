@@ -31,7 +31,7 @@ const office: TimeWindow = { days: [1, 2, 3, 4, 5], start: 9 * 60, end: 17 * 60 
 describe('days and times in words', () => {
   it('names the usual sets of days, and runs of three or more days', () => {
     expect(describeDays([0, 1, 2, 3, 4, 5, 6])).toBe('Every day');
-    expect(describeDays([])).toBe('No day');
+    expect(describeDays([])).toBe('No days');
     expect(describeDays([5, 4, 3, 2, 1])).toBe('Mon–Fri');
     expect(describeDays([6, 0])).toBe('Weekends');
     expect(describeDays([1, 2, 3, 5])).toBe('Mon–Wed, Fri');
@@ -81,7 +81,7 @@ describe('conditions in words', () => {
     const random = { ...(delayIntervention(20) as DelayIntervention), randomTo: 40, hideCountdown: true };
     expect(describeIntervention(random)).toBe('Wait 20–40 s (countdown hidden)');
     expect(describeIntervention({ type: 'ask', choices: [5], maxMinutes: 15 })).toBe(
-      'Ask what I want to do (up to 15 min)',
+      'Ask first (up to 15 min)',
     );
     expect(
       describeIntervention({
@@ -142,7 +142,7 @@ describe('changes in words', () => {
         { kind: 'target.remove', owner: { kind: 'group', id: 'Social' }, ownerName: 'Social', target: entry },
         'Remove a.test from Social',
       ],
-      [{ kind: 'setting', path: 'theme', value: 'dark', base: 'light' }, 'Change the setting "Theme"'],
+      [{ kind: 'setting', path: 'theme', value: 'dark', base: 'light' }, 'Change the setting “Theme”'],
     ];
     for (const [unit, line] of units) expect(describeUnit(unit)).toBe(line);
     expect(settingLabel('no.such.setting')).toBe('no.such.setting');
@@ -160,7 +160,7 @@ describe('the plan of a new rule', () => {
 
   it('one if-then sentence: when, then what happens', () => {
     expect(planSentence('always', 'block', 'a.test', [], 0)).toBe(
-      'Every time you open a.test, WebHandbrake blocks them.',
+      'Every time you open a.test, WebHandbrake blocks the page.',
     );
     expect(planSentence('schedule', 'track', 'a.test', [office], 0)).toBe(
       'When you open a.test (Mon–Fri 09:00–17:00), WebHandbrake only counts the time; outside these times it counts nothing.',

@@ -168,7 +168,7 @@ test('a rule is created step by step: sites → when → what happens → protec
   await p.button('Next: review').click();
   // The review states the plan: when (the schedule) and what happens.
   await p.get('.plan-text').expectText('Mon–Fri');
-  await p.get('.plan-text').expectText('WebHandbrake blocks them.');
+  await p.get('.plan-text').expectText('WebHandbrake blocks the page.');
   await p.button('Create rule').click();
   await p.role('heading', 'Rules', { exact: true }).expectVisible();
   const cfg = (await h.rpc('config.get')).config;
@@ -247,12 +247,12 @@ test("the wizard's Partner code protection is set up with a code from the partne
   await p.role('radio', /^Partner code/).click();
   await p.role('heading', 'Set up a partner code for Casino').expectVisible();
   const secret = (await p.get('.partner-key').text()).replace(/\s/g, '');
-  await p.label("Code from your partner's app").fill('000000');
+  await p.label('Code from your partner’s app').fill('000000');
   await p.button('Confirm', { exact: true, within: 'dialog' }).click();
-  await p.text(/not the code that your partner's app shows/).expectVisible();
-  await p.label("Code from your partner's app").fill(await totp(secret, timeStep(await h.clock.now())));
+  await p.text(/not the code that your partner’s app shows/).expectVisible();
+  await p.label('Code from your partner’s app').fill(await totp(secret, timeStep(await h.clock.now())));
   await p.button('Confirm', { exact: true, within: 'dialog' }).click();
-  await p.text("Your partner's app shows the codes for this rule.").expectVisible();
+  await p.text('Your partner’s app shows the codes for this rule.').expectVisible();
   expect(await wizardState(p)).not.toContain(secret);
   await p.button('Next: review').click();
   await p.button('Create rule').click();
@@ -546,7 +546,7 @@ test("first run, welcome → the rule wizard's steps → done", async ({ h }) =>
   await p.get('.plan-text').expectText('After 45 min a day on');
   await p.label('Why does this rule matter to you?').fill('More evenings outside');
   await p.button('Create rule').click();
-  await p.role('heading', "You're set").expectVisible();
+  await p.role('heading', 'You’re set').expectVisible();
   await p.text('“Video” is active.', { exact: false }).expectVisible();
   const cfg = (await h.rpc('config.get')).config;
   expect(cfg.groups).toHaveLength(1);
@@ -587,7 +587,7 @@ test('Back from the first step returns to the welcome and keeps the draft; the r
   await p.role('radio', '24 h').click();
   await p.button('Next: review').click();
   await p.button('Create rule').click();
-  await p.role('heading', "You're set").expectVisible();
+  await p.role('heading', 'You’re set').expectVisible();
   await expectBlocked(h, 'http://casino.test/');
   expect((await h.rpc('config.get')).config.groups.map((g: any) => g.protection)).toEqual([wait(86_400)]);
 });
@@ -688,7 +688,7 @@ test('the theme applies to every page of the extension', async ({ h }) => {
   // The accent is the brand colour, not a setting (#22).
   await p.get('input[type="color"]').expectCount(0);
   const blocked = await expectBlocked(h, 'http://blocked.test/');
-  await blocked.role('heading', /protected/).expectVisible();
+  await blocked.role('heading', /blocked/).expectVisible();
   expect(await blocked.eval(() => document.documentElement.dataset.theme)).toBe('dark');
   const popup = await h.popup(blocked);
   await popup.get('.popup-head').expectVisible();

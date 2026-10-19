@@ -53,7 +53,7 @@ test('a plain list (hosts file, uBlock syntax) becomes a rule from the import di
   await p.button('Import a file or a list…').click();
   await p.label('…or paste the content here').fill(LIST);
   await p.button('Preview').click();
-  await p.text('Imported list: 3 sites, 1 conditions').expectVisible();
+  await p.text('Imported list: 3 sites, 1 condition').expectVisible();
   await p.text(/not a site/).expectVisible();
   await p.button('Import', { exact: true, within: 'dialog' }).click();
   await expect
@@ -165,7 +165,7 @@ test('what earlier versions saved and this one removed is converted, not kept', 
     c.settings.interventions.alternatives = [{ id: 'a1', label: 'Read a book' }];
   });
   const cfg = (await h.rpc('config.get')).config;
-  // A Reminder kept the page and counted its time: Only count time does both.
+  // A Reminder kept the page and counted its time: Count only does both.
   expect(cfg.groups[0].policies[0].intervention).toEqual({ type: 'track' });
   expect(cfg.settings).not.toHaveProperty('accent');
   expect(cfg.settings.interventions).not.toHaveProperty('alternatives');

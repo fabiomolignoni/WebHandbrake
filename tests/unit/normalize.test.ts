@@ -211,7 +211,7 @@ describe('normalising what is read from storage or a file', () => {
     });
     expect(g?.color).toMatch(/^#[0-9a-f]{6}$/i);
     expect(g?.targets).toHaveLength(1);
-    expect(errors).toEqual(['group "": invalid entry {"value":""}']);
+    expect(errors).toEqual(['Rule “”: an entry that could not be read was left out: {"value":""}']);
     expect(normalizeGroup([], [])).toBeNull();
   });
 
@@ -243,7 +243,7 @@ describe('normalising what is read from storage or a file', () => {
     expect(config.schema).toBe(SCHEMA_VERSION);
     expect(new Set(config.groups.map((g) => g.id)).size).toBe(2);
     expect(config.tombstones).toEqual([{ id: 'x' }]);
-    expect(errors).toEqual(['invalid group']);
+    expect(errors).toEqual(['A rule that could not be read was left out.']);
     expect(normalizeConfig('nope')).toMatchObject({ errors: ['not an object'] });
   });
 
