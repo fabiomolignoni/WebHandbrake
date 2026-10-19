@@ -982,6 +982,9 @@
   "focus.noPausesHelp": {
     "message": "Breaks of the blocked rules are not available until the session ends."
   },
+  "focus.noQuickRules": {
+    "message": "No rule is in quick focus sessions yet: turn on \"Include in quick focus sessions\" in a rule, or choose the rules under More options."
+  },
   "focus.previewAllowlist": {
     "message": "Every website except {count, plural, =0 {the \"Always allowed\" list} one {# site and the \"Always allowed\" list} other {# sites and the \"Always allowed\" list}} will be blocked."
   },

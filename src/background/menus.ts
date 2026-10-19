@@ -53,6 +53,8 @@ export async function rebuildMenus() {
       contexts: ctxs(item.contexts),
     });
   }
+  // A quick session blocks the rules marked for it: with none, it would block nothing.
+  if (!groups.some((g) => g.options.quickSession)) return;
   create({ id: 'focus', title: t('menu.focus'), contexts: ctxs(['page', 'action']) });
   for (const m of QUICK_SESSION_MINUTES) {
     create({
@@ -96,6 +98,11 @@ export function registerMenuClicks() {
 export async function onCommand(command: string, tab?: chrome.tabs.Tab) {
   await store.ready();
   if (command === 'start-session') {
+    // Without a rule for quick sessions, the Focus page says how to choose them.
+    if (!store.config.groups.some((g) => isGroupActive(g) && g.options.quickSession)) {
+      await quiet(api.tabs.create({ url: extensionUrl('dashboard.html#/focus') }));
+      return;
+    }
     await startSession({
       kind: 'groups',
       groups: [],

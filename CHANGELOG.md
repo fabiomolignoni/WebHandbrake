@@ -25,6 +25,10 @@ All notable changes to WebHandbrake are documented here. The format follows
   the start of the day, which then applies on the following night.
 - A new rule whose wizard was left after choosing a password or a partner code, and resumed later,
   was created with a 30-second wait: the wizard now asks for the protection again.
+- Focus sessions: the preview of a session of another length said that it would end at once; and
+  a quick session (Today, the keyboard shortcut, the context menu) no longer starts when no rule is
+  in quick sessions, since it would block nothing: Today says how to add rules to them, and the
+  shortcut opens the Focus page.
 
 ## [1.0.0] - 2026-10-15
 

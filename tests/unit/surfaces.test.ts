@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { compileConfig } from '../../src/engine/compile';
-import { delayIntervention } from '../../src/engine/defaults';
+import { defaultOptions, delayIntervention } from '../../src/engine/defaults';
 import type { Group } from '../../src/engine/types';
 import { type FakeBrowser, installFakeBrowser } from './fake-browser';
 import { BLOCK, group, REMINDER } from './helpers';
@@ -198,6 +198,20 @@ describe('menus and shortcuts', () => {
     expect(fake.created.map((x) => x.url)).toEqual(['chrome-extension://test/dashboard.html']);
     await onCommand('start-session');
     expect(t.store.state.sessions).toHaveLength(1);
+  });
+
+  it('without a rule for quick sessions, no focus item and the shortcut opens the Focus page', async () => {
+    const t = await setup([
+      group('A', ['a.test'], [{ intervention: BLOCK }], {
+        options: { ...defaultOptions(), quickSession: false },
+      }),
+    ]);
+    const { onCommand, rebuildMenus } = await import('../../src/background/menus');
+    await rebuildMenus();
+    expect(fake.menus.map((m) => m.id)).not.toContain('focus');
+    await onCommand('start-session');
+    expect(t.store.state.sessions).toHaveLength(0);
+    expect(fake.created.map((x) => x.url)).toEqual(['chrome-extension://test/dashboard.html#/focus']);
   });
 });
 
