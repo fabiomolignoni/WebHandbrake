@@ -13,10 +13,10 @@ import {
 } from '../engine/decide';
 import { WAIT_IN_DIALOG_SECONDS } from '../engine/limits';
 import { candidateTimes, nextRestriction, untilFor } from '../engine/next';
-import { representativeUrl } from '../engine/patterns';
+import { representativeUrl, siteKeyFor } from '../engine/patterns';
 import { NAV_SEVERITY, SEVERITY } from '../engine/severity';
 import type { Group, Protection, Target } from '../engine/types';
-import { displayHost, parseUrl } from '../engine/url';
+import { displayHost, type ParsedUrl, parseUrl } from '../engine/url';
 import type { BudgetView, DecisionView, GroupDecisionView, GroupStatus } from '../shared/models';
 import { now } from './clock';
 import { store } from './store';
@@ -52,8 +52,7 @@ export function groupActiveNow(g: Group, c = ctx()): boolean {
   if (!cg) return false;
   if (activeSessions(c.state, c.now).some((s) => s.kind === 'allowlist' || s.groups.includes(g.id)))
     return true;
-  const r = evaluateRepresentative(cg, c);
-  return Boolean(r && SEVERITY[r.base.type] >= NAV_SEVERITY);
+  return evaluateSites(cg, c).some(({ result }) => SEVERITY[result.base.type] >= NAV_SEVERITY);
 }
 
 /** Loosening this rule is refused now (Locked before its date, or Permanent). */
@@ -150,16 +149,45 @@ export function decisionView(d: Decision, uctx: UrlContext, c = ctx()): Decision
   };
 }
 
-/** Evaluates a group on a representative URL of its first blocking entry. */
-export function evaluateRepresentative(cg: CompiledGroup, c = ctx()): GroupResult | null {
+/**
+ * Evaluates a group on a representative URL of each blocking entry, once per site: a break, an
+ * access, a cool-down or a limit per site applies to one site only, so the first entry alone
+ * does not tell what the rule does. The strictest result comes first; among equally strict
+ * ones, the earliest entry.
+ */
+export function evaluateSites(cg: CompiledGroup, c = ctx()): { result: GroupResult; url: ParsedUrl }[] {
+  const out: { result: GroupResult; url: ParsedUrl }[] = [];
+  const seen = new Set<string>();
+  const differ = sitesMayDiffer(cg, c);
   for (const cp of cg.index.all) {
+    if (out.length && !differ) break;
     if (cp.allow) continue;
     const rep = representativeUrl(cp);
     const parsed = rep ? parseUrl(rep) : null;
     if (!parsed) continue;
-    return evaluateGroup(c, cg, cp, parsed);
+    const site = siteKeyFor(cp, parsed);
+    if (seen.has(site)) continue;
+    seen.add(site);
+    out.push({ result: evaluateGroup(c, cg, cp, parsed), url: parsed });
   }
-  return null;
+  // A stable sort: the earliest entry first among equally strict results.
+  return out.sort((a, b) => SEVERITY[b.result.intervention.type] - SEVERITY[a.result.intervention.type]);
+}
+
+/** Whether something applies to some sites of a group only: otherwise every site has the same result. */
+function sitesMayDiffer(cg: CompiledGroup, c: EngineContext): boolean {
+  const id = cg.group.id;
+  return (
+    cg.group.policies.some((p) => p.budget?.perSite) ||
+    c.state.grants.some(
+      (g) =>
+        g.kind !== 'recheck' &&
+        g.scope !== 'group' &&
+        g.scope !== 'all' &&
+        (g.groups === '*' || g.groups.includes(id)),
+    ) ||
+    Object.values(c.state.cooldowns).some((cd) => cd.group === id && cd.site)
+  );
 }
 
 export function groupStatus(g: Group, c = ctx()): GroupStatus {
@@ -183,17 +211,18 @@ export function groupStatus(g: Group, c = ctx()): GroupStatus {
     nextChange: null,
   };
   if (!cg) return base;
-  const r = evaluateRepresentative(cg, c);
-  if (!r) return base;
+  const strictest = evaluateSites(cg, c)[0];
+  if (!strictest) return base;
+  const r = strictest.result;
   base.intervention = r.intervention;
   base.source = r.source;
   base.budgets = r.policies.filter((p) => p.budget).map((p) => budgetView(p.budget!));
   const pause = r.pause;
   if (pause) base.pause = { until: pause.until, remaining: pause.remaining };
-  // Next change for this group alone.
+  // Next change for this group alone, on the site that it restricts most now.
   for (const t of candidateTimes(c, [cg])) {
-    const later = evaluateRepresentative(cg, { ...c, now: t });
-    if (later && later.intervention.type !== r.intervention.type) {
+    const later = evaluateGroup({ ...c, now: t }, cg, r.entry, strictest.url);
+    if (later.intervention.type !== r.intervention.type) {
       base.nextChange = { at: t, intervention: later.intervention };
       if (SEVERITY[later.intervention.type] < SEVERITY[r.intervention.type]) {
         base.until = t;

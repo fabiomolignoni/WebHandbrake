@@ -116,7 +116,7 @@ test.describe('what is blocked', () => {
 
   test('every ready-made list fits the browser filters (none left to the fallback)', async ({ h }) => {
     await h.configure((c) => {
-      c.groups = TEMPLATES.map((tpl) => group(tpl.id, tpl.sites, [policy(BLOCK)]));
+      c.groups = TEMPLATES.map((tpl) => group(tpl.id, tpl.entries, [policy(BLOCK)]));
     });
     const d = await h.rpc('diag.get');
     expect(d.rules.lastError).toBeNull();
@@ -125,7 +125,7 @@ test.describe('what is blocked', () => {
     expect(d.rules.dynamic).toBeLessThanOrEqual(d.rules.limits.total);
     // A site of every list is stopped before the request.
     for (const tpl of TEMPLATES) {
-      const site = tpl.sites.find((s) => /^[a-z0-9.-]+\.[a-z]+$/.test(s));
+      const site = tpl.entries.find((s) => /^[a-z0-9.-]+\.[a-z]+$/.test(s));
       if (site) await expectBlocked(h, `http://${site}/`);
     }
   });

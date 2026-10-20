@@ -105,7 +105,8 @@ export class Overlay {
     this.soundOn = res.settings.sound;
     if (res.timer && res.settings.showTimer && !this.hiddenForVisit) this.showTimer(res, labels);
     else this.hideTimer();
-    if (this.lastKind === 'grant' && res.timer?.kind !== 'grant' && this.soundOn) chime();
+    const granted = (k: string | null | undefined) => k === 'pause' || k === 'pass';
+    if (granted(this.lastKind) && !granted(res.timer?.kind) && this.soundOn) chime();
     this.lastKind = res.timer?.kind ?? null;
     // The intention given at the entry question, recalled discreetly once per pass.
     const intention = res.intention ? `${res.intention.text}|${res.intention.until ?? ''}` : null;
@@ -151,7 +152,12 @@ export class Overlay {
     chip.style.setProperty('--o', String(s.opacity));
     (chip.querySelector('.dot') as HTMLElement).style.background = timer.color;
     chip.querySelector('.time')!.textContent = fmt(timer.seconds);
-    const labelKey = timer.kind === 'grant' ? 'overlay.pauseLeft' : 'overlay.timerLeft';
+    const labelKey =
+      timer.kind === 'pause'
+        ? 'overlay.pauseLeft'
+        : timer.kind === 'pass'
+          ? 'overlay.passLeft'
+          : 'overlay.timerLeft';
     chip.querySelector('.label')!.textContent = fill(labels, labelKey, { group: timer.label });
     const hide = chip.querySelector('.hide') as HTMLButtonElement;
     hide.textContent = '×';

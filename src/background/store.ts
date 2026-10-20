@@ -147,6 +147,7 @@ export class Store {
     const map: Record<string, DayRecord> = {};
     for (const [k, v] of Object.entries(days)) if (isObj(v)) map[k.slice(2)] = v as DayRecord;
     this.usage = new Usage(map, isObj(raw['u:min']) ? (raw['u:min'] as MinuteBuckets) : {});
+    this.usage.fillHours(this.cc.cal);
   }
 
   private async loadConfig(stored: unknown): Promise<Config> {

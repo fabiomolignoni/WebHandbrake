@@ -3,12 +3,14 @@
 import { costRank } from '../engine/changes';
 import { isGroupActive } from '../engine/compile';
 import { activeSessions, decide, grantActive } from '../engine/decide';
-import { MAX_BREAK_RECORDS } from '../engine/limits';
+import { MAX_BREAK_RECORDS, MAX_REASON_CHARS } from '../engine/limits';
 import { periodRange } from '../engine/time';
 import type { Cost, Grant, Group, PausePolicy, Period } from '../engine/types';
 import { pageKey } from '../engine/url';
+import { extensionUrl, INTERVENTION_PAGE } from '../platform/api';
 import type { PauseOptions, PauseRequest, TicketView } from '../shared/models';
 import { now } from './clock';
+import { interventionTabs } from './enforce';
 import { ctx } from './engine';
 import { reconcile } from './reconcile';
 import { store } from './store';
@@ -92,15 +94,30 @@ function unavailable(reason: string, url: string | undefined, incognito: boolean
   };
 }
 
-/** Options of a pause covering these groups: the strictest rules of all of them apply. */
+/** Minutes a break was started or extended for. */
+function grantMinutes(g: Grant): number {
+  return g.minutes ?? Math.round(((g.until ?? g.createdAt) - g.createdAt) / 60_000);
+}
+
+/**
+ * Options of a pause covering these groups: the strictest rules of all of them apply. With
+ * `running`, the options of extending that break instead: it is still one break, so no break is
+ * counted and no reason asked again, but it costs the same and lasts at most as long as a break can.
+ */
 function optionsFor(
   groups: Group[],
   url: string | undefined,
   site: string | null,
   incognito: boolean | null,
   t: number,
+  running?: Grant,
 ): PauseOptions {
-  const none = (reason: string) => unavailable(reason, url, incognito);
+  const extend = running && {
+    grantId: running.id,
+    scope: running.scope,
+    minutes: grantMinutes(running),
+  };
+  const none = (reason: string) => ({ ...unavailable(reason, url, incognito), extend });
   // The groups' limits and the global one: the lowest remaining amount applies.
   const limits = [
     ...groups.map((g) => remaining(g.pause.limit, g.id, t)),
@@ -112,20 +129,33 @@ function optionsFor(
     count = lower(count, r.count);
     mins = lower(mins, r.minutes);
   }
-  const remCount = count?.n ?? null;
+  // Extending a break does not take another one.
+  const remCount = running ? null : (count?.n ?? null);
   const remMinutes = mins?.n ?? null;
   if (remCount === 0) return { ...none('pause.unavailable.noneLeft'), remainingCount: 0 };
   if (remMinutes !== null && remMinutes <= 0)
     return { ...none('pause.unavailable.noMinutesLeft'), remainingMinutes: 0 };
 
   const main = groups[0];
-  const scopes = main.pause.scopes.filter(
-    (s) => groups.every((g) => g.pause.scopes.includes(s)) && (s !== 'page' || url) && (s !== 'site' || site),
-  );
+  const scopes = running
+    ? [running.scope]
+    : main.pause.scopes.filter(
+        (s) =>
+          groups.every((g) => g.pause.scopes.includes(s)) && (s !== 'page' || url) && (s !== 'site' || site),
+      );
   const duration = { ...main.pause.duration };
   for (const g of groups) duration.minutes = Math.min(duration.minutes, g.pause.duration.minutes);
+  if (running) {
+    duration.minutes -= grantMinutes(running);
+    if (duration.minutes <= 0) return none('pause.unavailable.longest');
+  }
   if (remMinutes !== null) duration.minutes = Math.min(duration.minutes, remMinutes);
   if (duration.choices) duration.choices = duration.choices.filter((m) => m <= duration.minutes);
+  // No choice is short enough for what is left: what is left is the only length.
+  if (duration.mode === 'choices' && !duration.choices?.length) {
+    duration.mode = 'fixed';
+    delete duration.choices;
+  }
   return {
     available: scopes.length > 0,
     reason: scopes.length ? undefined : 'pause.unavailable.notAllowed',
@@ -133,25 +163,48 @@ function optionsFor(
     scopes,
     duration,
     costs: groupCosts(groups),
-    reasonMode: groups.some((g) => g.pause.reason === 'required')
-      ? 'required'
-      : groups.some((g) => g.pause.reason === 'optional')
-        ? 'optional'
-        : 'none',
+    reasonMode: running
+      ? 'none'
+      : groups.some((g) => g.pause.reason === 'required')
+        ? 'required'
+        : groups.some((g) => g.pause.reason === 'optional')
+          ? 'optional'
+          : 'none',
     remainingCount: remCount,
     remainingMinutes: remMinutes,
-    countPeriod: count?.period ?? null,
+    countPeriod: running ? null : (count?.period ?? null),
     minutesPeriod: mins?.period ?? null,
     metered: groups.some((g) => g.pause.metered),
     site,
     url: url ?? null,
     incognito,
+    extend,
   };
 }
 
 /** Groups a pause of everything covers. */
 function pausableGroups(): Group[] {
   return store.config.groups.filter((g) => isGroupActive(g) && g.pause.allowed);
+}
+
+/** Options of extending a running break, following the rules of the groups it covers. */
+function extendOptions(grant: Grant, url: string | undefined, incognito: boolean | null, t: number) {
+  const groups =
+    grant.groups === '*'
+      ? pausableGroups()
+      : store.config.groups.filter((g) => grant.groups.includes(g.id) && isGroupActive(g) && g.pause.allowed);
+  if (!groups.length)
+    return {
+      ...unavailable('pause.unavailable.notAllowed', url, incognito),
+      extend: { grantId: grant.id, scope: grant.scope, minutes: grantMinutes(grant) },
+    };
+  return optionsFor(groups, url, grant.site ?? null, incognito, t, grant);
+}
+
+/** A running break of a group or all groups, by id. */
+function runningPause(grantId: string, t: number): Grant | undefined {
+  const g = store.state.grants.find((x) => x.id === grantId && x.kind === 'pause');
+  return g && grantActive(ctx(t), g) ? g : undefined;
 }
 
 /**
@@ -176,6 +229,8 @@ export function pauseOptions(url?: string, groupId?: string, incognito: boolean 
       );
       return none(inSession ? 'pause.unavailable.session' : 'pause.unavailable.notAllowed');
     }
+    // A break already lets the page through: it can be extended, not taken again.
+    if (pausable.every((r) => r.pause)) return extendOptions(pausable[0].pause!, url, incognito, c.now);
     groups = pausable.map((r) => r.group);
     site = pausable[0].site;
   } else if (groupId) {
@@ -200,11 +255,47 @@ export function pauseOptions(url?: string, groupId?: string, incognito: boolean 
   return opts;
 }
 
-export async function startPause(req: PauseRequest): Promise<{ ticket: TicketView | null; error?: string }> {
+/**
+ * The intervention page that a break of this address lets through, if one is shown: the page that
+ * asks for the break, or else a tab showing the page of the address (a break asked in the popup).
+ */
+function shownPage(
+  url: string | undefined,
+  sender?: chrome.runtime.MessageSender,
+): { tabId: number; groupId: string } | undefined {
+  if (!url) return undefined;
+  const tabId = sender?.tab?.id;
+  if (tabId !== undefined && (sender?.url ?? '').startsWith(extensionUrl(INTERVENTION_PAGE))) {
+    const info = interventionTabs.get(tabId);
+    if (info?.proceeded) return undefined;
+    // After a restart of the background, the page's rule is the one that restricts the address.
+    const groupId =
+      info?.groupId ??
+      decide(ctx(), url, { incognito: Boolean(sender?.tab?.incognito) }).primary?.group.id ??
+      'session';
+    return { tabId, groupId };
+  }
+  for (const [id, info] of interventionTabs)
+    if (info.url === url && !info.proceeded) return { tabId: id, groupId: info.groupId ?? 'session' };
+  return undefined;
+}
+
+export async function startPause(
+  req: PauseRequest,
+  sender?: chrome.runtime.MessageSender,
+): Promise<{ ticket: TicketView | null; error?: string }> {
   await store.ready();
-  const page = pauseOptions(req.url, req.groupId, req.incognito ?? null);
-  // A pause of everything follows the rules of every group it covers.
-  const opts = req.scope === 'all' && page.all ? page.all : page;
+  let opts: PauseOptions;
+  let running: Grant | undefined;
+  if (req.extend) {
+    running = runningPause(req.extend, now());
+    if (!running) return { ticket: null, error: 'pause.error.ended' };
+    opts = extendOptions(running, req.url, req.incognito ?? null, now());
+  } else {
+    const page = pauseOptions(req.url, req.groupId, req.incognito ?? null);
+    // A pause of everything follows the rules of every group it covers.
+    opts = req.scope === 'all' && page.all ? page.all : page;
+  }
   if (!opts.available) return { ticket: null, error: opts.reason ?? 'pause.unavailable.notAllowed' };
   if (!opts.scopes.includes(req.scope)) return { ticket: null, error: 'pause.error.scope' };
   const max = opts.duration.minutes;
@@ -222,35 +313,58 @@ export async function startPause(req: PauseRequest): Promise<{ ticket: TicketVie
     );
   // The codes of the partners of the rules covered, unless a rule's breaks do not need it.
   steps.push(...partnerSteps(covered.filter((g) => partnerOf(g)?.breaks)));
-  const groups = req.scope === 'all' ? '*' : opts.groups.map((g) => g.id);
+  const groups = running ? running.groups : req.scope === 'all' ? '*' : opts.groups.map((g) => g.id);
   const purpose = {
     kind: 'pause' as const,
     groups: groups as string[] | '*',
     scope: req.scope,
     minutes,
-    url: req.url ? pageKey(req.url) : undefined,
-    site: opts.site ?? undefined,
-    metered: opts.metered,
+    url: running ? running.url : req.url ? pageKey(req.url) : undefined,
+    site: running ? running.site : (opts.site ?? undefined),
+    metered: running ? running.remaining !== undefined : opts.metered,
+    // Extending lets no intervention page through: the break already did.
+    shown: running ? undefined : shownPage(req.url, sender),
+    extend: running?.id,
   };
   // A reason typed in the dialog before starting counts as the reason step.
+  let reason: string | undefined;
   if (req.reason !== undefined && steps[0]?.type === 'reason') {
     if (steps[0].required && !req.reason.trim())
       return { ticket: null, error: 'ticket.error.reasonRequired' };
     steps.shift();
-    pendingReasons.set(JSON.stringify(purpose), req.reason.trim());
+    reason = req.reason.trim().slice(0, MAX_REASON_CHARS) || undefined;
   }
-  const { view } = await createTicket(purpose, steps);
+  const { view } = await createTicket(purpose, steps, { reason });
   return { ticket: view };
 }
 
-const pendingReasons = new Map<string, string>();
+/** Adds minutes to a running break; the cost has been paid, the limits are checked again. */
+async function extendPause(grantId: string, requested: number) {
+  const t0 = now();
+  const grant = runningPause(grantId, t0);
+  if (!grant) throw new Error('pause.error.ended');
+  const opts = extendOptions(grant, undefined, null, t0);
+  if (!opts.available) throw new Error(opts.reason ?? 'pause.unavailable.notAllowed');
+  const minutes = Math.min(requested, opts.duration.minutes);
+  if (grant.remaining !== undefined) grant.remaining += minutes * 60;
+  else grant.until = (grant.until ?? t0) + minutes * 60_000;
+  grant.minutes = grantMinutes(grant) + minutes;
+  const rec = store.state.pauses.find((r) => r.grantId === grant.id);
+  if (rec) rec.minutes += minutes;
+  const ids = grant.groups === '*' ? store.config.groups.map((g) => g.id) : grant.groups;
+  for (const id of ids) store.usage.count(`pauseMin:${id}`, t0, store.cc.cal, minutes);
+  store.scheduleUsage();
+  await store.saveState();
+  await reconcile('pause');
+  return { grantId: grant.id };
+}
 
 registerExecutor('pause', async (ticket) => {
   if (ticket.purpose.kind !== 'pause') return;
   const p = ticket.purpose;
+  if (p.extend) return extendPause(p.extend, p.minutes);
   const t0 = now();
-  const reason = ticket.collected.reason ?? pendingReasons.get(JSON.stringify(p));
-  pendingReasons.delete(JSON.stringify(p));
+  const reason = ticket.collected.reason;
   const grant: Grant = {
     id: crypto.randomUUID(),
     kind: 'pause',
@@ -273,8 +387,16 @@ registerExecutor('pause', async (ticket) => {
     minutes: p.minutes,
     reason,
     grantId: grant.id,
+    site: grant.site,
+    url: grant.url,
   });
   store.state.pauses = store.state.pauses.slice(-MAX_BREAK_RECORDS);
+  // An intervention page that the break lets through is not an impulse resisted (Insights).
+  if (p.shown) {
+    const info = interventionTabs.get(p.shown.tabId);
+    if (!info?.proceeded) store.usage.count(`pausedIn:${p.shown.groupId}`, t0, store.cc.cal);
+    if (info) interventionTabs.set(p.shown.tabId, { ...info, proceeded: true });
+  }
   const ids = p.groups === '*' ? store.config.groups.map((g) => g.id) : p.groups;
   for (const id of ids) {
     store.usage.count(`pause:${id}`, t0, store.cc.cal);

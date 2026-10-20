@@ -11,7 +11,7 @@ import { parseTargetList, targetToLine } from '../../engine/patterns';
 import type { Target, TargetType } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { describeTarget, targetTypeLabel } from '../../shared/summary';
-import { Banner, Button, IconButton, Select } from '../../ui/components';
+import { Banner, Button, Field, IconButton, Select } from '../../ui/components';
 import { Icon } from '../../ui/icons';
 import { ADDRESS_TOPIC, helpRoute } from '../help-content';
 
@@ -159,37 +159,122 @@ function AddBox({
   );
 }
 
+/** The address of an entry as typed in the input, without the exception mark and the note. */
+const addressOf = (tg: Target) => targetToLine({ ...tg, allow: false, note: undefined });
+
+function RowEditor({
+  tg,
+  onSave,
+  onCancel,
+}: {
+  tg: Target;
+  /** Returns the error to show, or null when the entry was saved. */
+  onSave: (next: Omit<Target, 'id'>) => string | null;
+  onCancel: () => void;
+}) {
+  const [address, setAddress] = useState(addressOf(tg));
+  const [note, setNote] = useState(tg.note ?? '');
+  const [error, setError] = useState<string | null>(null);
+  const save = () => {
+    const { targets: parsed, errors } = parseTargetList(address.replace(/^\s*(\+|@@)\s*/, ''));
+    if (errors.length) return setError(t(errors[0].error));
+    if (parsed.length !== 1)
+      return setError(t(parsed.length ? 'targets.error.oneAddress' : 'targets.error.empty'));
+    const next: Omit<Target, 'id'> = { ...parsed[0], allow: tg.allow };
+    if (!next.allow) delete next.allow;
+    const typed = note.trim() || parsed[0].note;
+    if (typed) next.note = typed;
+    else delete next.note;
+    setError(onSave(next));
+  };
+  const keys = (e: KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      save();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      onCancel();
+    }
+  };
+  return (
+    <li class={`target-row editing${tg.allow ? ' exception' : ''}`}>
+      <div class="stack stack-sm">
+        <Field label={tg.allow ? t('targets.exceptionAddress') : t('targets.address')} error={error}>
+          {(id, describedBy) => (
+            <input
+              id={id}
+              class="input mono"
+              value={address}
+              aria-describedby={describedBy}
+              aria-invalid={error ? true : undefined}
+              autoCapitalize="off"
+              spellcheck={false}
+              autoFocus
+              onInput={(e) => setAddress((e.target as HTMLInputElement).value)}
+              onKeyDown={keys}
+            />
+          )}
+        </Field>
+        <Field label={t('targets.noteOptional')}>
+          {(id) => (
+            <input
+              id={id}
+              class="input"
+              value={note}
+              maxLength={500}
+              onInput={(e) => setNote((e.target as HTMLInputElement).value)}
+              onKeyDown={keys}
+            />
+          )}
+        </Field>
+        <div class="row end">
+          <Button size="small" variant="ghost" onClick={onCancel}>
+            {t('common.cancel')}
+          </Button>
+          <Button size="small" variant="primary" onClick={save}>
+            {t('common.save')}
+          </Button>
+        </div>
+      </div>
+    </li>
+  );
+}
+
 function Row({
   tg,
   advanced,
   onChange,
+  onEdit,
   onRemove,
 }: {
   tg: Target;
   advanced: boolean;
   onChange: (t: Target) => void;
+  onEdit: (next: Omit<Target, 'id'>) => string | null;
   onRemove: () => void;
 }) {
-  const [editingNote, setEditingNote] = useState(false);
+  const [editing, setEditing] = useState(false);
   const display = tg.type === 'regex' ? `/${tg.value}/` : describeTarget({ ...tg, allow: false });
   const options = COMPATIBLE[tg.type].map((x) => ({ value: x, label: targetTypeLabel(x) }));
+  if (editing) {
+    return (
+      <RowEditor
+        tg={tg}
+        onCancel={() => setEditing(false)}
+        onSave={(next) => {
+          const error = onEdit(next);
+          if (!error) setEditing(false);
+          return error;
+        }}
+      />
+    );
+  }
   return (
     <li class={`target-row${tg.allow ? ' exception' : ''}`}>
       <div class="stack" style={{ gap: '2px', minWidth: 0 }}>
         <span class="value">{display}</span>
-        {tg.note && !editingNote && <span class="tiny muted">{tg.note}</span>}
-        {editingNote && (
-          <input
-            class="input small"
-            value={tg.note ?? ''}
-            aria-label={t('targets.note')}
-            maxLength={500}
-            autoFocus
-            onInput={(e) => onChange({ ...tg, note: (e.target as HTMLInputElement).value || undefined })}
-            onBlur={() => setEditingNote(false)}
-            onKeyDown={(e) => e.key === 'Enter' && setEditingNote(false)}
-          />
-        )}
+        {tg.note && <span class="tiny muted">{tg.note}</span>}
       </div>
       {advanced && options.length > 1 ? (
         <span style={{ minWidth: '150px' }}>
@@ -207,8 +292,8 @@ function Row({
         icon="edit"
         size="small"
         variant="ghost"
-        label={t('targets.editNote', { value: tg.value })}
-        onClick={() => setEditingNote(true)}
+        label={t('targets.edit', { value: display })}
+        onClick={() => setEditing(true)}
       />
       <IconButton
         icon="trash"
@@ -266,6 +351,16 @@ export function TargetsEditor({
   };
 
   const update = (tg: Target) => onChange(targets.map((x) => (x.id === tg.id ? tg : x)));
+  /** Replaces an entry in place. A different address gets a new id, as in text mode, so the
+   *  change is a removal plus an addition, each following the rule's protection. */
+  const edit = (old: Target, next: Omit<Target, 'id'>): string | null => {
+    const same = key(next) === key(old);
+    if (!same && targets.some((x) => x.id !== old.id && key(x) === key(next)))
+      return t('targets.error.duplicate');
+    const id = same ? old.id : newId();
+    onChange(targets.map((x) => (x.id === old.id ? { ...next, id } : x)));
+    return null;
+  };
   const remove = (id: string) => onChange(targets.filter((x) => x.id !== id));
   const sort = () => onChange([...targets].sort((a, b) => a.value.localeCompare(b.value)));
   const dedupe = () => {
@@ -377,7 +472,14 @@ export function TargetsEditor({
       {blocks.length > 0 && (
         <ul class="list compact" aria-label={t('targets.sites')}>
           {blocks.map((tg) => (
-            <Row key={tg.id} tg={tg} advanced={advanced} onChange={update} onRemove={() => remove(tg.id)} />
+            <Row
+              key={tg.id}
+              tg={tg}
+              advanced={advanced}
+              onChange={update}
+              onEdit={(next) => edit(tg, next)}
+              onRemove={() => remove(tg.id)}
+            />
           ))}
         </ul>
       )}
@@ -393,6 +495,7 @@ export function TargetsEditor({
                   tg={tg}
                   advanced={advanced}
                   onChange={update}
+                  onEdit={(next) => edit(tg, next)}
                   onRemove={() => remove(tg.id)}
                 />
               ))}

@@ -412,6 +412,10 @@ test("the Partner code protection is set up with a code from the partner's app; 
   await p.label('Code from your partner’s app').fill('000000');
   await p.button('Confirm', { exact: true, within: 'dialog' }).click();
   await p.text(/not the code that your partner’s app shows/).expectVisible();
+  // Breaks need the partner's code only when asked for.
+  const breaks = p.role('checkbox', 'Breaks of this rule also need the partner’s code');
+  await breaks.expectChecked(false);
+  await breaks.click();
   const first = await partnerCode(h, secret);
   await p.label('Code from your partner’s app').fill(first);
   await p.button('Confirm', { exact: true, within: 'dialog' }).click();

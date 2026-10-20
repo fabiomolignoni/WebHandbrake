@@ -100,8 +100,8 @@ function credit(d: Decision, incognito: boolean, t: number) {
   // A rule whose condition allows its sites without counting gets no time.
   const counted = d.groups.filter((r) => r.intervention.type !== 'allow');
   if (counted.length) {
-    const any = creditSeconds('a:', t);
-    if (any > 0) store.usage.add('a:', t, any, 0, cal);
+    const any = creditSeconds(usageKeys.all, t);
+    if (any > 0) store.usage.add(usageKeys.all, t, any, 0, cal);
   }
   for (const r of counted) {
     const gk = usageKeys.group(r.group.id);
@@ -326,6 +326,7 @@ function overlayLabels(): Record<string, string> {
     'overlay.hide',
     'overlay.timerLeft',
     'overlay.pauseLeft',
+    'overlay.passLeft',
     'overlay.intention',
     'overlay.dismiss',
     'overlay.grace.title',

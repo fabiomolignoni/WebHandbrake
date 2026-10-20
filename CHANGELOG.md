@@ -13,15 +13,48 @@ All notable changes to WebHandbrake are documented here. The format follows
 - Help lists the keyboard shortcuts with the keys the browser has actually given them, including
   the one without a default key (open the dashboard), and **Change shortcuts** opens the browser's
   shortcut settings.
+- Insights shows a day hour by hour, and the day-by-day chart can split each day by site (**By
+  site**): the six sites with the most time in the period, the rest as "Other sites". The hours
+  are kept from this version on; for the last two days they are rebuilt from the minute counters.
+- Lengths of time are typed as a number and a unit (seconds, minutes, hours or days, as fits):
+  time limits and their periods (“After 2 hours”, “every 3 days”, “in any 2 hours”), continuous
+  use and its stop, waits, Ask first, breaks, focus sessions, the emergency exit and the time
+  settings. A new rule’s **After some time** is no longer only “each day”: the time allowed can
+  start again every so many minutes, hours or days. A limit as long as its period, which would
+  never be reached, is pointed out.
 
 ### Changed
 
+- The ready-made lists are rewritten. They cover the platforms of more countries (all of Amazon's
+  and eBay's stores, Mercado Livre in Brazil, Zalando, Vinted, Shopee and more), and each list
+  holds only addresses that people open, written out country by country: no list now needs a site
+  name with `*`, which made the page script run on every site and matched unrelated sites. They
+  block the distraction and not the work around it: Amazon's stores leave Amazon Web Services,
+  Seller Central and Kindle open, Meta's business tools, YouTube Studio and YouTube Music are
+  exceptions, LinkedIn is blocked in its feed only, and Discord, a messaging app, is no longer in
+  Forums. News adds outlets of more countries, Games adds browser and online games, and the
+  alternative front ends of YouTube and X are included.
 - Clearer texts throughout. The block page now says "This page is blocked" instead of "This space
   is protected", since Protection is what keeps a rule from being loosened. The kinds of
   intervention have one name each, the one of the "What should happen?" picker (**Ask first**,
   **Count only**, **Don't count**), and a change to a setting names it as Settings does. The popup's
   "Stop for today" is now **Stop now**: it gives up the time left for the limit's whole period,
   which may be an hour or a week. Quotation marks and apostrophes are typographic.
+- The browser's extension and settings pages are now blocked by default while a firmly protected
+  rule restricts sites or a focus session that cannot be interrupted is running, so that turning
+  WebHandbrake off is no longer the easiest way around a rule you protected. Before, they were
+  never blocked unless you chose it in Protection; a choice you made there is kept. The page shown
+  instead says why and where to change it.
+- A new rule from the wizard allows no breaks until you turn on **Allow breaks**, as in the full
+  editor; and with the Partner code protection, breaks need your partner's code only if you tick
+  the box (it was ticked from the start). What a protection says about breaks shows only while
+  the rule allows them.
+- Clearer texts: a rule says that its sites open normally when none of its conditions applies
+  (instead of "time is only counted"); the popup and **Why?** say "Your break lasts until 10:23.
+  After that: Block." instead of "The break or access ends", and the on-page timer of an access
+  no longer calls it a break; the plan of an **Ask first** rule in the wizard mentions the wait on
+  its page; **Later** says when a saved page opens again, or that the current rules never open it,
+  instead of "not yet available" for every page.
 
 ### Removed
 
@@ -32,6 +65,27 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ### Fixed
 
+- A limit's period no longer shows "per day" twice (in the list and again below it) in the rule
+  editor and in Settings › Interventions; and the wizard's step names are no longer cut, such as
+  "What ha…" at 1280 pixels.
+- Breaks say what they cover: Today, the popup and Insights showed only "Break: 4 min left on the
+  site" or "Tue 9:45 · 5 min", without the site or the rule. They now name the site or page and
+  the rules of each break ("youtube.com · Social"), or "All rules".
+- Today, in **Breaks in progress**, the **End the break** button stuck out of its card even at
+  1280 pixels, and on a phone-sized screen the page scrolled sideways. The text of a break now
+  wraps and the button stays in the card.
+- During a break, the popup offered **Take a break** again, which started a second break and used
+  up another break of the limit. It now offers **Extend the break**: the running break lasts
+  longer, at the same cost, up to the longest a break can last, and no other break is counted.
+- The pencil next to a site or an exception of a rule opened an empty box without a label, for a
+  note only: correcting a mistyped address meant removing it and adding it again. It now edits the
+  entry, with the address and an optional note, each labelled. A corrected address follows the
+  rule's protection like removing the old one and adding the new one.
+- A number typed quickly in a field could lose a digit (“120” became “10”).
+- A new rule left without a name no longer takes the name of its first site, which made texts such
+  as “Remove tiktok.com from tiktok.com” and the popup’s “Add to: tiktok.com”. As in the rule
+  editor, a rule needs a name: a ready-made list still gives one, otherwise the wizard asks for it
+  on its last step.
 - Keyboard shortcuts work in Firefox and Chrome: they are now Alt+Shift+1 (open the popup),
   Alt+Shift+2 (start a focus session) and Alt+Shift+3 (block the current site). In Firefox on
   Windows and Linux, Alt+Shift+H, Alt+Shift+F and Alt+Shift+B opened the Help, File and Bookmarks
@@ -56,6 +110,14 @@ All notable changes to WebHandbrake are documented here. The format follows
   confirmation (only loosening does); the import preview and some warnings said "1 conditions" or
   "1 entries are"; a notification about several pending changes said "it expires"; the privacy
   policy said that Reset follows the protection of your rules (it follows the emergency exit).
+- Today showed the state of a rule from its first site only. During a break or an access on that
+  site, a rule that still blocked or asked on its other sites read "On a break" or "Does not apply
+  now", the page said that nothing was restricted, and Coming up missed the end of the block.
+- The reason typed for a break could be lost, and was then missing from Insights: it was kept in
+  memory only, and the browser may stop the extension's background while you wait, type the
+  characters or ask your partner for the code.
+- "Times you chose not to go in" counted the block pages that you went past with a break, as if
+  you had left them.
 
 ## [1.0.0] - 2026-10-15
 

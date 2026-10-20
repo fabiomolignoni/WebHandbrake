@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'preact/hooks';
-import { defaultIntervention } from '../../engine/defaults';
+import { DAY_MINUTES, defaultIntervention, periodMinutes } from '../../engine/defaults';
 import type {
   Budget,
   ChallengeKind,
@@ -15,13 +15,13 @@ import type {
   Intervention,
   InterventionType,
   Period,
-  PeriodKind,
   Policy,
 } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { describeCondition, describeIntervention, describePeriod } from '../../shared/summary';
 import {
   Button,
+  DurationInput,
   Field,
   Menu,
   NumberInput,
@@ -38,6 +38,10 @@ const EDITOR_LADDER: InterventionType[] = ['allow', ...LADDER];
 
 import { ScheduleEditor } from './schedule';
 
+/** "every 2 hours" and "every 3 days" are one choice in the list, with a number and a unit. */
+type PeriodChoice = 'hour' | 'day' | 'week' | 'month' | 'every' | 'rolling';
+const choiceOf = (p: Period): PeriodChoice => (p.kind === 'minutes' || p.kind === 'days' ? 'every' : p.kind);
+
 export function PeriodSelect({
   period,
   onChange,
@@ -48,52 +52,57 @@ export function PeriodSelect({
   allowRolling?: boolean;
 }) {
   const offsetAllowed = allowRolling;
-  const kinds: PeriodKind[] = [
+  const choices: PeriodChoice[] = [
     'hour',
     'day',
     'week',
     'month',
-    'minutes',
-    'days',
+    'every',
     ...(allowRolling ? (['rolling'] as const) : []),
   ];
+  const choice = choiceOf(period);
   return (
     <div class="row">
-      <span style={{ minWidth: '190px' }}>
-        <Select<PeriodKind>
-          value={period.kind}
+      <span style={{ minWidth: '160px' }}>
+        <Select<PeriodChoice>
+          value={choice}
           label={t('period.label')}
-          onChange={(kind) =>
-            onChange({
-              kind,
-              ...(kind === 'minutes' || kind === 'rolling'
-                ? { n: period.n && period.n <= 1440 ? period.n : 120 }
-                : kind === 'days'
-                  ? { n: Math.min(90, period.n ?? 2) }
-                  : {}),
-            })
-          }
-          options={kinds.map((k) => ({ value: k, label: t(`period.kind.${k}`) }))}
+          onChange={(c) => {
+            if (c === choice) return;
+            if (c === 'every') onChange({ kind: 'minutes', n: 120 });
+            else if (c === 'rolling')
+              onChange({ kind: 'rolling', n: period.kind === 'minutes' ? (period.n ?? 120) : 120 });
+            else onChange({ kind: c });
+          }}
+          options={choices.map((c) => ({ value: c, label: t(`period.kind.${c}`) }))}
         />
       </span>
-      {(period.kind === 'minutes' || period.kind === 'rolling') && (
-        <NumberInput
-          value={period.n ?? 120}
+      {choice === 'every' && (
+        <DurationInput
+          value={period.kind === 'days' ? (period.n ?? 1) * DAY_MINUTES : (period.n ?? 120)}
           min={5}
-          max={1440}
-          step={5}
-          label={t('period.minutes')}
-          suffix={t('common.minutesUnit')}
-          onChange={(n) => onChange({ ...period, n })}
+          max={90 * DAY_MINUTES}
+          unitMax={{ minutes: DAY_MINUTES, hours: DAY_MINUTES }}
+          label={t('period.every')}
+          onChange={(minutes, unit) => {
+            const kind = unit === 'days' ? 'days' : 'minutes';
+            const n = kind === 'days' ? Math.max(1, Math.round(minutes / DAY_MINUTES)) : minutes;
+            // An offset in minutes means nothing for a period of days, and the other way round.
+            onChange({
+              kind,
+              n,
+              ...(kind === period.kind && period.offset ? { offset: period.offset } : {}),
+            });
+          }}
         />
       )}
-      {period.kind === 'days' && (
-        <NumberInput
-          value={period.n ?? 2}
-          min={1}
-          max={90}
-          label={t('period.days')}
-          suffix={t('common.daysUnit')}
+      {period.kind === 'rolling' && (
+        <DurationInput
+          value={period.n ?? 120}
+          units={['minutes', 'hours']}
+          min={5}
+          max={DAY_MINUTES}
+          label={t('period.rollingLength')}
           onChange={(n) => onChange({ ...period, n })}
         />
       )}
@@ -112,7 +121,10 @@ export function PeriodSelect({
           />
         </>
       )}
-      <span class="help">{describePeriod(period)}</span>
+      {/* "per day" would only repeat the choice: the sentence helps only with a length. */}
+      {(period.kind === 'minutes' || period.kind === 'days' || period.kind === 'rolling') && (
+        <span class="help">{describePeriod(period)}</span>
+      )}
     </div>
   );
 }
@@ -168,13 +180,13 @@ export function BudgetEditor({
             <div class="stack stack-sm">
               <div class="row">
                 <span>{t('budget.after')}</span>
-                <NumberInput
+                <DurationInput
                   value={budget.minutes}
+                  units={['minutes', 'hours']}
                   min={0.5}
                   max={129600}
                   step={0.5}
                   label={t('budget.minutes')}
-                  suffix={t('common.minutesUnit')}
                   onChange={(minutes) => onChange({ ...budget, minutes })}
                 />
               </div>
@@ -183,6 +195,9 @@ export function BudgetEditor({
                 onChange={(period) => onChange({ ...budget, period })}
                 allowRolling={advanced}
               />
+              {budget.minutes >= periodMinutes(budget.period) && (
+                <span class="error-text">{t('budget.neverReached')}</span>
+              )}
             </div>
           )}
           {budget?.type === 'visits' && (
@@ -218,12 +233,13 @@ export function BudgetEditor({
                   {t('budget.visitMaxLabel')}
                 </label>
                 {budget.maxVisitMinutes !== undefined && (
-                  <NumberInput
+                  <DurationInput
                     value={budget.maxVisitMinutes}
+                    units={['minutes', 'hours']}
                     min={0.5}
                     max={1440}
+                    step={0.5}
                     label={t('budget.visitMaxLabel')}
-                    suffix={t('common.minutesUnit')}
                     onChange={(m) => onChange({ ...budget, maxVisitMinutes: m })}
                   />
                 )}
@@ -234,21 +250,21 @@ export function BudgetEditor({
           {budget?.type === 'session' && (
             <div class="row">
               <span>{t('budget.sessionMax')}</span>
-              <NumberInput
+              <DurationInput
                 value={budget.maxMinutes}
+                units={['minutes', 'hours']}
                 min={0.5}
                 max={1440}
+                step={0.5}
                 label={t('budget.sessionMax')}
-                suffix={t('common.minutesUnit')}
                 onChange={(maxMinutes) => onChange({ ...budget, maxMinutes })}
               />
               <span>{t('budget.sessionCooldown')}</span>
-              <NumberInput
+              <DurationInput
                 value={budget.cooldownMinutes}
                 min={1}
                 max={10080}
                 label={t('budget.sessionCooldown')}
-                suffix={t('common.minutesUnit')}
                 onChange={(cooldownMinutes) => onChange({ ...budget, cooldownMinutes })}
               />
             </div>
@@ -294,12 +310,12 @@ function GrantEditor({ grant, onChange }: { grant: GrantSpec; onChange: (g: Gran
           ]}
         />
         {grant.mode === 'minutes' && (
-          <NumberInput
+          <DurationInput
+            units={['minutes', 'hours']}
             value={grant.minutes ?? 10}
             min={1}
             max={1440}
             label={t('grant.minutes')}
-            suffix={t('common.minutesUnit')}
             onChange={(minutes) => onChange({ ...grant, minutes })}
           />
         )}
@@ -421,24 +437,25 @@ export function InterventionEditor({
                 }}
               />
               <span>{t('ask.max')}</span>
-              <NumberInput
+              <DurationInput
+                units={['minutes', 'hours']}
                 value={v.maxMinutes}
                 min={1}
                 max={1440}
                 label={t('ask.max')}
-                suffix={t('common.minutesUnit')}
                 onChange={(maxMinutes) => onChange({ ...v, maxMinutes })}
               />
             </div>
             <p class="help">{t('ask.help')}</p>
             <div class="row">
               <span>{t('ask.wait')}</span>
-              <NumberInput
+              <DurationInput
+                base="seconds"
+                units={['seconds', 'minutes']}
                 value={v.seconds ?? 0}
                 min={0}
                 max={600}
                 label={t('ask.wait')}
-                suffix={t('common.secondsUnit')}
                 onChange={(seconds) => onChange({ ...v, seconds })}
               />
             </div>
@@ -457,12 +474,12 @@ export function InterventionEditor({
                 {t('ask.cooldown')}
               </label>
               {v.cooldownMinutes !== undefined && (
-                <NumberInput
+                <DurationInput
+                  units={['minutes', 'hours']}
                   value={v.cooldownMinutes}
                   min={1}
                   max={1440}
                   label={t('ask.cooldown')}
-                  suffix={t('common.minutesUnit')}
                   onChange={(cooldownMinutes) => onChange({ ...v, cooldownMinutes })}
                 />
               )}
@@ -473,23 +490,25 @@ export function InterventionEditor({
           <div class="stack stack-sm">
             <div class="row">
               <span>{t('delay.seconds')}</span>
-              <NumberInput
+              <DurationInput
+                base="seconds"
+                units={['seconds', 'minutes']}
                 value={v.seconds}
                 min={1}
                 max={3600}
                 label={t('delay.seconds')}
-                suffix={t('common.secondsUnit')}
                 onChange={(seconds) => onChange({ ...v, seconds })}
               />
               {advanced && (
                 <>
                   <span>{t('delay.randomTo')}</span>
-                  <NumberInput
+                  <DurationInput
+                    base="seconds"
+                    units={['seconds', 'minutes']}
                     value={v.randomTo ?? 0}
                     min={0}
                     max={3600}
                     label={t('delay.randomTo')}
-                    suffix={t('common.secondsUnit')}
                     onChange={(randomTo) => onChange({ ...v, randomTo: randomTo || undefined })}
                   />
                 </>
@@ -498,12 +517,13 @@ export function InterventionEditor({
             {advanced && (
               <div class="row">
                 <span>{t('delay.increase')}</span>
-                <NumberInput
+                <DurationInput
+                  base="seconds"
+                  units={['seconds', 'minutes']}
                   value={v.increase ?? 0}
                   min={0}
                   max={600}
                   label={t('delay.increase')}
-                  suffix={t('common.secondsUnit')}
                   onChange={(increase) => onChange({ ...v, increase: increase || undefined })}
                 />
               </div>

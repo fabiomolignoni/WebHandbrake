@@ -72,6 +72,46 @@ test('a break for this page, this site, the rule or everything', async ({ h }) =
   await expectBlocked(h, 'http://strict.test/');
 });
 
+test('breaks in progress on Today fit their card at 1280 and 360 px (regression)', async ({
+  h,
+  browserName,
+}) => {
+  await h.configure((c) => {
+    c.groups = [
+      group('News', ['news.test'], [policy(BLOCK)], { pause: pause() }),
+      group('Social media and chats', ['a-very-long-subdomain.social-network.test'], [policy(BLOCK)], {
+        pause: pause(),
+      }),
+      group('Games', ['games.test'], [policy(BLOCK)], { pause: pause() }),
+    ];
+  });
+  await startBreak(h, { url: 'http://news.test/', scope: 'site', minutes: 5 });
+  await startBreak(h, {
+    url: 'http://a-very-long-subdomain.social-network.test/a/long/path',
+    scope: 'page',
+    minutes: 5,
+  });
+  await startBreak(h, { url: 'http://games.test/', scope: 'all', minutes: 10 });
+  expect((await h.rpc('overview.get')).pauses).toHaveLength(3);
+  const today = await h.page('dashboard.html#/today');
+  for (const width of [1280, 360]) {
+    await today.viewport(width, 900);
+    // Firefox keeps a minimum window width: the narrowest it allows.
+    if (browserName === 'chromium') expect(await today.eval(() => window.innerWidth)).toBe(width);
+    await today.get('#pauses-title').waitFor('visible');
+    // Every "End the break" button stays inside the card, and the page never scrolls sideways.
+    const outside = await today.eval(() => {
+      const card = document.querySelector('[aria-labelledby="pauses-title"]')!.getBoundingClientRect();
+      return [...document.querySelectorAll('[aria-labelledby="pauses-title"] button')].map((b) => {
+        const r = b.getBoundingClientRect();
+        return Math.max(0, card.left - r.left, r.right - card.right);
+      });
+    });
+    expect(outside, `buttons outside the card at ${width}px`).toEqual([0, 0, 0]);
+    expect(await today.overflowX(), `horizontal overflow at ${width}px`).toBeLessThanOrEqual(0);
+  }
+});
+
 test('a break from the block page, with its cost, returns to the page', async ({ h }) => {
   await h.configure((c) => {
     c.groups = [
@@ -261,4 +301,32 @@ test('a break is visible in the popup, which can end it', async ({ h }) => {
   const popup2 = await h.popup(site);
   await popup2.button('End the break').click();
   await site.expectIntervention(true, 5000);
+});
+
+test('during a break the popup extends it instead of taking another one (regression)', async ({ h }) => {
+  await h.configure((c) => {
+    c.groups = [
+      group('News', ['news.test'], [policy(BLOCK)], {
+        pause: pause({
+          duration: { mode: 'upTo', minutes: 15 },
+          limit: { count: 1, period: { kind: 'day' } },
+        }),
+      }),
+    ];
+  });
+  const site = await expectBlocked(h, 'http://news.test/');
+  await startBreak(h, { url: 'http://news.test/', scope: 'site', minutes: 5 });
+  await site.button('Reopen the page').click();
+  await site.expectReal('news.test/');
+  const popup = await h.popup(site);
+  await popup.button(/Take a break/).expectCount(0);
+  await popup.button(/Extend the break/).click();
+  await popup.label('How much longer').fill('4');
+  await popup.button('Extend the break', { within: 'dialog' }).click();
+  await popup.text('Break extended by 4 minutes.').expectVisible();
+  const o = await h.rpc('overview.get');
+  expect(o.pauses).toHaveLength(1);
+  expect(o.pauses[0].minutes).toBe(9);
+  const today = await h.page('dashboard.html#/today');
+  await today.text('news.test · News').expectVisible();
 });

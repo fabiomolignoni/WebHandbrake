@@ -2,7 +2,7 @@
 
 import { clone } from '../../engine/json';
 import { t } from '../../i18n/i18n';
-import { formatDateTime } from '../../shared/format';
+import { formatDateTime, formatWhen } from '../../shared/format';
 import { call } from '../../shared/rpc';
 import { Button, Empty, IconButton, Spinner, Toggle, toast } from '../../ui/components';
 import { useModel } from '../../ui/hooks';
@@ -61,7 +61,11 @@ export function LaterPage() {
                 <span class="small muted ellipsis">{i.url}</span>
                 <span class="tiny muted">
                   {t('later.saved', { when: formatDateTime(i.savedAt) })} ·{' '}
-                  {i.allowedNow ? t('later.available') : t('later.notYet')}
+                  {i.allowedNow
+                    ? t('later.available')
+                    : i.availableAt
+                      ? t('later.availableAt', { when: formatWhen(i.availableAt) })
+                      : t('later.never')}
                 </span>
               </div>
               <div class="row nowrap">

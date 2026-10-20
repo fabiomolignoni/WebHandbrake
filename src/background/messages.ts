@@ -69,7 +69,7 @@ const handlers: { [M in Method]: Handler<M> } = {
   'ticket.accessible': (a) => accessibleAlternative(a.id, t('challenge.accessiblePhrase')),
 
   'pause.options': (a, s) => pauseOptions(a.url, a.groupId, a.incognito ?? s.tab?.incognito ?? null),
-  'pause.start': (a, s) => startPause({ ...a, incognito: a.incognito ?? s.tab?.incognito ?? null }),
+  'pause.start': (a, s) => startPause({ ...a, incognito: a.incognito ?? s.tab?.incognito ?? null }, s),
   'pause.cancel': (a) => cancelPause(a.grantId, a.all),
 
   'session.start': (a) => startSession(a),

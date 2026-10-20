@@ -143,7 +143,10 @@ describe('saved for later', () => {
     t.store.config.settings.notifications.enabled = true;
     const item = await t.later.addLater('https://a.test/story#top', 'Story', 'A');
     expect(await t.later.addLater('https://www.a.test/story', 'Again', 'A')).toEqual(item);
-    expect((await t.later.listLater()).items).toMatchObject([{ id: item.id, allowedNow: false }]);
+    // A rule that always blocks never lets it open by itself.
+    expect((await t.later.listLater()).items).toMatchObject([
+      { id: item.id, allowedNow: false, availableAt: null },
+    ]);
     expect(await t.later.openLater([item.id])).toBe(0);
     t.store.config.groups[0].enabled = false;
     t.store.cc = compileConfig(t.store.config);

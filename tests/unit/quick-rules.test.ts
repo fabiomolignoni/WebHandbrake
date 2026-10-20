@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { decide } from '../../src/engine/decide';
-import { QUICK_DELAY_SECONDS, quickPolicies } from '../../src/engine/defaults';
+import { everyPeriod, periodMinutes, QUICK_DELAY_SECONDS, quickPolicies } from '../../src/engine/defaults';
 import type { TimeWindow } from '../../src/engine/types';
 import { at, config, ctx, group } from './helpers';
 
@@ -24,6 +24,24 @@ describe('quick rules: the conditions built by the creation wizard and onboardin
     const [daily] = quickPolicies('daily', 'block', office, 45);
     expect(daily.schedule.mode).toBe('always');
     expect(daily.budget).toEqual({ type: 'time', minutes: 45, period: { kind: 'day' } });
+    // The time allowed can start again every so many minutes, hours or days.
+    const [hours] = quickPolicies('daily', 'block', office, 20, 120);
+    expect(hours.budget).toEqual({ type: 'time', minutes: 20, period: { kind: 'minutes', n: 120 } });
+    const [days] = quickPolicies('daily', 'block', office, 90, 3 * 1440);
+    expect(days.budget).toEqual({ type: 'time', minutes: 90, period: { kind: 'days', n: 3 } });
+  });
+
+  it('a period in minutes is the clock hour, the calendar day, whole days or minutes', () => {
+    expect(everyPeriod(60)).toEqual({ kind: 'hour' });
+    expect(everyPeriod(1440)).toEqual({ kind: 'day' });
+    expect(everyPeriod(2 * 1440)).toEqual({ kind: 'days', n: 2 });
+    expect(everyPeriod(200 * 1440)).toEqual({ kind: 'days', n: 90 });
+    expect(everyPeriod(30)).toEqual({ kind: 'minutes', n: 30 });
+    expect(everyPeriod(1)).toEqual({ kind: 'minutes', n: 5 });
+    expect(everyPeriod(36 * 60)).toEqual({ kind: 'minutes', n: 1440 });
+    for (const m of [60, 1440, 2 * 1440, 30, 180]) expect(periodMinutes(everyPeriod(m))).toBe(m);
+    expect(periodMinutes({ kind: 'week' })).toBe(7 * 1440);
+    expect(periodMinutes({ kind: 'rolling', n: 45 })).toBe(45);
   });
 
   it('counting at certain times leaves the sites allowed and not counted outside them (#21)', () => {

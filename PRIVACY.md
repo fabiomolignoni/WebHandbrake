@@ -47,8 +47,8 @@ lists.
 The page script runs on the sites of your active rules. It runs on every site when **Track time on
 all sites** is on, when an active rule has a regular expression, when an active rule has an
 address with `*` in the site name other than a leading `*.`, such as `amazon.*`, or when it has an
-address without a site name, such as `*news*` or `*` (every website). Several ready-made lists
-contain such addresses, so adding one of them makes the page script run on every site.
+address without a site name, such as `*news*` or `*` (every website). The ready-made lists contain
+no such address.
 
 ## What is stored
 
@@ -62,7 +62,7 @@ What is stored** shows, with their sizes.
 | Automatic backups | Copies of your rules and settings, including the password hashes and the partner codes: one before each of the last 20 changes and one a day for 30 days. | Until newer copies replace them | Only by uninstalling WebHandbrake. **Reset** and the emergency exit do not remove them. | Not exported |
 | Breaks, sessions, pending changes and protection events | Breaks and accesses in progress (for a single page, with its address), the last 1000 breaks taken with their reasons, focus sessions, pending changes, cool-downs, an emergency exit you requested, the detected clock difference, and the last 200 protection events: clock changes, settings restored from a backup, removed access to all sites or to private windows, browser blocking filters that did not match your settings, times WebHandbrake was not running, and the steps of the emergency exit. | Until they end or newer records replace them | Deleting all statistics removes the reasons of breaks | Not in exports or backups. Insights' JSON export includes the breaks. |
 | Visit tracking | For each rule and each site of a rule that you are visiting: when the visit started, how long it lasted and when you were last active. | Until the visit ends | Ends by itself | Not exported |
-| Daily statistics | For each day: the time and visits per rule, per site of a rule and per site (the site name, never a full address), and counters of intervention pages shown, of times you continued or left, of breaks and of focus sessions. Sites outside your rules appear only with **Track time on all sites**. | 730 days by default, changed in **Settings › Time › Keep daily statistics for** | **Insights › Data › Delete data**, or **Settings › Privacy › Delete all statistics** | Exports: only if you tick **Include statistics**. **Insights › Data** also exports them as CSV or JSON. Not in backups. |
+| Daily statistics | For each day: the time and visits per rule, per site of a rule and per site (the site name, never a full address), the time on limited sites per hour, and counters of intervention pages shown, of times you continued or left, of breaks and of focus sessions. Sites outside your rules appear only with **Track time on all sites**. | 730 days by default, changed in **Settings › Time › Keep daily statistics for** | **Insights › Data › Delete data**, or **Settings › Privacy › Delete all statistics** | Exports: only if you tick **Include statistics**. **Insights › Data** also exports them as CSV or JSON. Not in backups. |
 | Recent minute counters | Time and visits per minute, per rule and per site of a rule, for hourly and rolling limits. | 48 hours, removed by a daily clean-up, so up to about one day longer | Ends by itself | Not exported |
 | Pages saved for later | The full address and title of each page you save, also from private windows, with its rule and the time you saved it. The newest 1000 are kept. | Until you remove them | **Later › Remove** | Exports: yes. Not in backups. |
 | Reasons for going in | The reason you type when WebHandbrake asks what you want to do, with the rule, the time and the minutes you chose. The newest 500 are kept. | Until you delete them | Deleting all statistics | Not in the export of **Settings › Data**. Insights' JSON export includes them. |

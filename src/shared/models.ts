@@ -65,7 +65,7 @@ export interface GroupDecisionView {
 
 export interface RestrictionView {
   at: number;
-  kind: 'budget' | 'schedule' | 'grant' | 'session';
+  kind: 'budget' | 'schedule' | 'pause' | 'pass' | 'session';
   intervention: Intervention;
   groupId: string | null;
 }
@@ -185,6 +185,11 @@ export interface PauseOptions {
   incognito: boolean | null;
   /** Options of the "all" scope, which also covers the groups that are not on this page. */
   all?: PauseOptions;
+  /**
+   * A break already lets the page through: these are the options of extending it (no break is
+   * counted), with the minutes it has been taken for so far.
+   */
+  extend?: { grantId: string; scope: PauseScope; minutes: number };
 }
 
 export interface PauseRequest {
@@ -194,6 +199,8 @@ export interface PauseRequest {
   scope: PauseScope;
   minutes: number;
   reason?: string;
+  /** The running break to extend. */
+  extend?: string;
 }
 
 export type StepView =
@@ -320,6 +327,10 @@ export interface StatsDay {
   day: string;
   seconds: number;
   visits: number;
+  /** Seconds per site of `StatsModel.stack`, in the same order. */
+  sites: number[];
+  /** Seconds on the other sites. */
+  otherSites: number;
 }
 
 export interface StatsModel {
@@ -330,6 +341,8 @@ export interface StatsModel {
   previous: { seconds: number; visits: number };
   groups: { id: string; name: string; color: string; seconds: number; visits: number }[];
   sites: { host: string; seconds: number; visits: number }[];
+  /** The sites with the most time in the period, which the days split their time by. */
+  stack: string[];
   counters: {
     shown: number;
     proceeded: number;
@@ -343,12 +356,18 @@ export interface StatsModel {
     at: number;
     groups: string[];
     scope: PauseScope;
+    site?: string;
+    url?: string;
     minutes: number;
     reason?: string;
     used?: number;
   }[];
   intentions: { at: number; groupId: string; text: string; minutes: number }[];
-  hours: number[];
+  /**
+   * Seconds on limited sites per clock hour (index 0 to 23), or null when a day of the period
+   * has time but no hours (recorded before they were kept).
+   */
+  hours: number[] | null;
 }
 
 export interface DiagModel {
@@ -380,7 +399,8 @@ export interface DecisionLogEntry {
 }
 
 export interface LaterModel {
-  items: (LaterItem & { allowedNow: boolean })[];
+  /** `availableAt`: when the page opens again; null when the current rules never let it. */
+  items: (LaterItem & { allowedNow: boolean; availableAt: number | null })[];
 }
 
 export interface ImportPreview {
@@ -399,7 +419,7 @@ export interface TickResponse {
     seconds: number;
     label: string;
     color: string;
-    kind: 'budget' | 'grant' | 'schedule' | 'session';
+    kind: 'budget' | 'pause' | 'pass' | 'schedule' | 'session';
   } | null;
   filter: { css: string; mute: boolean } | null;
   intention: { text: string; until: number | null } | null;

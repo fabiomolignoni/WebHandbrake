@@ -102,7 +102,10 @@ test('a focus session can last any length, not only the quick ones (#18)', async
   });
   const p = await h.page('dashboard.html#/focus');
   await p.role('radio', 'Other…').click();
-  await p.label('Length of the session').fill('75');
+  // The length starts as 1 hour: the unit keeps the number, then 75 minutes are typed.
+  await p.label('Length of the session: unit').expectValue('hours');
+  await p.label('Length of the session: unit').select('minutes');
+  await p.label('Length of the session', { exact: true }).fill('75');
   await p.text('1 h 15 min').expectVisible();
   await p.button('Start focus session').click();
   // Shown once the session has started and the browser filters follow it.

@@ -47,6 +47,14 @@
   --ok-soft: var(--free-soft);
   --warning: var(--friction);
   --warning-soft: var(--friction-soft);
+  /* Chart series (sites), in this order; validated for colour vision deficiencies. */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-other: #9a978d;
 
   --shadow-sm: 0 1px 2px rgb(20 24 26 / 6%);
   --shadow: 0 1px 2px rgb(20 24 26 / 5%), 0 4px 14px rgb(20 24 26 / 5%);
@@ -107,6 +115,13 @@
     --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%);
     --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 6px 20px rgb(0 0 0 / 22%);
     --shadow-lg: 0 14px 44px rgb(0 0 0 / 55%);
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-other: #6d7481;
   }
 }
 
@@ -143,6 +158,13 @@
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%);
   --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 6px 20px rgb(0 0 0 / 22%);
   --shadow-lg: 0 14px 44px rgb(0 0 0 / 55%);
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-other: #6d7481;
 }
 
 /* High contrast */
@@ -393,6 +415,11 @@ blockquote {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+/* What a break covers: a long address wraps instead of pushing its button out. */
+.break-subject {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .center {
   text-align: center;
@@ -1726,7 +1753,7 @@ a.kpi:hover .caption {
 
 .chart {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: var(--s2);
 }
 .chart .axis {
@@ -1739,6 +1766,9 @@ a.kpi:hover .caption {
   text-align: end;
   height: 160px;
   padding-top: var(--s2);
+}
+.chart .axis span {
+  white-space: nowrap;
 }
 .chart .axis span:first-child {
   transform: translateY(-50%);
@@ -1777,6 +1807,21 @@ a.kpi:hover .caption {
 .bars .bar.today {
   background: var(--calm);
 }
+/* A column split by series: the first at the bottom, a 2px gap between them. */
+.bars .stacked {
+  width: 100%;
+  min-width: 3px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+}
+.bars .stacked > div {
+  flex-basis: 0;
+  min-height: 1px;
+}
+.bars .stacked > div:last-child {
+  border-radius: 4px 4px 0 0;
+}
 .bar-labels {
   display: flex;
   gap: 3px;
@@ -1789,6 +1834,42 @@ a.kpi:hover .caption {
   min-width: 3px;
   text-align: center;
   overflow: hidden;
+  white-space: nowrap;
+}
+/* Sparse labels may run over the empty columns next to them. */
+.bar-labels.spread > span {
+  overflow: visible;
+}
+@media (max-width: 600px) {
+  .bar-labels > span.minor {
+    visibility: hidden;
+  }
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1) var(--s4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-2);
+}
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.legend .key {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: none;
+}
+.table-scroll {
+  overflow-x: auto;
+}
+.table-scroll th,
+.table-scroll td {
   white-space: nowrap;
 }
 .hbar {
@@ -2353,6 +2434,10 @@ a.kpi:hover .caption {
   font-family: var(--mono);
   font-size: 0.9rem;
   overflow-wrap: anywhere;
+}
+.target-row.editing {
+  grid-template-columns: minmax(0, 1fr);
+  padding-block: var(--s2);
 }
 .target-row.exception .value::before {
   content: "+ ";
@@ -3163,8 +3248,9 @@ input[type="radio"] {
   display: flex;
   gap: var(--s2);
 }
+/* Each step takes the width of its name, so that none is cut while there is room. */
 .wizard-progress li {
-  flex: 1 1 0;
+  flex: 1 1 auto;
   min-width: 0;
 }
 .wizard-progress li > span,
@@ -3277,10 +3363,6 @@ input[type="radio"] {
 }
 .editor-title h1 {
   min-width: 0;
-}
-/* Each part takes the width of its name, so that none is cut. */
-.editor-steps li {
-  flex: 1 1 auto;
 }
 .editor-steps li > button {
   cursor: pointer;

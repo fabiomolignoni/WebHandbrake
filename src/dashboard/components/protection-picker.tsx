@@ -59,10 +59,11 @@ export function ProtectionExplanation({
           duration: formatDuration(p.seconds),
         })
       : t(`level.${p.kind}.weaken`);
+  const pauses = p.kind === 'partner' && p.breaks ? 'level.partner.pausesCode' : `level.${p.kind}.pauses`;
   return (
     <ul class="small bullets">
       <li>{weaken}</li>
-      {breaks && <li>{t(`level.${p.kind}.pauses`)}</li>}
+      {breaks && <li>{t(pauses)}</li>}
     </ul>
   );
 }
@@ -170,6 +171,8 @@ export function ProtectionPicker({
     onChange(p);
   };
   const setUpPartner = async () => setSetup(await call('partner.begin', { groupId, name }));
+  // A rule not yet named (the wizard asks for a name on its last step) has a placeholder in titles.
+  const title = name.trim() || t('editor.unnamed');
   const pick = (kind: ProtectionKind) => {
     const before = kept[kind];
     if (before) return choose(before);
@@ -261,7 +264,7 @@ export function ProtectionPicker({
       )}
       {dialog === 'password' && (
         <PasswordDialog
-          title={t('editor.passwordTitle', { name })}
+          title={t('editor.passwordTitle', { name: title })}
           help={t('editor.passwordHelp')}
           onSave={async (password) => {
             setDialog(null);
@@ -283,8 +286,8 @@ export function ProtectionPicker({
       {setup && (
         <PartnerSetupDialog
           setup={setup}
-          name={name}
-          initialBreaks={value?.kind === 'partner' ? value.breaks : true}
+          name={title}
+          initialBreaks={value?.kind === 'partner' ? value.breaks : false}
           hasBreaks={breaks}
           onConfirm={async (code, breaks) => {
             const r = await call('partner.verify', { groupId, code, breaks });

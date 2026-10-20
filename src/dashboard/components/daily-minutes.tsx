@@ -1,16 +1,16 @@
 /**
- * "How much time a day?" in the rule wizard and in first run: the usual amounts, and any other
- * amount the person types (#13).
+ * "How much time?" in the rule wizard and in first run: the usual amounts, and any other amount
+ * the person types, in minutes or hours (#13).
  */
 
 import { t } from '../../i18n/i18n';
-import { NumberInput, Segmented } from '../../ui/components';
+import { DurationInput, Segmented } from '../../ui/components';
 
 export const DAILY_MINUTES = [15, 30, 45, 60, 90, 120];
 /** The value of the "Other" choice in the segmented control. */
 const OTHER = -1;
-/** A daily limit is at most a whole day. */
-const MAX_MINUTES = 24 * 60;
+/** As much as a time limit allows: 90 days. */
+const MAX_MINUTES = 90 * 24 * 60;
 
 export function DailyMinutes({
   minutes,
@@ -40,12 +40,12 @@ export function DailyMinutes({
         ]}
       />
       {other && (
-        <NumberInput
+        <DurationInput
           value={minutes}
+          units={['minutes', 'hours']}
           min={1}
           max={MAX_MINUTES}
           label={t('dailyMinutes.custom')}
-          suffix={t('common.minutesUnit')}
           onChange={(m) => onChange(m, true)}
         />
       )}

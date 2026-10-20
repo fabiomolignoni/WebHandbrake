@@ -432,6 +432,9 @@ export interface PauseRecord {
   at: number;
   groups: string[] | '*';
   scope: PauseScope;
+  /** The site (site scope) or page (page scope) of the break. */
+  site?: string;
+  url?: string;
   minutes: number;
   reason?: string;
   grantId: string;
@@ -485,8 +488,10 @@ export interface RuntimeState {
 /** Per logical day: key → [seconds, visits]. Keys: g:<group>, s:<group>:<site>, h:<host>. */
 export interface DayRecord {
   t: Record<string, [number, number]>;
-  /** Counters: e.g. "shown:<group>", "proceeded:<group>", "left:<group>", "pause:<group>". */
+  /** Counters: e.g. "shown:<group>", "proceeded:<group>", "pausedIn:<group>", "left:<group>", "pause:<group>". */
   c: Record<string, number>;
+  /** Seconds of the a: total (time on limited sites) per clock hour, "0" to "23". */
+  h?: Record<string, number>;
 }
 
 /** Minute buckets for the last 48 hours: key → minute index → [seconds, visits]. */

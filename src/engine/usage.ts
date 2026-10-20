@@ -8,6 +8,7 @@ import { type CalendarSettings, dayKeyOf, MINUTE, type PeriodRange } from './tim
 import type { DayRecord, MinuteBuckets } from './types';
 
 export const usageKeys = {
+  all: 'a:',
   group: (groupId: string) => `g:${groupId}`,
   site: (groupId: string, site: string) => `s:${groupId}:${site}`,
   host: (host: string) => `h:${host}`,
@@ -46,6 +47,11 @@ export class Usage {
     cur[0] += seconds;
     cur[1] += visits;
     d.t[key] = cur;
+    if (key === usageKeys.all && seconds) {
+      const hk = String(new Date(t).getHours());
+      d.h ??= {};
+      d.h[hk] = (d.h[hk] ?? 0) + seconds;
+    }
     this.dirtyDays.add(dk);
     if (!minuteBuckets) return;
     const mk = String(Math.floor(t / MINUTE));
@@ -113,6 +119,33 @@ export class Usage {
       if (total < limit) return (i + windowMinutes + 1) * MINUTE;
     }
     return null;
+  }
+
+  /**
+   * Days recorded before the hours were kept get them from the minute buckets of the a: total,
+   * when these still cover all of the day's time.
+   */
+  fillHours(cal: CalendarSettings) {
+    const m = this.minutes[usageKeys.all];
+    if (!m) return;
+    const found = new Map<string, Record<string, number>>();
+    for (const [mk, [seconds]] of Object.entries(m)) {
+      const t = Number(mk) * MINUTE;
+      const dk = dayKeyOf(t, cal);
+      const d = this.days.get(dk);
+      if (!d || d.h || !d.t[usageKeys.all]) continue;
+      const h = found.get(dk) ?? {};
+      const hk = String(new Date(t).getHours());
+      h[hk] = (h[hk] ?? 0) + seconds;
+      found.set(dk, h);
+    }
+    for (const [dk, h] of found) {
+      const d = this.days.get(dk) as DayRecord;
+      const sum = Object.values(h).reduce((a, b) => a + b, 0);
+      if (Math.abs(sum - d.t[usageKeys.all][0]) > 1) continue;
+      d.h = h;
+      this.dirtyDays.add(dk);
+    }
   }
 
   pruneMinutes(now: number) {

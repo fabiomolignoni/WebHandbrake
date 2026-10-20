@@ -1,6 +1,7 @@
 /** "Save for later" list. */
 
 import { MAX_LATER_ITEMS } from '../engine/limits';
+import { openableAt } from '../engine/next';
 import { isNav } from '../engine/severity';
 import type { LaterItem } from '../engine/types';
 import { pageKey } from '../engine/url';
@@ -8,7 +9,7 @@ import { t } from '../i18n/i18n';
 import { api, quiet } from '../platform/api';
 import type { LaterModel } from '../shared/models';
 import { now } from './clock';
-import { decideUrl } from './engine';
+import { ctx, decideUrl } from './engine';
 import { notify } from './notifications';
 import { broadcast } from './reconcile';
 import { store } from './store';
@@ -48,7 +49,18 @@ export async function removeLater(ids: string[]) {
 
 export async function listLater(): Promise<LaterModel> {
   await store.ready();
-  return { items: store.later.map((i) => ({ ...i, allowedNow: !isNav(decideUrl(i.url, null)) })) };
+  const c = ctx();
+  return {
+    items: store.later.map((i) => {
+      const d = decideUrl(i.url, null, c.now);
+      const allowedNow = !isNav(d);
+      return {
+        ...i,
+        allowedNow,
+        availableAt: allowedNow ? c.now : openableAt(c, i.url, { incognito: null }, d),
+      };
+    }),
+  };
 }
 
 /** Opens saved pages that are allowed now and removes them from the list. */

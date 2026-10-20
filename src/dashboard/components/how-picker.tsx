@@ -11,7 +11,7 @@ import { type QuickHow, quickIntervention } from '../../engine/defaults';
 import type { ChallengeKind, FilterKind, Intervention } from '../../engine/types';
 import { isRedirectUrl } from '../../engine/validate';
 import { t } from '../../i18n/i18n';
-import { NumberInput, RadioCards, Select } from '../../ui/components';
+import { DurationInput, NumberInput, RadioCards, Select } from '../../ui/components';
 import { Icon } from '../../ui/icons';
 import { interventionIcon, LADDER, toneOf } from '../../ui/status';
 
@@ -114,12 +114,12 @@ function QuickOptions({ value: v, onChange }: { value: Intervention; onChange: (
       return (
         <div class="row nowrap small">
           <span aria-hidden="true">{t('wizard.how.askMax')}</span>
-          <NumberInput
+          <DurationInput
+            units={['minutes', 'hours']}
             value={v.maxMinutes}
             min={1}
             max={1440}
             label={t('wizard.how.askMax')}
-            suffix={t('common.minutesUnit')}
             onChange={(maxMinutes) =>
               // The durations offered never exceed the longest time.
               onChange({
@@ -137,12 +137,13 @@ function QuickOptions({ value: v, onChange }: { value: Intervention; onChange: (
       return (
         <div class="row nowrap small">
           <span aria-hidden="true">{t('delay.seconds')}</span>
-          <NumberInput
+          <DurationInput
+            base="seconds"
+            units={['seconds', 'minutes']}
             value={v.seconds}
             min={1}
             max={3600}
             label={t('delay.seconds')}
-            suffix={t('common.secondsUnit')}
             onChange={(seconds) => onChange({ ...v, seconds })}
           />
         </div>

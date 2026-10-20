@@ -12,20 +12,11 @@ import { formatDate, formatDateTime, formatDuration, formatWhen } from '../../sh
 import type { GroupStatus, Overview, UpcomingChange, Warning } from '../../shared/models';
 import { call } from '../../shared/rpc';
 import { describeIntervention } from '../../shared/summary';
-import {
-  Banner,
-  Button,
-  Empty,
-  GroupTile,
-  Progress,
-  Spinner,
-  StatusPill,
-  TypePills,
-  toast,
-} from '../../ui/components';
+import { Banner, Button, Empty, GroupTile, Progress, Spinner, TypePills, toast } from '../../ui/components';
 import { budgetText } from '../../ui/explain';
 import { useModel, useNow } from '../../ui/hooks';
 import { Icon } from '../../ui/icons';
+import { breakSubject } from '../../ui/pause';
 import { groupTone, interventionIcon, ruleTypes, toneOf, typeName } from '../../ui/status';
 import { useDashboard } from '../context';
 import { navigate } from '../router';
@@ -222,6 +213,7 @@ function Numbers({ o }: { o: Overview }) {
 
 export function TodayPage() {
   const { model } = useDashboard();
+  const groupName = (id: string) => model.config.groups.find((g) => g.id === id)?.name;
   const { data: o, reload } = useModel('overview.get', {}, [], 30_000);
   const now = useNow(30_000);
   if (!o) return <Spinner />;
@@ -309,11 +301,14 @@ export function TodayPage() {
               <div class="stack stack-sm">
                 {o.pauses.map((p) => (
                   <div key={p.id} class="row between nowrap">
-                    <StatusPill tone="calm" icon="pause">
-                      {p.until
-                        ? t('popup.pausedUntil', { when: formatWhen(p.until, now) })
-                        : t('popup.pausedLeft', { duration: formatDuration(p.remaining ?? 0) })}
-                    </StatusPill>
+                    <div class="stack stack-xs break-subject">
+                      <strong>{breakSubject(p, groupName)}</strong>
+                      <span class="small text-2">
+                        {p.until
+                          ? t('pause.leftUntil', { when: formatWhen(p.until, now) })
+                          : t('pause.leftMetered', { duration: formatDuration(p.remaining ?? 0) })}
+                      </span>
+                    </div>
                     <Button
                       size="small"
                       variant="ghost"

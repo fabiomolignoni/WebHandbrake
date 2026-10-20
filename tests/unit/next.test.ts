@@ -7,6 +7,7 @@ import {
   expiredGrants,
   nextGlobalChange,
   nextRestriction,
+  openableAt,
   untilFor,
 } from '../../src/engine/next';
 import { DAY, MINUTE } from '../../src/engine/time';
@@ -82,6 +83,25 @@ describe('when a restriction ends', () => {
   });
 });
 
+describe('when a page opens again', () => {
+  it('at the end of the window, now when it is open, never under a rule that always blocks', () => {
+    const c = ctx(config([group('A', ['a.test'], [{ schedule: office, intervention: BLOCK }])]), at(0, 10));
+    expect(openableAt(c, 'https://a.test/', U)).toBe(at(0, 17));
+    expect(openableAt(c, 'https://b.test/', U)).toBe(at(0, 10));
+    const always = ctx(config([group('A', ['a.test'], [{ intervention: BLOCK }])]), at(0, 10));
+    expect(openableAt(always, 'https://a.test/', U)).toBeNull();
+  });
+
+  it('not when a block gives way to a wait: the page still asks before opening', () => {
+    const g = group(
+      'A',
+      ['a.test'],
+      [{ schedule: office, intervention: BLOCK }, { intervention: delayIntervention(30) }],
+    );
+    expect(openableAt(ctx(config([g]), at(0, 10)), 'https://a.test/', U)).toBeNull();
+  });
+});
+
 describe('the next restriction of an open site', () => {
   it('a window that starts later', () => {
     const c = ctx(config([group('A', ['a.test'], [{ schedule: office, intervention: BLOCK }])]), at(0, 8));
@@ -105,9 +125,9 @@ describe('the next restriction of an open site', () => {
     const state = defaultState();
     state.grants.push(grant({ until: at(0, 10, 15) }));
     const c = ctx(config([g]), at(0, 10), state);
-    expect(nextRestriction(c, 'https://a.test/', U)).toMatchObject({ at: at(0, 10, 15), kind: 'grant' });
+    expect(nextRestriction(c, 'https://a.test/', U)).toMatchObject({ at: at(0, 10, 15), kind: 'pause' });
     state.grants = [grant({ remaining: 120 })];
-    expect(nextRestriction(c, 'https://a.test/', U)).toMatchObject({ at: at(0, 10, 2), kind: 'grant' });
+    expect(nextRestriction(c, 'https://a.test/', U)).toMatchObject({ at: at(0, 10, 2), kind: 'pause' });
   });
 
   it('the longest visit of a visit limit runs out', () => {

@@ -4,7 +4,7 @@
     "description": "Extension name shown in the browser and in the stores (75 characters at most). \"WebHandbrake\" is not translated; the words after the dash say what it does."
   },
   "extDescription": {
-    "message": "Block distracting websites or slow them down: schedules, daily limits, focus sessions. Privacy-focused and open source.",
+    "message": "Block distracting sites or slow them down with a short pause. Time limits, schedules and focus sessions. No account, no tracking.",
     "description": "Extension description shown in the browser and in the stores (132 characters at most)."
   },
   "cmdOpenPopup": {

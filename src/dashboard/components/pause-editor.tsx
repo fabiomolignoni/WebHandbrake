@@ -6,7 +6,7 @@
 import { useId } from 'preact/hooks';
 import type { Cost, PausePolicy, PauseScope } from '../../engine/types';
 import { t } from '../../i18n/i18n';
-import { NumberInput, Segmented, Select, Toggle } from '../../ui/components';
+import { DurationInput, NumberInput, Segmented, Select, Toggle } from '../../ui/components';
 import { PeriodSelect } from './policy';
 
 type CostKind = 'none' | 'confirm' | 'delay' | 'random' | 'phrase' | 'math' | 'password';
@@ -104,12 +104,12 @@ export function PauseEditor({
                   }}
                 />
               ) : (
-                <NumberInput
+                <DurationInput
+                  units={['minutes', 'hours']}
                   value={p.duration.minutes}
                   min={1}
                   max={1440}
                   label={t('pauseRules.minutes')}
-                  suffix={t('common.minutesUnit')}
                   onChange={(minutes) => set({ duration: { ...p.duration, minutes } })}
                 />
               )}
@@ -129,12 +129,13 @@ export function PauseEditor({
                   .map((k) => ({ value: k, label: t(`pauseRules.costKind.${k}`) }))}
               />
               {p.cost.type === 'delay' && (
-                <NumberInput
+                <DurationInput
+                  base="seconds"
+                  units={['seconds', 'minutes']}
                   value={p.cost.seconds}
                   min={1}
                   max={3600}
                   label={t('delay.seconds')}
-                  suffix={t('common.secondsUnit')}
                   onChange={(seconds) => set({ cost: { type: 'delay', seconds } })}
                 />
               )}
@@ -211,12 +212,12 @@ export function PauseEditor({
                 {t('pauseRules.limitMinutes')}
               </label>
               {p.limit.minutes !== undefined && (
-                <NumberInput
+                <DurationInput
+                  units={['minutes', 'hours']}
                   value={p.limit.minutes}
                   min={0}
                   max={10000}
                   label={t('pauseRules.limitMinutes')}
-                  suffix={t('common.minutesUnit')}
                   onChange={(minutes) => set({ limit: { ...p.limit, minutes } })}
                 />
               )}

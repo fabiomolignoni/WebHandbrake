@@ -20,6 +20,7 @@ import {
   Banner,
   Button,
   Dialog,
+  DurationInput,
   Field,
   NumberInput,
   Segmented,
@@ -191,12 +192,12 @@ function Feedback() {
         <div class="grid" style={{ ['--min' as string]: '200px' }}>
           <Field label={t('settings.timer.threshold')}>
             {() => (
-              <NumberInput
+              <DurationInput
+                units={['minutes', 'hours']}
                 commitOnBlur
                 value={s.timer.thresholdMinutes}
                 min={1}
                 max={1440}
-                suffix={t('common.minutesUnit')}
                 label={t('settings.timer.threshold')}
                 onChange={(v) => void save((x) => (x.timer.thresholdMinutes = v))}
               />
@@ -254,12 +255,12 @@ function Feedback() {
         />
         <Field label={t('settings.badge.threshold')}>
           {() => (
-            <NumberInput
+            <DurationInput
+              units={['minutes', 'hours']}
               commitOnBlur
               value={s.badge.thresholdMinutes}
               min={1}
               max={1440}
-              suffix={t('common.minutesUnit')}
               label={t('settings.badge.threshold')}
               onChange={(v) => void save((x) => (x.badge.thresholdMinutes = v))}
             />
@@ -350,12 +351,13 @@ function TimeSettings() {
         {s.tracking.idleEnabled && (
           <Field label={t('settings.idleSeconds')}>
             {() => (
-              <NumberInput
+              <DurationInput
+                base="seconds"
+                units={['seconds', 'minutes']}
                 commitOnBlur
                 value={s.tracking.idleSeconds}
                 min={15}
                 max={3600}
-                suffix={t('common.secondsUnit')}
                 label={t('settings.idleSeconds')}
                 onChange={(v) => void save((x) => (x.tracking.idleSeconds = v))}
               />
@@ -376,12 +378,12 @@ function TimeSettings() {
         />
         <Field label={t('settings.visitGap')} help={t('settings.visitGapHelp')}>
           {() => (
-            <NumberInput
+            <DurationInput
+              units={['minutes', 'hours']}
               commitOnBlur
               value={s.tracking.visitGapMinutes}
               min={1}
               max={240}
-              suffix={t('common.minutesUnit')}
               label={t('settings.visitGap')}
               onChange={(v) => void save((x) => (x.tracking.visitGapMinutes = v))}
             />
@@ -442,12 +444,13 @@ function InterventionSettings() {
         />
         <Field label={t('settings.grace')} help={t('settings.graceHelp')}>
           {() => (
-            <NumberInput
+            <DurationInput
+              base="seconds"
+              units={['seconds', 'minutes']}
               commitOnBlur
               value={s.interventions.graceSeconds}
               min={0}
               max={300}
-              suffix={t('common.secondsUnit')}
               label={t('settings.grace')}
               onChange={(v) => void save((x) => (x.interventions.graceSeconds = v))}
             />
@@ -499,12 +502,12 @@ function InterventionSettings() {
             {t('pauseRules.limitMinutes')}
           </label>
           {s.pauseLimit.minutes !== undefined && (
-            <NumberInput
+            <DurationInput
+              units={['minutes', 'hours']}
               commitOnBlur
               value={s.pauseLimit.minutes}
               min={0}
               max={10000}
-              suffix={t('common.minutesUnit')}
               label={t('pauseRules.limitMinutes')}
               onChange={(v) => void save((x) => (x.pauseLimit = { ...x.pauseLimit, minutes: v }))}
             />

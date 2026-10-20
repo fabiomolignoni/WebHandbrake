@@ -17,9 +17,9 @@ import {
   Banner,
   Button,
   Dialog,
+  DurationInput,
   Field,
   GroupTile,
-  NumberInput,
   Select,
   Spinner,
   ToneIcon,
@@ -469,12 +469,13 @@ export function ProtectionPage() {
           help={t('protection.emergencyWaitHelp', { hours: p.emergencyHours })}
         >
           {() => (
-            <NumberInput
+            <DurationInput
+              base="hours"
+              units={['hours', 'days']}
               commitOnBlur
               value={p.emergencyHours}
               min={4}
               max={168}
-              suffix={t('common.hoursUnit')}
               label={t('protection.emergencyWait')}
               onChange={(v) => void save((c) => (c.settings.protection.emergencyHours = v))}
             />

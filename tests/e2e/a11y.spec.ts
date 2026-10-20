@@ -130,7 +130,7 @@ test('the popup and the intervention pages pass WCAG checks', async ({ h }) => {
   const askPage = await expectBlocked(h, 'http://ask.test/');
   await askPage.button('Continue for 5 min').click();
   await askPage.role('radio', 'Other').click();
-  await askPage.label('How many minutes?').expectVisible();
+  await askPage.label('How long?', { exact: true }).expectVisible();
   all.push(...(await askPage.axe()).map((v) => `ask: ${v}`));
   const popup = await h.popup(wait);
   await popup.get('.popup-head').expectVisible();

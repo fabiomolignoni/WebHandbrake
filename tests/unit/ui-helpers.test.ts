@@ -5,8 +5,9 @@ import { SEVERITY } from '../../src/engine/severity';
 import type { TimeWindow } from '../../src/engine/types';
 import { setFormatPrefs } from '../../src/shared/format';
 import type { BudgetView, DecisionView, PauseOptions } from '../../src/shared/models';
+import { durationUnit } from '../../src/ui/components';
 import { budgetText, verdict } from '../../src/ui/explain';
-import { costLabel, costsLabel, pauseBudgetLabel, pauseSummary } from '../../src/ui/pause';
+import { breakSubject, costLabel, costsLabel, pauseBudgetLabel, pauseSummary } from '../../src/ui/pause';
 import { BLOCK } from './helpers';
 
 beforeAll(() => setFormatPrefs({ hour12: '24', dateFormat: 'auto' }));
@@ -84,6 +85,30 @@ describe('the cost and the breaks left, in words', () => {
       pauseSummary(options({ costs: [{ type: 'delay', seconds: 30 }], remainingCount: 3, countPeriod: day })),
     ).toBe('Cost: a 30 s wait · 3 breaks left today');
     expect(pauseSummary(options({}))).toBe('No cost');
+    // Extending a break: how much longer it can last, no break counted.
+    expect(
+      pauseSummary(
+        options({
+          extend: { grantId: 'x', scope: 'site', minutes: 5 },
+          duration: { mode: 'upTo', minutes: 10 },
+        }),
+      ),
+    ).toBe('No cost · up to 10 min more');
+  });
+
+  it('what a break covers: its site or page and its rules', () => {
+    const names: Record<string, string> = { S: 'Social', N: 'News' };
+    const nameOf = (id: string) => names[id];
+    expect(breakSubject({ groups: ['S'], scope: 'site', site: 'youtube.com' }, nameOf)).toBe(
+      'youtube.com · Social',
+    );
+    expect(
+      breakSubject({ groups: ['S', 'N'], scope: 'page', url: 'https://youtube.com/watch?v=1' }, nameOf),
+    ).toBe('youtube.com/watch?v=1 · Social and News');
+    expect(breakSubject({ groups: ['S'], scope: 'group' }, nameOf)).toBe('Social');
+    expect(breakSubject({ groups: ['gone'], scope: 'group' }, nameOf)).toBe('Deleted rule');
+    expect(breakSubject({ groups: '*', scope: 'all' }, nameOf)).toBe('All rules');
+    expect(breakSubject({ groups: ['*'], scope: 'all' }, nameOf)).toBe('All rules');
   });
 });
 
@@ -158,5 +183,18 @@ describe('"What should happen?" in the wizard', () => {
       }),
     ).toBe(false);
     expect(quickInterventionReady(BLOCK)).toBe(true);
+  });
+});
+
+describe('a length of time as a number and a unit', () => {
+  it('shows an amount in the largest unit in which it is a whole number', () => {
+    expect(durationUnit(120, ['minutes', 'hours', 'days'])).toBe('hours');
+    expect(durationUnit(90, ['minutes', 'hours', 'days'])).toBe('minutes');
+    expect(durationUnit(2880, ['minutes', 'hours', 'days'])).toBe('days');
+    expect(durationUnit(2880, ['minutes', 'hours'])).toBe('hours');
+    expect(durationUnit(0.5, ['minutes', 'hours'])).toBe('minutes');
+    expect(durationUnit(0, ['seconds', 'minutes'], 'seconds')).toBe('seconds');
+    expect(durationUnit(120, ['seconds', 'minutes'], 'seconds')).toBe('minutes');
+    expect(durationUnit(48, ['hours', 'days'], 'hours')).toBe('days');
   });
 });
