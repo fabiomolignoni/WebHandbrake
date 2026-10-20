@@ -7,7 +7,7 @@ Choose the sites, when each rule applies and what happens. Making a rule stricte
 loosening it takes what you chose for it, so a moment of impulse cannot undo it. No account, no
 tracking: everything stays on your device.
 
-![The block page of a social media rule: "This space is protected until 18:00", with a break that costs a 60-second wait](store/images/screenshots/1-block.png)
+![The block page of a social media rule: "This page is blocked until 18:00.", with the reason for the rule and a break that costs a 60-second wait](.github/images/block-page.png)
 
 ## What it does
 

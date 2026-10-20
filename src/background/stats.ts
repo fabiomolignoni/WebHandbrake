@@ -1,8 +1,10 @@
-/** Statistics: queries, export and deletion. Only daily aggregates exist. */
+/** Statistics: queries, export and deletion. Only daily aggregates exist, with the hours of the total. */
 
 import { BUDGET_KEEP_DAYS } from '../engine/limits';
 import { addDays, dayKey, dayStartAt, logicalDayOf, parseDayKey } from '../engine/time';
 import type { DayRecord } from '../engine/types';
+import { displayHost, stripWww } from '../engine/url';
+import { usageKeys } from '../engine/usage';
 import { api } from '../platform/api';
 import { timestampSuffix } from '../shared/format';
 import type { StatsModel } from '../shared/models';
@@ -21,6 +23,9 @@ function daysBetween(from: string, to: string): string[] {
   }
   return out;
 }
+
+/** Sites that the days split their time by; the rest is "other sites". */
+export const STACK_SITES = 6;
 
 function sumKey(records: Map<string, DayRecord>, days: string[], key: string, field: 0 | 1) {
   let n = 0;
@@ -61,7 +66,8 @@ export async function getStats(from: string, to: string): Promise<StatsModel> {
     for (const [name, n] of Object.entries(rec.c)) {
       const kind = name.split(':')[0];
       if (kind === 'shown') counters.shown += n;
-      else if (kind === 'proceeded') counters.proceeded += n;
+      // Passes, and breaks taken from an intervention page.
+      else if (kind === 'proceeded' || kind === 'pausedIn') counters.proceeded += n;
       else if (kind === 'left') counters.left += n;
       else if (kind === 'pause') counters.pauses += n;
       else if (kind === 'pauseMin') counters.pauseMinutes += n;
@@ -69,6 +75,29 @@ export async function getStats(from: string, to: string): Promise<StatsModel> {
     }
   }
   counters.impulses = Math.max(0, counters.shown - counters.proceeded);
+
+  const siteList = [...sites.entries()]
+    .map(([host, v]) => ({ host, ...v }))
+    .sort((a, b) => b.seconds - a.seconds);
+  const stack = siteList.slice(0, STACK_SITES).map((x) => x.host);
+  const bySite = (d: string) => {
+    const t = records.get(d)?.t ?? {};
+    const own = stack.map((host) => t[usageKeys.host(host)]?.[0] ?? 0);
+    let all = 0;
+    for (const [key, [sec]] of Object.entries(t)) if (key.startsWith('h:')) all += sec;
+    return { sites: own, otherSites: Math.max(0, all - own.reduce((a, b) => a + b, 0)) };
+  };
+
+  let hours: number[] | null = Array(24).fill(0);
+  for (const d of days) {
+    const rec = records.get(d);
+    if (!rec?.t[usageKeys.all]?.[0]) continue;
+    if (!rec.h) {
+      hours = null;
+      break;
+    }
+    for (const [hk, sec] of Object.entries(rec.h)) hours[Number(hk)] += sec;
+  }
 
   // The breaks and the reasons of the same logical days as the totals.
   const fromMs = dayStartAt(parseDayKey(from), store.cc.cal);
@@ -79,14 +108,15 @@ export async function getStats(from: string, to: string): Promise<StatsModel> {
     to,
     days: days.map((d) => ({
       day: d,
-      seconds: sumKey(records, [d], 'a:', 0),
-      visits: sumKey(records, [d], 'a:', 1),
+      seconds: sumKey(records, [d], usageKeys.all, 0),
+      visits: sumKey(records, [d], usageKeys.all, 1),
+      ...bySite(d),
     })),
     total: {
-      seconds: sumKey(records, days, 'a:', 0),
+      seconds: sumKey(records, days, usageKeys.all, 0),
       visits: [...groups.values()].reduce((a, g) => a + g.visits, 0),
     },
-    previous: { seconds: sumKey(records, prevDays, 'a:', 0), visits: 0 },
+    previous: { seconds: sumKey(records, prevDays, usageKeys.all, 0), visits: 0 },
     groups: [...groups.entries()]
       .map(([id, v]) => ({
         id,
@@ -95,10 +125,8 @@ export async function getStats(from: string, to: string): Promise<StatsModel> {
         ...v,
       }))
       .sort((a, b) => b.seconds - a.seconds),
-    sites: [...sites.entries()]
-      .map(([host, v]) => ({ host, ...v }))
-      .sort((a, b) => b.seconds - a.seconds)
-      .slice(0, 100),
+    sites: siteList.slice(0, 100),
+    stack,
     counters,
     pauses: store.state.pauses
       .filter((p) => p.at >= fromMs && p.at < toMs)
@@ -106,13 +134,15 @@ export async function getStats(from: string, to: string): Promise<StatsModel> {
         at: p.at,
         groups: p.groups === '*' ? ['*'] : p.groups,
         scope: p.scope,
+        site: p.site,
+        url: p.url,
         minutes: p.minutes,
         reason: p.reason,
         used: p.used,
       }))
       .reverse(),
     intentions: store.intentions.filter((i) => i.at >= fromMs && i.at < toMs).reverse(),
-    hours: [],
+    hours,
   };
 }
 
@@ -161,6 +191,8 @@ export async function exportStats(format: 'csv' | 'json') {
         String(v),
       ]);
     }
+    for (const [hour, sec] of Object.entries(rec.h ?? {}))
+      rows.push([day, 'hour', hour, '', String(Math.round(sec)), '']);
     for (const [name, n] of Object.entries(rec.c)) rows.push([day, 'counter', name, '', '', String(n)]);
   }
   return {
@@ -224,9 +256,11 @@ export async function deleteStats(
     if (scope === 'all') {
       delete store.usage.minutes['a:'];
       store.usage.dirtyMinutes = true;
-      // Break records stay for break limits, without the reasons.
+      // Break records stay for break limits, without the reasons and the sites.
       const since = Date.now() - BUDGET_KEEP_DAYS * 86_400_000;
-      store.state.pauses = store.state.pauses.filter((p) => p.at >= since).map(({ reason: _r, ...p }) => p);
+      store.state.pauses = store.state.pauses
+        .filter((p) => p.at >= since)
+        .map(({ reason: _r, site: _s, url: _u, ...p }) => p);
       store.intentions = [];
       await store.saveIntentions();
       await store.saveState();
@@ -242,6 +276,16 @@ export async function deleteStats(
       }
     }
     if (Object.keys(items).length) await api.storage.local.set(items);
+    // The breaks taken on the site no longer say where.
+    const site = stripWww(host);
+    let changed = false;
+    store.state.pauses = store.state.pauses.map((p) => {
+      if (p.site !== site && !(p.url && displayHost(p.url) === site)) return p;
+      changed = true;
+      const { site: _s, url: _u, ...rest } = p;
+      return rest;
+    });
+    if (changed) await store.saveState();
   }
   broadcast(['usage']);
 }

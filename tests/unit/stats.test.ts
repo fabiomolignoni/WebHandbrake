@@ -25,6 +25,7 @@ describe('deleting statistics never refills limits', () => {
       at: now,
       groups: ['G'],
       scope: 'site',
+      site: 'video.test',
       minutes: 10,
       reason: 'private',
       grantId: 'x',
@@ -42,8 +43,34 @@ describe('deleting statistics never refills limits', () => {
     expect(rec.c).toEqual({ 'proceeded:G': 1 });
     expect(store.state.pauses).toHaveLength(1);
     expect(store.state.pauses[0].reason).toBeUndefined();
+    expect(store.state.pauses[0].site).toBeUndefined();
     expect(store.intentions).toEqual([]);
     expect(store.usage.minutes['g:G']).toBeDefined();
+  });
+});
+
+describe('deleting a site', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    installFakeBrowser();
+  });
+
+  it('removes it from the breaks taken on it, which stay for the limits', async () => {
+    const { store } = await import('../../src/background/store');
+    const { deleteStats } = await import('../../src/background/stats');
+    await store.ready();
+    const at = Date.now();
+    store.state.pauses.push(
+      { at, groups: ['G'], scope: 'site', site: 'video.test', minutes: 5, grantId: 'a' },
+      { at, groups: ['G'], scope: 'page', url: 'https://www.video.test/watch?v=1', minutes: 5, grantId: 'b' },
+      { at, groups: ['G'], scope: 'site', site: 'news.test', minutes: 5, grantId: 'c' },
+    );
+    await deleteStats('site', undefined, undefined, 'video.test');
+    expect(store.state.pauses.map((p) => [p.grantId, p.site ?? p.url ?? null])).toEqual([
+      ['a', null],
+      ['b', null],
+      ['c', 'news.test'],
+    ]);
   });
 });
 
@@ -74,6 +101,8 @@ describe('statistics', () => {
     add('h:news.test', 1, 300, 1);
     store.usage.count('shown:G', T0, store.cc.cal, 4);
     store.usage.count('proceeded:G', T0, store.cc.cal, 1);
+    // A break taken from a block page is going in too.
+    store.usage.count('pausedIn:G', T0, store.cc.cal, 1);
     store.usage.count('pause:G', T0, store.cc.cal);
     store.usage.count('pauseMin:G', T0, store.cc.cal, 10);
     store.usage.count('sessions', T0, store.cc.cal);
@@ -86,26 +115,72 @@ describe('statistics', () => {
     const { stats } = await setup();
     const s = await stats.getStats('2026-10-06', '2026-10-07');
     expect(s.days).toEqual([
-      { day: '2026-10-06', seconds: 300, visits: 0 },
-      { day: '2026-10-07', seconds: 600, visits: 0 },
+      { day: '2026-10-06', seconds: 300, visits: 0, sites: [0, 300], otherSites: 0 },
+      { day: '2026-10-07', seconds: 600, visits: 0, sites: [600, 0], otherSites: 0 },
     ]);
+    expect(s.stack).toEqual(['video.test', 'news.test']);
     expect(s.total).toEqual({ seconds: 900, visits: 2 });
     expect(s.previous.seconds).toBe(100);
     expect(s.groups).toEqual([{ id: 'G', name: 'G', color: expect.any(String), seconds: 600, visits: 2 }]);
     expect(s.sites.map((x) => x.host)).toEqual(['video.test', 'news.test']);
     expect(s.counters).toEqual({
       shown: 4,
-      proceeded: 1,
+      proceeded: 2,
       left: 0,
       pauses: 1,
       pauseMinutes: 10,
       sessions: 1,
-      impulses: 3,
+      impulses: 2,
     });
     expect(s.pauses).toEqual([
       { at: T0, groups: ['*'], scope: 'all', minutes: 10, reason: undefined, used: undefined },
     ]);
     expect(s.intentions).toEqual([]);
+  });
+
+  it('the days split their time by the sites with the most time, the rest as other sites', async () => {
+    const { store, stats } = await setup();
+    for (let i = 0; i < 8; i++) store.usage.add(`h:s${i}.test`, T0, 100 - i, 1, store.cc.cal, false);
+    const s = await stats.getStats('2026-10-07', '2026-10-07');
+    expect(s.stack).toEqual(['video.test', 's0.test', 's1.test', 's2.test', 's3.test', 's4.test']);
+    expect(s.days[0].sites).toEqual([600, 100, 99, 98, 97, 96]);
+    expect(s.days[0].otherSites).toBe(95 + 94 + 93);
+  });
+
+  it('the hours of a day hold its time on limited sites by clock hour', async () => {
+    const { store, stats } = await setup();
+    store.usage.add('a:', new Date(2026, 9, 7, 9, 30).getTime(), 120, 0, store.cc.cal);
+    store.usage.add('a:', new Date(2026, 9, 7, 23, 59).getTime(), 30, 0, store.cc.cal);
+    const s = await stats.getStats('2026-10-07', '2026-10-07');
+    expect(s.hours).toHaveLength(24);
+    expect(s.hours?.[12]).toBe(600);
+    expect(s.hours?.[9]).toBe(120);
+    expect(s.hours?.[23]).toBe(30);
+    expect(s.hours?.reduce((a, b) => a + b, 0)).toBe(s.total.seconds);
+    const csv = (await stats.exportStats('csv')).text.split('\n');
+    expect(csv).toContain('2026-10-07,hour,9,,120,');
+  });
+
+  it('a day recorded without hours gets them from the minute buckets, or says it has none', async () => {
+    const { store, stats } = await setup();
+    // As recorded before the hours were kept.
+    for (const d of store.usage.days.values()) delete d.h;
+    await store.flushUsage();
+    // The minute buckets of the last 48 hours cover the time of 7 and 6 October, not of 4 October.
+    store.usage.pruneMinutes(T0);
+    store.usage.fillHours(store.cc.cal);
+    expect((await stats.getStats('2026-10-07', '2026-10-07')).hours?.[12]).toBe(600);
+    expect((await stats.getStats('2026-10-06', '2026-10-06')).hours?.[12]).toBe(300);
+    expect((await stats.getStats('2026-10-04', '2026-10-04')).hours).toBeNull();
+    // A day without time has nothing to miss.
+    expect((await stats.getStats('2026-10-05', '2026-10-05')).hours).toEqual(Array(24).fill(0));
+  });
+
+  it('deleting a range of days deletes its hours', async () => {
+    const { store, stats } = await setup();
+    await store.flushUsage();
+    await stats.deleteStats('range', '2026-10-07', '2026-10-07');
+    expect(store.usage.days.get('2026-10-07')?.h).toBeUndefined();
   });
 
   it('breaks and reasons belong to the logical day, as the totals do', async () => {

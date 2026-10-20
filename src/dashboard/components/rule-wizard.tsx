@@ -14,23 +14,26 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { TEMPLATES } from '../../data/templates';
 import {
   breaksLift,
+  DAY_MINUTES,
   DEFAULT_PROTECTION,
+  everyPeriod,
   GROUP_COLORS,
   newGroup,
   newId,
   pausePolicyFor,
+  periodMinutes,
   type QuickHow,
   type QuickWhen,
   quickIntervention,
   quickPolicies,
   SCHEDULE_PRESETS,
-  targetsFromSites,
+  targetKey,
+  targetsFromLines,
 } from '../../engine/defaults';
 import { clone } from '../../engine/json';
 import type { Group, Intervention, Protection, Target, TimeWindow } from '../../engine/types';
 import { t } from '../../i18n/i18n';
-import { describeTarget } from '../../shared/summary';
-import { Banner, Button, GroupTile, RadioCards, Toggle } from '../../ui/components';
+import { Banner, Button, DurationInput, GroupTile, RadioCards, Toggle } from '../../ui/components';
 import { GROUP_ICONS, Icon } from '../../ui/icons';
 import { costLabel } from '../../ui/pause';
 import { toneOf } from '../../ui/status';
@@ -57,8 +60,10 @@ interface State {
   when: QuickWhen;
   windows: TimeWindow[];
   minutes: number;
-  /** "Other" is chosen for the daily time (#13). */
+  /** "Other" is chosen for the time allowed (#13). */
   customMinutes: boolean;
+  /** The time allowed starts again every so many minutes: a day unless changed. */
+  every: number;
   /** What happens, with the settings chosen (#14); null until a choice is made. */
   intervention: Intervention | null;
   /** The settings chosen for each intervention tried (#14). */
@@ -68,8 +73,8 @@ interface State {
    * a partner code is never kept in storage: a resumed wizard asks for the protection again.
    */
   protection: Protection | null;
-  /** #15: whether the rule allows breaks; null follows its protection. */
-  breaks: boolean | null;
+  /** #15: whether the rule allows breaks; off until turned on, as in the full editor. */
+  breaks: boolean;
   note: string;
   color: string;
   icon: string;
@@ -95,8 +100,9 @@ function load(store: string): State | null {
       intervention,
       kept: s.kept ?? {},
       customMinutes: Boolean(s.customMinutes),
+      every: s.every ?? DAY_MINUTES,
       protection,
-      breaks: s.breaks ?? null,
+      breaks: Boolean(s.breaks),
       // A ready-made list may have been removed since.
       templates: (s.templates ?? []).filter((id) => TEMPLATES.some((x) => x.id === id)),
     };
@@ -173,10 +179,11 @@ export function RuleWizard({
       windows: clone(SCHEDULE_PRESETS.office),
       minutes: 30,
       customMinutes: false,
+      every: DAY_MINUTES,
       intervention: null,
       kept: {},
       protection: null,
-      breaks: null,
+      breaks: false,
       note: '',
       color: GROUP_COLORS.find((c) => !used.has(c)) ?? GROUP_COLORS[cfg.groups.length % GROUP_COLORS.length],
       icon: 'circle',
@@ -195,12 +202,9 @@ export function RuleWizard({
   }, [s.step]);
 
   const sites = s.targets.filter((x) => !x.allow);
-  // Without a name, the first site names the rule.
-  const name =
-    s.name.trim() ||
-    describeOrEmpty(sites[0]) ||
-    s.templates.map((id) => t(TEMPLATES.find((x) => x.id === id)?.nameKey ?? '')).join(' + ') ||
-    '';
+  // A ready-made list names the rule until the person types a name; a site never does, since the
+  // rule's name is shown next to its sites (block page, "Add to" in the popup).
+  const name = s.name.trim();
 
   // The full editor can be opened before choosing: it then starts from the default protection
   // and a gentle question.
@@ -208,12 +212,8 @@ export function RuleWizard({
   const intervention = s.intervention ?? quickIntervention('ask');
   // A break lifts a block only: a rule that does something else has none (#15).
   const breaksOffered = breaksLift(intervention);
-  // The breaks of the protection, unless the person turned them on or off (#15).
-  const pause = {
-    ...pausePolicyFor(protection),
-    ...(s.breaks === null ? {} : { allowed: s.breaks }),
-    ...(breaksOffered ? {} : { allowed: false }),
-  };
+  // The breaks of the protection, once the person turned them on (#15).
+  const pause = { ...pausePolicyFor(protection), allowed: breaksOffered && s.breaks };
 
   const build = (): Group =>
     newGroup({
@@ -223,16 +223,20 @@ export function RuleWizard({
       icon: s.icon,
       note: s.note.trim(),
       targets: s.targets,
-      policies: quickPolicies(s.when, intervention, s.windows, s.minutes),
+      policies: quickPolicies(s.when, intervention, s.windows, s.minutes, s.every),
       pause,
       protection,
     });
 
+  // A limit as long as its period would never be reached.
+  const limitTooLong = s.when === 'daily' && s.minutes >= periodMinutes(everyPeriod(s.every));
   const canNext =
     s.step === 0
       ? sites.length > 0
       : s.step === 1
-        ? s.when !== 'schedule' || s.windows.some((w) => w.days.length > 0)
+        ? s.when === 'schedule'
+          ? s.windows.some((w) => w.days.length > 0)
+          : !limitTooLong
         : s.step === 2
           ? quickInterventionReady(s.intervention)
           : s.step === 3
@@ -354,7 +358,7 @@ export function RuleWizard({
                 class="input"
                 value={s.name}
                 maxLength={80}
-                placeholder={sites[0]?.value ?? t('editor.namePlaceholder')}
+                placeholder={t('editor.namePlaceholder')}
                 onInput={(e) => update({ name: (e.target as HTMLInputElement).value, nameTouched: true })}
               />
             </div>
@@ -424,6 +428,37 @@ export function RuleWizard({
                   onChange={(minutes, customMinutes) => update({ minutes, customMinutes })}
                   labelledBy="wizard-minutes"
                 />
+                <div class="row">
+                  <span class="label" aria-hidden="true">
+                    {t('wizard.when.every')}
+                  </span>
+                  <DurationInput
+                    value={s.every}
+                    min={5}
+                    max={90 * DAY_MINUTES}
+                    unitMax={{ minutes: DAY_MINUTES, hours: DAY_MINUTES }}
+                    label={t('wizard.when.every')}
+                    describedBy="wizard-every-help"
+                    onChange={(every, unit) =>
+                      update({
+                        // A period of days counts whole days.
+                        every:
+                          unit === 'days'
+                            ? Math.max(1, Math.round(every / DAY_MINUTES)) * DAY_MINUTES
+                            : every,
+                      })
+                    }
+                  />
+                </div>
+                {limitTooLong ? (
+                  <span class="error-text" id="wizard-every-help">
+                    {t('wizard.when.tooLong')}
+                  </span>
+                ) : (
+                  <span class="help" id="wizard-every-help">
+                    {t('wizard.when.everyHelp')}
+                  </span>
+                )}
               </div>
             )}
           </>
@@ -462,7 +497,7 @@ export function RuleWizard({
             groupId={s.id}
             name={name}
             label={t('wizard.protection.title')}
-            breaks={breaksOffered}
+            breaks={pause.allowed}
           />
         )}
 
@@ -471,9 +506,9 @@ export function RuleWizard({
             <div class={`plan tone-${toneOf(intervention.type)}`}>
               <GroupTile color={s.color} icon={s.icon} size={48} />
               <div class="stack stack-sm" style={{ minWidth: 0 }}>
-                <strong class="plan-name">{name}</strong>
+                <strong class="plan-name">{name || t('editor.unnamed')}</strong>
                 <p class="plan-text">
-                  {planSentence(s.when, intervention, sitesPhrase(s.targets), s.windows, s.minutes)}
+                  {planSentence(s.when, intervention, sitesPhrase(s.targets), s.windows, s.minutes, s.every)}
                 </p>
               </div>
             </div>
@@ -485,10 +520,16 @@ export function RuleWizard({
                 id="wizard-name-review"
                 class="input"
                 value={s.name}
-                placeholder={name}
+                placeholder={t('editor.namePlaceholder')}
                 maxLength={80}
+                aria-describedby={name ? undefined : 'wizard-name-help'}
                 onInput={(e) => update({ name: (e.target as HTMLInputElement).value, nameTouched: true })}
               />
+              {!name && (
+                <span class="help" id="wizard-name-help">
+                  {t('validate.noName')}
+                </span>
+              )}
             </div>
             <div class="field">
               <label class="label" for="wizard-note">
@@ -592,16 +633,14 @@ export function RuleWizard({
   );
 }
 
-const describeOrEmpty = (tg: Target | undefined) => (tg ? describeTarget(tg) : '');
-
 /** A password or a partner code is not kept in session storage: it is chosen again. */
 function withoutSecret(p: Protection | null): Protection | null {
   return p && (p.kind === 'password' || p.kind === 'partner') ? null : p;
 }
 
 /**
- * Selecting a ready-made list adds its sites (and, until the user changes them, its name, colour
- * and icon); deselecting removes the sites no other selected list has.
+ * Selecting a ready-made list adds its entries (and, until the user changes them, its name, colour
+ * and icon); deselecting removes the entries no other selected list has.
  */
 function toggleTemplate(s: State, id: string): State {
   const tpl = TEMPLATES.find((x) => x.id === id);
@@ -610,11 +649,16 @@ function toggleTemplate(s: State, id: string): State {
   const templates = on ? [...s.templates, id] : s.templates.filter((x) => x !== id);
   let targets: Target[];
   if (on) {
-    const have = new Set(s.targets.map((x) => x.value));
-    targets = [...s.targets, ...targetsFromSites(tpl.sites.filter((v) => !have.has(v)))];
+    const have = new Set(s.targets.map(targetKey));
+    targets = [...s.targets, ...targetsFromLines(tpl.entries).filter((x) => !have.has(targetKey(x)))];
   } else {
-    const kept = new Set(templates.flatMap((x) => TEMPLATES.find((y) => y.id === x)?.sites ?? []));
-    targets = s.targets.filter((x) => !tpl.sites.includes(x.value) || kept.has(x.value));
+    const own = new Set(targetsFromLines(tpl.entries).map(targetKey));
+    const kept = new Set(
+      targetsFromLines(templates.flatMap((x) => TEMPLATES.find((y) => y.id === x)?.entries ?? [])).map(
+        targetKey,
+      ),
+    );
+    targets = s.targets.filter((x) => !own.has(targetKey(x)) || kept.has(targetKey(x)));
   }
   const chosen = templates.map((x) => TEMPLATES.find((y) => y.id === x)!);
   const first = chosen[0];

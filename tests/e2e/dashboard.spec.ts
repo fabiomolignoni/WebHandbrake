@@ -179,7 +179,8 @@ test('a rule is created step by step: sites → when → what happens → protec
   expect(created.policies[0].schedule.mode).toBe('during');
   expect(created.policies[0].intervention.type).toBe('block');
   expect(created.protection).toEqual({ kind: 'wait', seconds: 3600 });
-  // The breaks of a new rule follow its protection: a typed code for a long wait.
+  // Breaks are off until turned on; their cost follows the protection: a typed code for a long wait.
+  expect(created.pause.allowed).toBe(false);
   expect(created.pause.cost.type).toBe('challenge');
 });
 
@@ -258,7 +259,8 @@ test("the wizard's Partner code protection is set up with a code from the partne
   await p.button('Create rule').click();
   await p.role('heading', 'Rules', { exact: true }).expectVisible();
   const created = (await h.rpc('config.get')).config.groups.find((g: any) => g.name === 'Casino');
-  expect(created.protection).toEqual({ kind: 'partner', secret, breaks: true });
+  // The rule allows no breaks: nothing to ask the partner for them.
+  expect(created.protection).toEqual({ kind: 'partner', secret, breaks: false });
   const cfg = (await h.rpc('config.get')).config;
   cfg.groups.find((g: any) => g.id === created.id).targets = [];
   const r = await h.rpc('config.save', { config: cfg });
@@ -269,6 +271,7 @@ test("the wizard's Partner code protection is set up with a code from the partne
 test('the wizard takes wildcards and every website, and the editor warns (#20, #23)', async ({ h }) => {
   const p = await h.page('dashboard.html#/groups/new');
   await p.role('heading', 'Which sites?').expectVisible();
+  await p.label('Name', { exact: true }).fill('Everything');
   await p.placeholder('Add a site, or paste a list…').fill('*  *news*');
   await p.button('Add', { exact: true }).click();
   await p.text('Every website', { exact: true }).expectVisible();
@@ -349,6 +352,11 @@ test('"count only" at certain times counts nothing outside them (#21)', async ({
   await p.role('radio', 'Count only').click();
   await toReview(p);
   await p.get('.plan-text').expectText('outside these times it counts nothing');
+  // A site never names the rule: it is shown next to its sites.
+  await p.get('.plan-name').expectText('Unnamed rule');
+  await p.text('Give the rule a name.').expectVisible();
+  await p.button('Create rule').expectEnabled(false);
+  await p.label('Name', { exact: true }).fill('Work');
   await p.button('Create rule').click();
   await p.role('heading', 'Rules', { exact: true }).expectVisible();
   const cfg = (await h.rpc('config.get')).config;
@@ -360,7 +368,11 @@ test('"count only" at certain times counts nothing outside them (#21)', async ({
   // The editor shows the second condition, and no "otherwise" after it.
   const editor = await h.page(`dashboard.html#/groups/${created.id}`);
   await editor.text('Allowed, time not counted', { within: '.plan' }).expectVisible();
-  await editor.text('Otherwise: time is only counted.').expectCount(0);
+  await editor
+    .text(
+      'When no condition applies, the sites open normally: WebHandbrake only keeps track of the time spent on them.',
+    )
+    .expectCount(0);
   await openPart(editor, 'When');
   await editor.text('Allowed, time not counted', { within: '.policy' }).expectVisible();
   await editor.get('.policy.otherwise').expectCount(0);
@@ -370,6 +382,7 @@ test('"count only" at certain times counts nothing outside them (#21)', async ({
 
 test('the main settings of what happens are chosen in the wizard (#14)', async ({ h }) => {
   const p = await h.page('dashboard.html#/groups/new');
+  await p.label('Name', { exact: true }).fill('Feeds');
   await p.placeholder('Add a site, or paste a list…').fill('feeds.test');
   await p.button('Add', { exact: true }).click();
   await p.button('Next: when').click();
@@ -411,18 +424,21 @@ test('the main settings of what happens are chosen in the wizard (#14)', async (
 
 test('the wizard decides whether a new rule allows breaks (#15)', async ({ h }) => {
   const p = await h.page('dashboard.html#/groups/new');
+  await p.label('Name', { exact: true }).fill('No breaks');
   await p.placeholder('Add a site, or paste a list…').fill('nobreak.test');
   await p.button('Add', { exact: true }).click();
   await p.button('Next: when').click();
   await p.button('Next: what happens').click();
   await p.role('radio', 'Block').click();
-  // Breaks are asked with what happens; their cost comes from the protection, chosen next.
+  // Breaks are asked with what happens, off as in the full editor; their cost comes from the
+  // protection, chosen next.
   const breaks = p.role('switch', 'Allow breaks');
-  await breaks.expectChecked(true);
+  await breaks.expectChecked(false);
+  await breaks.click();
   await p.text(/depends on the protection you choose next/).expectVisible();
   await p.button('Next: protection').click();
   await p.role('radio', /^Wait/).click();
-  // Back in what happens, breaks follow the level until they are turned off.
+  // Back in what happens, breaks cost what the protection says until they are turned off.
   await p.button(/^What happens/).click();
   await breaks.expectChecked(true);
   await p.text(/A break costs: a 30 s wait/).expectVisible();
@@ -457,14 +473,20 @@ test('the rule editor has a Breaks part only while one of the conditions blocks'
   await openPart(p, 'What happens');
   await p.role('radio', 'Block').click();
   await part.expectVisible();
-  await openPart(p, 'Protection');
-  await p.text(/^Breaks cost/).expectVisible();
   await openPart(p, 'Breaks');
   await p.role('heading', PARTS.Breaks).expectVisible();
+  // The protection says what breaks take once they are allowed.
+  await openPart(p, 'Protection');
+  await p.text(/^Breaks cost/).expectCount(0);
+  await openPart(p, 'Breaks');
+  await p.role('switch', 'Breaks allowed').click();
+  await openPart(p, 'Protection');
+  await p.text(/^Breaks cost/).expectVisible();
 });
 
 test('only a rule that blocks gets breaks from the wizard (#15)', async ({ h }) => {
   const p = await h.page('dashboard.html#/groups/new');
+  await p.label('Name', { exact: true }).fill('Counted');
   await p.placeholder('Add a site, or paste a list…').fill('counted.test');
   await p.button('Add', { exact: true }).click();
   await p.button('Next: when').click();
@@ -495,13 +517,14 @@ test('only a rule that blocks gets breaks from the wizard (#15)', async ({ h }) 
 
 test('the daily time of a new rule can be any amount, not only the usual ones (#13)', async ({ h }) => {
   const p = await h.page('dashboard.html#/groups/new');
+  await p.label('Name', { exact: true }).fill('Clips');
   await p.placeholder('Add a site, or paste a list…').fill('clips.test');
   await p.button('Add', { exact: true }).click();
   await p.button('Next: when').click();
-  await p.role('radio', /After some time each day/).click();
+  await p.role('radio', /^After some time/).click();
   await p.role('radio', '30 min').expectChecked();
   await p.role('radio', 'Other').click();
-  await p.label('Minutes a day').fill('75');
+  await p.label('Time allowed').fill('75');
   await p.button('Next: what happens').click();
   await p.role('radio', 'Block').click();
   await toReview(p);
@@ -509,7 +532,7 @@ test('the daily time of a new rule can be any amount, not only the usual ones (#
   // Going back to the step keeps "Other" and the amount typed.
   await p.button(/^When/).click();
   await p.role('radio', 'Other').expectChecked();
-  await p.label('Minutes a day').expectValue('75');
+  await p.label('Time allowed').expectValue('75');
   await p.button('Next: what happens').click();
   await toReview(p);
   await p.button('Create rule').click();
@@ -520,6 +543,58 @@ test('the daily time of a new rule can be any amount, not only the usual ones (#
     minutes: 75,
     period: { kind: 'day' },
   });
+});
+
+test('the time of a new rule can start again every so many hours or days', async ({ h }) => {
+  const p = await h.page('dashboard.html#/groups/new');
+  await p.label('Name', { exact: true }).fill('Clips');
+  await p.placeholder('Add a site, or paste a list…').fill('clips.test');
+  await p.button('Add', { exact: true }).click();
+  await p.button('Next: when').click();
+  await p.role('radio', /^After some time/).click();
+  await p.label('Starts again every', { exact: true }).expectValue('1');
+  await p.label('Starts again every: unit').expectValue('days');
+  await p.role('radio', 'Other').click();
+  await p.label('Time allowed', { exact: true }).fill('120');
+  // The unit keeps the number: 1 day becomes 1 hour, shorter than the time allowed.
+  await p.label('Starts again every: unit').select('hours');
+  await p.text('The time allowed must be shorter than the period, or it is never reached.').expectVisible();
+  await p.button('Next: what happens').expectEnabled(false);
+  await p.label('Starts again every', { exact: true }).fill('3');
+  await p.label('Starts again every: unit').select('days');
+  await p.button('Next: what happens').click();
+  await p.role('radio', 'Block').click();
+  await toReview(p);
+  await p.get('.plan-text').expectText('After 2 h every 3 days on clips.test');
+  await p.button('Create rule').click();
+  await p.role('heading', 'Rules', { exact: true }).expectVisible();
+  const cfg = (await h.rpc('config.get')).config;
+  expect(cfg.groups[cfg.groups.length - 1].policies[0].budget).toMatchObject({
+    type: 'time',
+    minutes: 120,
+    period: { kind: 'days', n: 3 },
+  });
+});
+
+test('in the editor a limit and its period are a number and a unit', async ({ h }) => {
+  await setup(h, REMINDER);
+  const cfg = (await h.rpc('config.get')).config;
+  const p = await h.page(`dashboard.html#/groups/${cfg.groups[0].id}?step=when`);
+  await p.get({ css: '.policy-sentence', nth: 1 }).click();
+  await p.label('Time allowed', { exact: true }).expectValue('30');
+  await p.label('Time allowed: unit').select('hours');
+  await p.label('Period').select('every');
+  await p.label('Every', { exact: true }).expectValue('2');
+  await p.label('Every: unit').expectValue('hours');
+  // 30 hours every 2 hours would never be reached.
+  await p.text('This limit is as long as its period or longer, so it is never reached.').expectVisible();
+  await p.label('Every: unit').select('days');
+  await p.text('This limit is as long as its period or longer, so it is never reached.').expectCount(0);
+  await p.button('Save changes').click();
+  await p.button('Yes, continue').click();
+  await expect
+    .poll(async () => (await h.rpc('config.get')).config.groups[0].policies[1].budget)
+    .toMatchObject({ type: 'time', minutes: 30 * 60, period: { kind: 'days', n: 2 } });
 });
 
 test("first run, welcome → the rule wizard's steps → done", async ({ h }) => {
@@ -535,7 +610,7 @@ test("first run, welcome → the rule wizard's steps → done", async ({ h }) =>
   await p.placeholder('Add a site, or paste a list…').fill('clips.test');
   await p.button('Add', { exact: true }).click();
   await p.button('Next: when').click();
-  await p.role('radio', /After some time each day/).click();
+  await p.role('radio', /^After some time/).click();
   await p.role('radio', '45 min').click();
   await p.button('Next: what happens').click();
   // Nothing is pre-selected: we do not know why the extension was installed.
@@ -570,11 +645,13 @@ test('Back from the first step returns to the welcome and keeps the draft; the r
 }) => {
   const p = await h.page('dashboard.html#/welcome');
   await p.button('Set up in about a minute').click();
+  await p.label('Name', { exact: true }).fill('Casino');
   await p.placeholder('Add a site, or paste a list…').fill('casino.test');
   await p.button('Add', { exact: true }).click();
   await p.button('Back').click();
   await p.role('heading', 'Welcome to WebHandbrake').expectVisible();
   await p.button('Set up in about a minute').click();
+  await p.label('Name', { exact: true }).expectValue('Casino');
   await p.text('casino.test', { within: '.target-row' }).expectVisible();
   await p.button('Next: when').click();
   await p.button('Next: what happens').click();
@@ -622,6 +699,31 @@ test('the editor normalises a pasted address and saves a renamed rule', async ({
   expect(after.name).toBe('Videos');
   expect(after.targets.map((t: any) => t.value)).toContain('stream.test/watch?v=1');
   await expectBlocked(h, 'http://stream.test/watch?v=1');
+});
+
+test('the pencil corrects an address and its note in place', async ({ h }) => {
+  await setup(h, REMINDER);
+  const cfg = (await h.rpc('config.get')).config;
+  const p = await h.page(`dashboard.html#/groups/${cfg.groups[1].id}?step=sites`);
+  await p.button('Edit video.test').click();
+  await p.label('Address').expectValue('video.test');
+  await p.label('Address').fill('two.test three.test');
+  await p.button('Save', { exact: true }).click();
+  await p.text('Enter one address. To add more, use the box above.').expectVisible();
+  await p.label('Address').fill('vide0.test');
+  await p.label('Note (optional)').fill('typo fixed');
+  await p.button('Save', { exact: true }).click();
+  await p.text('vide0.test', { within: '.target-row' }).expectVisible();
+  await p.text('typo fixed').expectVisible();
+  await p.text('video.test', { within: '.target-row' }).expectCount(0);
+  await p.button('Save changes').click();
+  // The old address is removed (a loosening) and the new one added, not a note change.
+  await p.button('Yes, continue').click();
+  await p.text('Done: your change is applied.').expectVisible();
+  const after = (await h.rpc('config.get')).config.groups[1].targets;
+  expect(after.map((t: any) => [t.value, t.note])).toEqual([['vide0.test', 'typo fixed']]);
+  await expectBlocked(h, 'http://vide0.test/');
+  await expectAllowed(h, 'http://video.test/');
 });
 
 test('the rule editor follows changes made elsewhere while nothing is edited', async ({ h }) => {
@@ -709,6 +811,15 @@ test('insights show the time per rule and site, and the impulses resisted', asyn
   await insights.text('Video', { exact: true, within: 'main' }).expectVisible();
   await insights.text('video.test', { exact: true, within: 'main' }).expectVisible();
   await insights.text(/time you chose not to go in/).expectVisible();
+  // The days split by site, with a legend.
+  await insights.role('radio', 'By site').click();
+  await insights.get({ css: '.legend li', text: 'video.test' }).expectVisible();
+  await insights.get('.bars .stacked').expectVisible();
+  // A day hour by hour.
+  await insights.role('radio', 'Day').click();
+  await insights.text('Hour by hour', { exact: true }).expectVisible();
+  await insights.role('img', 'Time on limited sites per hour').expectVisible();
+  expect(await insights.get('.bars .col').count()).toBe(24);
   const today = await h.page('dashboard.html#/today');
   await today.text('Video', { within: 'main' }).expectVisible();
 });

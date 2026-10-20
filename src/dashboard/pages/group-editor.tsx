@@ -15,7 +15,8 @@ import {
   newGroup,
   newPolicy,
   pausePolicyFor,
-  targetsFromSites,
+  targetKey,
+  targetsFromLines,
 } from '../../engine/defaults';
 import { clone } from '../../engine/json';
 import type { Group, Policy, Protection, Target } from '../../engine/types';
@@ -149,7 +150,7 @@ export function groupFromTemplate(templateId: string | null, protection: Protect
     name: t(tpl.nameKey),
     color: tpl.color,
     icon: tpl.icon,
-    targets: targetsFromSites(tpl.sites),
+    targets: targetsFromLines(tpl.entries),
     policies: [newPolicy({ intervention: frictionIntervention() })],
     pause: pausePolicyFor(protection),
     protection,
@@ -453,7 +454,7 @@ export function GroupEditorPage({
                     key={tpl.id}
                     type="button"
                     class="chip"
-                    aria-pressed={hasTemplate(draft.targets, tpl.sites)}
+                    aria-pressed={hasTemplate(draft.targets, tpl.entries)}
                     onClick={() => set({ targets: toggleTemplate(draft.targets, tpl.id) })}
                   >
                     <Icon name={tpl.icon} />
@@ -566,7 +567,7 @@ export function GroupEditorPage({
             groupId={draft.id}
             name={draft.name}
             label={t('editor.level')}
-            breaks={canHaveBreaks(draft)}
+            breaks={canHaveBreaks(draft) && draft.pause.allowed}
           />
         )}
 
@@ -872,7 +873,7 @@ function Overview({
           'how',
           draft.policies.length
             ? [...new Set(draft.policies.map((x) => describeIntervention(x.intervention)))].join(' · ')
-            : t('editor.otherwise'),
+            : t('editor.overview.openNormally'),
         )}
         {row(
           'protection',
@@ -905,25 +906,29 @@ function Overview({
   );
 }
 
-/** Whether every site of a ready-made list is in the rule. */
-function hasTemplate(targets: Target[], sites: string[]): boolean {
-  const have = new Set(targets.filter((x) => !x.allow).map((x) => x.value));
-  return sites.every((s) => have.has(s));
+/** Whether every site of a ready-made list is in the rule (its exceptions may have been removed). */
+function hasTemplate(targets: Target[], entries: string[]): boolean {
+  const have = new Set(targets.map(targetKey));
+  return targetsFromLines(entries).every((x) => x.allow || have.has(targetKey(x)));
 }
 
 /**
- * A ready-made list adds its missing sites; when all of them are there, it removes them, except
- * those that another complete ready-made list also has.
+ * A ready-made list adds its missing entries; when all of its sites are there, it removes its
+ * entries, except those that another complete ready-made list also has.
  */
 function toggleTemplate(targets: Target[], id: string): Target[] {
   const tpl = TEMPLATES.find((x) => x.id === id);
   if (!tpl) return targets;
-  if (!hasTemplate(targets, tpl.sites)) {
-    const have = new Set(targets.map((x) => x.value));
-    return [...targets, ...targetsFromSites(tpl.sites.filter((v) => !have.has(v)))];
+  const own = targetsFromLines(tpl.entries);
+  if (!hasTemplate(targets, tpl.entries)) {
+    const have = new Set(targets.map(targetKey));
+    return [...targets, ...own.filter((x) => !have.has(targetKey(x)))];
   }
+  const ownKeys = new Set(own.map(targetKey));
   const kept = new Set(
-    TEMPLATES.filter((x) => x.id !== id && hasTemplate(targets, x.sites)).flatMap((x) => x.sites),
+    targetsFromLines(
+      TEMPLATES.filter((x) => x.id !== id && hasTemplate(targets, x.entries)).flatMap((x) => x.entries),
+    ).map(targetKey),
   );
-  return targets.filter((x) => x.allow || !tpl.sites.includes(x.value) || kept.has(x.value));
+  return targets.filter((x) => !ownKeys.has(targetKey(x)) || kept.has(targetKey(x)));
 }

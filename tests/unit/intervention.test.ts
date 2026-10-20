@@ -232,6 +232,36 @@ describe('the intervention page', () => {
     expect(fake.removed).toEqual([1]);
   });
 
+  it('a break taken from the block page, or from the popup on its tab, is going in, not an impulse resisted', async () => {
+    const blocks = group('A', ['a.test', 'b.test'], [{ intervention: BLOCK }]);
+    blocks.pause = { ...blocks.pause, allowed: true, scopes: ['page', 'site'], cost: { type: 'confirm' } };
+    const t = await setup([blocks]);
+    const pauses = await import('../../src/background/pauses');
+    const { todayStats } = await import('../../src/background/views');
+    const takeBreak = async (url: string, sender?: chrome.runtime.MessageSender) => {
+      const { ticket } = await pauses.startPause({ url, scope: 'page', minutes: 5, reason: 'x' }, sender);
+      expect(await t.tickets.answerTicket(ticket!.id, '')).toMatchObject({ status: 'done' });
+    };
+    await t.model('https://a.test/');
+    await takeBreak('https://a.test/', t.sender);
+    expect(todayStats()).toMatchObject({ shown: 1, proceeded: 1, impulses: 0 });
+    // Closing the page afterwards is not leaving without going in.
+    await t.intervention.interventionLeft(t.sender);
+    expect(t.store.usage.counterSum('left:A', ['2026-10-05'])).toBe(0);
+    // The popup of a tab showing the block page of b.test.
+    fake.tabs.push({ id: 2, url: `${PAGE}#https://b.test/`, incognito: false, active: false });
+    await t.intervention.interventionModel('https://b.test/', {
+      tab: { id: 2, incognito: false },
+      url: PAGE,
+    } as chrome.runtime.MessageSender);
+    await takeBreak('https://b.test/');
+    expect(todayStats()).toMatchObject({ shown: 2, proceeded: 2, impulses: 0 });
+    // A break with no block page shown lets no page through.
+    await takeBreak('https://b.test/other');
+    expect(todayStats()).toMatchObject({ shown: 2, proceeded: 2, impulses: 0 });
+    expect(t.store.usage.counterSum('pausedIn:A', ['2026-10-05'])).toBe(2);
+  });
+
   it('reopens an allowed page in its own tab, only for the intervention page and real addresses', async () => {
     const t = await setup([group('A', ['a.test'], [{ intervention: BLOCK }])]);
     expect(await t.intervention.reopenInTab('file:///notes.txt', t.sender)).toEqual({ ok: true });

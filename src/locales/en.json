@@ -118,7 +118,10 @@
     "message": "Limit"
   },
   "budget.minutes": {
-    "message": "Minutes"
+    "message": "Time allowed"
+  },
+  "budget.neverReached": {
+    "message": "This limit is as long as its period or longer, so it is never reached."
   },
   "budget.perSite": {
     "message": "Count each site separately"
@@ -345,11 +348,11 @@
     "message": "typing {length} random characters"
   },
   "dailyMinutes.custom": {
-    "message": "Minutes a day"
+    "message": "Time allowed"
   },
   "dailyMinutes.other": {
     "message": "Other",
-    "description": "Choice that lets the person type a daily amount of minutes."
+    "description": "Choice that lets the person type an amount of time."
   },
   "data.backups": {
     "message": "Automatic backups"
@@ -430,7 +433,7 @@
     "message": "Hide the countdown"
   },
   "delay.increase": {
-    "message": "Extra seconds for each previous visit today"
+    "message": "Extra wait for each previous visit today"
   },
   "delay.onBlur": {
     "message": "If you leave the page"
@@ -554,6 +557,25 @@
   },
   "duration.s": {
     "message": "{s} s"
+  },
+  "duration.unit": {
+    "message": "Unit"
+  },
+  "duration.unit.days": {
+    "message": "{n, plural, one {day} other {days}}"
+  },
+  "duration.unit.hours": {
+    "message": "{n, plural, one {hour} other {hours}}"
+  },
+  "duration.unit.minutes": {
+    "message": "{n, plural, one {minute} other {minutes}}"
+  },
+  "duration.unit.seconds": {
+    "message": "{n, plural, one {second} other {seconds}}"
+  },
+  "duration.unitOf": {
+    "message": "{label}: unit",
+    "description": "Name of the unit list next to a number, e.g. \"Time allowed: unit\"."
   },
   "editor.addAlways": {
     "message": "Add a condition for all times"
@@ -682,7 +704,7 @@
     "message": "e.g. I want to finish my thesis by March."
   },
   "editor.otherwise": {
-    "message": "Otherwise: time is only counted."
+    "message": "When no condition applies, the sites open normally: WebHandbrake only keeps track of the time spent on them."
   },
   "editor.overview.breaksFree": {
     "message": "Allowed, up to {duration} each, at no cost."
@@ -694,7 +716,7 @@
     "message": "Allowed, up to {duration} each. A break costs: {cost}."
   },
   "editor.overview.conditions": {
-    "message": "{count, plural, =0 {No conditions yet: time is only counted} one {# condition} other {# conditions, checked from top to bottom}}"
+    "message": "{count, plural, =0 {No conditions yet: the sites open normally and WebHandbrake only keeps track of the time spent on them} one {# condition} other {# conditions, checked from top to bottom}}"
   },
   "editor.overview.intro": {
     "message": "What the rule does, in a few lines. Choose Change next to a part to edit it, then save your changes."
@@ -713,6 +735,9 @@
   },
   "editor.overview.on": {
     "message": "On {sites}"
+  },
+  "editor.overview.openNormally": {
+    "message": "The sites open normally."
   },
   "editor.overview.title": {
     "message": "This rule at a glance"
@@ -1025,7 +1050,7 @@
     "message": "After passing, allow"
   },
   "grant.minutes": {
-    "message": "Minutes"
+    "message": "How long"
   },
   "grant.mode": {
     "message": "For"
@@ -1297,7 +1322,7 @@
     "message": "Insights shows the time and visits on the sites of your rules, day by day, by rule and by site. With “Track time on all sites” on (Settings › Time), it also measures sites outside your rules."
   },
   "help.insights.p2": {
-    "message": "“Times WebHandbrake stepped in” counts the intervention pages shown; “times you chose not to go in” counts those you did not continue past. Insights also lists your breaks with their reasons, focus sessions and the reasons you gave for going in."
+    "message": "“Times WebHandbrake stepped in” counts the intervention pages shown; “times you chose not to go in” counts those you did not continue past, neither by answering them nor with a break. Insights also lists your breaks with their reasons, focus sessions and the reasons you gave for going in."
   },
   "help.insights.title": {
     "message": "Insights"
@@ -1369,7 +1394,7 @@
     "message": "A break lifts a block from a page, a site, a rule or all rules for a few minutes. Only a block has breaks: a question, a wait and a challenge have their own way in, and the other interventions either leave the page open or take you away from it at once. Each rule that blocks decides whether breaks are allowed, how long they last, how many you can take and what they cost (nothing, a confirmation, a wait, a challenge or the rule’s password)."
   },
   "help.pauses.p2": {
-    "message": "Breaks end by themselves and the restriction comes back at once. You can end a break early at any time."
+    "message": "Breaks end by themselves and the restriction comes back at once. You can end a break early at any time, or extend it from the popup: it lasts longer, at the same cost and up to the longest a break can last, without counting as another break."
   },
   "help.pauses.title": {
     "message": "Breaks"
@@ -1378,10 +1403,10 @@
     "message": "WebHandbrake has no account, no server and no telemetry. It makes no network requests of its own: a redirect address you set and the links you click are opened by the browser. Your rules, settings and statistics stay in your browser profile."
   },
   "help.privacy.p2": {
-    "message": "Statistics are daily totals per rule, per site of a rule and per site; they never contain full addresses. Sites outside your rules are measured only with “Track time on all sites”. In private windows only the totals your limits need are kept. Statistics are kept {days} days by default, and deleting them never refills a limit: the totals your limits use are kept for {keepDays} days."
+    "message": "Statistics are daily totals per rule, per site of a rule and per site, and the time on limited sites per hour; they never contain full addresses. Sites outside your rules are measured only with “Track time on all sites”. In private windows only the totals your limits need are kept. Statistics are kept {days} days by default, and deleting them never refills a limit: the totals your limits use are kept for {keepDays} days."
   },
   "help.privacy.p3": {
-    "message": "A small script in the page shows the timer, filters and the grace period, and tells WebHandbrake the page’s address, whether you are active and whether media is playing. It runs on the sites of your rules, and on every site when “Track time on all sites” is on or when a rule has a regular expression, a site name with *, such as amazon.* (several ready-made lists have them), or an entry without a site name, such as *news*. The text you type is read only inside the page, for the grace period. Apart from the time counted per site, nothing the script reads is stored."
+    "message": "A small script in the page shows the timer, filters and the grace period, and tells WebHandbrake the page’s address, whether you are active and whether media is playing. It runs on the sites of your rules, and on every site when “Track time on all sites” is on or when a rule has a regular expression, a site name with *, such as amazon.* (no ready-made list has one), or an entry without a site name, such as *news*. The text you type is read only inside the page, for the grace period. Apart from the time counted per site, nothing the script reads is stored."
   },
   "help.privacy.p4": {
     "message": "Pages saved for later keep their address and title, also from private windows, until you remove them. “Recent decisions” (Settings › Diagnostics) keeps the addresses of restricted pages until the browser closes; “Keep a log” turns it off. Settings › Privacy lists what is saved on this device, with sizes; what is kept only until the browser closes is not listed there."
@@ -1408,7 +1433,7 @@
     "message": "With the Password protection, loosening the rule needs its password, and so does a break of the rule that costs a password. Give the password to someone you trust, or keep it where you cannot reach it at once; only a salted hash is stored. A change to several rules asks for the password of each rule it loosens, once for rules that share one."
   },
   "help.protection.p6": {
-    "message": "With the Partner code protection, someone you trust holds the key: they add the rule to an authenticator app on their phone by scanning a QR code once. From then on, loosening the rule and confirming its pending changes need the six-digit code that their app shows, and so do its breaks unless you turn that off. Each code works once, nothing is sent anywhere, and the emergency exit still works without your partner. The clocks of both devices must be right."
+    "message": "With the Partner code protection, someone you trust holds the key: they add the rule to an authenticator app on their phone by scanning a QR code once. From then on, loosening the rule and confirming its pending changes need the six-digit code that their app shows, and so do its breaks if you ask for that. Each code works once, nothing is sent anywhere, and the emergency exit still works without your partner. The clocks of both devices must be right."
   },
   "help.protection.p7": {
     "message": "Some changes follow the emergency exit instead of the protections of your rules, for that change only: loosening the settings of the protection itself (blocking the browser’s extension and settings pages, the emergency exit’s waiting time, detecting a manipulated clock), and whatever a restore, an import or a reset loosens. Such a change waits as long as the emergency exit, then you confirm it in Protection by typing a sentence. It applies at once when no rule is active."
@@ -1417,7 +1442,7 @@
     "message": "Protecting your rules"
   },
   "help.rules.p1": {
-    "message": "Each rule has one or more conditions with what happens, such as “Mon–Fri 09:00–17:00 → Block” or “Always, after 45 min per day → Wait 30 s”. Conditions are checked from top to bottom and the first true one applies. If none applies, time is only counted."
+    "message": "Each rule has one or more conditions with what happens, such as “Mon–Fri 09:00–17:00 → Block” or “Always, after 45 min per day → Wait 30 s”. Conditions are checked from top to bottom and the first true one applies. If none applies, the sites open normally and WebHandbrake only keeps track of the time spent on them."
   },
   "help.rules.p2": {
     "message": "A condition can use time windows (also overnight, like 22:00–02:00), and optionally a limit: time per hour, day, week, month or custom period, visits per period, or continuous use followed by a mandatory stop."
@@ -1696,14 +1721,41 @@
   "insights.exportJson": {
     "message": "Export as JSON"
   },
+  "insights.hour": {
+    "message": "Hour"
+  },
+  "insights.hours": {
+    "message": "Hour by hour"
+  },
+  "insights.hoursLabel": {
+    "message": "Time on limited sites per hour"
+  },
   "insights.impulses": {
     "message": "{count, plural, one {time you chose not to go in} other {times you chose not to go in}}"
   },
   "insights.intentions": {
     "message": "Reasons for going in"
   },
+  "insights.legend": {
+    "message": "Sites"
+  },
+  "insights.mode": {
+    "message": "Show"
+  },
+  "insights.mode.sites": {
+    "message": "By site"
+  },
+  "insights.mode.total": {
+    "message": "Total"
+  },
+  "insights.month": {
+    "message": "Month"
+  },
   "insights.next": {
     "message": "Next period"
+  },
+  "insights.noHours": {
+    "message": "No hour-by-hour detail for this day: it was recorded before WebHandbrake kept the hours."
   },
   "insights.noIntentions": {
     "message": "No reasons recorded."
@@ -1713,6 +1765,9 @@
   },
   "insights.none": {
     "message": "Nothing yet."
+  },
+  "insights.otherSites": {
+    "message": "Other sites"
   },
   "insights.pauses": {
     "message": "{count, plural, one {break} other {breaks}} ({minutes} min)"
@@ -1727,7 +1782,7 @@
     "message": "Previous period"
   },
   "insights.privacy": {
-    "message": "Statistics are daily totals kept on this device. Nothing is sent anywhere."
+    "message": "Statistics are totals per day and per hour, kept on this device. Nothing is sent anywhere."
   },
   "insights.sessions": {
     "message": "{count, plural, one {focus session} other {focus sessions}}"
@@ -1765,11 +1820,26 @@
   "insights.total": {
     "message": "on limited sites"
   },
+  "insights.total.column": {
+    "message": "Total"
+  },
   "insights.trend": {
     "message": "Day by day"
   },
+  "insights.trend.months": {
+    "message": "Month by month"
+  },
   "insights.trendLabel": {
     "message": "Time on limited sites per day"
+  },
+  "insights.trendLabel.months": {
+    "message": "Time on limited sites per month"
+  },
+  "insights.trendSitesLabel": {
+    "message": "Time per site per day"
+  },
+  "insights.trendSitesLabel.months": {
+    "message": "Time per site per month"
   },
   "insights.visits": {
     "message": "{count, plural, one {# visit} other {# visits}}"
@@ -1895,7 +1965,7 @@
     "message": "Continue for {minutes} min"
   },
   "iv.ask.custom": {
-    "message": "How many minutes?"
+    "message": "How long?"
   },
   "iv.ask.howLong": {
     "message": "For how long?"
@@ -1911,7 +1981,7 @@
     "message": "Your reason"
   },
   "iv.ask.upTo": {
-    "message": "Up to {minutes} min."
+    "message": "Up to {duration}."
   },
   "iv.ask.wait": {
     "message": "You can continue in {seconds} s."
@@ -1972,6 +2042,9 @@
   },
   "iv.internal": {
     "message": "The browser’s extension and settings pages are blocked right now."
+  },
+  "iv.internal.body": {
+    "message": "So that WebHandbrake cannot be turned off in a moment of impulse. You choose when this happens with “Block the browser’s extension and settings pages” in Protection."
   },
   "iv.loop": {
     "message": "This page keeps being redirected. Open Diagnostics in WebHandbrake to check the blocking filters."
@@ -2036,14 +2109,17 @@
   "later.available": {
     "message": "available now"
   },
+  "later.availableAt": {
+    "message": "available from {when}"
+  },
   "later.empty": {
     "message": "Nothing saved for later."
   },
   "later.emptyHelp": {
     "message": "When a page is blocked, choose “Save for later” to find it here."
   },
-  "later.notYet": {
-    "message": "not yet available"
+  "later.never": {
+    "message": "will not open with the current rules"
   },
   "later.notify": {
     "message": "Tell me when saved pages become available"
@@ -2094,7 +2170,10 @@
     "message": "Loosening the rule needs the code of someone you trust."
   },
   "level.partner.pauses": {
-    "message": "Breaks also need your partner’s code, unless you turn that off, and only a few are allowed each day."
+    "message": "Breaks cost a confirmation, or your partner’s code if you ask for it, and only a few are allowed each day."
+  },
+  "level.partner.pausesCode": {
+    "message": "Breaks also need your partner’s code, and only a few are allowed each day."
   },
   "level.partner.weaken": {
     "message": "Loosening the rule needs the code that your partner’s authenticator app shows. Each code works once."
@@ -2285,6 +2364,9 @@
   "overlay.intention": {
     "message": "Your reason"
   },
+  "overlay.passLeft": {
+    "message": "access · {group}"
+  },
   "overlay.pauseLeft": {
     "message": "break · {group}"
   },
@@ -2348,8 +2430,23 @@
   "pause.error.duration": {
     "message": "This duration is not allowed."
   },
+  "pause.error.ended": {
+    "message": "This break has already ended."
+  },
   "pause.error.scope": {
     "message": "This kind of break is not allowed."
+  },
+  "pause.extend": {
+    "message": "Extend the break"
+  },
+  "pause.extendBy": {
+    "message": "How much longer"
+  },
+  "pause.extendHelp": {
+    "message": "You are on a break for {scope} ({minutes} min so far). Extending it does not count as another break."
+  },
+  "pause.extended": {
+    "message": "Break extended by {minutes} minutes."
   },
   "pause.for": {
     "message": "Break for"
@@ -2366,8 +2463,14 @@
     "message": "{minutes} min of breaks left {period}",
     "description": "period: pause.period.*, e.g. \"30 min of breaks left this week\""
   },
+  "pause.leftMetered": {
+    "message": "{duration} left on the site"
+  },
+  "pause.leftUntil": {
+    "message": "Until {when}"
+  },
   "pause.max": {
-    "message": "at most {minutes} min"
+    "message": "at most {duration}"
   },
   "pause.metered": {
     "message": "Minutes are used only while you are on the site."
@@ -2417,6 +2520,15 @@
   "pause.started": {
     "message": "Break started for {minutes} minutes."
   },
+  "pause.subject.all": {
+    "message": "All rules"
+  },
+  "pause.subject.page": {
+    "message": "{page} · {rules}"
+  },
+  "pause.subject.site": {
+    "message": "{site} · {rules}"
+  },
   "pause.summary.cost": {
     "message": "Cost: {cost}",
     "description": "cost: cost.*, e.g. \"Cost: a 30 s wait\""
@@ -2424,8 +2536,14 @@
   "pause.summary.free": {
     "message": "No cost"
   },
+  "pause.summary.more": {
+    "message": "up to {minutes} min more"
+  },
   "pause.title": {
     "message": "Take a break"
+  },
+  "pause.unavailable.longest": {
+    "message": "This break is already as long as a break can be."
   },
   "pause.unavailable.noGroup": {
     "message": "No rule applies to this page."
@@ -2485,7 +2603,7 @@
     "message": "At most this many breaks"
   },
   "pauseRules.limitMinutes": {
-    "message": "At most this many minutes"
+    "message": "At most this much time"
   },
   "pauseRules.metered": {
     "message": "Count only time spent on the site"
@@ -2494,7 +2612,7 @@
     "message": "Break minutes are used only while you are actually on the site."
   },
   "pauseRules.minutes": {
-    "message": "Minutes"
+    "message": "How long"
   },
   "pauseRules.mode.choices": {
     "message": "Choose from a list"
@@ -2577,8 +2695,8 @@
   "pending.requested": {
     "message": "requested {when}"
   },
-  "period.days": {
-    "message": "Days"
+  "period.every": {
+    "message": "Every"
   },
   "period.everyDays": {
     "message": "every {n, plural, one {day} other {# days}}"
@@ -2589,29 +2707,25 @@
   "period.kind.day": {
     "message": "per day"
   },
-  "period.kind.days": {
-    "message": "every N days"
+  "period.kind.every": {
+    "message": "every…",
+    "description": "Followed by a number and a unit: \"every 2 hours\", \"every 3 days\"."
   },
   "period.kind.hour": {
     "message": "per hour"
-  },
-  "period.kind.minutes": {
-    "message": "every N minutes"
   },
   "period.kind.month": {
     "message": "per month"
   },
   "period.kind.rolling": {
-    "message": "in any N minutes"
+    "message": "in any…",
+    "description": "Followed by a number and a unit: \"in any 2 hours\" (a sliding window)."
   },
   "period.kind.week": {
     "message": "per week"
   },
   "period.label": {
     "message": "Period"
-  },
-  "period.minutes": {
-    "message": "Minutes"
   },
   "period.offset": {
     "message": "shifted by",
@@ -2631,6 +2745,9 @@
   },
   "period.rolling": {
     "message": "in any {duration}"
+  },
+  "period.rollingLength": {
+    "message": "In any"
   },
   "permanent.ack": {
     "message": "I understand that only the emergency exit can loosen this rule."
@@ -2767,12 +2884,6 @@
   },
   "popup.pause": {
     "message": "Take a break"
-  },
-  "popup.pausedLeft": {
-    "message": "Break: {duration} left on the site"
-  },
-  "popup.pausedUntil": {
-    "message": "On a break until {when}"
   },
   "popup.pendingReady": {
     "message": "{count, plural, one {A change is ready to confirm} other {# changes are ready to confirm}}"
@@ -3574,13 +3685,13 @@
     "description": "e.g. \"Mon–Fri 09:00–17:00, after 30 min per day\""
   },
   "summary.noPolicies": {
-    "message": "No conditions yet: time is only counted."
+    "message": "No conditions yet: the sites open normally and WebHandbrake only keeps track of the time spent on them."
   },
   "summary.noWindows": {
     "message": "no time set"
   },
   "summary.otherwise": {
-    "message": "Otherwise: time is only counted."
+    "message": "When no condition applies, the sites open normally: WebHandbrake only keeps track of the time spent on them."
   },
   "summary.outside": {
     "message": "Outside {windows}"
@@ -3645,6 +3756,9 @@
   "targets.addPlaceholder": {
     "message": "Add a site, or paste a list…"
   },
+  "targets.address": {
+    "message": "Address"
+  },
   "targets.allSites": {
     "message": "Every website"
   },
@@ -3657,8 +3771,11 @@
   "targets.dedupe": {
     "message": "Remove duplicates"
   },
-  "targets.editNote": {
-    "message": "Add a note to {value}"
+  "targets.edit": {
+    "message": "Edit {value}"
+  },
+  "targets.error.duplicate": {
+    "message": "This address is already in the list."
   },
   "targets.error.empty": {
     "message": "Empty entry."
@@ -3668,6 +3785,9 @@
   },
   "targets.error.noDot": {
     "message": "Not a site address: add the ending, for example youtube.com."
+  },
+  "targets.error.oneAddress": {
+    "message": "Enter one address. To add more, use the box above."
   },
   "targets.error.regexBackref": {
     "message": "Back-references are not allowed in patterns."
@@ -3692,6 +3812,9 @@
   },
   "targets.errors": {
     "message": "{count, plural, one {# line was not added:} other {# lines were not added:}}"
+  },
+  "targets.exceptionAddress": {
+    "message": "Exception address"
   },
   "targets.exceptions": {
     "message": "Exceptions"
@@ -3732,8 +3855,8 @@
   "targets.lineError": {
     "message": "Line {line} “{text}”: {error}"
   },
-  "targets.note": {
-    "message": "Note"
+  "targets.noteOptional": {
+    "message": "Note (optional)"
   },
   "targets.remove": {
     "message": "Remove {value}"
@@ -4294,8 +4417,11 @@
   "why.restriction.budget": {
     "message": "With continuous use: {what} · {when}."
   },
-  "why.restriction.grant": {
-    "message": "The break or access ends: {when} ({what})."
+  "why.restriction.pass": {
+    "message": "Your access lasts until {when}. After that: {what}."
+  },
+  "why.restriction.pause": {
+    "message": "Your break lasts until {when}. After that: {what}."
   },
   "why.restriction.schedule": {
     "message": "{what} · {when}."
@@ -4319,7 +4445,8 @@
     "message": "Every time you open {sites}"
   },
   "wizard.cond.daily": {
-    "message": "After {duration} a day on {sites}"
+    "message": "After {duration} {period} on {sites}",
+    "description": "e.g. \"After 30 min a day on youtube.com\", \"After 2 h every 3 days on youtube.com\"."
   },
   "wizard.cond.schedule": {
     "message": "When you open {sites} ({windows})"
@@ -4341,7 +4468,7 @@
   },
   "wizard.how.askMax": {
     "message": "Allowed for at most",
-    "description": "Followed by a number of minutes: the longest time the person can choose after the question."
+    "description": "Followed by a number and a unit: the longest time the person can choose after the question."
   },
   "wizard.how.breaks": {
     "message": "Allow breaks"
@@ -4387,6 +4514,14 @@
   },
   "wizard.open": {
     "message": "Open"
+  },
+  "wizard.period.day": {
+    "message": "a day",
+    "description": "Inside \"After 30 min a day on …\"."
+  },
+  "wizard.period.hour": {
+    "message": "an hour",
+    "description": "Inside \"After 10 min an hour on …\"."
   },
   "wizard.protection.intro": {
     "message": "Making the rule stricter is always immediate. This is what loosening it will take later."
@@ -4470,6 +4605,9 @@
   "wizard.then.ask": {
     "message": "WebHandbrake first asks what you want to do, for {max} at most."
   },
+  "wizard.then.askWait": {
+    "message": "WebHandbrake first asks what you want to do, for {max} at most, and lets you go in after waiting {seconds, plural, one {# second} other {# seconds}}."
+  },
   "wizard.then.block": {
     "message": "WebHandbrake blocks the page."
   },
@@ -4510,16 +4648,22 @@
     "message": "Whenever you open these sites."
   },
   "wizard.when.daily": {
-    "message": "After some time each day"
+    "message": "After some time"
   },
   "wizard.when.daily.desc": {
-    "message": "Allowed up to a daily amount, then what you choose next happens."
+    "message": "Allowed up to an amount of time, then what you choose next happens."
+  },
+  "wizard.when.every": {
+    "message": "Starts again every"
+  },
+  "wizard.when.everyHelp": {
+    "message": "For example 30 min a day, or 2 hours every 3 days."
   },
   "wizard.when.intro": {
     "message": "Pick the moment that matters most. You can add more conditions later."
   },
   "wizard.when.minutes": {
-    "message": "How much time a day?"
+    "message": "How much time?"
   },
   "wizard.when.schedule": {
     "message": "At certain times"
@@ -4529,5 +4673,8 @@
   },
   "wizard.when.title": {
     "message": "When should it apply?"
+  },
+  "wizard.when.tooLong": {
+    "message": "The time allowed must be shorter than the period, or it is never reached."
   }
 }

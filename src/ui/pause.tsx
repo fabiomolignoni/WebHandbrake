@@ -3,9 +3,10 @@
 import { useState } from 'preact/hooks';
 import type { Cost, PauseScope, Period } from '../engine/types';
 import { t } from '../i18n/i18n';
+import { formatDuration, formatList } from '../shared/format';
 import type { PauseOptions, TicketView } from '../shared/models';
 import { call } from '../shared/rpc';
-import { Banner, Button, Chips, Dialog, NumberInput, toast } from './components';
+import { Banner, Button, Chips, Dialog, DurationInput, toast } from './components';
 import { TicketDialog } from './ticket';
 
 export function costLabel(c: Cost): string {
@@ -65,7 +66,22 @@ export function pauseSummary(o: PauseOptions): string {
   const cost = o.costs.length
     ? t('pause.summary.cost', { cost: costsLabel(o.costs) })
     : t('pause.summary.free');
-  return [cost, pauseBudgetLabel(o)].filter(Boolean).join(' · ');
+  // Extending: how much longer the break can last.
+  const more = o.extend ? t('pause.summary.more', { minutes: o.duration.minutes }) : null;
+  return [cost, more, pauseBudgetLabel(o)].filter(Boolean).join(' · ');
+}
+
+/** What a break covers: "youtube.com · Social", "Social", "All rules". */
+export function breakSubject(
+  b: { groups: string[] | '*'; scope: PauseScope; site?: string; url?: string },
+  nameOf: (id: string) => string | undefined,
+): string {
+  if (b.groups === '*' || b.groups.includes('*')) return t('pause.subject.all');
+  const rules = formatList(b.groups.map((id) => nameOf(id) || t('insights.deletedGroup')));
+  if (b.scope === 'page' && b.url)
+    return t('pause.subject.page', { page: b.url.replace(/^[a-z][a-z0-9+.-]*:\/\//i, ''), rules });
+  if (b.scope === 'site' && b.site) return t('pause.subject.site', { site: b.site, rules });
+  return rules;
 }
 
 export function PauseDialog({
@@ -79,8 +95,10 @@ export function PauseDialog({
   onClose: () => void;
   onStarted?: () => void;
 }) {
+  // A break already running is extended: it keeps what it covers.
+  const extend = options.extend;
   const [scope, setScope] = useState<PauseScope>(
-    options.scopes.includes('site') ? 'site' : options.scopes[0],
+    extend?.scope ?? (options.scopes.includes('site') ? 'site' : options.scopes[0]),
   );
   // A pause of everything has its own rules (the strictest of every group).
   const o = scope === 'all' && options.all ? options.all : options;
@@ -92,6 +110,7 @@ export function PauseDialog({
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [ticket, setTicket] = useState<TicketView | null>(null);
+  const title = extend ? t('pause.extend') : t('pause.title');
 
   const start = async () => {
     setError(null);
@@ -106,21 +125,20 @@ export function PauseDialog({
       minutes,
       incognito: options.incognito,
       reason: o.reasonMode === 'none' ? undefined : reason,
+      extend: extend?.grantId,
     });
     if (r.error) setError(t(r.error));
     else if (r.ticket) setTicket(r.ticket);
     else done();
   };
   const done = () => {
-    toast(t('pause.started', { minutes }));
+    toast(extend ? t('pause.extended', { minutes }) : t('pause.started', { minutes }));
     onStarted?.();
     onClose();
   };
 
   if (ticket) {
-    return (
-      <TicketDialog ticket={ticket} title={t('pause.title')} onDone={done} onCancel={() => setTicket(null)} />
-    );
+    return <TicketDialog ticket={ticket} title={title} onDone={done} onCancel={() => setTicket(null)} />;
   }
   const scopeLabel: Record<PauseScope, string> = {
     page: t('pause.scope.page'),
@@ -132,38 +150,43 @@ export function PauseDialog({
     all: t('pause.scope.all'),
   };
   const budget = pauseBudgetLabel(o);
+  const durationLabel = extend ? t('pause.extendBy') : t('pause.duration');
   return (
     <Dialog
       open
       onClose={onClose}
-      title={t('pause.title')}
+      title={title}
       actions={
         <>
           <Button variant="primary" onClick={onClose}>
             {t('pause.cancel')}
           </Button>
-          <Button onClick={start}>{t('pause.start')}</Button>
+          <Button onClick={start}>{extend ? t('pause.extend') : t('pause.start')}</Button>
         </>
       }
     >
       <div class="stack">
+        {extend ? (
+          <p>{t('pause.extendHelp', { scope: scopeLabel[extend.scope], minutes: extend.minutes })}</p>
+        ) : (
+          <div class="field">
+            <span class="label">{t('pause.for')}</span>
+            <Chips
+              value={scope}
+              onChange={setScope}
+              label={t('pause.for')}
+              options={options.scopes.map((s) => ({ value: s, label: scopeLabel[s] }))}
+            />
+          </div>
+        )}
         <div class="field">
-          <span class="label">{t('pause.for')}</span>
-          <Chips
-            value={scope}
-            onChange={setScope}
-            label={t('pause.for')}
-            options={options.scopes.map((s) => ({ value: s, label: scopeLabel[s] }))}
-          />
-        </div>
-        <div class="field">
-          <span class="label">{t('pause.duration')}</span>
+          <span class="label">{durationLabel}</span>
           {d.mode === 'fixed' && <p>{t('common.minutes', { n: d.minutes })}</p>}
           {d.mode === 'choices' && (
             <Chips
               value={minutes}
               onChange={setMinutes}
-              label={t('pause.duration')}
+              label={durationLabel}
               options={(d.choices?.length ? d.choices : [d.minutes]).map((m) => ({
                 value: m,
                 label: t('common.minutes', { n: m }),
@@ -172,15 +195,15 @@ export function PauseDialog({
           )}
           {d.mode === 'upTo' && (
             <div class="row">
-              <NumberInput
+              <DurationInput
+                units={['minutes', 'hours']}
                 value={minutes}
                 onChange={setMinutes}
                 min={1}
                 max={d.minutes}
-                label={t('pause.duration')}
-                suffix={t('common.minutesUnit')}
+                label={durationLabel}
               />
-              <span class="help">{t('pause.max', { minutes: d.minutes })}</span>
+              <span class="help">{t('pause.max', { duration: formatDuration(d.minutes * 60) })}</span>
             </div>
           )}
           {o.metered && <span class="help">{t('pause.metered')}</span>}

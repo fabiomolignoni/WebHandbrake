@@ -153,7 +153,7 @@ function main(argv) {
     console.log(`To undo instead:\n  git tag -d v${version} && git reset --hard HEAD~1`);
   }
   console.log(
-    `\nThen: https://github.com/${repository}/releases has the draft with the packages. Submit them to the stores (store/), then publish the draft.`,
+    `\nThen: https://github.com/${repository}/releases has the draft with the packages. Submit them to the stores, then publish the draft.`,
   );
 }
 

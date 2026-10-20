@@ -3,12 +3,18 @@
  * the rule wizard and onboarding (implementation intentions).
  */
 
-import { type QuickHow, type QuickWhen, quickIntervention } from '../engine/defaults';
+import {
+  DAY_MINUTES,
+  everyPeriod,
+  type QuickHow,
+  type QuickWhen,
+  quickIntervention,
+} from '../engine/defaults';
 import { ALL_SITES } from '../engine/patterns';
 import type { Intervention, Target, TimeWindow } from '../engine/types';
 import { t } from '../i18n/i18n';
 import { formatDuration } from '../shared/format';
-import { describeWindows } from '../shared/summary';
+import { describePeriod, describeWindows } from '../shared/summary';
 
 /** "a.com, b.com and 3 more sites". */
 export function sitesPhrase(targets: Target[]): string {
@@ -30,7 +36,10 @@ function outcomeOf(when: QuickWhen, i: Intervention): string {
     case 'filter':
       return t('wizard.then.filter', { filter: t(`filter.${i.filter}`) });
     case 'ask':
-      return t('wizard.then.ask', { max: formatDuration(i.maxMinutes * 60) });
+      // The wait on the page is part of the deal: the plan says so.
+      return i.seconds
+        ? t('wizard.then.askWait', { max: formatDuration(i.maxMinutes * 60), seconds: i.seconds })
+        : t('wizard.then.ask', { max: formatDuration(i.maxMinutes * 60) });
     case 'delay':
       return t('wizard.then.delay', { seconds: i.seconds });
     case 'challenge':
@@ -52,15 +61,24 @@ export function planSentence(
   sites: string,
   windows: TimeWindow[],
   minutes: number,
-  redirectUrl = '',
+  every = DAY_MINUTES,
 ): string {
-  const outcome = outcomeOf(when, typeof how === 'string' ? quickIntervention(how, redirectUrl) : how);
+  const outcome = outcomeOf(when, typeof how === 'string' ? quickIntervention(how) : how);
   return t('wizard.review.plan', {
     cond: t(`wizard.cond.${when}`, {
       sites,
       windows: describeWindows(windows),
       duration: formatDuration(minutes * 60),
+      period: periodPhrase(every),
     }),
     outcome,
   });
+}
+
+/** "a day", "an hour", "every 3 days": how often the time allowed starts again. */
+function periodPhrase(every: number): string {
+  const period = everyPeriod(every);
+  if (period.kind === 'day') return t('wizard.period.day');
+  if (period.kind === 'hour') return t('wizard.period.hour');
+  return describePeriod(period);
 }

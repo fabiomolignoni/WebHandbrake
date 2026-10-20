@@ -13,7 +13,7 @@ import {
   Button,
   ColorDot,
   Dialog,
-  NumberInput,
+  DurationInput,
   RadioCards,
   Ring,
   Segmented,
@@ -186,12 +186,12 @@ export function QuickSession({
   );
   const customField = minutes === 'custom' && (
     <div class="row nowrap small">
-      <NumberInput
+      <DurationInput
+        units={['minutes', 'hours']}
         value={customMinutes}
         min={1}
         max={MAX_SESSION_MS / 60_000}
         label={t('focus.customMinutes')}
-        suffix={t('common.minutesUnit')}
         onChange={setCustomMinutes}
       />
       <span class="muted" aria-live="polite">

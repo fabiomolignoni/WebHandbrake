@@ -31,7 +31,8 @@ export function todayStats(): TodayStats {
       .filter(([k]) => k.startsWith(prefix))
       .reduce((a, [, v]) => a + v, 0);
   const shown = sum('shown:');
-  const proceeded = sum('proceeded:');
+  // Passes, and breaks taken from an intervention page.
+  const proceeded = sum('proceeded:') + sum('pausedIn:');
   return {
     seconds: day?.t['a:']?.[0] ?? 0,
     shown,

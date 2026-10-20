@@ -13,7 +13,7 @@ import {
   type UrlContext,
 } from './decide';
 import { HORIZON_DAYS } from './limits';
-import { SEVERITY, severityOf } from './severity';
+import { isNav, SEVERITY, severityOf } from './severity';
 import { DAY, periodRange, scheduleBoundaries } from './time';
 import type { Intervention } from './types';
 import { usageKeys } from './usage';
@@ -95,10 +95,28 @@ export function untilFor(ctx: EngineContext, url: string, uctx: UrlContext, curr
   return { until: null, next: null };
 }
 
+/**
+ * When the URL opens without an intervention page again, considering every rule (null: not
+ * with the current rules, such as under a rule that always blocks).
+ */
+export function openableAt(
+  ctx: EngineContext,
+  url: string,
+  uctx: UrlContext,
+  current?: Decision,
+): number | null {
+  const d0 = current ?? decide(ctx, url, uctx);
+  if (!isNav(d0)) return ctx.now;
+  for (const t of candidateTimes(ctx, relevantGroups(ctx, d0))) {
+    if (!isNav(decide({ ...ctx, now: t }, url, uctx))) return t;
+  }
+  return null;
+}
+
 export interface Restriction {
   /** Instant at which a stricter intervention will apply if the user keeps using the site. */
   at: number;
-  kind: 'budget' | 'schedule' | 'grant' | 'session';
+  kind: 'budget' | 'schedule' | 'pause' | 'pass' | 'session';
   intervention: Intervention;
   groupId: string | null;
 }
@@ -125,12 +143,13 @@ export function nextRestriction(
     // Pauses and passes ending.
     const grant = r.pause ?? r.pass;
     if (grant) {
+      const kind = r.pause ? 'pause' : 'pass';
       if (grant.until !== undefined) {
-        consider({ at: grant.until, kind: 'grant', intervention: r.base, groupId: r.group.id });
+        consider({ at: grant.until, kind, intervention: r.base, groupId: r.group.id });
       } else if (grant.remaining !== undefined) {
         consider({
           at: ctx.now + grant.remaining * 1000,
-          kind: 'grant',
+          kind,
           intervention: r.base,
           groupId: r.group.id,
         });

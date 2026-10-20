@@ -6,6 +6,7 @@
 
 import type { ChangeUnit } from '../engine/changes';
 import {
+  MAX_REASON_CHARS,
   SECRET_LOCK_MS,
   SECRET_MAX_FAILURES,
   TICKET_LOCK_MS,
@@ -46,6 +47,10 @@ export type Purpose =
       url?: string;
       site?: string;
       metered: boolean;
+      /** The intervention page that the break lets through, if one is shown (statistics). */
+      shown?: { tabId: number; groupId: string };
+      /** The running break this extends, instead of taking another one. */
+      extend?: string;
     }
   | {
       kind: 'pass';
@@ -164,10 +169,15 @@ export function ticketView(t: Ticket): TicketView {
   };
 }
 
-/** Creates a ticket. With no steps the purpose is executed immediately and null is returned. */
+/**
+ * Creates a ticket. With no steps the purpose is executed immediately and null is returned.
+ * `collected` holds answers already given, such as a reason typed before the ticket starts: kept
+ * with the ticket, they survive a restart of the background.
+ */
 export async function createTicket(
   purpose: Purpose,
   steps: Step[],
+  collected: Ticket['collected'] = {},
 ): Promise<{ view: TicketView | null; result?: unknown }> {
   await load();
   if (!steps.length) {
@@ -181,7 +191,7 @@ export async function createTicket(
           createdAt: now(),
           expiresAt: now(),
           active: {},
-          collected: {},
+          collected,
           failures: 0,
         })
       : undefined;
@@ -200,7 +210,7 @@ export async function createTicket(
     createdAt: now(),
     expiresAt: now() + waits + TICKET_TTL_MS,
     active: {},
-    collected: {},
+    collected,
     failures: 0,
   };
   activate(t);
@@ -297,7 +307,7 @@ export async function answerTicket(
     case 'reason':
       if (step.required && !a.trim())
         return { status: 'error', error: 'ticket.error.reasonRequired', ticket: ticketView(t) };
-      t.collected.reason = a.trim().slice(0, 500) || undefined;
+      t.collected.reason = a.trim().slice(0, MAX_REASON_CHARS) || undefined;
       break;
     case 'intention': {
       if (n < (t.active.readyAt ?? 0) - 500)

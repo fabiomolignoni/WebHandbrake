@@ -1,15 +1,23 @@
 /**
- * Insights: day, week, month, year; per group and per site; trend and comparison
- * with the previous period; attempts and pauses; neutral language.
+ * Insights: day, week, month, year; per group and per site; the hours of a day, the days of
+ * a period (in total or by site), and comparison with the previous period; attempts and
+ * pauses; neutral language.
  * Charts always have text labels and a table alternative.
  */
 
 import { useState } from 'preact/hooks';
 import { BUDGET_KEEP_DAYS } from '../../engine/limits';
-import { addDays, dayKey, logicalDayOf, parseDayKey, weekdayOf } from '../../engine/time';
+import { addDays, dayKey, HOUR, logicalDayOf, parseDayKey, weekdayOf } from '../../engine/time';
 import { t } from '../../i18n/i18n';
-import { formatDate, formatDateTime, formatDuration, formatPercent } from '../../shared/format';
-import type { StatsModel } from '../../shared/models';
+import {
+  formatDate,
+  formatDateTime,
+  formatDuration,
+  formatHour,
+  formatPercent,
+  formatTime,
+} from '../../shared/format';
+import type { StatsDay, StatsModel } from '../../shared/models';
 import { call } from '../../shared/rpc';
 import {
   Button,
@@ -24,6 +32,7 @@ import {
 } from '../../ui/components';
 import { downloadText } from '../../ui/download';
 import { useModel } from '../../ui/hooks';
+import { breakSubject } from '../../ui/pause';
 import { useDashboard } from '../context';
 
 type Span = 'day' | 'week' | 'month' | 'year';
@@ -78,59 +87,139 @@ function dayLabel(key: string, count: number): string {
   return count <= 7 ? formatDate(ms, { weekday: 'short' }) : String(d.d);
 }
 
-function Trend({ s, cal }: { s: StatsModel; cal: { dayStart: number; weekStart: number } }) {
+interface Column {
+  key: string;
+  /** Axis label; empty for none. */
+  label: string;
+  /** Hidden on narrow screens. */
+  minor?: boolean;
+  /** Name in the table and the tooltip. */
+  name: string;
+  seconds: number;
+  /** Seconds per series, for a stacked column. */
+  parts?: number[];
+  current?: boolean;
+}
+
+/** Colour of series i, the last one being "other sites". */
+function seriesColor(i: number, count: number) {
+  return i === count - 1 ? 'var(--series-other)' : `var(--series-${i + 1})`;
+}
+
+/** Columns of time, stacked by series when given, with a table alternative. */
+function Columns({
+  columns,
+  label,
+  head,
+  series,
+  spread,
+}: {
+  columns: Column[];
+  label: string;
+  head: string;
+  series?: string[];
+  /** Labels only every few columns, which may run over the empty ones. */
+  spread?: boolean;
+}) {
   const [table, setTable] = useState(false);
-  const days = s.days.length > 62 ? monthly(s) : s.days;
-  const max = Math.max(1, ...days.map((d) => d.seconds));
-  // Today as the statistics count it: the logical day, which may have started yesterday.
-  const todayKey = dayKey(logicalDayOf(Date.now(), cal));
-  // Labels for at most ~16 columns, so they never overlap.
-  const every = Math.max(1, Math.ceil(days.length / 16));
+  const total = (c: Column) => (c.parts ? c.parts.reduce((a, b) => a + b, 0) : c.seconds);
+  const max = Math.max(1, ...columns.map(total));
+  // A series that has no time in the period is not in the legend.
+  const shown = series?.map((_, i) => columns.some((c) => (c.parts?.[i] ?? 0) > 0));
   return (
     <div class="stack stack-sm">
       {!table ? (
-        <div class="chart">
-          <div class="axis" aria-hidden="true">
-            <span>{formatDuration(max)}</span>
-            <span>{formatDuration(max / 2)}</span>
-            <span>0</span>
-          </div>
-          <div>
-            <div class="bars" role="img" aria-label={t('insights.trendLabel')}>
-              {days.map((d) => (
-                <div class="col" key={d.day}>
-                  <div
-                    class={`bar${d.seconds ? '' : ' empty-bar'}${d.day === todayKey ? ' today' : ''}`}
-                    style={{ height: `${Math.max(2, (d.seconds / max) * 100)}%` }}
-                    title={`${d.day}: ${formatDuration(d.seconds)}`}
-                  />
-                </div>
-              ))}
+        <>
+          <div class="chart">
+            <div class="axis" aria-hidden="true">
+              <span>{formatDuration(max)}</span>
+              <span>{formatDuration(max / 2)}</span>
+              <span>0</span>
             </div>
-            <div class="bar-labels" aria-hidden="true">
-              {days.map((d, i) => (
-                <span key={d.day}>{i % every === 0 ? dayLabel(d.day, days.length) : ''}</span>
-              ))}
+            <div>
+              <div class="bars" role="img" aria-label={label}>
+                {columns.map((c) => {
+                  const sum = total(c);
+                  return (
+                    <div class="col" key={c.key}>
+                      {c.parts && sum > 0 ? (
+                        <div class="stacked" style={{ height: `${(sum / max) * 100}%` }}>
+                          {c.parts.map((p, i) =>
+                            p > 0 ? (
+                              <div
+                                key={i}
+                                style={{ flexGrow: p, background: seriesColor(i, c.parts?.length ?? 0) }}
+                                title={`${c.name} · ${series?.[i]}: ${formatDuration(p)}`}
+                              />
+                            ) : null,
+                          )}
+                        </div>
+                      ) : (
+                        <div
+                          class={`bar${sum ? '' : ' empty-bar'}${c.current && !c.parts ? ' today' : ''}`}
+                          style={{ height: `${Math.max(2, (sum / max) * 100)}%` }}
+                          title={`${c.name}: ${formatDuration(sum)}`}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <div class={`bar-labels${spread ? ' spread' : ''}`} aria-hidden="true">
+                {columns.map((c) => (
+                  <span key={c.key} class={c.minor ? 'minor' : undefined}>
+                    {c.label}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+          {series && (
+            <ul class="legend small" aria-label={t('insights.legend')}>
+              {series.map((name, i) =>
+                shown?.[i] ? (
+                  <li key={name}>
+                    <span class="key" style={{ background: seriesColor(i, series.length) }} />
+                    {name}
+                  </li>
+                ) : null,
+              )}
+            </ul>
+          )}
+        </>
       ) : (
-        <table class="table">
-          <thead>
-            <tr>
-              <th>{t('insights.day')}</th>
-              <th class="num">{t('insights.time')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {days.map((d) => (
-              <tr key={d.day}>
-                <td>{d.day}</td>
-                <td class="num">{formatDuration(d.seconds)}</td>
+        <div class="table-scroll">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>{head}</th>
+                {series?.map((name, i) =>
+                  shown?.[i] ? (
+                    <th key={name} class="num">
+                      {name}
+                    </th>
+                  ) : null,
+                )}
+                <th class="num">{series ? t('insights.total.column') : t('insights.time')}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {columns.map((c) => (
+                <tr key={c.key}>
+                  <td>{c.name}</td>
+                  {c.parts?.map((p, i) =>
+                    shown?.[i] ? (
+                      <td key={i} class="num">
+                        {formatDuration(p)}
+                      </td>
+                    ) : null,
+                  )}
+                  <td class="num">{formatDuration(total(c))}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
       <button
         type="button"
@@ -144,13 +233,114 @@ function Trend({ s, cal }: { s: StatsModel; cal: { dayStart: number; weekStart: 
   );
 }
 
-function monthly(s: StatsModel) {
-  const by = new Map<string, { day: string; seconds: number; visits: number }>();
+type TrendMode = 'total' | 'sites';
+
+function Trend({
+  s,
+  span,
+  cal,
+  mode,
+  onMode,
+}: {
+  s: StatsModel;
+  span: Span;
+  cal: { dayStart: number; weekStart: number };
+  mode: TrendMode;
+  onMode: (m: TrendMode) => void;
+}) {
+  // A year is shown month by month, the other periods day by day.
+  const months = span === 'year';
+  const days = months ? monthly(s) : s.days;
+  // Today as the statistics count it: the logical day, which may have started yesterday.
+  const todayKey = dayKey(logicalDayOf(Date.now(), cal));
+  // Labels for at most ~16 columns, so they never overlap.
+  const every = Math.max(1, Math.ceil(days.length / 16));
+  const bySite = mode === 'sites' && s.stack.length > 0;
+  const columns: Column[] = days.map((d, i) => ({
+    key: d.day,
+    label: i % every === 0 ? dayLabel(d.day, days.length) : '',
+    name: d.day,
+    seconds: d.seconds,
+    parts: bySite ? [...d.sites, d.otherSites] : undefined,
+    current: d.day === todayKey,
+  }));
+  return (
+    <div class="card stack">
+      <div class="card-head">
+        <h2>{months ? t('insights.trend.months') : t('insights.trend')}</h2>
+        <Segmented
+          value={bySite ? 'sites' : 'total'}
+          onChange={onMode}
+          label={t('insights.mode')}
+          options={[
+            { value: 'total', label: t('insights.mode.total') },
+            { value: 'sites', label: t('insights.mode.sites'), disabled: !s.stack.length },
+          ]}
+        />
+      </div>
+      <Columns
+        columns={columns}
+        head={months ? t('insights.month') : t('insights.day')}
+        label={
+          months
+            ? t(bySite ? 'insights.trendSitesLabel.months' : 'insights.trendLabel.months')
+            : t(bySite ? 'insights.trendSitesLabel' : 'insights.trendLabel')
+        }
+        series={bySite ? [...s.stack, t('insights.otherSites')] : undefined}
+      />
+    </div>
+  );
+}
+
+/** The hours of one day, from the hour the day starts. */
+function Hours({ s, cal }: { s: StatsModel; cal: { dayStart: number; weekStart: number } }) {
+  const d = parseDayKey(s.from);
+  const first = Math.floor(cal.dayStart / 60);
+  const now = new Date();
+  const isToday = s.from === dayKey(logicalDayOf(now.getTime(), cal));
+  const columns: Column[] = [];
+  for (let i = 0; i < 24; i++) {
+    const hour = (first + i) % 24;
+    // Hours before the one the day starts at belong to the next calendar day.
+    const at = new Date(d.y, d.m, d.d + (hour < first ? 1 : 0), hour).getTime();
+    columns.push({
+      key: String(hour),
+      label: i % 3 === 0 ? formatHour(at) : '',
+      minor: i % 6 !== 0,
+      name: `${formatTime(at)}–${formatTime(at + HOUR)}`,
+      seconds: s.hours?.[hour] ?? 0,
+      current: isToday && now.getHours() === hour,
+    });
+  }
+  return (
+    <div class="card stack">
+      <h2>{t('insights.hours')}</h2>
+      {s.hours ? (
+        <Columns columns={columns} head={t('insights.hour')} label={t('insights.hoursLabel')} spread />
+      ) : (
+        <p class="muted small">{t('insights.noHours')}</p>
+      )}
+    </div>
+  );
+}
+
+function monthly(s: StatsModel): StatsDay[] {
+  const by = new Map<string, StatsDay>();
   for (const d of s.days) {
     const k = d.day.slice(0, 7);
-    const cur = by.get(k) ?? { day: k, seconds: 0, visits: 0 };
+    const cur = by.get(k) ?? {
+      day: k,
+      seconds: 0,
+      visits: 0,
+      sites: d.sites.map(() => 0),
+      otherSites: 0,
+    };
     cur.seconds += d.seconds;
     cur.visits += d.visits;
+    d.sites.forEach((sec, i) => {
+      cur.sites[i] += sec;
+    });
+    cur.otherSites += d.otherSites;
     by.set(k, cur);
   }
   return [...by.values()];
@@ -221,10 +411,12 @@ function DeleteDialog({
 
 export function InsightsPage() {
   const { model } = useDashboard();
+  const groupName = (id: string) => model.config.groups.find((g) => g.id === id)?.name;
   const cal = { dayStart: model.config.settings.dayStart, weekStart: model.config.settings.weekStart };
   const [span, setSpan] = useState<Span>('week');
   const [offset, setOffset] = useState(0);
   const [del, setDel] = useState(false);
+  const [trendMode, setTrendMode] = useState<TrendMode>('total');
   const range = rangeFor(span, offset, cal);
   const { data: s, reload } = useModel('stats.get', range, [range.from, range.to]);
   const exportAs = async (format: 'csv' | 'json') => {
@@ -319,11 +511,10 @@ export function InsightsPage() {
             </div>
           ) : (
             <>
-              {span !== 'day' && (
-                <div class="card stack">
-                  <h2>{t('insights.trend')}</h2>
-                  <Trend s={s} cal={cal} />
-                </div>
+              {span === 'day' ? (
+                <Hours s={s} cal={cal} />
+              ) : (
+                <Trend s={s} span={span} cal={cal} mode={trendMode} onMode={setTrendMode} />
               )}
               <div class="grid" style={{ ['--min' as string]: '320px' }}>
                 <div class="card stack">
@@ -391,7 +582,7 @@ export function InsightsPage() {
                     <ul class="list compact small">
                       {s.pauses.slice(0, 30).map((p, i) => (
                         <li key={i}>
-                          <strong>{formatDateTime(p.at)}</strong> ·{' '}
+                          <strong>{formatDateTime(p.at)}</strong> · {breakSubject(p, groupName)} ·{' '}
                           {t('common.minutes', { n: p.used ?? p.minutes })}
                           {p.reason && <> · “{p.reason}”</>}
                         </li>

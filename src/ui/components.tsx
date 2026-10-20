@@ -549,12 +549,16 @@ export function NumberInput({
   commitOnBlur?: boolean;
 }) {
   const [text, setText] = useState(String(value));
-  useEffect(() => setText(String(value)), [value]);
   const parse = (v: string) => {
     const n = Number(v);
     if (v === '' || !Number.isFinite(n)) return null;
     return Math.min(max ?? Infinity, Math.max(min ?? -Infinity, n));
   };
+  // A value set from outside, or limited to min and max, replaces the text; the value of the text
+  // typed does not, or a late update would overwrite keys typed meanwhile ("120" read as "10").
+  useEffect(() => {
+    if (text === '' || Number(text) !== value) setText(String(value));
+  }, [value]);
   return (
     <span class="row nowrap" style={{ gap: '6px' }}>
       <input
@@ -621,6 +625,113 @@ export function Select<T extends string>({
         </option>
       ))}
     </select>
+  );
+}
+
+export type DurationUnit = 'seconds' | 'minutes' | 'hours' | 'days';
+const UNIT_SECONDS: Record<DurationUnit, number> = { seconds: 1, minutes: 60, hours: 3600, days: 86400 };
+
+/**
+ * The largest of the units in which an amount (in `base` units) is a whole number: 120 minutes →
+ * hours.
+ */
+export function durationUnit(
+  value: number,
+  units: DurationUnit[],
+  base: DurationUnit = 'minutes',
+): DurationUnit {
+  const seconds = value * UNIT_SECONDS[base];
+  return (
+    [...units].reverse().find((u) => seconds >= UNIT_SECONDS[u] && seconds % UNIT_SECONDS[u] === 0) ??
+    units[0]
+  );
+}
+
+/**
+ * A length of time as a number and a unit ("2 hours"), kept in one unit (`base`, minutes unless
+ * said). Changing the unit keeps the number: 2 minutes become 2 hours.
+ */
+export function DurationInput({
+  value,
+  onChange,
+  base = 'minutes',
+  units: offered = ['minutes', 'hours', 'days'],
+  min,
+  max,
+  unitMax,
+  step = 1,
+  label,
+  id,
+  describedBy,
+  commitOnBlur,
+}: {
+  /** In `base` units, as are min, max, unitMax and step. */
+  value: number;
+  onChange: (value: number, unit: DurationUnit) => void;
+  base?: DurationUnit;
+  units?: DurationUnit[];
+  min: number;
+  max: number;
+  /** A lower maximum in some units (a period of hours is at most a day). */
+  unitMax?: Partial<Record<DurationUnit, number>>;
+  /** The precision. */
+  step?: number;
+  label?: string;
+  id?: string;
+  describedBy?: string;
+  /** Report the value only when the field loses focus (settings that are saved at once). */
+  commitOnBlur?: boolean;
+}) {
+  // A unit larger than the maximum is not offered (hours for at most 15 minutes).
+  const units = offered.filter((u, i) => !i || UNIT_SECONDS[u] / UNIT_SECONDS[base] <= max);
+  const [unit, setUnit] = useState(() => durationUnit(value, units, base));
+  // The value last reported: a different one comes from outside and picks its own unit.
+  const own = useRef(value);
+  useEffect(() => {
+    if (value !== own.current) {
+      own.current = value;
+      setUnit(durationUnit(value, units, base));
+    }
+  }, [value]);
+  /** One `unit` in `base` units. */
+  const per = UNIT_SECONDS[unit] / UNIT_SECONDS[base];
+  const top = (u: DurationUnit) => Math.min(max, unitMax?.[u] ?? max);
+  const shown = Math.round((value / per) * 100) / 100;
+  const report = (v: number, u: DurationUnit) => {
+    const clamped = Math.min(top(u), Math.max(min, Math.round(v / step) * step));
+    own.current = clamped;
+    onChange(clamped, u);
+  };
+  return (
+    <span class="row nowrap" style={{ gap: '6px' }}>
+      <NumberInput
+        id={id}
+        value={shown}
+        // In a larger unit the arrows count whole units; the minimum is applied in `base` units.
+        min={unit === base ? min : 0}
+        max={top(unit) / per}
+        step={unit === base ? step : 1}
+        label={label}
+        describedBy={describedBy}
+        commitOnBlur={commitOnBlur}
+        onChange={(n) => report(n * per, unit)}
+      />
+      {units.length === 1 ? (
+        <span class="muted small">{t(`duration.unit.${unit}`, { n: shown })}</span>
+      ) : (
+        <span>
+          <Select<DurationUnit>
+            value={unit}
+            label={label ? t('duration.unitOf', { label }) : t('duration.unit')}
+            onChange={(u) => {
+              setUnit(u);
+              report((shown * UNIT_SECONDS[u]) / UNIT_SECONDS[base], u);
+            }}
+            options={units.map((u) => ({ value: u, label: t(`duration.unit.${u}`, { n: shown }) }))}
+          />
+        </span>
+      )}
+    </span>
   );
 }
 

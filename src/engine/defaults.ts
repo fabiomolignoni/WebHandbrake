@@ -1,6 +1,7 @@
 /** Defaults and constructors for configuration entities. */
 
 import { WAIT_IN_DIALOG_SECONDS } from './limits';
+import { parseTargetLine, targetToLine } from './patterns';
 import {
   type Config,
   type Group,
@@ -8,6 +9,7 @@ import {
   type Intervention,
   type InterventionType,
   type PausePolicy,
+  type Period,
   type Policy,
   type Protection,
   type RuntimeState,
@@ -75,7 +77,7 @@ export function defaultSettings(): Settings {
     pauseLimit: { period: { kind: 'day' } },
     protection: {
       confirmHours: 48,
-      internalPages: 'never',
+      internalPages: 'auto',
       internalPagesFollowPause: false,
       emergencyHours: 24,
     },
@@ -286,16 +288,50 @@ export function quickIntervention(how: QuickHow, redirectUrl?: string): Interven
   return defaultIntervention(how);
 }
 
+/** A day, in minutes: the period of a new rule's time limit unless another is chosen. */
+export const DAY_MINUTES = 1440;
+
+/**
+ * The period of a time limit that starts again every so many minutes: an hour and a day are the
+ * clock's and the calendar's, whole days count days, anything else counts minutes within the day.
+ */
+export function everyPeriod(minutes: number): Period {
+  if (minutes === 60) return { kind: 'hour' };
+  if (minutes === DAY_MINUTES) return { kind: 'day' };
+  if (minutes > DAY_MINUTES && minutes % DAY_MINUTES === 0)
+    return { kind: 'days', n: Math.min(90, minutes / DAY_MINUTES) };
+  return { kind: 'minutes', n: Math.min(DAY_MINUTES, Math.max(5, Math.round(minutes))) };
+}
+
+/** How long a period lasts at most, in minutes (a month: 31 days). */
+export function periodMinutes(p: Period): number {
+  switch (p.kind) {
+    case 'hour':
+      return 60;
+    case 'day':
+      return DAY_MINUTES;
+    case 'week':
+      return 7 * DAY_MINUTES;
+    case 'month':
+      return 31 * DAY_MINUTES;
+    case 'days':
+      return (p.n ?? 1) * DAY_MINUTES;
+    default:
+      return p.n ?? 60;
+  }
+}
+
 /** The starting condition of a rule: "when" × "what happens" (an if-then plan). */
 export function quickPolicies(
   when: QuickWhen,
   how: QuickHow | Intervention,
   windows: TimeWindow[],
   minutes: number,
-  redirectUrl?: string,
+  /** The period of the time limit, in minutes: it starts again every so often. */
+  every = DAY_MINUTES,
 ): Policy[] {
   // The wizard passes the intervention with the settings chosen (#14); a type takes the defaults.
-  const intervention = typeof how === 'string' ? quickIntervention(how, redirectUrl) : how;
+  const intervention = typeof how === 'string' ? quickIntervention(how) : how;
   // Counting only at certain times (#21): outside them the sites are allowed and not counted.
   if (when === 'schedule' && intervention.type === 'track')
     return [
@@ -304,10 +340,19 @@ export function quickPolicies(
     ];
   if (when === 'schedule') return [newPolicy({ schedule: { mode: 'during', windows }, intervention })];
   if (when === 'daily')
-    return [newPolicy({ budget: { type: 'time', minutes, period: { kind: 'day' } }, intervention })];
+    return [newPolicy({ budget: { type: 'time', minutes, period: everyPeriod(every) }, intervention })];
   return [newPolicy({ intervention })];
 }
 
-export function targetsFromSites(sites: string[]): Target[] {
-  return sites.map((value) => newTarget({ type: 'domain', value }));
+/** The targets of lines in the address syntax, such as the entries of a ready-made list. */
+export function targetsFromLines(lines: string[]): Target[] {
+  return lines.flatMap((line) => {
+    const parsed = parseTargetLine(line);
+    return parsed?.target ? [newTarget(parsed.target)] : [];
+  });
+}
+
+/** What makes two targets the same entry, whatever their id and note: their line. */
+export function targetKey(t: Pick<Target, 'type' | 'value' | 'allow'>): string {
+  return targetToLine({ type: t.type, value: t.value, allow: t.allow });
 }

@@ -80,7 +80,12 @@ English is the source language. To add a language:
 ## Site lists
 
 The ready-made lists are plain data in `src/data/templates.ts`; a pull request can add or correct
-sites without touching any other code.
+sites without touching any other code. An entry belongs in a list when people open it to spend time
+the way the list says, in many countries or in a large one. Its comment at the top of the file says
+how entries are written: addresses people open (no content delivery domains), each site once,
+every country domain written out instead of `name.*`, and exceptions for the work tools around a
+distraction. Say in the pull request how you checked each address (that it answers, and where it
+redirects); `npm test` checks the rest.
 
 ## Pull requests
 

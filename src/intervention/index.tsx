@@ -8,11 +8,11 @@ import { render } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { isNav } from '../engine/severity';
 import { t } from '../i18n/i18n';
-import { formatList, formatWhen } from '../shared/format';
+import { formatDuration, formatList, formatWhen } from '../shared/format';
 import type { DecisionView, InterventionModel, PauseOptions, StepView, TicketView } from '../shared/models';
 import { call } from '../shared/rpc';
 import { setWeekStart } from '../shared/summary';
-import { Banner, Button, ColorDot, Field, NumberInput, Segmented, Toasts, toast } from '../ui/components';
+import { Banner, Button, ColorDot, DurationInput, Field, Segmented, Toasts, toast } from '../ui/components';
 import { Explain } from '../ui/explain';
 import { bootPage, onBackgroundChange, useNow } from '../ui/hooks';
 import { Icon } from '../ui/icons';
@@ -270,6 +270,7 @@ function App() {
           {headline(m)}
         </h1>
         {m.kind === 'selftest' && <Banner kind="ok">{t('iv.selftest.body')}</Banner>}
+        {m.kind === 'internal' && <p class="message">{t('iv.internal.body')}</p>}
         {m.group?.note && (
           <blockquote class="note">
             “{m.group.note}”<span class="by">— {t('iv.yourNote')}</span>
@@ -598,15 +599,19 @@ function PassStep({
             />
           </div>
           {custom && (
-            <Field label={t('iv.ask.custom')} help={t('iv.ask.upTo', { minutes: step.maxMinutes })}>
+            <Field
+              label={t('iv.ask.custom')}
+              help={t('iv.ask.upTo', { duration: formatDuration(step.maxMinutes * 60) })}
+            >
               {(id, describedBy) => (
-                <NumberInput
+                <DurationInput
+                  units={['minutes', 'hours']}
                   id={id}
                   value={minutes}
                   min={1}
                   max={step.maxMinutes}
+                  label={t('iv.ask.custom')}
                   describedBy={describedBy}
-                  suffix={t('common.minutesUnit')}
                   onChange={(n) => setMinutes(Math.max(1, Math.round(n)))}
                 />
               )}

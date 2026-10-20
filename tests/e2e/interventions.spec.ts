@@ -119,7 +119,8 @@ test.describe('block page', () => {
     await p.button('Saved').expectEnabled(false);
     const later = await h.page('dashboard.html#/later');
     await later.text('paper.test').expectVisible();
-    await later.text('not yet available').expectVisible();
+    // The rule always blocks: the page would never open by itself.
+    await later.text('will not open with the current rules').expectVisible();
     await h.configure((c) => {
       c.groups[0].enabled = false;
     });
@@ -333,9 +334,9 @@ test.describe('intention question', () => {
     const p = await expectBlocked(h, 'http://tube.test/');
     await p.label('Your reason').fill('Watch the lecture');
     await p.role('radio', 'Other').click();
-    await p.label('How many minutes?').fill('90');
+    await p.label('How long?', { exact: true }).fill('90');
     await p.button('Continue for 45 min').expectVisible();
-    await p.label('How many minutes?').fill('25');
+    await p.label('How long?', { exact: true }).fill('25');
     await p.button('Continue for 25 min').click();
     await p.expectReal('tube.test/');
     const d = await h.rpc('explain', { url: 'http://tube.test/other' });

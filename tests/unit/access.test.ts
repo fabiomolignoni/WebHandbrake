@@ -202,9 +202,9 @@ describe('the protection of each rule', () => {
     expect((await set(REMINDER)).applied).toHaveLength(1);
   });
 
-  it('the browser pages are blocked while a firm rule restricts, not for a short wait', async () => {
+  it('by default the browser pages are blocked while a firm rule restricts, not for a short wait', async () => {
     const t = await setup([group('A', ['a.test'], [{ intervention: BLOCK }], { protection: wait(30) })]);
-    t.store.config.settings.protection.internalPages = 'auto';
+    expect(t.store.config.settings.protection.internalPages).toBe('auto');
     const { internalPagesBlocked } = await import('../../src/background/enforce');
     expect(internalPagesBlocked()).toBe(false);
     const firm: Group['protection'][] = [
@@ -247,7 +247,7 @@ describe('changes that follow the emergency exit', () => {
 
   it('loosening a setting of the protection waits the hours of the emergency exit, then takes a sentence', async () => {
     const t = await setup([group('A', ['a.test'], [{ intervention: BLOCK }], { protection: PERMANENT })]);
-    expect(t.store.config.settings.protection.internalPages).toBe('never');
+    expect(t.store.config.settings.protection.internalPages).toBe('auto');
     // Stricter is immediate, as always.
     expect((await t.propose((c) => (c.settings.protection.internalPages = 'always'))).applied).toHaveLength(
       1,

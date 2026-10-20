@@ -106,6 +106,45 @@ describe('what the popup and the dashboard show', () => {
     expect(o.warnings.map((w) => w.kind)).toEqual(['incognito', 'clock']);
   });
 
+  it('a break or an access on one site of a rule leaves the rule restricting its other sites', async () => {
+    const blocked = group('A', ['a.test', 'b.test'], [{ schedule: office, intervention: BLOCK }]);
+    blocked.pause = { ...blocked.pause, allowed: true, scopes: ['site'] };
+    const asks = group(
+      'Q',
+      ['q.test', 'r.test'],
+      [{ intervention: { type: 'ask', choices: [5], maxMinutes: 5 } }],
+    );
+    const t = await setup([blocked, asks]);
+    const grant = { createdAt: T0, groups: [] as string[], scope: 'site' as const, until: T0 + 5 * 60_000 };
+    t.store.state.grants.push(
+      { ...grant, id: 'p', kind: 'pause', groups: ['A'], site: 'a.test', severity: 99 },
+      { ...grant, id: 'q', kind: 'pass', groups: ['Q'], site: 'q.test', severity: 50 },
+    );
+    const { overviewModel } = await import('../../src/background/views');
+    const o = await overviewModel();
+    // b.test is still blocked until 17:00 and r.test still asks: the first site does not speak for them.
+    expect(o.groups.map((g) => [g.id, g.intervention?.type, g.pause, g.until])).toEqual([
+      ['A', 'block', null, new Date(2026, 9, 5, 17).getTime()],
+      ['Q', 'ask', null, null],
+    ]);
+    expect(o.upcoming.map((u) => [u.groupId, u.label, u.at])).toEqual([
+      ['A', 'ends', new Date(2026, 9, 5, 17).getTime()],
+    ]);
+    const { configModel } = await import('../../src/background/views');
+    expect((await configModel()).groups.A.activeNow).toBe(true);
+    // A break on every site of the rule: the rule is on a break.
+    t.store.state.grants.push({
+      ...grant,
+      id: 'p2',
+      kind: 'pause',
+      groups: ['A'],
+      site: 'b.test',
+      severity: 99,
+    });
+    const [a] = (await overviewModel()).groups;
+    expect([a.intervention?.type, a.pause?.until]).toEqual(['track', T0 + 5 * 60_000]);
+  });
+
   it('the configuration model: each rule, its protection now and whether it restricts now', async () => {
     await setup([
       group('A', ['a.test'], [{ schedule: office, intervention: BLOCK }], {

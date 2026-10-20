@@ -21,6 +21,11 @@ export function formatTime(ms: number): string {
   );
 }
 
+/** An hour as an axis label, such as "14" or "2 pm". */
+export function formatHour(ms: number): string {
+  return new Intl.DateTimeFormat(locale(), { hour: 'numeric', hour12: hour12() }).format(ms);
+}
+
 export function formatDate(
   ms: number,
   opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' },

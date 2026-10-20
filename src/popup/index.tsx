@@ -31,7 +31,7 @@ import {
 import { budgetText, Explain } from '../ui/explain';
 import { bootPage, useModel, useNow } from '../ui/hooks';
 import { BrakeLogo, Icon } from '../ui/icons';
-import { PauseDialog, pauseSummary } from '../ui/pause';
+import { breakSubject, PauseDialog, pauseSummary } from '../ui/pause';
 import { useSaveFlow } from '../ui/saveflow';
 import { interventionIcon, meterLevel, siteStatus, toneOf } from '../ui/status';
 import { TicketDialog } from '../ui/ticket';
@@ -413,6 +413,7 @@ function App() {
   const pause = m.pause;
   const otherPauses = m.activePauses.filter((p) => !m.decision?.groups.some((g) => g.pause?.id === p.id));
   const tiles = (pause ? 1 : 0) + (m.canAdd ? 2 : 0);
+  const groupName = (id: string) => m.groups.find((g) => g.id === id)?.name;
   return (
     <div class="popup">
       <header class="popup-head">
@@ -464,7 +465,7 @@ function App() {
                 onClick={() => setPausing(true)}
               >
                 <Icon name="pause" />
-                {t('popup.pause')}
+                {pause.extend ? t('pause.extend') : t('popup.pause')}
                 <span class="sub">
                   {pause.available ? pauseSummary(pause) : pause.reason ? t(pause.reason) : ''}
                 </span>
@@ -511,11 +512,16 @@ function App() {
           <section class="panel" aria-label={t('popup.status')}>
             {otherPauses.map((p) => (
               <div key={p.id} class="row between nowrap">
-                <span class="row nowrap small" style={{ gap: '8px' }}>
+                <span class="row nowrap small" style={{ gap: '8px', minWidth: 0 }}>
                   <ToneIcon tone="calm" icon="pause" size={26} />
-                  {p.until
-                    ? t('popup.pausedUntil', { when: formatWhen(p.until, now) })
-                    : t('popup.pausedLeft', { duration: formatDuration(p.remaining ?? 0) })}
+                  <span class="stack break-subject" style={{ gap: 0 }}>
+                    <span>{breakSubject(p, groupName)}</span>
+                    <span class="text-2">
+                      {p.until
+                        ? t('pause.leftUntil', { when: formatWhen(p.until, now) })
+                        : t('pause.leftMetered', { duration: formatDuration(p.remaining ?? 0) })}
+                    </span>
+                  </span>
                 </span>
                 <Button
                   size="small"
