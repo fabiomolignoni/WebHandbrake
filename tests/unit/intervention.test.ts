@@ -175,7 +175,22 @@ describe('the intervention page', () => {
   it('browser settings pages are protected as the setting says; the self-test is recognised', async () => {
     const t = await setup([group('A', ['a.test'], [{ intervention: BLOCK }])]);
     t.store.config.settings.protection.internalPages = 'always';
-    expect(await t.model('chrome://extensions')).toMatchObject({ kind: 'internal', canSaveLater: false });
+    expect(await t.model('chrome://extensions')).toMatchObject({
+      kind: 'internal',
+      canSaveLater: false,
+      internal: { always: true, rules: [], session: false },
+      until: null,
+    });
+    // The page names the firmly protected rules that block it.
+    t.store.config.settings.protection.internalPages = 'auto';
+    t.store.config.groups[0].protection = { kind: 'password', hash: 'x' };
+    t.store.cc = compileConfig(t.store.config);
+    expect((await t.model('chrome://settings/reset')).internal).toEqual({
+      always: false,
+      rules: [expect.objectContaining({ name: 'A', protection: { kind: 'password', hash: 'x' } })],
+      session: false,
+    });
+    expect((await t.model('chrome://settings/passwords')).kind).toBe('allow');
     t.store.config.settings.protection.internalPages = 'never';
     expect((await t.model('chrome://extensions')).kind).toBe('allow');
     expect((await t.model('http://selftest.webhandbrake.invalid/')).kind).toBe('selftest');

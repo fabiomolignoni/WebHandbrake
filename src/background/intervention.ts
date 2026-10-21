@@ -13,8 +13,14 @@ import { now } from './clock';
 import { randomInt } from './crypto';
 import { logDecision } from './diagnostics-state';
 import { removeSelftestRule, SELFTEST_HOST, syncRules } from './dnr-sync';
-import { internalPagesBlocked, interventionTabs, isProtectedInternal } from './enforce';
-import { ctx, decideUrl, decisionView } from './engine';
+import {
+  internalGuard,
+  internalGuardUntil,
+  internalPagesBlocked,
+  interventionTabs,
+  isProtectedInternal,
+} from './enforce';
+import { ctx, decideUrl, decisionView, groupProtection } from './engine';
 import { pauseOptions } from './pauses';
 import { reconcile } from './reconcile';
 import { countSessionStop } from './sessions';
@@ -41,6 +47,7 @@ function base(url: string, kind: InterventionModel['kind']): InterventionModel {
     hour12: s.hour12,
     locked: false,
     canSaveLater: /^https?:/i.test(url),
+    internal: null,
   };
 }
 
@@ -98,8 +105,23 @@ export async function interventionModel(
     return base(url, 'selftest');
   }
   if (isProtectedInternal(url)) {
-    const m = base(url, internalPagesBlocked() ? 'internal' : 'allow');
+    const c = ctx();
+    const guard = internalGuard(c);
+    const m = base(url, guard ? 'internal' : 'allow');
     m.canSaveLater = false;
+    if (guard) {
+      m.internal = {
+        always: guard.always,
+        rules: guard.groups.map((g) => ({
+          id: g.id,
+          name: g.name,
+          color: g.color,
+          protection: groupProtection(g, c.now),
+        })),
+        session: guard.session,
+      };
+      m.until = internalGuardUntil(c);
+    }
     return m;
   }
 

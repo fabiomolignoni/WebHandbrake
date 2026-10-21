@@ -6,9 +6,11 @@
  * internal browser pages and every open tab whenever the state changes.
  */
 
-import type { Decision } from '../engine/decide';
+import type { Decision, EngineContext } from '../engine/decide';
 import { activeSessions } from '../engine/decide';
+import { candidateTimes } from '../engine/next';
 import { isNav, NAV_SEVERITY, SEVERITY } from '../engine/severity';
+import type { Group } from '../engine/types';
 import { parseUrl } from '../engine/url';
 import { api, blockedUrlFrom, extensionUrl, interventionUrl, quiet } from '../platform/api';
 import { now } from './clock';
@@ -25,55 +27,83 @@ export const interventionTabs = new Map<
   { url: string; groupId: string | null; proceeded: boolean }
 >();
 
+/**
+ * The pages from which WebHandbrake can be turned off or removed: the extension managers, the
+ * flags, Firefox's troubleshooting pages (Refresh Firefox, troubleshoot mode) and the reset of a
+ * Chromium browser's settings, which turns every extension off. The rest of the settings
+ * (passwords, privacy, search engine…) has nothing to do with the extension and stays open.
+ */
+const CHROMIUM = ['chrome', 'edge', 'brave', 'vivaldi', 'opera'];
 const INTERNAL_PAGES = [
   'about:addons',
   'about:debugging',
   'about:config',
   'about:support',
   'about:profiles',
-  'chrome://extensions',
-  'chrome://settings',
-  'chrome://flags',
-  'edge://extensions',
-  'edge://settings',
-  'edge://flags',
-  'brave://extensions',
-  'brave://settings',
-  'brave://flags',
-  'vivaldi://extensions',
-  'vivaldi://settings',
-  'vivaldi://flags',
-  'opera://extensions',
-  'opera://settings',
-  'opera://flags',
+  ...CHROMIUM.flatMap((b) => [`${b}://extensions`, `${b}://flags`]),
 ];
+/** Prefixes of the settings resets: "settings/reset" also covers "settings/resetProfileSettings". */
+const SETTINGS_RESETS = CHROMIUM.flatMap((b) => [`${b}://settings/reset`, `${b}://settings/triggeredreset`]);
 
 export function isProtectedInternal(url: string): boolean {
   const u = url.toLowerCase();
-  return INTERNAL_PAGES.some(
-    (p) => u === p || u.startsWith(`${p}/`) || u.startsWith(`${p}?`) || u.startsWith(`${p}#`),
+  return (
+    INTERNAL_PAGES.some(
+      (p) => u === p || u.startsWith(`${p}/`) || u.startsWith(`${p}?`) || u.startsWith(`${p}#`),
+    ) || SETTINGS_RESETS.some((p) => u.startsWith(p))
   );
 }
 
-/** Whether the browser's extension and settings pages are blocked right now. */
-export function internalPagesBlocked(): boolean {
+/** Why the browser's extension and settings pages are blocked. */
+export interface InternalGuard {
+  /** "Block the browser's extension and settings pages" is set to Always. */
+  always: boolean;
+  /** The firmly protected rules that restrict sites. */
+  groups: Group[];
+  /** A focus session that cannot be interrupted is running. */
+  session: boolean;
+}
+
+/** Why the browser's extension and settings pages are blocked at the context's time, or null. */
+export function internalGuard(c: EngineContext = ctx()): InternalGuard | null {
   const p = store.config.settings.protection;
-  if (p.internalPages === 'never') return false;
-  const c = ctx();
+  if (p.internalPages === 'never') return null;
   if (
     p.internalPagesFollowPause &&
     c.state.grants.some(
       (g) => g.kind === 'pause' && (g.until ?? Number.POSITIVE_INFINITY) > c.now && (g.remaining ?? 1) > 0,
     )
   ) {
-    return false;
+    return null;
   }
-  if (p.internalPages === 'always') return true;
-  if (activeSessions(c.state, c.now).some((s) => s.locked)) return true;
-  for (const cg of c.cc.groups) {
-    if (firmProtection(groupProtection(cg.group, c.now)) && groupActiveNow(cg.group, c)) return true;
+  if (p.internalPages === 'always') return { always: true, groups: [], session: false };
+  const session = activeSessions(c.state, c.now).some((s) => s.locked);
+  const groups = c.cc.groups
+    .filter((cg) => firmProtection(groupProtection(cg.group, c.now)) && groupActiveNow(cg.group, c))
+    .map((cg) => cg.group);
+  return session || groups.length ? { always: false, groups, session } : null;
+}
+
+/** Whether the browser's extension and settings pages are blocked right now. */
+export function internalPagesBlocked(): boolean {
+  return internalGuard() !== null;
+}
+
+/**
+ * When the browser's extension and settings pages open again with the current rules: the first
+ * moment, among those at which something changes, without a reason to block them. Null when
+ * no such moment comes within the horizon (Always, a rule that always applies).
+ */
+export function internalGuardUntil(c: EngineContext = ctx()): number | null {
+  const guard = internalGuard(c);
+  if (!guard || guard.always) return null;
+  const times = new Set(candidateTimes(c, c.cc.groups));
+  // The date after which Locked asks only for a reminder: the rule is no longer firm.
+  for (const g of guard.groups) if (g.protection.kind === 'locked') times.add(g.protection.until);
+  for (const t of [...times].filter((x) => x > c.now).sort((a, b) => a - b)) {
+    if (!internalGuard({ ...c, now: t })) return t;
   }
-  return false;
+  return null;
 }
 
 function shouldEnforce(d: Decision, tab: chrome.tabs.Tab, onNavigation: boolean): boolean {

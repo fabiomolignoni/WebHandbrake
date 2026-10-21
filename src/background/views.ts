@@ -18,7 +18,7 @@ import type {
   Warning,
 } from '../shared/models';
 import { dnrStatus } from './dnr-sync';
-import { restorableTabs } from './enforce';
+import { internalPagesBlocked, restorableTabs } from './enforce';
 import { ctx, decisionView, groupActiveNow, groupProtection, groupStatus, lockedNow } from './engine';
 import { activePauses, pauseOptions } from './pauses';
 import { store } from './store';
@@ -131,6 +131,7 @@ export async function configModel(): Promise<ConfigModel> {
       contextMenus: features.contextMenus,
       commands: features.commands,
     },
+    browserPagesBlocked: !isAndroid && internalPagesBlocked(),
   };
 }
 

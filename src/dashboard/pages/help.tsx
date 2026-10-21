@@ -7,6 +7,7 @@ import { api, features, openShortcutSettings, quiet } from '../../platform/api';
 import { CHANGELOG_URL, NEW_ISSUE_URL, PRIVACY_URL, REPO_URL } from '../../shared/links';
 import { Button } from '../../ui/components';
 import { Icon } from '../../ui/icons';
+import { useDashboard } from '../context';
 import { HELP_TOPICS, type HelpBlock, type HelpFacts, helpFacts, SHORTCUTS, SYNTAX } from '../help-content';
 
 function SyntaxTable() {
@@ -57,6 +58,8 @@ function Shortcuts({ facts }: { facts: HelpFacts }) {
 
 function ShortcutList({ facts }: { facts: HelpFacts }) {
   const keys = useCommandKeys();
+  // The shortcut settings are among the browser's extension pages.
+  const blocked = useDashboard().model.browserPagesBlocked;
   if (!keys) return null;
   return (
     <div class="stack stack-sm">
@@ -81,10 +84,16 @@ function ShortcutList({ facts }: { facts: HelpFacts }) {
         })}
       </ul>
       <div>
-        <Button size="small" icon="keyboard" onClick={() => void quiet(openShortcutSettings())}>
+        <Button
+          size="small"
+          icon="keyboard"
+          disabled={blocked}
+          onClick={() => void quiet(openShortcutSettings())}
+        >
           {t('help.shortcutsChange')}
         </Button>
       </div>
+      {blocked && <p class="small muted">{t('help.shortcutsBlocked')}</p>}
     </div>
   );
 }

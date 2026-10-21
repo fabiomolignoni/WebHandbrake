@@ -11,7 +11,6 @@ import {
   type GroupResult,
   type UrlContext,
 } from '../engine/decide';
-import { WAIT_IN_DIALOG_SECONDS } from '../engine/limits';
 import { candidateTimes, nextRestriction, untilFor } from '../engine/next';
 import { representativeUrl, siteKeyFor } from '../engine/patterns';
 import { NAV_SEVERITY, SEVERITY } from '../engine/severity';
@@ -38,13 +37,7 @@ export function groupProtection(g: Group, t = now()): Protection {
   return ruleProtection(g, t);
 }
 
-/**
- * A protection that the person cannot pass alone within a couple of minutes: a password or
- * a partner code (which someone else may keep), Locked, Permanent, or a wait that is a pending change.
- */
-export function firmProtection(p: Protection): boolean {
-  return p.kind === 'wait' ? p.seconds > WAIT_IN_DIALOG_SECONDS : p.kind !== 'reminder';
-}
+export { firmProtection } from '../engine/defaults';
 
 /** A group is "active" when it currently restricts navigation. */
 export function groupActiveNow(g: Group, c = ctx()): boolean {

@@ -161,6 +161,8 @@ export interface ConfigModel {
   /** The protection now and the current lock state per group. */
   groups: Record<string, { protection: Protection; lockedNow: boolean; activeNow: boolean }>;
   platform: { android: boolean; firefox: boolean; contextMenus: boolean; commands: boolean };
+  /** Whether the browser's extension and settings pages are blocked right now. */
+  browserPagesBlocked: boolean;
 }
 
 export interface PauseOptions {
@@ -291,6 +293,12 @@ export interface InterventionModel {
   locked: boolean;
   /** Seconds of grace not applicable here; kept for symmetry. */
   canSaveLater: boolean;
+  /** Why the browser's extension and settings pages are blocked (kind "internal"). */
+  internal: {
+    always: boolean;
+    rules: { id: string; name: string; color: string; protection: Protection }[];
+    session: boolean;
+  } | null;
 }
 
 export interface PopupModel {
