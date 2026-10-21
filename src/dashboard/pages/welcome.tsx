@@ -6,9 +6,12 @@
 
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { clone } from '../../engine/json';
+import { isNav } from '../../engine/severity';
 import type { Group } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { api, browserName } from '../../platform/api';
+import { formatWhen } from '../../shared/format';
+import type { DecisionView } from '../../shared/models';
 import { call } from '../../shared/rpc';
 import { Button, ToneIcon } from '../../ui/components';
 import { BrakeLogo, Icon } from '../../ui/icons';
@@ -25,6 +28,14 @@ const STORE = 'whb-first-rule';
 /** A site to show as an example: a plain address. */
 const sampleSite = (g: Group) =>
   g.targets.find((x) => !x.allow && x.type === 'domain' && !x.value.includes('*'))?.value;
+
+/** What opening the example site shows now, or when the rule will step in on it. */
+function tryText(site: string, d: DecisionView | null): string {
+  if (!d || isNav(d)) return t('welcome.try.body', { site });
+  if (d.restriction?.kind === 'budget') return t('welcome.try.afterLimit', { site });
+  if (d.restriction) return t('welcome.try.later', { site, when: formatWhen(d.restriction.at) });
+  return t('welcome.try.notNow', { site });
+}
 
 export function WelcomePage() {
   const { model } = useDashboard();
@@ -81,6 +92,16 @@ export function WelcomePage() {
   const firstSite = created?.policies.some((p) => p.intervention.type !== 'track')
     ? sampleSite(created)
     : undefined;
+  // Outside the rule's times, or within its limit, the site opens normally: trying it then would
+  // look as if the rule did not work, so the step says when the rule steps in instead.
+  const [sample, setSample] = useState<DecisionView | null>(null);
+  useEffect(() => {
+    if (!firstSite) return;
+    void call('explain', { url: `https://${firstSite}` })
+      .then(setSample)
+      .catch(() => {});
+  }, [firstSite]);
+  const tryNow = !sample || isNav(sample);
   const browser = browserName();
 
   // ---------------------------------------------------------------- welcome
@@ -160,16 +181,18 @@ export function WelcomePage() {
               <li>
                 <ToneIcon tone="friction" icon="play" size={40} />
                 <span class="stack stack-xs grow">
-                  <strong>{t('welcome.try.title')}</strong>
-                  <span class="small text-2">{t('welcome.try.body', { site: firstSite })}</span>
+                  <strong>{tryNow ? t('welcome.try.title') : t('welcome.try.laterTitle')}</strong>
+                  <span class="small text-2">{tryText(firstSite, sample)}</span>
                 </span>
-                <Button
-                  size="small"
-                  icon="external"
-                  onClick={() => void call('tabs.open', { url: `https://${firstSite}` })}
-                >
-                  {t('welcome.try.action')}
-                </Button>
+                {tryNow && (
+                  <Button
+                    size="small"
+                    icon="external"
+                    onClick={() => void call('tabs.open', { url: `https://${firstSite}` })}
+                  >
+                    {t('welcome.try.action')}
+                  </Button>
+                )}
               </li>
             )}
             {incognito === false && (

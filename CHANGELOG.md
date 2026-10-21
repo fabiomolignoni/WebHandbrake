@@ -139,6 +139,11 @@ All notable changes to WebHandbrake are documented here. The format follows
   you pick will do (“blocks it from 18:00: until then it stays open”). A rule created there is
   called “Blocked sites” unless you name it, never after the site, and allows no breaks until you
   turn them on, as a rule from the wizard.
+- At the end of the first setup, **Try it** opened the example site even when the new rule did
+  not apply at that moment (outside its times, or within its limit), so the site opened normally
+  and the rule looked broken. The step now says when the rule steps in instead (“opens normally:
+  WebHandbrake steps in from Mon 9:00”) and offers **Try it** only when the site is restricted
+  right away.
 
 ## [1.0.0] - 2026-10-15
 
