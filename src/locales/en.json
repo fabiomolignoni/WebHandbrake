@@ -2849,6 +2849,18 @@
   "popup.add.newGroupName": {
     "message": "Name of the new rule"
   },
+  "popup.add.outcomeLater": {
+    "message": "“{rule}” blocks it from {when}: until then it stays open."
+  },
+  "popup.add.outcomeNever": {
+    "message": "“{rule}” does not block it: the site gets what this rule does instead, such as a question or a wait."
+  },
+  "popup.add.outcomeNew": {
+    "message": "A new rule that blocks it at all times."
+  },
+  "popup.add.outcomeNow": {
+    "message": "Blocked right away."
+  },
   "popup.add.page": {
     "message": "This page"
   },

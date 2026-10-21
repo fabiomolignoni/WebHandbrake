@@ -74,6 +74,28 @@ test('"Block site" adds this page, this section or the whole site, and restricts
   await expectAllowed(h, 'http://shop.test/cart/other');
 });
 
+test('"Block site" blocks: a rule that does not block now is not the default, and the popup says why', async ({
+  h,
+}) => {
+  await h.configure((c) => {
+    c.groups = [
+      group('Never now', ['other.test'], [policy(BLOCK, { schedule: { mode: 'during', windows: [] } })]),
+    ];
+  });
+  const [rule] = (await h.rpc('config.get')).config.groups;
+  const site = await expectAllowed(h, 'http://wiki.test/article');
+  const popup = await h.popup(site);
+  await popup.button('Block site').click();
+  await popup.text('A new rule that blocks it at all times.').expectVisible();
+  await popup.label('Add to').select(rule.id);
+  await popup.text(/^“Never now” does not block it/).expectVisible();
+  await popup.label('Add to').select('new');
+  await popup.button('Block', { exact: true }).click();
+  await site.expectIntervention(true, 5000);
+  const added = (await h.rpc('config.get')).config.groups[1];
+  expect(added).toMatchObject({ name: 'Blocked sites', pause: { allowed: false } });
+});
+
 test('"Save for later" from the popup, counted in its footer', async ({ h }) => {
   await h.configure((c) => {
     c.groups = [group('News', ['news.test'], [policy(TRACK)])];

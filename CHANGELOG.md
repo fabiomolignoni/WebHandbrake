@@ -132,6 +132,13 @@ All notable changes to WebHandbrake are documented here. The format follows
   rules or the focus session that block them and says until when, with a link to Protection; and
   where these pages are needed while they are blocked (allowing WebHandbrake in private windows,
   **Change shortcuts** in Help) the dashboard says so instead of opening a blocked page.
+- **Block site** in the popup, and the keyboard shortcut, added the site to the first rule in the
+  list (or the last one used) even when that rule applied only at certain times or after a limit,
+  so the site stayed open: “Allowed until tomorrow 9:00”. They now add it to a rule that blocks
+  it right away, or else to a new rule that blocks at all times, and the popup says what the rule
+  you pick will do (“blocks it from 18:00: until then it stays open”). A rule created there is
+  called “Blocked sites” unless you name it, never after the site, and allows no breaks until you
+  turn them on, as a rule from the wizard.
 
 ## [1.0.0] - 2026-10-15
 

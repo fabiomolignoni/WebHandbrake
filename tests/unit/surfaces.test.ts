@@ -7,6 +7,10 @@ import { BLOCK, group, REMINDER } from './helpers';
 
 const T0 = new Date(2026, 9, 5, 10).getTime();
 const office = { mode: 'during' as const, windows: [{ days: [1, 2, 3, 4, 5], start: 9 * 60, end: 17 * 60 }] };
+const evening = {
+  mode: 'during' as const,
+  windows: [{ days: [0, 1, 2, 3, 4, 5, 6], start: 18 * 60, end: 23 * 60 }],
+};
 
 let fake: FakeBrowser;
 
@@ -63,6 +67,25 @@ describe('what the popup and the dashboard show', () => {
     expect(m).toMatchObject({ canAdd: true, canFocus: true, restorable: 0, quickMinutes: [25, 50, 90] });
     // The tab of an intervention page shows the page it replaced.
     expect((await popupModel(2)).tab?.url).toBe('https://a.test/x');
+  });
+
+  it('"Block this site" goes to a rule that blocks the page right now, and says what each rule would do', async () => {
+    await setup([
+      group('Asks', ['x.test'], [{ intervention: delayIntervention(10) }]),
+      group('Evening', ['y.test'], [{ intervention: BLOCK, schedule: evening }]),
+      group('Always', ['z.test'], [{ intervention: BLOCK }]),
+    ]);
+    const { popupModel } = await import('../../src/background/views');
+    const m = await popupModel();
+    expect(m.addTo).toBe('Always');
+    expect(m.groups.map((g) => [g.id, g.blocksNow, g.blockAt])).toEqual([
+      ['Asks', false, null],
+      ['Evening', false, new Date(2026, 9, 5, 18).getTime()],
+      ['Always', true, null],
+    ]);
+    // Without a rule that blocks now, a new one.
+    await setup([group('Evening', ['y.test'], [{ intervention: BLOCK, schedule: evening }])]);
+    expect((await popupModel()).addTo).toBeNull();
   });
 
   it('no break where no rule blocks the page', async () => {
@@ -221,18 +244,29 @@ describe('menus and shortcuts', () => {
     expect(t.store.state.sessions[0].endAt - t.store.state.sessions[0].startAt).toBe(50 * 60_000);
   });
 
-  it('the shortcut adds the site to the last rule used, if it is still active', async () => {
+  it('the shortcut adds the site to the last rule used, or the first one, that blocks it right now', async () => {
     const t = await setup([
+      group('Evening', ['e.test'], [{ intervention: BLOCK, schedule: evening }]),
       group('A', ['a.test'], [{ intervention: BLOCK }]),
       group('B', ['b.test'], [{ intervention: BLOCK }]),
     ]);
     const { onCommand } = await import('../../src/background/menus');
     t.store.meta.lastAddGroup = 'B';
     await onCommand('block-site', { id: 9, url: 'https://new.test/x' } as chrome.tabs.Tab);
-    expect(t.store.config.groups[1].targets.map((x) => x.value)).toEqual(['b.test', 'new.test']);
-    t.store.config.groups[1].archived = true;
+    expect(t.store.config.groups[2].targets.map((x) => x.value)).toEqual(['b.test', 'new.test']);
+    // Archived: the first rule that blocks now, not one that blocks only in the evening.
+    t.store.config.groups[2].archived = true;
+    t.store.cc = compileConfig(t.store.config);
     await onCommand('block-site', { id: 9, url: 'https://other.test/' } as chrome.tabs.Tab);
-    expect(t.store.config.groups[0].targets.map((x) => x.value)).toEqual(['a.test', 'other.test']);
+    expect(t.store.config.groups[1].targets.map((x) => x.value)).toEqual(['a.test', 'other.test']);
+    // None blocks now: a new rule that blocks at all times, without breaks, as from the wizard.
+    t.store.config.groups[1].archived = true;
+    t.store.cc = compileConfig(t.store.config);
+    t.store.meta.lastAddGroup = 'Evening';
+    await onCommand('block-site', { id: 9, url: 'https://third.test/' } as chrome.tabs.Tab);
+    const added = t.store.config.groups[3];
+    expect(added).toMatchObject({ name: 'Blocked sites', pause: { allowed: false } });
+    expect(added.targets.map((x) => x.value)).toEqual(['third.test']);
     await onCommand('open-dashboard');
     expect(fake.created.map((x) => x.url)).toEqual(['chrome-extension://test/dashboard.html']);
     await onCommand('start-session');
