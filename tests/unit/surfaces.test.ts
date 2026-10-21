@@ -342,6 +342,9 @@ describe('messages', () => {
 describe('diagnostics and permissions', () => {
   it('the report hides the addresses unless asked', async () => {
     const t = await setup([group('A', ['a.test'], [{ intervention: BLOCK }])]);
+    // Off by default: the log keeps full addresses.
+    expect(t.store.config.settings.diagnostics.decisionLog).toBe(false);
+    t.store.config.settings.diagnostics.decisionLog = true;
     const { logDecision } = await import('../../src/background/diagnostics-state');
     await logDecision(true, 'navigation', 'https://secret.test/private?x=1', 'block', 'A');
     const { diagReport } = await import('../../src/background/diagnostics');
@@ -350,7 +353,6 @@ describe('diagnostics and permissions', () => {
     expect(hidden).toContain('navigation block https://…');
     expect(hidden).not.toContain('secret.test');
     expect(await diagReport(true)).toContain('https://secret.test/private?x=1');
-    expect(t.store.config.settings.diagnostics.decisionLog).toBe(true);
   });
 
   it('losing access to the sites or to private windows is a protection event', async () => {

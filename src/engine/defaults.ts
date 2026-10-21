@@ -82,7 +82,8 @@ export function defaultSettings(): Settings {
       emergencyHours: 24,
     },
     later: { notify: true },
-    diagnostics: { decisionLog: true },
+    // Full addresses of restricted pages, readable by anyone at the computer: only when asked for.
+    diagnostics: { decisionLog: false },
     clock: { useDateHeaders: true },
     onboarded: false,
   };

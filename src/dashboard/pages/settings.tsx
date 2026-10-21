@@ -973,6 +973,7 @@ function Diagnostics() {
             checked={s.diagnostics.decisionLog}
             onChange={(v) => void save((x) => (x.diagnostics.decisionLog = v))}
             label={t('diag.logEnabled')}
+            help={t('diag.logHelp')}
           />
         </div>
         {d.log.length === 0 ? (
