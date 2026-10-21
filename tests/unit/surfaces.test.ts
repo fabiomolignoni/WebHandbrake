@@ -69,22 +69,25 @@ describe('what the popup and the dashboard show', () => {
     expect((await popupModel(2)).tab?.url).toBe('https://a.test/x');
   });
 
-  it('"Block this site" goes to a rule that blocks the page right now, and says what each rule would do', async () => {
+  it('"Block this site" goes to a rule that keeps blocking the page, and says what each rule would do', async () => {
     await setup([
+      group('Office', ['w.test'], [{ intervention: BLOCK, schedule: office }]),
       group('Asks', ['x.test'], [{ intervention: delayIntervention(10) }]),
       group('Evening', ['y.test'], [{ intervention: BLOCK, schedule: evening }]),
       group('Always', ['z.test'], [{ intervention: BLOCK }]),
     ]);
     const { popupModel } = await import('../../src/background/views');
     const m = await popupModel();
+    // Office blocks now but not after 17:00: not where "Block" should put a site.
     expect(m.addTo).toBe('Always');
-    expect(m.groups.map((g) => [g.id, g.blocksNow, g.blockAt])).toEqual([
+    expect(m.groups.map((g) => [g.id, g.blocksNow, g.change])).toEqual([
+      ['Office', true, new Date(2026, 9, 5, 17).getTime()],
       ['Asks', false, null],
       ['Evening', false, new Date(2026, 9, 5, 18).getTime()],
       ['Always', true, null],
     ]);
-    // Without a rule that blocks now, a new one.
-    await setup([group('Evening', ['y.test'], [{ intervention: BLOCK, schedule: evening }])]);
+    // Without a rule that keeps blocking it, a new one.
+    await setup([group('Office', ['w.test'], [{ intervention: BLOCK, schedule: office }])]);
     expect((await popupModel()).addTo).toBeNull();
   });
 

@@ -2844,6 +2844,10 @@ body.page-popup {
   color: var(--text-2);
   overflow-wrap: anywhere;
 }
+.granularity .choice .scope {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
 
 /* Progress ring (focus sessions, waits). */
 .ring {

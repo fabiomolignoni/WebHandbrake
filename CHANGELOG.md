@@ -135,8 +135,11 @@ All notable changes to WebHandbrake are documented here. The format follows
 - **Block site** in the popup, and the keyboard shortcut, added the site to the first rule in the
   list (or the last one used) even when that rule applied only at certain times or after a limit,
   so the site stayed open: “Allowed until tomorrow 9:00”. They now add it to a rule that blocks
-  it right away, or else to a new rule that blocks at all times, and the popup says what the rule
-  you pick will do (“blocks it from 18:00: until then it stays open”). A rule created there is
+  it right away and at all times, or else to a new rule that does, and the popup says what the
+  rule you pick will do (“blocks it from 18:00: until then it stays open”, “blocked right away,
+  until 17:00”). Its choices say what each one covers: the whole site with its subdomains, this
+  host without them, a section with the pages under it, or only this page, which showed the
+  same address twice before. A rule created there is
   called “Blocked sites” unless you name it, never after the site, and allows no breaks until you
   turn them on, as a rule from the wizard.
 - At the end of the first setup, **Try it** opened the example site even when the new rule did
