@@ -221,8 +221,9 @@ export async function interventionModel(
     }
   }
   if (primary?.pausable) m.pause = breakOptions(d, url, incognito);
-  // "Times you chose not to go in" counts the pages that offered a way in and that were opened:
-  // a block without a break, or a page put in place of one already open, leaves no choice.
+  // "Times you chose not to go in" counts the pages that offered a way in, except those that a
+  // change of the rules put in place of a page already open: a block without a break leaves no
+  // choice, and the tab of a site just blocked from the popup was no attempt to go in.
   const replaced = tab?.id !== undefined && replacedTabs.get(tab.id) === url;
   tabInfo.offered = (Boolean(m.ticket) || Boolean(m.pause?.available)) && !replaced;
   if (fresh && tabInfo.offered) {

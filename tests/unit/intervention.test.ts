@@ -259,7 +259,7 @@ describe('the intervention page', () => {
     // A wait does: leaving it is a choice not to go in.
     await t.model('https://asks.test/');
     expect(todayStats()).toMatchObject({ shown: 2, impulses: 1 });
-    // The same page put in place of one already open (a rule created, a limit reached) is not.
+    // The same page put in place of one already open by a change of the rules is not.
     enforce.replacedTabs.set(1, 'https://asks.test/other');
     await t.model('https://asks.test/other');
     expect(todayStats()).toMatchObject({ shown: 3, impulses: 1 });

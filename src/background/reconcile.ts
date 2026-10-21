@@ -50,7 +50,7 @@ async function doReconcile(configChanged: boolean) {
     await quiet(updateContentScripts());
     await quiet(rebuildMenus());
   }
-  await enforceAllTabs();
+  await enforceAllTabs(configChanged ? 'config' : 'state');
   await scheduleNext();
   await quiet(updateActiveBadges());
   broadcast(['state', ...(configChanged ? (['config'] as const) : [])]);
