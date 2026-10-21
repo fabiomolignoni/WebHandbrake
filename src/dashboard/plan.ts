@@ -62,10 +62,13 @@ export function planSentence(
   windows: TimeWindow[],
   minutes: number,
   every = DAY_MINUTES,
+  /** Whether a time limit is for one site, shared by several or for each of them. */
+  limitSites: 'one' | 'shared' | 'each' = 'one',
 ): string {
   const outcome = outcomeOf(when, typeof how === 'string' ? quickIntervention(how) : how);
+  const cond = when === 'daily' && limitSites !== 'one' ? `daily.${limitSites}` : when;
   return t('wizard.review.plan', {
-    cond: t(`wizard.cond.${when}`, {
+    cond: t(`wizard.cond.${cond}`, {
       sites,
       windows: describeWindows(windows),
       duration: formatDuration(minutes * 60),

@@ -29,6 +29,9 @@ describe('quick rules: the conditions built by the creation wizard and onboardin
     expect(hours.budget).toEqual({ type: 'time', minutes: 20, period: { kind: 'minutes', n: 120 } });
     const [days] = quickPolicies('daily', 'block', office, 90, 3 * 1440);
     expect(days.budget).toEqual({ type: 'time', minutes: 90, period: { kind: 'days', n: 3 } });
+    // Shared by the sites of the rule unless each one gets its own.
+    const [each] = quickPolicies('daily', 'block', office, 30, 1440, true);
+    expect(each.budget).toEqual({ type: 'time', minutes: 30, period: { kind: 'day' }, perSite: true });
   });
 
   it('a period in minutes is the clock hour, the calendar day, whole days or minutes', () => {

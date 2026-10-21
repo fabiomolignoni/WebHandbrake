@@ -337,6 +337,8 @@ export function quickPolicies(
   minutes: number,
   /** The period of the time limit, in minutes: it starts again every so often. */
   every = DAY_MINUTES,
+  /** Each site of the rule gets its own time allowed. */
+  perSite = false,
 ): Policy[] {
   // The wizard passes the intervention with the settings chosen (#14); a type takes the defaults.
   const intervention = typeof how === 'string' ? quickIntervention(how) : how;
@@ -348,7 +350,12 @@ export function quickPolicies(
     ];
   if (when === 'schedule') return [newPolicy({ schedule: { mode: 'during', windows }, intervention })];
   if (when === 'daily')
-    return [newPolicy({ budget: { type: 'time', minutes, period: everyPeriod(every) }, intervention })];
+    return [
+      newPolicy({
+        budget: { type: 'time', minutes, period: everyPeriod(every), ...(perSite ? { perSite } : {}) },
+        intervention,
+      }),
+    ];
   return [newPolicy({ intervention })];
 }
 

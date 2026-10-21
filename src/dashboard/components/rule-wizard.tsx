@@ -33,6 +33,7 @@ import {
 import { clone } from '../../engine/json';
 import type { Group, Intervention, Protection, Target, TimeWindow } from '../../engine/types';
 import { t } from '../../i18n/i18n';
+import { formatDuration } from '../../shared/format';
 import { Banner, Button, DurationInput, GroupTile, RadioCards, Toggle } from '../../ui/components';
 import { GROUP_ICONS, Icon } from '../../ui/icons';
 import { costLabel } from '../../ui/pause';
@@ -64,6 +65,8 @@ interface State {
   customMinutes: boolean;
   /** The time allowed starts again every so many minutes: a day unless changed. */
   every: number;
+  /** Each site gets its own time allowed, instead of sharing it with the others of the rule. */
+  perSite: boolean;
   /** What happens, with the settings chosen (#14); null until a choice is made. */
   intervention: Intervention | null;
   /** The settings chosen for each intervention tried (#14). */
@@ -101,6 +104,7 @@ function load(store: string): State | null {
       kept: s.kept ?? {},
       customMinutes: Boolean(s.customMinutes),
       every: s.every ?? DAY_MINUTES,
+      perSite: Boolean(s.perSite),
       protection,
       breaks: Boolean(s.breaks),
       // A ready-made list may have been removed since.
@@ -180,6 +184,7 @@ export function RuleWizard({
       minutes: 30,
       customMinutes: false,
       every: DAY_MINUTES,
+      perSite: false,
       intervention: null,
       kept: {},
       protection: null,
@@ -202,6 +207,8 @@ export function RuleWizard({
   }, [s.step]);
 
   const sites = s.targets.filter((x) => !x.allow);
+  // With several sites, a time limit is shared by them unless each site gets its own.
+  const severalSites = sites.length > 1;
   // A ready-made list names the rule until the person types a name; a site never does, since the
   // rule's name is shown next to its sites (block page, "Add to" in the popup).
   const name = s.name.trim();
@@ -223,7 +230,7 @@ export function RuleWizard({
       icon: s.icon,
       note: s.note.trim(),
       targets: s.targets,
-      policies: quickPolicies(s.when, intervention, s.windows, s.minutes, s.every),
+      policies: quickPolicies(s.when, intervention, s.windows, s.minutes, s.every, severalSites && s.perSite),
       pause,
       protection,
     });
@@ -459,6 +466,16 @@ export function RuleWizard({
                     {t('wizard.when.everyHelp')}
                   </span>
                 )}
+                {severalSites && (
+                  <Toggle
+                    checked={s.perSite}
+                    onChange={(perSite) => update({ perSite })}
+                    label={t('budget.perSite')}
+                    help={t(s.perSite ? 'wizard.when.perSiteOn' : 'wizard.when.perSiteOff', {
+                      duration: formatDuration(s.minutes * 60),
+                    })}
+                  />
+                )}
               </div>
             )}
           </>
@@ -508,7 +525,15 @@ export function RuleWizard({
               <div class="stack stack-sm" style={{ minWidth: 0 }}>
                 <strong class="plan-name">{name || t('editor.unnamed')}</strong>
                 <p class="plan-text">
-                  {planSentence(s.when, intervention, sitesPhrase(s.targets), s.windows, s.minutes, s.every)}
+                  {planSentence(
+                    s.when,
+                    intervention,
+                    sitesPhrase(s.targets),
+                    s.windows,
+                    s.minutes,
+                    s.every,
+                    severalSites ? (s.perSite ? 'each' : 'shared') : 'one',
+                  )}
                 </p>
               </div>
             </div>

@@ -612,13 +612,15 @@ test("first run, welcome → the rule wizard's steps → done", async ({ h }) =>
   await p.button('Next: when').click();
   await p.role('radio', /^After some time/).click();
   await p.role('radio', '45 min').click();
+  // The sites of the list share the time allowed unless each one gets its own.
+  await p.text(/^The sites share the time allowed: 45 min in total/).expectVisible();
   await p.button('Next: what happens').click();
   // Nothing is pre-selected: we do not know why the extension was installed.
   await p.get('.choice[aria-checked="true"]').expectCount(0);
   await p.button('Next: protection').expectEnabled(false);
   await p.role('radio', 'Block').click();
   await toReview(p, 'Reminder');
-  await p.get('.plan-text').expectText('After 45 min a day on');
+  await p.get('.plan-text').expectText('After 45 min a day in total on');
   await p.label('Why does this rule matter to you?').fill('More evenings outside');
   await p.button('Create rule').click();
   await p.role('heading', 'You’re set').expectVisible();

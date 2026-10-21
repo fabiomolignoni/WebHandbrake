@@ -269,7 +269,7 @@ export function BudgetEditor({
               />
             </div>
           )}
-          {budget && advanced && (
+          {budget && (
             <Toggle
               checked={Boolean(budget.perSite)}
               onChange={(perSite) => onChange({ ...budget, perSite } as Budget)}

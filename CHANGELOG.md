@@ -144,6 +144,11 @@ All notable changes to WebHandbrake are documented here. The format follows
   and the rule looked broken. The step now says when the rule steps in instead (“opens normally:
   WebHandbrake steps in from Mon 9:00”) and offers **Try it** only when the site is restricted
   right away.
+- A time limit on several sites did not say that they share it: “30 min a day on youtube.com,
+  reddit.com and 2 more sites” is 30 minutes in total, and **Count each site separately** was
+  only in advanced mode. The wizard says that the sites share the time allowed, with the option to
+  give each site its own, the plan says “in total” or “on each of”, and the rule editor shows the
+  option without advanced mode.
 
 ## [1.0.0] - 2026-10-15
 

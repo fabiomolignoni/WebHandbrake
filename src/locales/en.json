@@ -127,7 +127,7 @@
     "message": "Count each site separately"
   },
   "budget.perSiteHelp": {
-    "message": "Each site of the rule gets its own limit instead of sharing one."
+    "message": "Each site of the rule gets its own limit. Otherwise the sites share one: the time or the visits on all of them count together."
   },
   "budget.perSiteSuffix": {
     "message": "(per site)"
@@ -602,7 +602,7 @@
     "message": "Advanced options"
   },
   "editor.advancedModeHint": {
-    "message": "More options (regular expressions, rolling windows, per-site limits…) appear when advanced mode is on in Settings."
+    "message": "More options (regular expressions, rolling windows…) appear when advanced mode is on in Settings."
   },
   "editor.breaks.title": {
     "message": "Can you take a break from this rule?"
@@ -3379,7 +3379,7 @@
     "message": "Advanced mode"
   },
   "settings.advancedHelp": {
-    "message": "Shows regular expressions, rolling windows, per-site limits, text editing of lists and other expert options."
+    "message": "Shows regular expressions, rolling windows, text editing of lists and other expert options."
   },
   "settings.allSites": {
     "message": "Track time on all sites"
@@ -4506,6 +4506,14 @@
     "message": "After {duration} {period} on {sites}",
     "description": "e.g. \"After 30 min a day on youtube.com\", \"After 2 h every 3 days on youtube.com\"."
   },
+  "wizard.cond.daily.each": {
+    "message": "After {duration} {period} on each of {sites}",
+    "description": "e.g. \"After 30 min a day on each of youtube.com, reddit.com and 2 more sites\""
+  },
+  "wizard.cond.daily.shared": {
+    "message": "After {duration} {period} in total on {sites}",
+    "description": "e.g. \"After 30 min a day in total on youtube.com, reddit.com and 2 more sites\""
+  },
   "wizard.cond.schedule": {
     "message": "When you open {sites} ({windows})"
   },
@@ -4722,6 +4730,12 @@
   },
   "wizard.when.minutes": {
     "message": "How much time?"
+  },
+  "wizard.when.perSiteOff": {
+    "message": "The sites share the time allowed: {duration} in total, whichever sites you spend it on."
+  },
+  "wizard.when.perSiteOn": {
+    "message": "Each site gets its own {duration}."
   },
   "wizard.when.schedule": {
     "message": "At certain times"
