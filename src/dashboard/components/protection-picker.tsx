@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'preact/hooks';
-import { DEFAULT_PROTECTION } from '../../engine/defaults';
+import { DEFAULT_PROTECTION, firmProtection } from '../../engine/defaults';
 import { WAIT_CHOICES_SECONDS, WAIT_IN_DIALOG_SECONDS } from '../../engine/limits';
 import type { Protection, ProtectionKind } from '../../engine/types';
 import { t } from '../../i18n/i18n';
@@ -15,8 +15,12 @@ import type { PartnerSetup } from '../../shared/models';
 import { call } from '../../shared/rpc';
 import { Button, Dialog, Field, RadioCards, Segmented, toast } from '../../ui/components';
 import { Icon } from '../../ui/icons';
+import { protectionIcon } from '../../ui/protection';
+import { useDashboard } from '../context';
 import { PartnerSetupDialog } from './partner-setup';
 import { PasswordDialog } from './password-dialog';
+
+export { protectionIcon, protectionLabel } from '../../ui/protection';
 
 export const PROTECTION_KINDS: ProtectionKind[] = [
   'reminder',
@@ -27,31 +31,19 @@ export const PROTECTION_KINDS: ProtectionKind[] = [
   'permanent',
 ];
 
-export function protectionIcon(kind: ProtectionKind): string {
-  return {
-    reminder: 'leaf',
-    wait: 'hourglass',
-    password: 'key',
-    partner: 'users',
-    locked: 'lock',
-    permanent: 'infinity',
-  }[kind];
-}
-
-/** "Reminder", "Wait · 1 h", "Locked until Fri 12 Oct 00:00"… */
-export function protectionLabel(p: Protection): string {
-  if (p.kind === 'wait') return t('level.wait.tag', { duration: formatDuration(p.seconds) });
-  if (p.kind === 'locked') return t('level.locked.tag', { when: formatDateTime(p.until) });
-  return t(`level.${p.kind}`);
-}
-
-/** What loosening the rule and, when it has breaks, taking a break will take. */
+/**
+ * What loosening the rule and, when it has breaks, taking a break will take; and, for a firm
+ * protection, that the browser's extension and settings pages are blocked while it restricts.
+ */
 export function ProtectionExplanation({
   protection: p,
   breaks,
+  browserPages,
 }: {
   protection: Protection;
   breaks: boolean;
+  /** Whether a firmly protected rule blocks the browser's extension and settings pages. */
+  browserPages: boolean;
 }) {
   const weaken =
     p.kind === 'wait'
@@ -64,6 +56,7 @@ export function ProtectionExplanation({
     <ul class="small bullets">
       <li>{weaken}</li>
       {breaks && <li>{t(pauses)}</li>}
+      {browserPages && firmProtection(p) && <li>{t('level.firm.browserPages')}</li>}
     </ul>
   );
 }
@@ -164,6 +157,8 @@ export function ProtectionPicker({
   const [kept, setKept] = useState<Partial<Record<ProtectionKind, Protection>>>(() =>
     value ? { [value.kind]: value } : {},
   );
+  const { model } = useDashboard();
+  const browserPages = !model.platform.android && model.config.settings.protection.internalPages === 'auto';
   const [dialog, setDialog] = useState<'password' | 'locked' | 'permanent' | null>(null);
   const [setup, setSetup] = useState<PartnerSetup | null>(null);
   const choose = (p: Protection) => {
@@ -207,7 +202,7 @@ export function ProtectionPicker({
       />
       {value && (
         <div class="option-panel stack stack-sm" aria-live="polite">
-          <ProtectionExplanation protection={value} breaks={breaks} />
+          <ProtectionExplanation protection={value} breaks={breaks} browserPages={browserPages} />
           {value.kind === 'wait' && (
             <div class="stack stack-xs">
               <span class="label" id={`wait-${groupId}`}>

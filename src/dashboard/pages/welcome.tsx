@@ -185,6 +185,7 @@ export function WelcomePage() {
                           ? 'checklist.incognito.android'
                           : 'checklist.incognito.firefox',
                     )}
+                    {model.browserPagesBlocked && <> {t('checklist.incognito.blockedNow')}</>}
                   </span>
                 </span>
               </li>

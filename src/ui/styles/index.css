@@ -2961,6 +2961,21 @@ body.page-popup {
   max-width: 50ch;
   margin: 0;
 }
+.intervention .internal-why {
+  align-items: center;
+  max-width: 50ch;
+}
+.intervention .internal-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  text-align: start;
+}
+.intervention .internal-reasons li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s2);
+}
 .intervention .why {
   text-align: start;
   width: 100%;

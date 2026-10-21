@@ -8,6 +8,7 @@ import { render } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { isNav } from '../engine/severity';
 import { t } from '../i18n/i18n';
+import { extensionUrl } from '../platform/api';
 import { formatDuration, formatList, formatWhen } from '../shared/format';
 import type { DecisionView, InterventionModel, PauseOptions, StepView, TicketView } from '../shared/models';
 import { call } from '../shared/rpc';
@@ -17,6 +18,7 @@ import { Explain } from '../ui/explain';
 import { bootPage, onBackgroundChange, useNow } from '../ui/hooks';
 import { Icon } from '../ui/icons';
 import { costsLabel, PauseDialog, pauseBudgetLabel } from '../ui/pause';
+import { protectionLabel } from '../ui/protection';
 import { CanvasText, TypingInput } from '../ui/ticket';
 
 const blockedUrl = () => decodeHash(location.hash.slice(1));
@@ -92,7 +94,7 @@ function headline(m: InterventionModel): string {
     case 'cooldown':
       return until ? t('iv.cooldown.until', { when: until }) : t('iv.cooldown');
     case 'internal':
-      return t('iv.internal');
+      return until ? t('iv.internal.until', { when: until }) : t('iv.internal');
     case 'delay':
       return t('iv.delay');
     case 'ask':
@@ -270,7 +272,7 @@ function App() {
           {headline(m)}
         </h1>
         {m.kind === 'selftest' && <Banner kind="ok">{t('iv.selftest.body')}</Banner>}
-        {m.kind === 'internal' && <p class="message">{t('iv.internal.body')}</p>}
+        {m.kind === 'internal' && m.internal && <InternalReasons internal={m.internal} />}
         {m.group?.note && (
           <blockquote class="note">
             “{m.group.note}”<span class="by">— {t('iv.yourNote')}</span>
@@ -357,6 +359,47 @@ function App() {
       )}
       <Toasts />
     </main>
+  );
+}
+
+/** Why the browser's own pages are blocked now, and where that is chosen. */
+function InternalReasons({ internal }: { internal: NonNullable<InterventionModel['internal']> }) {
+  return (
+    <div class="stack stack-sm internal-why">
+      {internal.always ? (
+        <p class="message">{t('iv.internal.always')}</p>
+      ) : (
+        <>
+          <p class="message">{t('iv.internal.body')}</p>
+          <ul class="internal-reasons plain">
+            {internal.rules.map((r) => (
+              <li key={r.id}>
+                <ColorDot color={r.color} />
+                <span>
+                  {t('iv.internal.rule', { rule: r.name, protection: protectionLabel(r.protection) })}
+                </span>
+              </li>
+            ))}
+            {internal.session && (
+              <li>
+                <Icon name="target" />
+                <span>{t('iv.internal.session')}</span>
+              </li>
+            )}
+          </ul>
+        </>
+      )}
+      <p class="small muted">
+        {t('iv.internal.change')}{' '}
+        <button
+          type="button"
+          class="link-btn"
+          onClick={() => void call('tabs.open', { url: extensionUrl('dashboard.html#/protection') })}
+        >
+          {t('iv.internal.open')}
+        </button>
+      </p>
+    </div>
   );
 }
 

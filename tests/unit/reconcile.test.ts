@@ -204,14 +204,24 @@ describe('browser settings pages', () => {
     for (const url of [
       'about:addons',
       'chrome://extensions/?id=x',
-      'edge://settings/privacy',
+      'chrome://extensions/shortcuts',
+      'chrome://flags',
+      'chrome://settings/reset',
+      'chrome://settings/resetProfileSettings?origin=userclick',
+      'edge://settings/triggeredResetProfileSettings',
       'ABOUT:CONFIG',
     ])
       expect(isProtectedInternal(url), url).toBe(true);
+    // The settings that cannot turn the extension off stay open (passwords, privacy, search…).
     for (const url of [
       'about:blank',
+      'about:preferences',
       'chrome://newtab',
       'chrome://extensionsx',
+      'chrome://settings',
+      'chrome://settings/passwords',
+      'chrome://settings/clearBrowserData',
+      'edge://settings/privacy',
       'https://chrome.test/settings',
     ])
       expect(isProtectedInternal(url), url).toBe(false);
@@ -252,6 +262,27 @@ describe('browser settings pages', () => {
     t.store.config.settings.protection.internalPages = 'never';
     t.store.state.grants = [];
     expect(blocked()).toBe(false);
+  });
+
+  it('say why they are blocked and when they open again', async () => {
+    const firm = group('Firm', ['a.test'], [{ intervention: BLOCK }], { protection: PERMANENT });
+    const t = await setup([]);
+    t.store.config.settings.protection.internalPages = 'auto';
+    t.store.state.sessions.push(session({ locked: true }));
+    expect(t.enforce.internalGuard()).toEqual({ always: false, groups: [], session: true });
+    expect(t.enforce.internalGuardUntil()).toBe(T0 + 3_600_000);
+    // A rule that always applies keeps them blocked once the session is over.
+    t.store.config.groups.push(firm);
+    t.store.cc = compileConfig(t.store.config);
+    expect(t.enforce.internalGuard()?.groups.map((g) => g.name)).toEqual(['Firm']);
+    expect(t.enforce.internalGuardUntil()).toBeNull();
+    // Locked is firm until its date, then asks only for a reminder.
+    firm.protection = { kind: 'locked', until: T0 + 7_200_000 };
+    t.store.cc = compileConfig(t.store.config);
+    expect(t.enforce.internalGuardUntil()).toBe(T0 + 7_200_000);
+    t.store.config.settings.protection.internalPages = 'always';
+    expect(t.enforce.internalGuard()).toEqual({ always: true, groups: [], session: false });
+    expect(t.enforce.internalGuardUntil()).toBeNull();
   });
 });
 

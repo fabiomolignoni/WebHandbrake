@@ -120,6 +120,14 @@ export function defaultState(): RuntimeState {
 export const DEFAULT_PROTECTION: Protection = { kind: 'wait', seconds: 30 };
 
 /**
+ * A protection that the person cannot pass alone within a couple of minutes: a password or
+ * a partner code (which someone else may keep), Locked, Permanent, or a wait that is a pending change.
+ */
+export function firmProtection(p: Protection): boolean {
+  return p.kind === 'wait' ? p.seconds > WAIT_IN_DIALOG_SECONDS : p.kind !== 'reminder';
+}
+
+/**
  * Whether a break lifts an intervention: only a block. A question, a wait and a challenge have
  * their own way in; count only and a filter leave the page open, a redirect and closing the tab
  * leave it at once (#15).

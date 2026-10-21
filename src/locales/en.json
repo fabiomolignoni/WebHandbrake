@@ -239,6 +239,9 @@
   "checklist.incognito.android": {
     "message": "In Firefox, open Settings › Add-ons, choose WebHandbrake and turn on “Run in private browsing”."
   },
+  "checklist.incognito.blockedNow": {
+    "message": "The extension pages are blocked right now: do it once no firmly protected rule restricts sites."
+  },
   "checklist.incognito.chrome": {
     "message": "Open chrome://extensions, choose Details under WebHandbrake and turn on “Allow in Incognito”."
   },
@@ -257,8 +260,14 @@
   "checklist.internal.auto": {
     "message": "Browser extension and settings pages are blocked while a firmly protected rule restricts sites or a focus session that cannot be interrupted is running."
   },
+  "checklist.internal.blockedNow": {
+    "message": "Blocked right now."
+  },
   "checklist.internal.no": {
     "message": "Browser extension and settings pages are never blocked."
+  },
+  "checklist.internal.openNow": {
+    "message": "Not blocked right now."
   },
   "checklist.ok": {
     "message": "OK"
@@ -1474,6 +1483,9 @@
   "help.shortcuts": {
     "message": "Keyboard shortcuts"
   },
+  "help.shortcutsBlocked": {
+    "message": "The browser’s shortcut settings are blocked right now, with its other extension pages: see “Block the browser’s extension and settings pages” in Protection."
+  },
   "help.shortcutsChange": {
     "message": "Change shortcuts"
   },
@@ -2043,8 +2055,27 @@
   "iv.internal": {
     "message": "The browser’s extension and settings pages are blocked right now."
   },
+  "iv.internal.always": {
+    "message": "So that WebHandbrake cannot be turned off in a moment of impulse, they are always blocked: “Block the browser’s extension and settings pages” is set to Always."
+  },
   "iv.internal.body": {
-    "message": "So that WebHandbrake cannot be turned off in a moment of impulse. You choose when this happens with “Block the browser’s extension and settings pages” in Protection."
+    "message": "So that WebHandbrake cannot be turned off in a moment of impulse, they stay blocked while:"
+  },
+  "iv.internal.change": {
+    "message": "You choose when they are blocked with “Block the browser’s extension and settings pages”, in Protection."
+  },
+  "iv.internal.open": {
+    "message": "Open Protection"
+  },
+  "iv.internal.rule": {
+    "message": "“{rule}” restricts sites and is firmly protected ({protection})",
+    "description": "A reason why the browser's pages are blocked; protection is e.g. Password or Wait · 1 h"
+  },
+  "iv.internal.session": {
+    "message": "a focus session that cannot be interrupted is running"
+  },
+  "iv.internal.until": {
+    "message": "The browser’s extension and settings pages are blocked until {when}."
   },
   "iv.loop": {
     "message": "This page keeps being redirected. Open Diagnostics in WebHandbrake to check the blocking filters."
@@ -2147,6 +2178,9 @@
   },
   "later.title": {
     "message": "Later"
+  },
+  "level.firm.browserPages": {
+    "message": "While the rule restricts sites, the browser’s extension and settings pages are blocked too, so that WebHandbrake cannot be turned off in a moment of impulse. You can change this in Protection."
   },
   "level.locked": {
     "message": "Locked"
@@ -3033,7 +3067,7 @@
     "message": "Block the browser’s extension and settings pages"
   },
   "protection.internalPagesHelp": {
-    "message": "Stops the easiest way around a blocker: turning it off. A rule is firmly protected by a password, a partner code, Locked, Permanent or a wait over {minutes} min. Not available on Android, and pages opened from the command line are not covered."
+    "message": "Stops the easiest way around a blocker: turning it off. Blocked: the extension pages, the flags and the reset of the settings in Chrome and similar browsers; the Add-ons manager, about:config and the troubleshooting pages in Firefox. The rest of the settings stays open. A rule is firmly protected by a password, a partner code, Locked, Permanent or a wait over {minutes} min. Not available on Android, and pages opened from the command line are not covered."
   },
   "protection.level": {
     "message": "Protection"

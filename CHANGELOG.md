@@ -123,6 +123,15 @@ All notable changes to WebHandbrake are documented here. The format follows
 - Sites pasted with commas or semicolons between them (“a.com, *news*, b.com/feed”) kept the
   comma: a site name was refused, but a wildcard or a section was added with it and then matched
   nothing, so those pages stayed open. Commas and semicolons now separate entries like spaces.
+- Blocking the browser's extension and settings pages also blocked all of Chrome's settings, such
+  as saved passwords, clearing browsing data and the search engine, although only resetting them
+  can turn WebHandbrake off. In Chrome and similar browsers it now blocks the extension pages, the
+  flags and the reset of the settings, as Firefox blocks only the Add-ons manager and its
+  troubleshooting pages. The wizard and the rule editor say, when you choose a firm protection,
+  that these pages are blocked while the rule restricts sites; the page shown instead names the
+  rules or the focus session that block them and says until when, with a link to Protection; and
+  where these pages are needed while they are blocked (allowing WebHandbrake in private windows,
+  **Change shortcuts** in Help) the dashboard says so instead of opening a blocked page.
 
 ## [1.0.0] - 2026-10-15
 

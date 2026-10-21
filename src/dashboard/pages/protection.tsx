@@ -134,7 +134,11 @@ function Checklist() {
     {
       ok: diag.permissions.incognito,
       text: diag.permissions.incognito ? t('checklist.incognito.ok') : t('checklist.incognito.no'),
-      help: diag.permissions.incognito ? undefined : incognitoHelp(),
+      help: diag.permissions.incognito
+        ? undefined
+        : model.browserPagesBlocked
+          ? `${incognitoHelp()} ${t('checklist.incognito.blockedNow')}`
+          : incognitoHelp(),
     },
     {
       ok: internal !== 'never',
@@ -144,6 +148,10 @@ function Checklist() {
           : internal === 'always'
             ? t('checklist.internal.always')
             : t('checklist.internal.auto'),
+      help:
+        internal === 'auto'
+          ? t(model.browserPagesBlocked ? 'checklist.internal.blockedNow' : 'checklist.internal.openNow')
+          : undefined,
     },
     {
       ok: clockIssues.length === 0,
