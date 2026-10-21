@@ -31,8 +31,10 @@ export const interventionTabs = new Map<
   { url: string; groupId: string | null; proceeded: boolean; offered: boolean }
 >();
 /**
- * Tabs whose page was replaced by an intervention page while it was open (a rule created, a limit
- * reached, a break over): tab id → the address. That is not an attempt to go in.
+ * Tabs whose page was replaced by an intervention page because the rules changed while it was
+ * open (a rule created, the site blocked from the popup): tab id → the address. That is not an
+ * attempt to go in. A page replaced as time goes by (a limit used up, a break over) still offers
+ * the choice to go on or to leave.
  */
 export const replacedTabs = new Map<number, string>();
 
@@ -137,7 +139,7 @@ async function redirectTab(tabId: number, url: string) {
  */
 export async function enforceTab(
   tab: chrome.tabs.Tab,
-  reason: 'navigation' | 'state' | 'activation',
+  reason: 'navigation' | 'state' | 'config' | 'activation',
 ): Promise<boolean> {
   if (tab.id === undefined || !tab.url) return false;
   const url = tab.url;
@@ -172,7 +174,7 @@ export async function enforceTab(
     }
   }
   graceTabs.delete(tab.id);
-  if (reason !== 'navigation') replacedTabs.set(tab.id, url);
+  if (reason === 'config') replacedTabs.set(tab.id, url);
   void logDecision(
     store.config.settings.diagnostics.decisionLog,
     reason === 'navigation' ? 'navigation' : 'tab',
@@ -192,11 +194,11 @@ export async function finishGrace(tabId: number) {
   graceTabs.delete(tabId);
 }
 
-/** Applies the current state to every open tab. */
-export async function enforceAllTabs() {
+/** Applies the current state to every open tab, after a change of the rules or of the state. */
+export async function enforceAllTabs(reason: 'state' | 'config' = 'state') {
   const tabs = await quiet(api.tabs.query({}));
   if (!tabs) return;
-  await Promise.all(tabs.map((tab) => enforceTab(tab, 'state').catch(() => false)));
+  await Promise.all(tabs.map((tab) => enforceTab(tab, reason).catch(() => false)));
   // Refresh in-page state (filters, timers) of tabs that stay.
   for (const tab of tabs) {
     if (tab.id === undefined || !tab.url || !/^https?:/.test(tab.url)) continue;

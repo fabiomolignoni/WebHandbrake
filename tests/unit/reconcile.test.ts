@@ -317,6 +317,20 @@ describe('navigation listeners', () => {
     await vi.waitFor(() => expect(t.store.usage.counterSum('left:A', ['2026-10-05'])).toBe(1));
   });
 
+  it('a page replaced by a change of the rules is remembered, one replaced as time goes by is not', async () => {
+    const t = await setup([group('A', ['free.test'], [{ intervention: BLOCK }])]);
+    await t.enforce.enforceTab(
+      { ...fake.tabs[0], id: 1, url: 'https://free.test/' } as chrome.tabs.Tab,
+      'state',
+    );
+    expect(t.enforce.replacedTabs.has(1)).toBe(false);
+    await t.enforce.enforceTab(
+      { ...fake.tabs[0], id: 1, url: 'https://free.test/' } as chrome.tabs.Tab,
+      'config',
+    );
+    expect(t.enforce.replacedTabs.get(1)).toBe('https://free.test/');
+  });
+
   it('without access to the sites, a request stopped by a filter is turned into the intervention page', async () => {
     const t = await setup([group('A', ['a.test'], [{ intervention: BLOCK }])]);
     const { dnrStatus } = await import('../../src/background/dnr-sync');
