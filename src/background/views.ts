@@ -21,7 +21,7 @@ import type {
 import { dnrStatus } from './dnr-sync';
 import { internalPagesBlocked, restorableTabs } from './enforce';
 import { ctx, decisionView, groupActiveNow, groupProtection, groupStatus, lockedNow } from './engine';
-import { blockTimeIn, defaultAddGroup } from './pages';
+import { blockingIn, defaultAddGroup } from './pages';
 import { activePauses, pauseOptions } from './pauses';
 import { store } from './store';
 
@@ -162,13 +162,13 @@ export async function popupModel(tabId?: number): Promise<PopupModel> {
     decision: d ? decisionView(d, { incognito }, c) : null,
     groups: store.config.groups.filter(isGroupActive).map((g) => {
       const cg = c.cc.byId.get(g.id);
-      const at = cg && parsed?.web ? blockTimeIn(cg, url, 'domain', c) : null;
+      const b = cg && parsed?.web ? blockingIn(cg, url, 'domain', c) : null;
       return {
         id: g.id,
         name: g.name,
         color: g.color,
-        blocksNow: at === c.now,
-        blockAt: at === c.now ? null : at,
+        blocksNow: Boolean(b?.now),
+        change: b?.change ?? null,
       };
     }),
     addTo: parsed?.web ? defaultAddGroup(url, 'domain', c) : null,

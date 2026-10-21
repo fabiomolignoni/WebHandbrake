@@ -305,10 +305,10 @@ export interface PopupModel {
   tab: { id: number; url: string; host: string; title: string; incognito: boolean } | null;
   decision: DecisionView | null;
   /**
-   * The active rules, with whether the page would be blocked right away once added to each, or
-   * else from when (null: not within the coming weeks).
+   * The active rules, with whether each would block the page right away once it is added, and
+   * when that changes: when it stops blocking it, or when it starts (null: not in the coming weeks).
    */
-  groups: { id: string; name: string; color: string; blocksNow: boolean; blockAt: number | null }[];
+  groups: { id: string; name: string; color: string; blocksNow: boolean; change: number | null }[];
   /** The rule "Block this site" adds to by default; null for a new rule. */
   addTo: string | null;
   sessions: FocusSession[];

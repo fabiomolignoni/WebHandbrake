@@ -2840,11 +2840,17 @@
   "popup.add.domain": {
     "message": "Whole site"
   },
+  "popup.add.domain.scope": {
+    "message": "With its subdomains"
+  },
   "popup.add.group": {
     "message": "Add to"
   },
   "popup.add.host": {
     "message": "This host"
+  },
+  "popup.add.host.scope": {
+    "message": "Without its subdomains"
   },
   "popup.add.newGroup": {
     "message": "New rule…"
@@ -2862,13 +2868,22 @@
     "message": "A new rule that blocks it at all times."
   },
   "popup.add.outcomeNow": {
-    "message": "Blocked right away."
+    "message": "Blocked right away, at all times."
+  },
+  "popup.add.outcomeUntil": {
+    "message": "Blocked right away, until {when}: then “{rule}” lets it open again."
   },
   "popup.add.page": {
     "message": "This page"
   },
+  "popup.add.page.scope": {
+    "message": "Only this page"
+  },
   "popup.add.path": {
     "message": "This section"
+  },
+  "popup.add.path.scope": {
+    "message": "With the pages under it"
   },
   "popup.add.title": {
     "message": "Block this site"

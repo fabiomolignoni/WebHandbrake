@@ -175,11 +175,13 @@ function Hero({ m, reload }: { m: PopupModel; reload: () => void }) {
   );
 }
 
-/** What adding the page to a rule will do: block it now, from a time, or not at all. */
+/** What adding the page to a rule will do: block it now (and until when), from a time, or not at all. */
 function addOutcome(g: PopupModel['groups'][number] | undefined): string {
   if (!g) return t('popup.add.outcomeNew');
+  if (g.blocksNow && g.change)
+    return t('popup.add.outcomeUntil', { rule: g.name, when: formatWhen(g.change) });
   if (g.blocksNow) return t('popup.add.outcomeNow');
-  if (g.blockAt) return t('popup.add.outcomeLater', { rule: g.name, when: formatWhen(g.blockAt) });
+  if (g.change) return t('popup.add.outcomeLater', { rule: g.name, when: formatWhen(g.change) });
   return t('popup.add.outcomeNever', { rule: g.name });
 }
 
@@ -238,6 +240,8 @@ function AddSite({ m, onDone, onCancel }: { m: PopupModel; onDone: () => void; o
             <span class="stack stack-xs grow" style={{ minWidth: 0 }}>
               <span class={checked ? 'strong' : ''}>{options.find((x) => x.value === o.value)?.label}</span>
               <span class="value">{preview(o.value)}</span>
+              {/* The same address can mean a site with its subdomains or without, a section or one page. */}
+              <span class="scope">{t(`popup.add.${o.value}.scope`)}</span>
             </span>
           </>
         )}
