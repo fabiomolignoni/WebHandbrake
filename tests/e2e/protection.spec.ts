@@ -461,3 +461,35 @@ test("the Partner code protection is set up with a code from the partner's app; 
   expect((await h.rpc('ticket.answer', { id: r.ticket.id, answer: code })).status).toBe('done');
   expect((await h.rpc('config.get')).config.groups[0].protection).toEqual(REMINDER);
 });
+
+test('the protections of the rules keep their names on a phone-sized screen (regression)', async ({
+  h,
+  browserName,
+}) => {
+  await h.configure((c) => {
+    c.groups = [
+      group('Social media and chats', ['social.test'], [policy(BLOCK)], { protection: REMINDER }),
+      group('Games', ['games.test'], [policy(BLOCK)], { protection: wait(24 * 3600) }),
+    ];
+  });
+  const p = await h.page('dashboard.html#/protection');
+  for (const width of [1280, 360]) {
+    await p.viewport(width, 900);
+    if (browserName === 'chromium') expect(await p.eval(() => window.innerWidth)).toBe(width);
+    await p.text('Social media and chats', { exact: true }).waitFor('visible');
+    // Each name is readable, and Change stays inside the list.
+    const rows = await p.eval(() =>
+      [...document.querySelectorAll('[aria-label="Protection of your rules"] li')].map((li) => {
+        const list = li.parentElement!.getBoundingClientRect();
+        const name = li.querySelector('strong')!.getBoundingClientRect();
+        const link = li.querySelector('a')!.getBoundingClientRect();
+        return { name: Math.round(name.width) > 40, inside: link.right <= list.right + 0.5 };
+      }),
+    );
+    expect(rows, `at ${width}px`).toEqual([
+      { name: true, inside: true },
+      { name: true, inside: true },
+    ]);
+    expect(await p.overflowX(), `horizontal overflow at ${width}px`).toBeLessThanOrEqual(0);
+  }
+});

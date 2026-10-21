@@ -149,6 +149,9 @@ All notable changes to WebHandbrake are documented here. The format follows
   only in advanced mode. The wizard says that the sites share the time allowed, with the option to
   give each site its own, the plan says “in total” or “on each of”, and the rule editor shows the
   option without advanced mode.
+- On a phone-sized screen, the list of rules in Protection lost their names: only their icons, their
+  protections and **Change** were left, and one **Change** stuck out of the list. The protection
+  now goes under the name when both do not fit.
 
 ## [1.0.0] - 2026-10-15
 

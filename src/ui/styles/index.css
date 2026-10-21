@@ -1242,6 +1242,18 @@ blockquote {
 .list.compact > li {
   padding: var(--s2) var(--s3);
 }
+.rule-protection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s1) var(--s2);
+  min-width: 0;
+}
+.rule-protection strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .list.plain {
   border: 0;
   background: transparent;

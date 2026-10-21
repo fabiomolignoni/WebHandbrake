@@ -343,11 +343,12 @@ function RuleProtections({ groups, now }: { groups: Group[]; now: Map<string, Pr
         return (
           <li key={g.id} class="row nowrap">
             <GroupTile color={g.color} icon={g.icon} size={28} />
-            <span class="grow ellipsis">
+            {/* The protection goes under the name when both do not fit (phone-sized screens). */}
+            <span class="rule-protection grow">
               <strong>{g.name}</strong>
-            </span>
-            <span class="tag">
-              <Icon name={protectionIcon(p.kind)} /> {protectionLabel(p)}
+              <span class="tag">
+                <Icon name={protectionIcon(p.kind)} /> {protectionLabel(p)}
+              </span>
             </span>
             <a
               href={`#/groups/${g.id}?step=protection`}
