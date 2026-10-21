@@ -4373,8 +4373,20 @@
   "welcome.try.action": {
     "message": "Try it"
   },
+  "welcome.try.afterLimit": {
+    "message": "Right now {site} opens normally: WebHandbrake steps in once the time or the visits allowed are used up."
+  },
   "welcome.try.body": {
     "message": "Open {site} to see what WebHandbrake shows instead."
+  },
+  "welcome.try.later": {
+    "message": "Right now {site} opens normally: WebHandbrake steps in from {when}."
+  },
+  "welcome.try.laterTitle": {
+    "message": "When it steps in"
+  },
+  "welcome.try.notNow": {
+    "message": "Right now {site} opens normally: the rule does not apply at this moment."
   },
   "welcome.try.title": {
     "message": "See it in action"

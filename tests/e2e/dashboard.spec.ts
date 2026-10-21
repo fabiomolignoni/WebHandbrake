@@ -623,6 +623,11 @@ test("first run, welcome → the rule wizard's steps → done", async ({ h }) =>
   await p.button('Create rule').click();
   await p.role('heading', 'You’re set').expectVisible();
   await p.text('“Video” is active.', { exact: false }).expectVisible();
+  // Within its limit the site opens normally: no "Try it", which would show it open.
+  await p
+    .text(/opens normally: WebHandbrake steps in once the time or the visits allowed are used up/)
+    .expectVisible();
+  await p.button('Try it').expectCount(0);
   const cfg = (await h.rpc('config.get')).config;
   expect(cfg.groups).toHaveLength(1);
   const video = cfg.groups[0];
@@ -661,10 +666,15 @@ test('Back from the first step returns to the welcome and keeps the draft; the r
   await p.button('Next: review').expectEnabled(false);
   await p.get('.choice').expectCount(6);
   await p.role('radio', /^Wait/).click();
+  // A short wait is not a firm protection; a long one blocks the browser's own pages too, and says so.
+  const pages = p.text(/the browser’s extension and settings pages are blocked too/);
+  await pages.expectCount(0);
   await p.role('radio', '24 h').click();
+  await pages.expectVisible();
   await p.button('Next: review').click();
   await p.button('Create rule').click();
   await p.role('heading', 'You’re set').expectVisible();
+  await p.button('Try it').expectVisible();
   await expectBlocked(h, 'http://casino.test/');
   expect((await h.rpc('config.get')).config.groups.map((g: any) => g.protection)).toEqual([wait(86_400)]);
 });
