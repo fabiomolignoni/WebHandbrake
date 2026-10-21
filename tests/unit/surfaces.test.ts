@@ -112,6 +112,8 @@ describe('what the popup and the dashboard show', () => {
     t.store.state.clockOffset = 20 * 60_000;
     t.store.usage.count('shown:A', T0, t.store.cc.cal, 3);
     t.store.usage.count('proceeded:A', T0, t.store.cc.cal, 1);
+    t.store.usage.count('offered:A', T0, t.store.cc.cal, 3);
+    t.store.usage.count('took:A', T0, t.store.cc.cal, 1);
     const { overviewModel } = await import('../../src/background/views');
     const o = await overviewModel();
     expect(o.groups.map((g) => [g.id, g.intervention?.type, g.until])).toEqual([

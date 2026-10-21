@@ -21,11 +21,20 @@ import { store } from './store';
 
 /** Tabs in their grace period: tab id → deadline. */
 const graceTabs = new Map<number, number>();
-/** Tabs showing an intervention page: tab id → info (for the "left" attempts in statistics). */
+/**
+ * Tabs showing an intervention page: tab id → info, for the statistics. `offered`: the page
+ * offered a way in (a question, a wait, a challenge, a break) and was opened, so leaving it is a
+ * choice not to go in.
+ */
 export const interventionTabs = new Map<
   number,
-  { url: string; groupId: string | null; proceeded: boolean }
+  { url: string; groupId: string | null; proceeded: boolean; offered: boolean }
 >();
+/**
+ * Tabs whose page was replaced by an intervention page while it was open (a rule created, a limit
+ * reached, a break over): tab id → the address. That is not an attempt to go in.
+ */
+export const replacedTabs = new Map<number, string>();
 
 /**
  * The pages from which WebHandbrake can be turned off or removed: the extension managers, the
@@ -163,6 +172,7 @@ export async function enforceTab(
     }
   }
   graceTabs.delete(tab.id);
+  if (reason !== 'navigation') replacedTabs.set(tab.id, url);
   void logDecision(
     store.config.settings.diagnostics.decisionLog,
     reason === 'navigation' ? 'navigation' : 'tab',
@@ -231,11 +241,17 @@ async function checkNavigation(tabId: number, url: string, reason: 'navigation' 
     const blocked = blockedUrlFrom(url);
     if (blocked && !interventionTabs.has(tabId)) {
       const d = decideUrl(blocked, null);
-      interventionTabs.set(tabId, { url: blocked, groupId: d.primary?.group.id ?? null, proceeded: false });
+      interventionTabs.set(tabId, {
+        url: blocked,
+        groupId: d.primary?.group.id ?? null,
+        proceeded: false,
+        offered: false,
+      });
     }
     return;
   }
   interventionTabs.delete(tabId);
+  replacedTabs.delete(tabId);
   const tab = await quiet(api.tabs.get(tabId));
   if (!tab) return;
   tab.url = url;
@@ -329,6 +345,7 @@ export function registerTabListeners(
   });
   api.tabs.onRemoved.addListener((tabId) => {
     graceTabs.delete(tabId);
+    replacedTabs.delete(tabId);
     onRemoved(tabId);
     const info = interventionTabs.get(tabId);
     interventionTabs.delete(tabId);

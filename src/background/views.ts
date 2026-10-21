@@ -8,6 +8,7 @@ import { isNav, SEVERITY } from '../engine/severity';
 import { dayKeyOf } from '../engine/time';
 import type { FocusSession } from '../engine/types';
 import { displayHost, parseUrl } from '../engine/url';
+import { impulsesOf } from '../engine/usage';
 import { api, blockedUrlFrom, features, isAndroid, isFirefox, quiet } from '../platform/api';
 import type {
   ConfigModel,
@@ -38,7 +39,7 @@ export function todayStats(): TodayStats {
     seconds: day?.t['a:']?.[0] ?? 0,
     shown,
     proceeded,
-    impulses: Math.max(0, shown - proceeded),
+    impulses: impulsesOf(day?.c ?? {}),
     pauses: sum('pause:'),
     sessions: day?.c.sessions ?? 0,
   };

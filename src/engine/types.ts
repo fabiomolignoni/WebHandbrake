@@ -488,7 +488,7 @@ export interface RuntimeState {
 /** Per logical day: key → [seconds, visits]. Keys: g:<group>, s:<group>:<site>, h:<host>. */
 export interface DayRecord {
   t: Record<string, [number, number]>;
-  /** Counters: e.g. "shown:<group>", "proceeded:<group>", "pausedIn:<group>", "left:<group>", "pause:<group>". */
+  /** Counters: e.g. "shown:<group>", "offered:<group>", "took:<group>", "proceeded:<group>", "pausedIn:<group>", "left:<group>", "pause:<group>". */
   c: Record<string, number>;
   /** Seconds of the a: total (time on limited sites) per clock hour, "0" to "23". */
   h?: Record<string, number>;

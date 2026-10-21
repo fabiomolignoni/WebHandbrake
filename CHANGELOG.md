@@ -152,6 +152,11 @@ All notable changes to WebHandbrake are documented here. The format follows
 - On a phone-sized screen, the list of rules in Protection lost their names: only their icons, their
   protections and **Change** were left, and one **Change** stuck out of the list. The protection
   now goes under the name when both do not fit.
+- "Times you chose not to go in" counted every intervention page that you did not go past,
+  including those that left no choice: a block without breaks, and a page put in place of one you
+  had open, such as the tab of a site you had just blocked (“You chose not to go in once” before
+  you had tried anything). It now counts only the pages that offered a way in (a question, a wait,
+  a challenge or a break) and that you opened yourself, from this version on.
 
 ## [1.0.0] - 2026-10-15
 

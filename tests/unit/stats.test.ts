@@ -103,6 +103,9 @@ describe('statistics', () => {
     store.usage.count('proceeded:G', T0, store.cc.cal, 1);
     // A break taken from a block page is going in too.
     store.usage.count('pausedIn:G', T0, store.cc.cal, 1);
+    // Of the pages shown, those that offered a way in, and the ways taken.
+    store.usage.count('offered:G', T0, store.cc.cal, 3);
+    store.usage.count('took:G', T0, store.cc.cal, 1);
     store.usage.count('pause:G', T0, store.cc.cal);
     store.usage.count('pauseMin:G', T0, store.cc.cal, 10);
     store.usage.count('sessions', T0, store.cc.cal);

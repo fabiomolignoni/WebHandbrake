@@ -4,7 +4,7 @@ import { BUDGET_KEEP_DAYS } from '../engine/limits';
 import { addDays, dayKey, dayStartAt, logicalDayOf, parseDayKey } from '../engine/time';
 import type { DayRecord } from '../engine/types';
 import { displayHost, stripWww } from '../engine/url';
-import { usageKeys } from '../engine/usage';
+import { impulsesOf, usageKeys } from '../engine/usage';
 import { api } from '../platform/api';
 import { timestampSuffix } from '../shared/format';
 import type { StatsModel } from '../shared/models';
@@ -50,6 +50,7 @@ export async function getStats(from: string, to: string): Promise<StatsModel> {
   for (const d of days) {
     const rec = records.get(d);
     if (!rec) continue;
+    counters.impulses += impulsesOf(rec.c);
     for (const [key, [s, v]] of Object.entries(rec.t)) {
       if (key.startsWith('g:')) {
         const g = groups.get(key.slice(2)) ?? { seconds: 0, visits: 0 };
@@ -74,7 +75,6 @@ export async function getStats(from: string, to: string): Promise<StatsModel> {
       else if (kind === 'sessions') counters.sessions += n;
     }
   }
-  counters.impulses = Math.max(0, counters.shown - counters.proceeded);
 
   const siteList = [...sites.entries()]
     .map(([host, v]) => ({ host, ...v }))

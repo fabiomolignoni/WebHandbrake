@@ -247,6 +247,25 @@ describe('the intervention page', () => {
     expect(fake.removed).toEqual([1]);
   });
 
+  it('only a page that offered a way in, opened rather than put in place of an open page, is a choice', async () => {
+    const hard = group('Hard', ['hard.test'], [{ intervention: BLOCK }]);
+    hard.pause = { ...hard.pause, allowed: false };
+    const t = await setup([hard, group('Asks', ['asks.test'], [{ intervention: delayIntervention(10) }])]);
+    const { todayStats } = await import('../../src/background/views');
+    const enforce = await import('../../src/background/enforce');
+    // A block without a break leaves no choice.
+    await t.model('https://hard.test/');
+    expect(todayStats()).toMatchObject({ shown: 1, impulses: 0 });
+    // A wait does: leaving it is a choice not to go in.
+    await t.model('https://asks.test/');
+    expect(todayStats()).toMatchObject({ shown: 2, impulses: 1 });
+    // The same page put in place of one already open (a rule created, a limit reached) is not.
+    enforce.replacedTabs.set(1, 'https://asks.test/other');
+    await t.model('https://asks.test/other');
+    expect(todayStats()).toMatchObject({ shown: 3, impulses: 1 });
+    expect(t.store.usage.counterSum('offered:Asks', ['2026-10-05'])).toBe(1);
+  });
+
   it('a break taken from the block page, or from the popup on its tab, is going in, not an impulse resisted', async () => {
     const blocks = group('A', ['a.test', 'b.test'], [{ intervention: BLOCK }]);
     blocks.pause = { ...blocks.pause, allowed: true, scopes: ['page', 'site'], cost: { type: 'confirm' } };

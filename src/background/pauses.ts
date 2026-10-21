@@ -395,6 +395,7 @@ registerExecutor('pause', async (ticket) => {
   if (p.shown) {
     const info = interventionTabs.get(p.shown.tabId);
     if (!info?.proceeded) store.usage.count(`pausedIn:${p.shown.groupId}`, t0, store.cc.cal);
+    if (info?.offered && !info.proceeded) store.usage.count(`took:${p.shown.groupId}`, t0, store.cc.cal);
     if (info) interventionTabs.set(p.shown.tabId, { ...info, proceeded: true });
   }
   const ids = p.groups === '*' ? store.config.groups.map((g) => g.id) : p.groups;
