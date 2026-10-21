@@ -14,6 +14,20 @@ export const usageKeys = {
   host: (host: string) => `h:${host}`,
 };
 
+/**
+ * "Times you chose not to go in" in a day's counters: the intervention pages that offered a way in
+ * (a question, a wait, a challenge, a break) and that you opened, less those you went past.
+ */
+export function impulsesOf(counters: Record<string, number>): number {
+  let offered = 0;
+  let took = 0;
+  for (const [key, n] of Object.entries(counters)) {
+    if (key.startsWith('offered:')) offered += n;
+    else if (key.startsWith('took:')) took += n;
+  }
+  return Math.max(0, offered - took);
+}
+
 export function emptyDay(): DayRecord {
   return { t: {}, c: {} };
 }

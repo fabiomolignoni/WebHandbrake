@@ -19,6 +19,7 @@ import {
   internalPagesBlocked,
   interventionTabs,
   isProtectedInternal,
+  replacedTabs,
 } from './enforce';
 import { ctx, decideUrl, decisionView, groupProtection } from './engine';
 import { pauseOptions } from './pauses';
@@ -165,7 +166,8 @@ export async function interventionModel(
   const gid = primary?.group.id ?? 'session';
   const key = `${tab?.id ?? ''}|${url}|${gid}`;
   const last = shownRecently.get(key) ?? 0;
-  if (c.now - last > 60_000) {
+  const fresh = c.now - last > 60_000;
+  if (fresh) {
     for (const [k, at] of shownRecently) if (c.now - at > 60_000) shownRecently.delete(k);
     shownRecently.set(key, c.now);
     store.usage.count(`shown:${gid}`, c.now, store.cc.cal);
@@ -181,9 +183,8 @@ export async function interventionModel(
     if (d.session) countSessionStop(d.session.id);
     else if (primary?.session) countSessionStop(primary.session.id);
   }
-  if (tab?.id !== undefined) {
-    interventionTabs.set(tab.id, { url, groupId: primary?.group.id ?? null, proceeded: false });
-  }
+  const tabInfo = { url, groupId: primary?.group.id ?? null, proceeded: false, offered: false };
+  if (tab?.id !== undefined) interventionTabs.set(tab.id, tabInfo);
 
   if (d.session) {
     m.kind = 'session';
@@ -220,6 +221,14 @@ export async function interventionModel(
     }
   }
   if (primary?.pausable) m.pause = breakOptions(d, url, incognito);
+  // "Times you chose not to go in" counts the pages that offered a way in and that were opened:
+  // a block without a break, or a page put in place of one already open, leaves no choice.
+  const replaced = tab?.id !== undefined && replacedTabs.get(tab.id) === url;
+  tabInfo.offered = (Boolean(m.ticket) || Boolean(m.pause?.available)) && !replaced;
+  if (fresh && tabInfo.offered) {
+    store.usage.count(`offered:${gid}`, c.now, store.cc.cal);
+    store.scheduleUsage();
+  }
   return m;
 }
 
@@ -325,8 +334,13 @@ registerExecutor('pass', async (ticket) => {
     });
     await store.saveIntentions();
   }
+  let took = false;
   for (const [tabId, info] of interventionTabs)
-    if (info.url === p.url) interventionTabs.set(tabId, { ...info, proceeded: true });
+    if (info.url === p.url) {
+      took ||= info.offered && !info.proceeded;
+      interventionTabs.set(tabId, { ...info, proceeded: true });
+    }
+  if (took && p.groups[0]) store.usage.count(`took:${p.groups[0]}`, t0, store.cc.cal);
   store.scheduleUsage();
   await store.saveState();
   await reconcile('pass');
