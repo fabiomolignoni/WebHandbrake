@@ -5,7 +5,7 @@ import { DEFAULT_SESSION_MINUTES, QUICK_SESSION_MINUTES } from '../engine/limits
 import { t } from '../i18n/i18n';
 import { api, extensionUrl, features, quiet } from '../platform/api';
 import type { Granularity } from '../shared/rpc';
-import { addPage } from './pages';
+import { addPage, defaultAddGroup } from './pages';
 import { startSession } from './sessions';
 import { store } from './store';
 import { testLog } from './test-log';
@@ -116,12 +116,9 @@ export async function onCommand(command: string, tab?: chrome.tabs.Tab) {
   } else if (command === 'block-site') {
     const active = tab ?? (await quiet(api.tabs.query({ active: true, currentWindow: true })))?.[0];
     if (!active?.url) return;
-    const last = store.meta.lastAddGroup;
-    // A rule that is archived (or off) blocks nothing: never the destination of a shortcut.
-    const group =
-      store.config.groups.find((g) => g.id === last && isGroupActive(g)) ??
-      store.config.groups.find(isGroupActive);
-    await store.mutate(() => addPage(active.url!, 'domain', group?.id ?? null));
+    // A rule that blocks the site right now, or a new one: the shortcut is "block", not "add".
+    const url = active.url;
+    await store.mutate(() => addPage(url, 'domain', defaultAddGroup(url, 'domain')));
   }
 }
 

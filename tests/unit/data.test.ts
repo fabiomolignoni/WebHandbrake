@@ -177,7 +177,10 @@ describe('"Block this site / page"', () => {
     ]);
     await t.pages.addPage('https://b.test/', 'domain', null, 'Later');
     expect(t.store.config.groups.map((g) => g.name)).toEqual(['A', 'Later']);
-    expect(t.store.meta.lastAddGroup).toBe(t.store.config.groups[1].id);
+    // Never named after the site: without a name, "Blocked sites".
+    await t.pages.addPage('https://c.test/', 'domain', null, '');
+    expect(t.store.config.groups[2].name).toBe('Blocked sites');
+    expect(t.store.meta.lastAddGroup).toBe(t.store.config.groups[2].id);
     expect((await t.pages.addPage('about:config', 'domain', 'A')).errors).toHaveLength(1);
   });
 });

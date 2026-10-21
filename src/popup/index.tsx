@@ -175,9 +175,18 @@ function Hero({ m, reload }: { m: PopupModel; reload: () => void }) {
   );
 }
 
+/** What adding the page to a rule will do: block it now, from a time, or not at all. */
+function addOutcome(g: PopupModel['groups'][number] | undefined): string {
+  if (!g) return t('popup.add.outcomeNew');
+  if (g.blocksNow) return t('popup.add.outcomeNow');
+  if (g.blockAt) return t('popup.add.outcomeLater', { rule: g.name, when: formatWhen(g.blockAt) });
+  return t('popup.add.outcomeNever', { rule: g.name });
+}
+
 function AddSite({ m, onDone, onCancel }: { m: PopupModel; onDone: () => void; onCancel: () => void }) {
   const [granularity, setGranularity] = useState<Granularity>('domain');
-  const [groupId, setGroupId] = useState<string>(m.groups[0]?.id ?? 'new');
+  // A rule that blocks the page right now, or a new one: "Block" should block.
+  const [groupId, setGroupId] = useState<string>(m.addTo ?? 'new');
   const [name, setName] = useState('');
   const flow = useSaveFlow();
   const url = m.tab?.url ?? '';
@@ -205,7 +214,7 @@ function AddSite({ m, onDone, onCancel }: { m: PopupModel; onDone: () => void; o
         url,
         granularity,
         groupId: groupId === 'new' ? null : groupId,
-        newGroupName: name || m.tab!.host,
+        newGroupName: name,
       }),
     );
     if (ok) onDone();
@@ -255,11 +264,14 @@ function AddSite({ m, onDone, onCancel }: { m: PopupModel; onDone: () => void; o
         <input
           class="input"
           value={name}
-          placeholder={m.tab?.host}
+          placeholder={t('addPage.newGroupName')}
           aria-label={t('popup.add.newGroupName')}
           onInput={(e) => setName((e.target as HTMLInputElement).value)}
         />
       )}
+      <p class="small text-2" aria-live="polite">
+        {addOutcome(m.groups.find((g) => g.id === groupId))}
+      </p>
       <div class="row end">
         <Button variant="ghost" size="small" onClick={onCancel}>
           {t('common.cancel')}
