@@ -183,5 +183,12 @@ describe('the plan of a new rule', () => {
     expect(planSentence('daily', 'block', 'a.test', [], 20, 180)).toBe(
       'After 20 min every 3 h on a.test, WebHandbrake blocks the page.',
     );
+    // With several sites, whether they share the time allowed or each has its own.
+    expect(planSentence('daily', 'block', 'a.test, b.test', [], 30, 1440, 'shared')).toBe(
+      'After 30 min a day in total on a.test, b.test, WebHandbrake blocks the page.',
+    );
+    expect(planSentence('daily', 'block', 'a.test, b.test', [], 30, 1440, 'each')).toBe(
+      'After 30 min a day on each of a.test, b.test, WebHandbrake blocks the page.',
+    );
   });
 });
