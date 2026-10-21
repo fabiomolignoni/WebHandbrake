@@ -157,6 +157,10 @@ All notable changes to WebHandbrake are documented here. The format follows
   had open, such as the tab of a site you had just blocked (“You chose not to go in once” before
   you had tried anything). It now counts only the pages that offered a way in (a question, a wait,
   a challenge or a break) and that you opened yourself, from this version on.
+- **Recent decisions** in Settings › Diagnostics kept, by default, the full address of every page
+  that WebHandbrake restricted, private windows included, for anyone at the computer to read
+  until the browser closed. It is now off until you turn on **Keep a log**, which says what it
+  keeps; a choice already made is kept.
 
 ## [1.0.0] - 2026-10-15
 

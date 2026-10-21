@@ -498,6 +498,9 @@
   "diag.logEnabled": {
     "message": "Keep a log"
   },
+  "diag.logHelp": {
+    "message": "Keeps the full address of the last pages that WebHandbrake restricted, private windows included, until the browser closes: useful to find out why a page was blocked. Off by default, since anyone using this computer can read it here."
+  },
   "diag.openIssue": {
     "message": "Open an issue on GitHub"
   },
@@ -1418,7 +1421,7 @@
     "message": "A small script in the page shows the timer, filters and the grace period, and tells WebHandbrake the page’s address, whether you are active and whether media is playing. It runs on the sites of your rules, and on every site when “Track time on all sites” is on or when a rule has a regular expression, a site name with *, such as amazon.* (no ready-made list has one), or an entry without a site name, such as *news*. The text you type is read only inside the page, for the grace period. Apart from the time counted per site, nothing the script reads is stored."
   },
   "help.privacy.p4": {
-    "message": "Pages saved for later keep their address and title, also from private windows, until you remove them. “Recent decisions” (Settings › Diagnostics) keeps the addresses of restricted pages until the browser closes; “Keep a log” turns it off. Settings › Privacy lists what is saved on this device, with sizes; what is kept only until the browser closes is not listed there."
+    "message": "Pages saved for later keep their address and title, also from private windows, until you remove them. “Recent decisions” (Settings › Diagnostics) keeps the addresses of restricted pages until the browser closes, only once you turn on “Keep a log”. Settings › Privacy lists what is saved on this device, with sizes; what is kept only until the browser closes is not listed there."
   },
   "help.privacy.title": {
     "message": "Privacy"

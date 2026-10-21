@@ -112,6 +112,7 @@ test('the self-test opens a test address that the browser filters stop', async (
 test('diagnostics show the filters and recent decisions; the report hides addresses', async ({ h }) => {
   await h.configure((c) => {
     c.groups = [group('Block', ['blocked.test'], [policy(BLOCK)])];
+    c.settings.diagnostics.decisionLog = true;
   });
   await expectBlocked(h, 'http://blocked.test/secret-path');
   await h.open('http://blocked.test/');

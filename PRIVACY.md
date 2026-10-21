@@ -73,8 +73,8 @@ closes. **Settings › Privacy** does not list it.
 
 - **Recent decisions**: the last 200 pages
   that WebHandbrake restricted, with their full address, what happened, the rule and the time,
-  private windows included. It is on by default. **Settings › Diagnostics › Keep a log** turns it
-  off, and **Clear the log** empties it.
+  private windows included, only if you turn on **Settings › Diagnostics › Keep a log** (it is off
+  by default). **Clear the log** empties it.
 - **Costs in progress**: a wait, challenge or confirmation that you have started. Each expires
   after 60 minutes.
 - Which reasons for going in have already been recalled on the page, and a marker that WebHandbrake is
