@@ -83,11 +83,6 @@ export function toneOf(type: InterventionType): Tone {
   }
 }
 
-/** Notches of the friction meter (0 = not applicable). */
-export function meterLevel(tone: Tone): number {
-  return { neutral: 0, calm: 0, free: 1, gentle: 2, friction: 3, protected: 4 }[tone];
-}
-
 export interface StatusView {
   tone: Tone;
   icon: string;

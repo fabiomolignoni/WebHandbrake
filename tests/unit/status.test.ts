@@ -4,16 +4,7 @@ import { SEVERITY } from '../../src/engine/severity';
 import type { Intervention, Policy, TimeWindow } from '../../src/engine/types';
 import { setFormatPrefs } from '../../src/shared/format';
 import type { BudgetView, DecisionView, GroupDecisionView, GroupStatus } from '../../src/shared/models';
-import {
-  groupTone,
-  interventionStatus,
-  LADDER,
-  meterLevel,
-  ruleTypes,
-  siteStatus,
-  type Tone,
-  toneOf,
-} from '../../src/ui/status';
+import { groupTone, interventionStatus, LADDER, ruleTypes, siteStatus, toneOf } from '../../src/ui/status';
 import { BLOCK } from './helpers';
 
 const office: TimeWindow[] = [{ days: [1, 2, 3, 4, 5], start: 9 * 60, end: 17 * 60 }];
@@ -118,7 +109,7 @@ describe('the state of the current site', () => {
     expect(on({})).toBe('Allowed');
   });
 
-  it('tones, icons and the friction meter follow the ladder', () => {
+  it('tones and icons follow the ladder', () => {
     expect(LADDER.map(toneOf)).toEqual([
       'free',
       'gentle',
@@ -129,9 +120,6 @@ describe('the state of the current site', () => {
       'protected',
       'protected',
     ]);
-    expect(
-      ['neutral', 'calm', 'free', 'gentle', 'friction', 'protected'].map((x) => meterLevel(x as Tone)),
-    ).toEqual([0, 0, 1, 2, 3, 4]);
     expect(interventionStatus({ type: 'track' }, null)).toMatchObject({
       tone: 'free',
       icon: 'check-circle',

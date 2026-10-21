@@ -17,7 +17,6 @@ import {
   Banner,
   Button,
   ColorDot,
-  FrictionMeter,
   IconButton,
   Progress,
   RadioCards,
@@ -33,7 +32,7 @@ import { bootPage, useModel, useNow } from '../ui/hooks';
 import { BrakeLogo, Icon } from '../ui/icons';
 import { breakSubject, PauseDialog, pauseSummary } from '../ui/pause';
 import { useSaveFlow } from '../ui/saveflow';
-import { interventionIcon, meterLevel, siteStatus, toneOf } from '../ui/status';
+import { interventionIcon, siteStatus, toneOf } from '../ui/status';
 import { TicketDialog } from '../ui/ticket';
 
 /**
@@ -84,7 +83,6 @@ function Hero({ m, reload }: { m: PopupModel; reload: () => void }) {
   const budget =
     primary?.policies.find((p) => p.budget && p.scheduleActive && !p.budget.exhausted)?.budget ?? null;
   const pausedHere = m.activePauses.find((p) => d?.groups.some((g) => g.pause?.id === p.id));
-  const level = meterLevel(s.tone);
   return (
     <section class={`hero tone-${s.tone}`} aria-label={t('popup.currentSite')}>
       <div class="hero-top">
@@ -102,7 +100,6 @@ function Hero({ m, reload }: { m: PopupModel; reload: () => void }) {
           )}
           <span class="status">{s.title}</span>
         </div>
-        {level > 0 && <FrictionMeter level={level} tone={s.tone} />}
       </div>
       {budget && (
         <div class="stack stack-xs">

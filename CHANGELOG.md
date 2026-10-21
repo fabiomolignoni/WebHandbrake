@@ -62,6 +62,8 @@ All notable changes to WebHandbrake are documented here. The format follows
   exceptions are now all in the rule. When you update, the sites of a shared list move into the
   rules that used it, and an Always allowed site becomes an exception of the rules whose sites it
   may open. Files exported by earlier versions are read the same way.
+- The four bars next to the current site's status in the popup: the status already says in words
+  how much the site is restricted.
 
 ### Fixed
 

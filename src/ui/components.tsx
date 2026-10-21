@@ -314,18 +314,6 @@ export function GroupTile({ color, icon, size = 40 }: { color: string; icon: str
   );
 }
 
-/** Four notches from free to protected: the handbrake, made visible. Decorative: the level is
-    always also given in words next to it. */
-export function FrictionMeter({ level, tone }: { level: number; tone: string }) {
-  return (
-    <span class={`meter tone-${tone}`} aria-hidden="true">
-      {[1, 2, 3, 4].map((n) => (
-        <i key={n} class={n <= level ? 'on' : ''} />
-      ))}
-    </span>
-  );
-}
-
 /** Circular progress (0…1) with a label inside. */
 export function Ring({
   value,

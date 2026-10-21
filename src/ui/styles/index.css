@@ -1144,33 +1144,6 @@ blockquote {
   height: 50%;
 }
 
-/* Friction meter: four notches, free → protected (the handbrake made visible). */
-.meter {
-  display: inline-flex;
-  gap: 3px;
-  align-items: flex-end;
-}
-.meter > i {
-  width: 6px;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--tone, var(--text-2)) 18%, transparent);
-}
-.meter > i:nth-child(1) {
-  height: 8px;
-}
-.meter > i:nth-child(2) {
-  height: 11px;
-}
-.meter > i:nth-child(3) {
-  height: 14px;
-}
-.meter > i:nth-child(4) {
-  height: 17px;
-}
-.meter > i.on {
-  background: var(--tone, var(--text-2));
-}
-
 /* ------------------------------------------------------------------------------------------ */
 /* Banners                                                                                     */
 /* ------------------------------------------------------------------------------------------ */
@@ -2742,7 +2715,7 @@ body.page-popup {
 }
 .hero .hero-top {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: var(--s3);
   align-items: center;
 }
