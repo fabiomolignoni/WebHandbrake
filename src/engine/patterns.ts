@@ -284,7 +284,7 @@ export function parseTargetList(text: string): {
       /^\s*[#![]/.test(line) ||
       /^\s*(?:0\.0\.0\.0|127\.0\.0\.1|::1?|::)\s/.test(line) ||
       /^\s*\+?\//.test(line);
-    const parts = whole ? [line] : line.trim().split(/\s+/);
+    const parts = whole ? [line] : line.trim().split(/\s+/).flatMap(splitSeparators);
     const failed: { line: number; text: string; error: string }[] = [];
     let added = 0;
     for (const part of parts) {
@@ -301,6 +301,21 @@ export function parseTargetList(text: string): {
     else errors.push(...failed);
   });
   return { targets, errors };
+}
+
+/**
+ * Lists are often pasted separated by commas or semicolons ("a.com, *news*, b.com/feed"). Kept
+ * in an entry, a separator makes it match nothing: "*news*," needs a comma after "news". Those
+ * around an entry are dropped, and one inside splits it when every piece is an address, so that
+ * an address with a comma of its own ("a.com/search?q=a,b") stays whole.
+ */
+function splitSeparators(part: string): string[] {
+  if (/^\+?\//.test(part)) return [part];
+  const bare = part.replace(/^[,;]+|[,;]+$/g, '');
+  if (!bare) return [];
+  if (!/[,;]/.test(bare)) return [bare];
+  const pieces = bare.split(/[,;]+/);
+  return pieces.every((p) => parseTargetLine(p)?.target) ? pieces : [bare];
 }
 
 // ---------------------------------------------------------------------------

@@ -101,6 +101,28 @@ describe('target syntax and normalisation', () => {
     expect(r.targets.map((x) => x.value)).toEqual(['facebook.com', 'facebook.com/groups', 'twitter.com']);
   });
 
+  it('accepts sites separated by commas or semicolons, never keeping the separator (regression)', () => {
+    const r = parseTargetList('pornhub.com, xvideos.com, *porn*, *xxx*, reddit.com/r/nsfw, onlyfans.com');
+    expect(r.errors).toEqual([]);
+    expect(r.targets.map((x) => x.value)).toEqual([
+      'pornhub.com',
+      'xvideos.com',
+      '*porn*',
+      '*xxx*',
+      'reddit.com/r/nsfw',
+      'onlyfans.com',
+    ]);
+    expect(parseTargetList('a.com,b.com;+b.com/feed').targets).toEqual([
+      { type: 'domain', value: 'a.com' },
+      { type: 'domain', value: 'b.com' },
+      { type: 'path', value: 'b.com/feed', allow: true },
+    ]);
+    // A comma that belongs to the address keeps it whole; a regular expression is never split.
+    expect(parseTargetList('a.com/search?q=a,b').targets.map((x) => x.value)).toEqual(['a.com/search?q=a,b']);
+    expect(parseTargetList('/a{1,3}b/').targets).toEqual([{ type: 'regex', value: 'a{1,3}b' }]);
+    expect(parseTargetList(',\n;').targets).toEqual([]);
+  });
+
   it('round-trips through the text syntax', () => {
     for (const line of [
       'youtube.com',

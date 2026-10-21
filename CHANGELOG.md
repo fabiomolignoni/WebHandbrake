@@ -120,6 +120,9 @@ All notable changes to WebHandbrake are documented here. The format follows
   characters or ask your partner for the code.
 - "Times you chose not to go in" counted the block pages that you went past with a break, as if
   you had left them.
+- Sites pasted with commas or semicolons between them (“a.com, *news*, b.com/feed”) kept the
+  comma: a site name was refused, but a wildcard or a section was added with it and then matched
+  nothing, so those pages stayed open. Commas and semicolons now separate entries like spaces.
 
 ## [1.0.0] - 2026-10-15
 
