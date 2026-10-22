@@ -31,7 +31,15 @@ import {
   storedConfigIntact,
 } from '../engine/schema';
 import { addDays, dayKey, logicalDayOf } from '../engine/time';
-import type { Config, DayRecord, LaterItem, MinuteBuckets, RuntimeState, TamperEvent } from '../engine/types';
+import type {
+  Config,
+  DayRecord,
+  Grant,
+  LaterItem,
+  MinuteBuckets,
+  RuntimeState,
+  TamperEvent,
+} from '../engine/types';
 import { Usage } from '../engine/usage';
 import { api, isFirefox } from '../platform/api';
 
@@ -138,6 +146,12 @@ export class Store {
     for (const k of ['cooldowns', 'forfeits', 'partnerSteps'] as const)
       if (!isObj(this.state[k])) this.state[k] = {};
     if (!isObj(this.state.secretFailures)) this.state.secretFailures = { count: 0, lockedUntil: 0 };
+    // A break of an earlier version could count only the time on the site: it now ends by the clock.
+    for (const g of this.state.grants as (Grant & { remaining?: number })[]) {
+      if (g.remaining === undefined) continue;
+      g.until = Date.now() + Math.max(0, g.remaining) * 1000;
+      delete g.remaining;
+    }
 
     this.later = Array.isArray(raw.later) ? raw.later : [];
     this.intentions = Array.isArray(raw.intentions) ? raw.intentions : [];

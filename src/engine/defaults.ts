@@ -139,60 +139,18 @@ export const breaksLift = (i: Intervention): boolean => i.type === 'block';
 export const canHaveBreaks = (g: Pick<Group, 'policies'>): boolean =>
   g.policies.some((p) => breaksLift(p.intervention));
 
-/** Pause rules suggested for each protection. */
-export function pausePolicyFor(protection: Protection): PausePolicy {
-  const firm: PausePolicy = {
-    allowed: true,
+/**
+ * The breaks of a new rule: off until turned on; then at most 15 minutes each, three a day and half
+ * an hour in all, after a 30-second wait.
+ */
+export function defaultPause(): PausePolicy {
+  return {
+    allowed: false,
     duringSessions: false,
-    scopes: ['page', 'site'],
-    duration: { mode: 'choices', minutes: 10, choices: [5, 10] },
-    limit: { count: 2, minutes: 15, period: { kind: 'day' } },
-    cost: { type: 'challenge', kind: 'random', length: 24 },
-    reason: 'required',
-    metered: true,
+    maxMinutes: 15,
+    limit: { count: 3, minutes: 30, period: { kind: 'day' } },
+    cost: { type: 'delay', seconds: 30 },
   };
-  switch (protection.kind) {
-    case 'reminder':
-      return {
-        allowed: true,
-        duringSessions: true,
-        scopes: ['page', 'site', 'group', 'all'],
-        duration: { mode: 'upTo', minutes: 30 },
-        limit: { count: 6, period: { kind: 'day' } },
-        cost: { type: 'confirm' },
-        reason: 'none',
-        metered: false,
-      };
-    case 'wait':
-      if (protection.seconds > WAIT_IN_DIALOG_SECONDS) return firm;
-      return {
-        allowed: true,
-        duringSessions: false,
-        scopes: ['page', 'site', 'group'],
-        duration: { mode: 'choices', minutes: 15, choices: [5, 10, 15] },
-        limit: { count: 3, minutes: 30, period: { kind: 'day' } },
-        cost: { type: 'delay', seconds: protection.seconds },
-        reason: 'optional',
-        metered: false,
-      };
-    case 'password':
-      return { ...firm, cost: { type: 'password' } };
-    case 'partner':
-      // The partner's code is asked for the breaks of the rule unless it says otherwise.
-      return { ...firm, cost: { type: 'confirm' } };
-    case 'locked':
-    case 'permanent':
-      return {
-        allowed: false,
-        duringSessions: false,
-        scopes: ['page'],
-        duration: { mode: 'fixed', minutes: 5 },
-        limit: { count: 1, period: { kind: 'day' } },
-        cost: { type: 'challenge', kind: 'random', length: 48 },
-        reason: 'required',
-        metered: true,
-      };
-  }
 }
 
 export function defaultOptions(): GroupOptions {
@@ -213,7 +171,7 @@ export function newGroup(partial: Partial<Group> = {}, now = Date.now()): Group 
     archived: false,
     targets: [],
     policies: [],
-    pause: pausePolicyFor(DEFAULT_PROTECTION),
+    pause: defaultPause(),
     protection: { ...DEFAULT_PROTECTION },
     options: defaultOptions(),
     ...partial,

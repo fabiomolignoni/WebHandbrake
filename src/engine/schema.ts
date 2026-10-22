@@ -6,13 +6,12 @@
 
 import {
   canHaveBreaks,
-  DEFAULT_PROTECTION,
   defaultConfig,
   defaultOptions,
+  defaultPause,
   defaultSettings,
   GROUP_COLORS,
   newId,
-  pausePolicyFor,
 } from './defaults';
 import { clone, isObj } from './json';
 import { MAX_WAIT_SECONDS, MIN_WAIT_SECONDS, PBKDF2_MAX_ITERATIONS, PBKDF2_MIN_ITERATIONS } from './limits';
@@ -248,7 +247,6 @@ export function normalizePolicy(raw: unknown): Policy | null {
 }
 
 const COST_TYPES = ['none', 'confirm', 'delay', 'challenge', 'password'] as const;
-const PAUSE_SCOPES = ['page', 'site', 'group', 'all'] as const;
 
 function normalizeCost(raw: unknown): Cost {
   const r = isObj(raw) ? raw : {};
@@ -273,38 +271,33 @@ function normalizeCost(raw: unknown): Cost {
 
 /**
  * Pause policy. Optional limits stay absent when absent: merging with the defaults would turn
- * "no limit" into the default limit.
+ * "no limit" into the default limit. A break of earlier versions could last a fixed time or one
+ * of a few lengths, cover less than the rule, ask for a reason or count only the time on the site:
+ * it now lasts up to the longest of its lengths and covers the rule.
  */
 export function normalizePause(raw: unknown): PausePolicy {
-  const def = pausePolicyFor(DEFAULT_PROTECTION);
+  const def = defaultPause();
   if (!isObj(raw)) return def;
   const d = isObj(raw.duration) ? raw.duration : {};
   const l = isObj(raw.limit) ? raw.limit : {};
-  const choices = Array.isArray(d.choices)
-    ? d.choices.filter((c: unknown) => typeof c === 'number' && c > 0 && c <= 1440).slice(0, 6)
-    : undefined;
-  const scopes = Array.isArray(raw.scopes)
-    ? [...new Set(raw.scopes.filter((x: unknown) => PAUSE_SCOPES.includes(x as never)))]
-    : def.scopes;
-  return {
+  const choices: unknown[] = d.mode === 'choices' && Array.isArray(d.choices) ? d.choices : [];
+  const lengths = [raw.maxMinutes, d.minutes, ...choices].filter(
+    (m): m is number => typeof m === 'number' && Number.isFinite(m),
+  );
+  const pause = {
     ...raw,
     allowed: bool(raw.allowed, def.allowed),
     duringSessions: bool(raw.duringSessions, def.duringSessions),
-    scopes: scopes as PausePolicy['scopes'],
-    duration: {
-      mode: oneOf(d.mode, ['fixed', 'upTo', 'choices'] as const, def.duration.mode),
-      minutes: num(d.minutes, def.duration.minutes, 1, 1440),
-      ...(choices?.length ? { choices } : {}),
-    },
+    maxMinutes: lengths.length ? num(Math.max(...lengths), def.maxMinutes, 1, 1440) : def.maxMinutes,
     limit: {
       ...(typeof l.count === 'number' ? { count: Math.round(num(l.count, 0, 0, 1000)) } : {}),
       ...(typeof l.minutes === 'number' ? { minutes: num(l.minutes, 0, 0, 100_000) } : {}),
       period: normalizePeriod(l.period),
     },
     cost: normalizeCost(raw.cost),
-    reason: oneOf(raw.reason, ['none', 'optional', 'required'] as const, def.reason),
-    metered: bool(raw.metered, def.metered),
-  } as PausePolicy;
+  } as PausePolicy & Record<string, unknown>;
+  for (const old of ['duration', 'scopes', 'reason', 'metered']) delete pause[old];
+  return pause;
 }
 
 const KINDS = ['reminder', 'wait', 'password', 'partner', 'locked', 'permanent'] as const;

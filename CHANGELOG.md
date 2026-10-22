@@ -51,8 +51,7 @@ All notable changes to WebHandbrake are documented here. The format follows
   instead says why and where to change it.
 - A new rule from the wizard allows no breaks until you turn on **Allow breaks**, as in the full
   editor; and with the Partner code protection, breaks need your partner's code only if you tick
-  the box (it was ticked from the start). What a protection says about breaks shows only while
-  the rule allows them.
+  the box (it was ticked from the start).
 - Clearer texts: a rule says that its sites open normally when none of its conditions applies
   (instead of "time is only counted"); the popup and **Why?** say "Your break lasts until 10:23.
   After that: Block." instead of "The break or access ends", and the on-page timer of an access
@@ -60,8 +59,20 @@ All notable changes to WebHandbrake are documented here. The format follows
   its page; **Later** says when a saved page opens again, or that the current rules never open it,
   instead of "not yet available" for every page.
 
+- Breaks are set up in **What happens**, under Block, in the rule editor and in the wizard alike:
+  whether they are allowed, how long a break can last, what it costs and how many you get. The
+  rule editor no longer has a Breaks part, and a protection no longer decides what breaks cost: a
+  new rule's breaks are off until you turn them on, then cost a 30-second wait unless you choose
+  otherwise. A break opens all the sites of its rule for the longest time allowed, and you can end
+  it sooner from the popup or Today. Breaks set up before keep their cost and limits, and last the
+  longest of their lengths.
+
 ### Removed
 
+- What a break covered (this page, this site, the rule or every rule), its fixed length or list of
+  lengths, the length asked when taking it, the reason asked before taking it and breaks that
+  counted only the time on the site: a break now always covers its whole rule, asks for nothing
+  but its cost and lasts by the clock.
 - Shared lists and the **Always allowed** list, with their pages under Rules: a rule's sites and
   exceptions are now all in the rule. When you update, the sites of a shared list move into the
   rules that used it, and an Always allowed site becomes an exception of the rules whose sites it

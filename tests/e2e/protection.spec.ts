@@ -377,7 +377,7 @@ test('the Password protection is chosen in the editor, asked to loosen the rule 
   expect(news.ticket?.step.type).toBe('confirm');
 
   // A break of the rule asks for its password.
-  const r = await h.rpc('pause.start', { url: 'http://bet.test/', scope: 'site', minutes: 5 });
+  const r = await h.rpc('pause.start', { url: 'http://bet.test/', minutes: 5 });
   expect(r.ticket.step).toEqual({ type: 'rulePassword', names: ['Gambling'] });
   expect((await h.rpc('ticket.answer', { id: r.ticket.id, answer: 'only my sister knows' })).status).toBe(
     'done',

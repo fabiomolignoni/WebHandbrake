@@ -17,7 +17,7 @@ import {
   scheduleBitmap,
   unusedExceptions,
 } from '../../src/engine/changes';
-import { defaultOptions, delayIntervention, newPolicy, pausePolicyFor } from '../../src/engine/defaults';
+import { defaultOptions, defaultPause, delayIntervention, newPolicy } from '../../src/engine/defaults';
 import { scheduleActive } from '../../src/engine/time';
 import type { Budget, Config, Intervention, PausePolicy, Policy, Schedule } from '../../src/engine/types';
 import { BLOCK, config, group, t } from './helpers';
@@ -213,28 +213,22 @@ describe('protections', () => {
 });
 
 describe('breaks and options', () => {
-  const base = (): PausePolicy => pausePolicyFor({ kind: 'wait', seconds: 30 });
+  const base = (): PausePolicy => ({ ...defaultPause(), allowed: true });
 
-  it('fewer, shorter, costlier breaks, with a reason, are stricter', () => {
+  it('fewer, shorter, costlier breaks are stricter', () => {
     const p = base();
     expect(comparePause(p, structuredClone(p))).toBe('neutral');
     expect(comparePause(p, { ...p, allowed: false })).toBe('strengthen');
     expect(comparePause({ ...p, allowed: false }, p)).toBe('weaken');
-    expect(comparePause({ ...p, allowed: false }, { ...p, allowed: false, scopes: ['all'] })).toBe('neutral');
+    expect(comparePause({ ...p, allowed: false }, { ...p, allowed: false, maxMinutes: 60 })).toBe('neutral');
     expect(comparePause(p, { ...p, duringSessions: true })).toBe('weaken');
-    expect(comparePause(p, { ...p, scopes: ['page'] })).toBe('strengthen');
-    expect(comparePause(p, { ...p, scopes: [...p.scopes, 'all'] })).toBe('weaken');
-    expect(comparePause(p, { ...p, duration: { mode: 'choices', minutes: 15, choices: [5, 30] } })).toBe(
-      'weaken',
-    );
+    expect(comparePause(p, { ...p, maxMinutes: 5 })).toBe('strengthen');
+    expect(comparePause(p, { ...p, maxMinutes: 30 })).toBe('weaken');
     expect(comparePause(p, { ...p, limit: { ...p.limit, count: 1 } })).toBe('strengthen');
     expect(comparePause(p, { ...p, limit: { count: 3, period: day } })).toBe('weaken');
     expect(comparePause(p, { ...p, limit: { ...p.limit, period: { kind: 'week' } } })).toBe('weaken');
     expect(comparePause(p, { ...p, cost: { type: 'password' } })).toBe('strengthen');
     expect(comparePause(p, { ...p, cost: { type: 'confirm' } })).toBe('weaken');
-    expect(comparePause(p, { ...p, reason: 'required' })).toBe('strengthen');
-    // A metered break lasts as long as it is not used: it opens more.
-    expect(comparePause(p, { ...p, metered: true })).toBe('weaken');
     const challenge = { ...p, cost: { type: 'challenge' as const, kind: 'random' as const, length: 24 } };
     expect(
       comparePause(challenge, { ...challenge, cost: { type: 'challenge', kind: 'math', length: 24 } }),

@@ -77,11 +77,6 @@ export async function maintenance() {
         };
       }
     }
-    if (g.kind === 'pause') {
-      const rec = state.pauses.find((p) => p.grantId === g.id);
-      if (rec && g.remaining !== undefined)
-        rec.used = Math.round(((g.minutes ?? rec.minutes) * 60 - Math.max(0, g.remaining)) / 60);
-    }
   }
   for (const [k, cd] of Object.entries(state.cooldowns)) {
     if (cd.until <= t0) {

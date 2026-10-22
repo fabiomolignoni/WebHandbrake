@@ -143,23 +143,22 @@ describe('normalising what is read from storage or a file', () => {
     expect(normalizePolicy({})?.id).toEqual(expect.any(String));
   });
 
-  it('breaks: known scopes once, costs within range, absent limits stay absent', () => {
+  it('breaks: a length within range, costs within range, absent limits stay absent', () => {
     const p = normalizePause({
       allowed: true,
-      scopes: ['page', 'page', 'galaxy'],
-      duration: { mode: 'choices', minutes: 0, choices: [5, 9999] },
+      maxMinutes: 9999,
       limit: { count: 2.4 },
       cost: { type: 'challenge', kind: 'phrase', phrase: 'ok', length: 1 },
-      reason: 'maybe',
     });
-    expect(p).toMatchObject({
+    expect(p).toEqual({
       allowed: true,
-      scopes: ['page'],
-      duration: { mode: 'choices', minutes: 1, choices: [5] },
+      duringSessions: false,
+      maxMinutes: 1440,
       limit: { count: 2, period: { kind: 'day' } },
       cost: { type: 'challenge', kind: 'phrase', length: 4, phrase: 'ok' },
     });
-    expect(p.limit.minutes).toBeUndefined();
+    expect(normalizePause({ allowed: true, maxMinutes: 0 }).maxMinutes).toBe(1);
+    expect(normalizePause({}).maxMinutes).toBe(15);
     expect(normalizePause({ cost: { type: 'delay', seconds: 99999 } }).cost).toEqual({
       type: 'delay',
       seconds: 3600,
@@ -167,6 +166,32 @@ describe('normalising what is read from storage or a file', () => {
     expect(normalizePause({ cost: { type: 'none' } }).cost).toEqual({ type: 'none' });
     expect(normalizePause({ cost: { type: 'password' } }).cost).toEqual({ type: 'password' });
     expect(normalizePause({ cost: 'free' }).cost).toEqual({ type: 'confirm' });
+  });
+
+  it('breaks of earlier versions last up to their longest length, cover the rule, never ask why and count the clock', () => {
+    const old = {
+      allowed: true,
+      duringSessions: true,
+      scopes: ['page', 'site'],
+      limit: { count: 3, period: { kind: 'day' } },
+      cost: { type: 'confirm' },
+      reason: 'required',
+      metered: true,
+    };
+    const choices = normalizePause({ ...old, duration: { mode: 'choices', minutes: 10, choices: [5, 20] } });
+    expect(choices).toEqual({
+      allowed: true,
+      duringSessions: true,
+      maxMinutes: 20,
+      limit: { count: 3, period: { kind: 'day' } },
+      cost: { type: 'confirm' },
+    });
+    expect(
+      normalizePause({ ...old, duration: { mode: 'fixed', minutes: 10, choices: [5, 20] } }).maxMinutes,
+    ).toBe(10);
+    expect(normalizePause({ ...old, duration: { mode: 'upTo', minutes: 30 } }).maxMinutes).toBe(30);
+    // Fields of newer versions are kept.
+    expect(normalizePause({ ...old, future: 1 })).toMatchObject({ future: 1 });
   });
 
   it('breaks lift a block only: a rule without a condition that blocks has none', () => {

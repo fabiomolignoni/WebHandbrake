@@ -223,19 +223,6 @@ function StepBody({
           />
         </>
       );
-    case 'reason':
-      return (
-        <>
-          <p>{step.required ? t('ticket.reason.required') : t('ticket.reason.optional')}</p>
-          <textarea
-            class="textarea"
-            value={value}
-            aria-label={t('ticket.reason.input')}
-            maxLength={500}
-            onInput={(e) => setValue((e.target as HTMLTextAreaElement).value)}
-          />
-        </>
-      );
     case 'intention':
       return <p>{t('ticket.intention.body')}</p>;
   }

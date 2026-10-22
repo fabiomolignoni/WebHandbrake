@@ -89,8 +89,8 @@ describe('the cost and the breaks left, in words', () => {
     expect(
       pauseSummary(
         options({
-          extend: { grantId: 'x', scope: 'site', minutes: 5 },
-          duration: { mode: 'upTo', minutes: 10 },
+          extend: { grantId: 'x', minutes: 5 },
+          maxMinutes: 10,
         }),
       ),
     ).toBe('No cost · up to 10 min more');

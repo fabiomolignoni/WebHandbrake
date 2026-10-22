@@ -79,15 +79,25 @@ test('WCAG 2.2 AA in every step of the rule editor, the wizard and the first run
   const all: string[] = [];
   // Every part of the rule editor; its only condition is open, with the friction picker.
   await go(p, `groups/${id}`);
-  for (const part of ['Sites', 'When', 'What happens', 'Protection', 'Breaks', 'Details']) {
+  for (const part of ['Sites', 'When', 'What happens', 'Protection', 'Details']) {
     await openPart(p, part);
-    if (part === 'What happens') await p.role('radiogroup', 'What happens').expectVisible();
+    // What happens with its breaks allowed, so that their settings are shown.
+    if (part === 'What happens') {
+      await p.role('radiogroup', 'What happens').expectVisible();
+      await p.role('switch', 'Allow breaks').expectChecked(true);
+    }
     all.push(...(await check(p, `rule editor, ${part}`)));
   }
   // Every step of the rule wizard.
   await go(p, 'groups/new?template=social');
   for (const step of ['when', 'what happens', 'protection', 'review']) {
-    if (step === 'protection') await p.role('radio', 'Ask first').click();
+    if (step === 'protection') {
+      // What happens with breaks, whose settings show under Block.
+      await p.role('radio', 'Block').click();
+      await p.role('switch', 'Allow breaks').click();
+      all.push(...(await check(p, 'wizard what happens, breaks')));
+      await p.role('radio', 'Ask first').click();
+    }
     if (step === 'review') await p.role('radio', /^Wait/).click();
     await p.button(`Next: ${step}`).click();
     all.push(...(await check(p, `wizard ${step}`)));

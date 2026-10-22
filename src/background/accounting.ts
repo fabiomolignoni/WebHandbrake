@@ -113,13 +113,6 @@ function credit(d: Decision, incognito: boolean, t: number) {
       store.usage.add(key, t, sec, visit ? 1 : 0, cal);
     }
     checkSessionBudgets(r.group, r.site, t);
-    // Metered pauses are consumed only while on the site.
-    const pause = r.pause;
-    if (pause && pause.remaining !== undefined) {
-      const sec = creditSeconds(`pause:${pause.id}`, t);
-      pause.remaining = Math.max(0, pause.remaining - sec);
-      store.scheduleState();
-    }
   }
   // No per-site detail for private windows; budgets above are still consumed.
   if (parsed?.web && !incognito && (counted.length || s.tracking.allSites)) {

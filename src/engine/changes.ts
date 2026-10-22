@@ -408,26 +408,12 @@ export function costRank(c: Cost): number {
   }
 }
 
-const REASON_RANK = { none: 0, optional: 1, required: 2 } as const;
-
 export function comparePause(a: PausePolicy, b: PausePolicy): Direction {
   if (deepEqual(a, b)) return 'neutral';
   if (!a.allowed && !b.allowed) return 'neutral';
   if (a.allowed !== b.allowed) return b.allowed ? 'weaken' : 'strengthen';
   const dirs: Direction[] = [cmpBool(a.duringSessions, b.duringSessions, false)];
-  const scopesA = new Set(a.scopes);
-  const scopesB = new Set(b.scopes);
-  if ([...scopesB].some((s) => !scopesA.has(s))) dirs.push('weaken');
-  else if ([...scopesA].some((s) => !scopesB.has(s))) dirs.push('strengthen');
-  const maxA = Math.max(
-    a.duration.minutes,
-    ...(a.duration.mode === 'choices' ? (a.duration.choices ?? []) : []),
-  );
-  const maxB = Math.max(
-    b.duration.minutes,
-    ...(b.duration.mode === 'choices' ? (b.duration.choices ?? []) : []),
-  );
-  dirs.push(cmpNum(maxA, maxB, false));
+  dirs.push(cmpNum(a.maxMinutes, b.maxMinutes, false));
   if (
     !samePeriod(a.limit.period, b.limit.period) &&
     (a.limit.count !== undefined || a.limit.minutes !== undefined)
@@ -438,8 +424,6 @@ export function comparePause(a: PausePolicy, b: PausePolicy): Direction {
   dirs.push(cmpNum(costRank(a.cost), costRank(b.cost), true));
   if (a.cost.type === 'challenge' && b.cost.type === 'challenge' && a.cost.kind !== b.cost.kind)
     dirs.push('weaken');
-  dirs.push(cmpNum(REASON_RANK[a.reason], REASON_RANK[b.reason], true));
-  dirs.push(cmpBool(a.metered, b.metered, false));
   return combine(dirs);
 }
 

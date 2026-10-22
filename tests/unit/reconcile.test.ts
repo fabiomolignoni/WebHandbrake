@@ -143,23 +143,6 @@ describe('maintenance', () => {
     });
   });
 
-  it('a metered break that ended records the minutes used', async () => {
-    const t = await setup([]);
-    t.store.state.grants.push({
-      id: 'p',
-      kind: 'pause',
-      groups: '*',
-      scope: 'all',
-      createdAt: T0,
-      remaining: 0,
-      minutes: 10,
-      severity: 99,
-    });
-    t.store.state.pauses.push({ at: T0, groups: '*', scope: 'all', minutes: 10, grantId: 'p' });
-    await t.reconcile.maintenance();
-    expect(t.store.state.pauses[0].used).toBe(10);
-  });
-
   it('timed state expires; ended sessions and ready changes are notified once', async () => {
     const t = await setup([], (c) => {
       c.settings.notifications.enabled = true;

@@ -141,17 +141,11 @@ describe('the intervention page', () => {
 
   it('a break is offered where it can open the page, and says so where another rule keeps it closed', async () => {
     const open = group('Open', ['a.test'], [{ intervention: BLOCK }], { protection: REMINDER });
-    open.pause = {
-      ...open.pause,
-      allowed: true,
-      scopes: ['page', 'site'],
-      reason: 'none',
-      cost: { type: 'confirm' },
-    };
+    open.pause = { ...open.pause, allowed: true, cost: { type: 'confirm' } };
     const t = await setup([open]);
     expect((await t.model('https://a.test/')).pause).toMatchObject({
       available: true,
-      scopes: ['page', 'site'],
+      groups: [{ id: 'Open', name: 'Open' }],
     });
     const closed = group('Closed', ['a.test'], [{ intervention: BLOCK }]);
     closed.pause = { ...closed.pause, allowed: false };
@@ -268,13 +262,15 @@ describe('the intervention page', () => {
 
   it('a break taken from the block page, or from the popup on its tab, is going in, not an impulse resisted', async () => {
     const blocks = group('A', ['a.test', 'b.test'], [{ intervention: BLOCK }]);
-    blocks.pause = { ...blocks.pause, allowed: true, scopes: ['page', 'site'], cost: { type: 'confirm' } };
+    blocks.pause = { ...blocks.pause, allowed: true, cost: { type: 'confirm' } };
     const t = await setup([blocks]);
     const pauses = await import('../../src/background/pauses');
     const { todayStats } = await import('../../src/background/views');
     const takeBreak = async (url: string, sender?: chrome.runtime.MessageSender) => {
-      const { ticket } = await pauses.startPause({ url, scope: 'page', minutes: 5, reason: 'x' }, sender);
+      const { ticket } = await pauses.startPause({ url, minutes: 5 }, sender);
       expect(await t.tickets.answerTicket(ticket!.id, '')).toMatchObject({ status: 'done' });
+      // A break covers the whole rule: the next one is taken after this one ends.
+      await pauses.cancelPause(undefined, true);
     };
     await t.model('https://a.test/');
     await takeBreak('https://a.test/', t.sender);

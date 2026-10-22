@@ -311,11 +311,11 @@ export function TodayPage() {
                   <div key={p.id} class="row between nowrap">
                     <div class="stack stack-xs break-subject">
                       <strong>{breakSubject(p, groupName)}</strong>
-                      <span class="small text-2">
-                        {p.until
-                          ? t('pause.leftUntil', { when: formatWhen(p.until, now) })
-                          : t('pause.leftMetered', { duration: formatDuration(p.remaining ?? 0) })}
-                      </span>
+                      {p.until !== undefined && (
+                        <span class="small text-2">
+                          {t('pause.leftUntil', { when: formatWhen(p.until, now) })}
+                        </span>
+                      )}
                     </div>
                     <Button
                       size="small"

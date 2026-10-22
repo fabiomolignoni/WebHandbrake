@@ -528,11 +528,9 @@ function App() {
                   <ToneIcon tone="calm" icon="pause" size={26} />
                   <span class="stack break-subject" style={{ gap: 0 }}>
                     <span>{breakSubject(p, groupName)}</span>
-                    <span class="text-2">
-                      {p.until
-                        ? t('pause.leftUntil', { when: formatWhen(p.until, now) })
-                        : t('pause.leftMetered', { duration: formatDuration(p.remaining ?? 0) })}
-                    </span>
+                    {p.until !== undefined && (
+                      <span class="text-2">{t('pause.leftUntil', { when: formatWhen(p.until, now) })}</span>
+                    )}
                   </span>
                 </span>
                 <Button

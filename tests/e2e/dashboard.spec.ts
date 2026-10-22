@@ -55,7 +55,6 @@ const PARTS = {
   When: 'When should it apply?',
   'What happens': 'What should happen?',
   Protection: 'What should loosening this rule take?',
-  Breaks: 'Can you take a break from this rule?',
   Details: 'Name, reason and block page',
 };
 
@@ -104,15 +103,12 @@ for (const width of [1280, 390]) {
       }, g.id);
       await p.get('.editor-steps').waitFor('visible');
       // The parts of the rule as the wizard's steps: every part opens. A break lifts a block only,
-      // so a rule that never blocks has no Breaks part.
+      // so only a rule that blocks has breaks, under what happens.
       const blocks = g.policies.some((x: any) => x.intervention.type === 'block');
       for (const [part, title] of Object.entries(PARTS)) {
-        if (part === 'Breaks' && !blocks) {
-          await p.button(/^Breaks/, { within: '.editor-steps' }).expectCount(0);
-          continue;
-        }
         await openPart(p, part);
         await p.role('heading', title).expectVisible();
+        if (part === 'What happens') await p.role('switch', 'Allow breaks').expectCount(blocks ? 1 : 0);
         expect(await p.overflowX(), `horizontal overflow on ${part}`).toBeLessThanOrEqual(0);
       }
       // Conditions open in place: when they apply in When, the friction picker in What happens; a
@@ -179,9 +175,12 @@ test('a rule is created step by step: sites → when → what happens → protec
   expect(created.policies[0].schedule.mode).toBe('during');
   expect(created.policies[0].intervention.type).toBe('block');
   expect(created.protection).toEqual({ kind: 'wait', seconds: 3600 });
-  // Breaks are off until turned on; their cost follows the protection: a typed code for a long wait.
-  expect(created.pause.allowed).toBe(false);
-  expect(created.pause.cost.type).toBe('challenge');
+  // Breaks are off until turned on, whatever the protection.
+  expect(created.pause).toMatchObject({
+    allowed: false,
+    maxMinutes: 15,
+    cost: { type: 'delay', seconds: 30 },
+  });
 });
 
 /** A new rule through the wizard, up to its protection step. */
@@ -234,8 +233,7 @@ test("the wizard's Password protection is hashed in the background and never kep
   expect(created.protection.kind).toBe('password');
   expect(created.protection.hash).toMatch(/^pbkdf2-sha256\$/);
   expect(JSON.stringify(created)).not.toContain('only my sister knows');
-  // Its breaks cost the password, and loosening it asks for it.
-  expect(created.pause.cost).toEqual({ type: 'password' });
+  // Loosening it asks for its password.
   const cfg = (await h.rpc('config.get')).config;
   cfg.groups.find((g: any) => g.id === created.id).targets = [];
   const r = await h.rpc('config.save', { config: cfg });
@@ -414,7 +412,47 @@ test('the main settings of what happens are chosen in the wizard (#14)', async (
   });
 });
 
-test('the wizard decides whether a new rule allows breaks (#15)', async ({ h }) => {
+test('the wizard sets up the breaks of a rule that blocks (#15)', async ({ h }) => {
+  const p = await h.page('dashboard.html#/groups/new');
+  await p.label('Name', { exact: true }).fill('Breaks');
+  await p.placeholder('Add a site, or paste a list…').fill('withbreaks.test');
+  await p.button('Add', { exact: true }).click();
+  await p.button('Next: when').click();
+  await p.button('Next: what happens').click();
+  await p.role('radio', 'Block').click();
+  // Breaks are asked with what happens, off as in the full editor.
+  const breaks = p.role('switch', 'Allow breaks');
+  await breaks.expectChecked(false);
+  await p.text('How long can a break last?').expectCount(0);
+  await breaks.click();
+  // The basic settings: how long at most, what a break costs, how many; not focus sessions.
+  await p.role('spinbutton', 'At most', { exact: true }).fill('20');
+  await p.label('What should a break cost?').select('confirm');
+  await p.role('spinbutton', 'At most this many breaks').fill('2');
+  await p.role('switch', 'Also during focus sessions').expectCount(0);
+  await p.button('Next: protection').click();
+  await p.role('radio', /^Reminder/).click();
+  // The protection says nothing about breaks: they cost what was chosen.
+  await p.text(/^Breaks cost/).expectCount(0);
+  await p.button('Next: review').click();
+  await p.text('Breaks: up to 20 min each. Cost: a confirmation.').expectVisible();
+  await p.text(/^Protection: Reminder\./).expectVisible();
+  await p.button('Create rule').click();
+  await p.role('heading', 'Rules', { exact: true }).expectVisible();
+  const cfg = (await h.rpc('config.get')).config;
+  expect(cfg.groups[cfg.groups.length - 1].pause).toEqual({
+    allowed: true,
+    duringSessions: false,
+    maxMinutes: 20,
+    limit: { count: 2, minutes: 30, period: { kind: 'day' } },
+    cost: { type: 'confirm' },
+  });
+  const blocked = await expectBlocked(h, 'http://withbreaks.test/');
+  await blocked.get('.break-offer').expectText('a confirmation');
+  await blocked.get('.break-left').expectText('2 breaks left today, 30 min in total');
+});
+
+test('the wizard creates a rule without breaks once they are turned off (#15)', async ({ h }) => {
   const p = await h.page('dashboard.html#/groups/new');
   await p.label('Name', { exact: true }).fill('No breaks');
   await p.placeholder('Add a site, or paste a list…').fill('nobreak.test');
@@ -422,23 +460,19 @@ test('the wizard decides whether a new rule allows breaks (#15)', async ({ h }) 
   await p.button('Next: when').click();
   await p.button('Next: what happens').click();
   await p.role('radio', 'Block').click();
-  // Breaks are asked with what happens, off as in the full editor; their cost comes from the
-  // protection, chosen next.
   const breaks = p.role('switch', 'Allow breaks');
-  await breaks.expectChecked(false);
   await breaks.click();
-  await p.text(/depends on the protection you choose next/).expectVisible();
   await p.button('Next: protection').click();
   await p.role('radio', /^Wait/).click();
-  // Back in what happens, breaks cost what the protection says until they are turned off.
+  // Back in what happens, the breaks are as they were left, until they are turned off.
   await p.button(/^What happens/).click();
   await breaks.expectChecked(true);
-  await p.text(/Cost: a 30 s wait/).expectVisible();
+  await p.label('What should a break cost?').expectValue('delay');
   await breaks.click();
   await breaks.expectChecked(false);
   await p.button('Next: protection').click();
   await p.button('Next: review').click();
-  await p.text(/^No breaks\./).expectVisible();
+  await p.text('No breaks.', { exact: true }).expectVisible();
   await p.button('Create rule').click();
   await p.role('heading', 'Rules', { exact: true }).expectVisible();
   const cfg = (await h.rpc('config.get')).config;
@@ -449,31 +483,40 @@ test('the wizard decides whether a new rule allows breaks (#15)', async ({ h }) 
   await blocked.button(/Take a break/).expectCount(0);
 });
 
-test('the rule editor has a Breaks part only while one of the conditions blocks', async ({ h }) => {
+test('the rule editor shows breaks in What happens only while one of the conditions blocks', async ({
+  h,
+}) => {
   await setup(h);
   const video = (await h.rpc('config.get')).config.groups.find((g: any) => g.name === 'Video');
-  const p = await h.page(`dashboard.html#/groups/${video.id}`);
-  const part = p.button(/^Breaks/, { within: '.editor-steps' });
-  // The rule asks first: no Breaks part, no breaks in its overview or its protection.
-  await p.role('heading', PARTS.Overview).expectVisible();
-  await part.expectCount(0);
-  await p.text('Breaks', { exact: true, within: '.summary-list' }).expectCount(0);
+  const p = await h.page(`dashboard.html#/groups/${video.id}?step=breaks`);
+  // An old link to the Breaks part opens What happens; there is no Breaks part.
+  await p.role('heading', PARTS['What happens']).expectVisible();
+  await p.button(/^Breaks/, { within: '.editor-steps' }).expectCount(0);
+  // The rule asks first: no breaks.
+  const breaks = p.role('switch', 'Allow breaks');
+  await breaks.expectCount(0);
+  await openPart(p, 'Overview');
+  await p.text(/No breaks|Breaks:/, { within: '.summary-list' }).expectCount(0);
+  // Once it blocks, they are there, off until turned on.
+  await openPart(p, 'What happens');
+  await p.role('radio', 'Block').click();
+  await p.role('heading', 'Breaks', { exact: true }).expectVisible();
+  await breaks.expectChecked(false);
+  await openPart(p, 'Overview');
+  await p.text('No breaks.', { within: '.summary-list' }).expectVisible();
+  await openPart(p, 'What happens');
+  await breaks.click();
+  await p.text('How long can a break last?').expectVisible();
+  await p.role('switch', 'Also during focus sessions').expectVisible();
+  await p.text('What can a break cover?').expectCount(0);
+  await p.text('Ask for a reason?').expectCount(0);
+  await p.text('Count only time on the site').expectCount(0);
+  await openPart(p, 'Overview');
+  await p.text('Breaks: up to 30 min each, free.', { within: '.summary-list' }).expectVisible();
+  // The protection says nothing about breaks.
   await openPart(p, 'Protection');
   await p.text(/^Loosening the rule makes you wait/).expectVisible();
   await p.text(/^Breaks cost/).expectCount(0);
-  // Once it blocks, the part is there.
-  await openPart(p, 'What happens');
-  await p.role('radio', 'Block').click();
-  await part.expectVisible();
-  await openPart(p, 'Breaks');
-  await p.role('heading', PARTS.Breaks).expectVisible();
-  // The protection says what breaks take once they are allowed.
-  await openPart(p, 'Protection');
-  await p.text(/^Breaks cost/).expectCount(0);
-  await openPart(p, 'Breaks');
-  await p.role('switch', 'Breaks allowed').click();
-  await openPart(p, 'Protection');
-  await p.text(/^Breaks cost/).expectVisible();
 });
 
 test('only a rule that blocks gets breaks from the wizard (#15)', async ({ h }) => {
@@ -492,11 +535,9 @@ test('only a rule that blocks gets breaks from the wizard (#15)', async ({ h }) 
   await p.role('radio', 'Block').click();
   await breaks.expectVisible();
   await p.role('radio', 'Wait').click();
-  // Nor does the protection say what breaks would take.
   await p.button('Next: protection').click();
   await p.role('radio', /^Reminder/).click();
   await p.text('Loosening the rule asks for a confirmation.').expectVisible();
-  await p.text('Breaks cost a confirmation.').expectCount(0);
   await p.button('Next: review').click();
   // The review does not mention breaks at all.
   await p.text(/^Protection: Reminder\./).expectVisible();

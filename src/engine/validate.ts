@@ -104,7 +104,7 @@ export function validateGroup(g: Group): Issue[] {
     out.push({ level: 'info', key: 'validate.unusedException', params: { value: e.value } });
   }
   // Without a condition that blocks, the rule has no breaks (they are turned off when it is saved).
-  if (g.pause.allowed && canHaveBreaks(g) && g.pause.duration.minutes <= 0)
+  if (g.pause.allowed && canHaveBreaks(g) && g.pause.maxMinutes <= 0)
     out.push({ level: 'error', key: 'validate.pauseDuration' });
   return out;
 }

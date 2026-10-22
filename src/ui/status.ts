@@ -146,9 +146,10 @@ export function siteStatus(d: DecisionView | null, now = Date.now()): SiteStatus
       tone: 'calm',
       icon: 'pause',
       label: '',
-      title: paused.pause.until
-        ? t('status.pausedUntil', { when: formatWhen(paused.pause.until, now) })
-        : t('status.pausedLeft', { duration: formatDuration(paused.pause.remaining ?? 0) }),
+      title:
+        paused.pause.until !== undefined
+          ? t('status.pausedUntil', { when: formatWhen(paused.pause.until, now) })
+          : t('status.paused'),
     };
   }
   const passed = d.groups.find((g) => g.pass);

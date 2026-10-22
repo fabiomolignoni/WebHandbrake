@@ -93,12 +93,9 @@ export const challenge = (more: Record<string, unknown> = {}) => ({
 export const pauseFree = {
   allowed: true,
   duringSessions: true,
-  scopes: ['page', 'site', 'group', 'all'],
-  duration: { mode: 'upTo', minutes: 30 },
+  maxMinutes: 30,
   limit: { period: { kind: 'day' } },
   cost: { type: 'none' },
-  reason: 'none',
-  metered: false,
 };
 
 /** Protections of rules. */

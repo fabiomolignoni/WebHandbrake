@@ -3462,6 +3462,12 @@ input[type="radio"] {
     grid-column: 2;
   }
 }
+/* The breaks of a rule, after what each of its conditions does. */
+.editor-breaks {
+  margin-top: var(--s4);
+  padding-top: var(--s5);
+  border-top: 1px solid var(--border);
+}
 /* A question of the editor, answered below its heading (condition, breaks). */
 .question {
   display: flex;

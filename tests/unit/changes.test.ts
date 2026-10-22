@@ -10,7 +10,7 @@ import {
   ruleProtection,
   unitGroups,
 } from '../../src/engine/changes';
-import { delayIntervention, newPolicy, pausePolicyFor } from '../../src/engine/defaults';
+import { defaultPause, delayIntervention, newGroup, newPolicy } from '../../src/engine/defaults';
 import type { Config, Group, Policy } from '../../src/engine/types';
 import { BLOCK, config, group, lockedUntil, PERMANENT, REMINDER, t, wait } from './helpers';
 
@@ -118,21 +118,21 @@ describe('the protection of a rule', () => {
     expect(withPw.groups[0].protection).toEqual(PW);
   });
 
-  it('Locked asks only for a reminder after its date, Permanent never ends; their breaks are none', () => {
+  it('Locked asks only for a reminder after its date, Permanent never ends', () => {
     const g = group('Bets', ['bet.test'], [{ intervention: BLOCK }], { protection: lockedUntil(1000) });
     expect(ruleProtection(g, 999)).toEqual(lockedUntil(1000));
     expect(ruleProtection(g, 1000)).toEqual(REMINDER);
     expect(ruleProtection({ ...g, protection: PERMANENT }, Number.MAX_SAFE_INTEGER)).toEqual(PERMANENT);
-    expect(pausePolicyFor(PERMANENT).allowed).toBe(false);
-    expect(pausePolicyFor(lockedUntil(1000)).allowed).toBe(false);
   });
 
-  it('the breaks of a new rule follow its protection', () => {
-    expect(pausePolicyFor(REMINDER).cost).toEqual({ type: 'confirm' });
-    expect(pausePolicyFor(wait(45)).cost).toEqual({ type: 'delay', seconds: 45 });
-    expect(pausePolicyFor(wait(3600)).cost).toMatchObject({ type: 'challenge' });
-    expect(pausePolicyFor(PW).cost).toEqual({ type: 'password' });
-    expect(pausePolicyFor(PARTNER).cost).toEqual({ type: 'confirm' });
+  it('a new rule has no breaks until they are turned on, whatever its protection', () => {
+    for (const protection of [REMINDER, wait(45), PW, PARTNER, PERMANENT])
+      expect(newGroup({ protection }).pause).toEqual(defaultPause());
+    expect(defaultPause()).toMatchObject({
+      allowed: false,
+      maxMinutes: 15,
+      cost: { type: 'delay', seconds: 30 },
+    });
   });
 });
 

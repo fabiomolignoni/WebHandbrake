@@ -120,14 +120,13 @@ describe('the next restriction of an open site', () => {
     expect(nextRestriction(c, 'https://a.test/', U)).toMatchObject({ at: at(0, 9), kind: 'session' });
   });
 
-  it('a break or a pass that ends: its own end, or the minutes left of a metered break', () => {
+  it('a break or a pass that ends at its own end', () => {
     const g = group('A', ['a.test'], [{ intervention: BLOCK }]);
+    g.pause.allowed = true;
     const state = defaultState();
     state.grants.push(grant({ until: at(0, 10, 15) }));
     const c = ctx(config([g]), at(0, 10), state);
     expect(nextRestriction(c, 'https://a.test/', U)).toMatchObject({ at: at(0, 10, 15), kind: 'pause' });
-    state.grants = [grant({ remaining: 120 })];
-    expect(nextRestriction(c, 'https://a.test/', U)).toMatchObject({ at: at(0, 10, 2), kind: 'pause' });
   });
 
   it('the longest visit of a visit limit runs out', () => {
@@ -229,11 +228,5 @@ describe('expired grants', () => {
     const c = ctx(config([]), at(0, 10, 24), state);
     expect(expiredGrants(c)).toEqual([]);
     expect(expiredGrants({ ...c, now: at(0, 10, 20) + 5 * MINUTE + 1 })).toHaveLength(1);
-  });
-
-  it('a metered break ends when its minutes are used up', () => {
-    const state = defaultState();
-    state.grants.push(grant({ remaining: 0 }));
-    expect(expiredGrants(ctx(config([]), at(0, 10), state))).toHaveLength(1);
   });
 });

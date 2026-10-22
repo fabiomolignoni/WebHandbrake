@@ -270,7 +270,6 @@ const DYNAMIC = {
   'level.{l}': ['reminder', 'wait', 'password', 'partner', 'locked', 'permanent'],
   'level.{l}.desc': ['reminder', 'wait', 'password', 'partner', 'locked', 'permanent'],
   'level.{l}.weaken': ['reminder', 'wait', 'password', 'partner', 'locked', 'permanent'],
-  'level.{l}.pauses': ['reminder', 'wait', 'password', 'partner', 'locked', 'permanent'],
   'intervention.{x}': ['allow', 'track', 'filter', 'ask', 'delay', 'challenge', 'block', 'redirect', 'close'],
   'intervention.help.{x}': [
     'allow',
@@ -357,7 +356,6 @@ const DYNAMIC = {
   'period.kind.{x}': ['hour', 'day', 'week', 'month', 'every', 'rolling'],
   'why.restriction.{x}': ['budget', 'schedule', 'pause', 'pass', 'session'],
   'schedule.preset.{x}': ['office', 'evenings', 'allDay', 'weekdays', 'nights'],
-  'pause.scope.{x}': ['page', 'site', 'group', 'all'],
   'pauseRules.costKind.{x}': ['none', 'confirm', 'delay', 'random', 'phrase', 'math', 'password'],
   'challenge.charset.{x}': ['alnum', 'letters', 'digits', 'symbols'],
   'settings.tab.{x}': ['general', 'feedback', 'time', 'interventions', 'data', 'privacy', 'diagnostics'],

@@ -182,20 +182,19 @@ export type Cost =
   | { type: 'challenge'; kind: ChallengeKind; length?: number; phrase?: string }
   | { type: 'password' };
 
+/** What a break covers. Breaks now cover their whole rules; the others are of earlier versions. */
 export type PauseScope = 'page' | 'site' | 'group' | 'all';
 
+/** The breaks of a rule. A break covers the whole rule and can be ended before its time is up. */
 export interface PausePolicy {
   allowed: boolean;
   /** Pauses allowed while a focus session involving the group is active. */
   duringSessions: boolean;
-  scopes: PauseScope[];
-  duration: { mode: 'fixed' | 'upTo' | 'choices'; minutes: number; choices?: number[] };
+  /** The longest a break can last. */
+  maxMinutes: number;
   /** Per group budget. */
   limit: { count?: number; minutes?: number; period: Period };
   cost: Cost;
-  reason: 'none' | 'optional' | 'required';
-  /** Minutes are consumed only while actually on the site. */
-  metered: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -356,14 +355,11 @@ export interface Grant {
   site?: string;
   createdAt: number;
   until?: number;
-  /** Metered pauses: seconds left. */
-  remaining?: number;
   /** Ends with the visit. */
   visit?: boolean;
   /** Highest intervention severity this grant lets through. */
   severity: number;
   intention?: string;
-  reason?: string;
   /** Block for this many minutes once the chosen time is over. */
   cooldownMinutes?: number;
   minutes?: number;
@@ -435,6 +431,7 @@ export interface PauseRecord {
   site?: string;
   url?: string;
   minutes: number;
+  /** The reason given, when breaks of earlier versions asked for one. */
   reason?: string;
   grantId: string;
   used?: number;

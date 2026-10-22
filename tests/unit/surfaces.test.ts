@@ -49,13 +49,7 @@ describe('what the popup and the dashboard show', () => {
     const soft = group('A', ['a.test'], [{ schedule: office, intervention: BLOCK }], {
       protection: REMINDER,
     });
-    soft.pause = {
-      ...soft.pause,
-      allowed: true,
-      scopes: ['site'],
-      cost: { type: 'confirm' },
-      reason: 'none',
-    };
+    soft.pause = { ...soft.pause, allowed: true, cost: { type: 'confirm' } };
     await setup([soft, group('Off', ['off.test'], [], { enabled: false })]);
     const { popupModel } = await import('../../src/background/views');
     const m = await popupModel();
@@ -157,9 +151,9 @@ describe('what the popup and the dashboard show', () => {
     expect(await kinds()).toEqual(['tamper', 'clock']);
   });
 
-  it('a break or an access on one site of a rule leaves the rule restricting its other sites', async () => {
+  it('a break of an earlier version or an access on one site of a rule leaves the rule restricting its other sites', async () => {
     const blocked = group('A', ['a.test', 'b.test'], [{ schedule: office, intervention: BLOCK }]);
-    blocked.pause = { ...blocked.pause, allowed: true, scopes: ['site'] };
+    blocked.pause = { ...blocked.pause, allowed: true };
     const asks = group(
       'Q',
       ['q.test', 'r.test'],

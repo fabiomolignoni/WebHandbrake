@@ -1,12 +1,14 @@
 /**
- * Pause rules of a group, as the questions of the rule editor's Breaks step: how
- * long, what a break takes, how many, what it covers and whether a reason is asked.
+ * The breaks of a rule, under what happens: whether they are allowed, how long one can last, what
+ * it costs and how many. A break covers the whole rule and can be ended before its time is up.
  */
 
 import { useId } from 'preact/hooks';
-import type { Cost, PausePolicy, PauseScope } from '../../engine/types';
+import type { Cost, PausePolicy } from '../../engine/types';
 import { t } from '../../i18n/i18n';
-import { DurationInput, NumberInput, Segmented, Select, Toggle } from '../../ui/components';
+import { formatDuration } from '../../shared/format';
+import { DurationInput, NumberInput, Select, Toggle } from '../../ui/components';
+import { costLabel } from '../../ui/pause';
 import { PeriodSelect } from './policy';
 
 type CostKind = 'none' | 'confirm' | 'delay' | 'random' | 'phrase' | 'math' | 'password';
@@ -41,77 +43,62 @@ function costFrom(kind: CostKind, prev: Cost): Cost {
   }
 }
 
+/** The breaks of a rule in a line: "Breaks: up to 15 min each. Cost: a 30 s wait." */
+export function pauseRulesSummary(p: PausePolicy): string {
+  if (!p.allowed) return t('pauseRules.summary.off');
+  const duration = formatDuration(p.maxMinutes * 60);
+  return p.cost.type === 'none'
+    ? t('pauseRules.summary.free', { duration })
+    : t('pauseRules.summary.on', { duration, cost: costLabel(p.cost) });
+}
+
 export function PauseEditor({
   value,
   onChange,
   hasPassword,
+  basic = false,
 }: {
   value: PausePolicy;
   onChange: (p: PausePolicy) => void;
   /** A break can cost the rule's password only when the rule has one. */
   hasPassword: boolean;
+  /** The wizard's questions only: whether breaks are allowed during focus sessions is left out. */
+  basic?: boolean;
 }) {
   const p = value;
   const id = useId();
   // Without a password, a break that costs one asks for random characters instead.
   const noPassword = costKind(p.cost) === 'password' && !hasPassword;
   const set = (patch: Partial<PausePolicy>) => onChange({ ...p, ...patch });
-  const toggleScope = (s: PauseScope) =>
-    set({ scopes: p.scopes.includes(s) ? p.scopes.filter((x) => x !== s) : [...p.scopes, s] });
   return (
     <div class="stack stack-lg">
-      <Toggle checked={p.allowed} onChange={(allowed) => set({ allowed })} label={t('pauseRules.allowed')} />
+      <Toggle
+        checked={p.allowed}
+        onChange={(allowed) => set({ allowed })}
+        label={t('pauseRules.allowed')}
+        help={t('pauseRules.allowedHelp')}
+      />
       {p.allowed && (
         <>
           <div class="question">
-            <h3 id={`${id}-duration`}>{t('pauseRules.q.duration')}</h3>
-            <Segmented<PausePolicy['duration']['mode']>
-              value={p.duration.mode}
-              labelledBy={`${id}-duration`}
-              onChange={(mode) =>
-                set({
-                  duration: {
-                    ...p.duration,
-                    mode,
-                    ...(mode === 'choices' && !p.duration.choices?.length ? { choices: [5, 10, 15] } : {}),
-                  },
-                })
-              }
-              options={[
-                { value: 'fixed', label: t('pauseRules.mode.fixed') },
-                { value: 'upTo', label: t('pauseRules.mode.upTo') },
-                { value: 'choices', label: t('pauseRules.mode.choices') },
-              ]}
-            />
+            <h3>{t('pauseRules.q.duration')}</h3>
             <div class="row">
-              {p.duration.mode === 'choices' ? (
-                <input
-                  class="input inline mono"
-                  style={{ width: '10em' }}
-                  aria-label={t('pauseRules.choices')}
-                  value={(p.duration.choices ?? []).join(', ')}
-                  onChange={(e) => {
-                    const choices = (e.target as HTMLInputElement).value
-                      .split(/[,\s]+/)
-                      .map(Number)
-                      .filter((n) => n > 0 && n <= 1440)
-                      .slice(0, 6);
-                    if (choices.length)
-                      set({ duration: { ...p.duration, choices, minutes: Math.max(...choices) } });
-                  }}
-                />
-              ) : (
-                <DurationInput
-                  units={['minutes', 'hours']}
-                  value={p.duration.minutes}
-                  min={1}
-                  max={1440}
-                  label={t('pauseRules.minutes')}
-                  onChange={(minutes) => set({ duration: { ...p.duration, minutes } })}
-                />
-              )}
-              {p.duration.mode === 'choices' && <span class="help">{t('pauseRules.choices')}</span>}
+              <span class="label" aria-hidden="true">
+                {t('pauseRules.minutes')}
+              </span>
+              <DurationInput
+                units={['minutes', 'hours']}
+                value={p.maxMinutes}
+                min={1}
+                max={1440}
+                label={t('pauseRules.minutes')}
+                describedBy={`${id}-duration-help`}
+                onChange={(maxMinutes) => set({ maxMinutes })}
+              />
             </div>
+            <span class="help" id={`${id}-duration-help`}>
+              {t('pauseRules.durationHelp')}
+            </span>
           </div>
           <div class="question">
             <h3 id={`${id}-cost`}>{t('pauseRules.q.cost')}</h3>
@@ -227,43 +214,15 @@ export function PauseEditor({
               />
             )}
           </div>
-          <fieldset class="question">
-            <legend>{t('pauseRules.q.scopes')}</legend>
-            <div class="row">
-              {(['page', 'site', 'group', 'all'] as PauseScope[]).map((s) => (
-                <label key={s} class="check small">
-                  <input type="checkbox" checked={p.scopes.includes(s)} onChange={() => toggleScope(s)} />
-                  {t(`pause.scope.${s}`)}
-                </label>
-              ))}
+          {!basic && (
+            <div class="settings-list">
+              <Toggle
+                checked={p.duringSessions}
+                onChange={(duringSessions) => set({ duringSessions })}
+                label={t('pauseRules.duringSessions')}
+              />
             </div>
-          </fieldset>
-          <div class="question">
-            <h3 id={`${id}-reason`}>{t('pauseRules.q.reason')}</h3>
-            <Segmented<PausePolicy['reason']>
-              value={p.reason}
-              labelledBy={`${id}-reason`}
-              onChange={(reason) => set({ reason })}
-              options={[
-                { value: 'none', label: t('pauseRules.reason.none') },
-                { value: 'optional', label: t('pauseRules.reason.optional') },
-                { value: 'required', label: t('pauseRules.reason.required') },
-              ]}
-            />
-          </div>
-          <div class="settings-list">
-            <Toggle
-              checked={p.duringSessions}
-              onChange={(duringSessions) => set({ duringSessions })}
-              label={t('pauseRules.duringSessions')}
-            />
-            <Toggle
-              checked={p.metered}
-              onChange={(metered) => set({ metered })}
-              label={t('pauseRules.metered')}
-              help={t('pauseRules.meteredHelp')}
-            />
-          </div>
+          )}
         </>
       )}
     </div>

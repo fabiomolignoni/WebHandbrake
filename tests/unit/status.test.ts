@@ -91,7 +91,7 @@ describe('the state of the current site', () => {
     const on = (patch: Partial<GroupDecisionView>, d: Partial<DecisionView> = {}) =>
       siteStatus(view({ groups: [rule(patch)], ...d }), NOW).title;
     expect(on({ pause: { id: 'p', until: later, scope: 'site' } })).toBe('On a break until 17:00');
-    expect(on({ pause: { id: 'p', remaining: 300, scope: 'site' } })).toBe('On a break · 5 min left');
+    expect(on({ pause: { id: 'p', scope: 'group' } })).toBe('On a break');
     expect(on({ pass: { id: 'g', until: later, scope: 'site' } })).toBe('Access granted until 17:00');
     expect(on({ pass: { id: 'g', visit: true, scope: 'site' } })).toBe('Access granted for this visit');
     const budget = { type: 'visits', used: 2, limit: 3, remaining: 1, exhausted: false } as BudgetView;

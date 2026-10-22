@@ -81,9 +81,7 @@ export function internalGuard(c: EngineContext = ctx()): InternalGuard | null {
   if (p.internalPages === 'never') return null;
   if (
     p.internalPagesFollowPause &&
-    c.state.grants.some(
-      (g) => g.kind === 'pause' && (g.until ?? Number.POSITIVE_INFINITY) > c.now && (g.remaining ?? 1) > 0,
-    )
+    c.state.grants.some((g) => g.kind === 'pause' && (g.until ?? Number.POSITIVE_INFINITY) > c.now)
   ) {
     return null;
   }

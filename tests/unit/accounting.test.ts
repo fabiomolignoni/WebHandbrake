@@ -151,24 +151,6 @@ describe('counting time', () => {
     });
     expect(t.store.state.activity['g:A'].run).toBe(0);
   });
-
-  it('a metered break is used only while on the site', async () => {
-    const t = await setup([group('A', ['a.test'], [{ intervention: BLOCK }])]);
-    t.store.state.grants.push({
-      id: 'p',
-      kind: 'pause',
-      groups: ['A'],
-      scope: 'group',
-      createdAt: T0,
-      remaining: 60,
-      severity: 99,
-    });
-    await t.tick(T0);
-    await t.tick(T0 + 1000);
-    await t.tick(T0 + 2000);
-    // Three ticks, three seconds of the break.
-    expect(t.store.state.grants[0].remaining).toBe(57);
-  });
 });
 
 describe('what the page shows', () => {

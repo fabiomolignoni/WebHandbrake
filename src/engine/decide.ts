@@ -213,7 +213,6 @@ export function budgetStatus(
 export function grantActive(ctx: EngineContext, g: Grant, groupId?: string, site?: string): boolean {
   const { now, state } = ctx;
   if (g.until !== undefined && now >= g.until) return false;
-  if (g.remaining !== undefined && g.remaining <= 0) return false;
   if (g.visit) {
     const key =
       g.scope === 'site' && site && groupId
@@ -229,6 +228,7 @@ export function grantActive(ctx: EngineContext, g: Grant, groupId?: string, site
 
 export function grantCovers(g: Grant, group: Group, site: string, url: ParsedUrl): boolean {
   if (g.groups !== '*' && !g.groups.includes(group.id)) return false;
+  // A break of everything, from an earlier version, covers the rules that allow breaks.
   if (g.groups === '*' && !group.pause.allowed) return false;
   switch (g.scope) {
     case 'page':

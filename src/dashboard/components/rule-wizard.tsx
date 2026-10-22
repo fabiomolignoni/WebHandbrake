@@ -17,11 +17,11 @@ import {
   breaksLift,
   DAY_MINUTES,
   DEFAULT_PROTECTION,
+  defaultPause,
   everyPeriod,
   GROUP_COLORS,
   newGroup,
   newId,
-  pausePolicyFor,
   periodMinutes,
   type QuickHow,
   type QuickWhen,
@@ -32,17 +32,17 @@ import {
   targetsFromLines,
 } from '../../engine/defaults';
 import { clone } from '../../engine/json';
-import type { Group, Intervention, Protection, Target, TimeWindow } from '../../engine/types';
+import type { Group, Intervention, PausePolicy, Protection, Target, TimeWindow } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { formatDuration } from '../../shared/format';
 import { Banner, Button, DurationInput, GroupTile, RadioCards, Toggle } from '../../ui/components';
 import { GROUP_ICONS, Icon } from '../../ui/icons';
-import { costLabel } from '../../ui/pause';
 import { toneOf } from '../../ui/status';
 import { useDashboard } from '../context';
 import { planSentence, sitesPhrase } from '../plan';
 import { DailyMinutes } from './daily-minutes';
 import { HowPicker, type KeptInterventions, quickInterventionReady } from './how-picker';
+import { PauseEditor, pauseRulesSummary } from './pause-editor';
 import { ProtectionPicker, protectionLabel } from './protection-picker';
 import { WindowsEditor } from './schedule';
 import { TargetsEditor } from './targets';
@@ -77,8 +77,8 @@ interface State {
    * a partner code is never kept in storage: a resumed wizard asks for the protection again.
    */
   protection: Protection | null;
-  /** #15: whether the rule allows breaks; off until turned on, as in the full editor. */
-  breaks: boolean;
+  /** #15: the rule's breaks, off until turned on, as in the full editor. */
+  pause: PausePolicy;
   note: string;
   color: string;
   icon: string;
@@ -89,7 +89,9 @@ interface State {
 function load(store: string): State | null {
   try {
     const raw = sessionStorage.getItem(store);
-    const s = raw ? (JSON.parse(raw) as State & { how?: QuickHow | null; redirectUrl?: string }) : null;
+    const s = raw
+      ? (JSON.parse(raw) as State & { how?: QuickHow | null; redirectUrl?: string; breaks?: boolean })
+      : null;
     if (!s) return null;
     // A wizard started by an earlier version kept only the kind of intervention.
     const intervention =
@@ -107,7 +109,8 @@ function load(store: string): State | null {
       every: s.every ?? DAY_MINUTES,
       perSite: Boolean(s.perSite),
       protection,
-      breaks: Boolean(s.breaks),
+      // A wizard started by an earlier version kept only whether breaks were allowed.
+      pause: s.pause ?? { ...defaultPause(), allowed: Boolean(s.breaks) },
       // A ready-made list may have been removed since.
       templates: (s.templates ?? []).filter((id) => TEMPLATES.some((x) => x.id === id)),
     };
@@ -189,7 +192,7 @@ export function RuleWizard({
       intervention: null,
       kept: {},
       protection: null,
-      breaks: false,
+      pause: defaultPause(),
       note: '',
       color: GROUP_COLORS.find((c) => !used.has(c)) ?? GROUP_COLORS[cfg.groups.length % GROUP_COLORS.length],
       icon: 'circle',
@@ -220,8 +223,7 @@ export function RuleWizard({
   const intervention = s.intervention ?? quickIntervention('ask');
   // A break lifts a block only: a rule that does something else has none (#15).
   const breaksOffered = breaksLift(intervention);
-  // The breaks of the protection, once the person turned them on (#15).
-  const pause = { ...pausePolicyFor(protection), allowed: breaksOffered && s.breaks };
+  const pause = { ...s.pause, allowed: breaksOffered && s.pause.allowed };
 
   const build = (): Group =>
     newGroup({
@@ -491,18 +493,11 @@ export function RuleWizard({
               label={t('wizard.how.title')}
             />
             {s.intervention && breaksOffered && (
-              <Toggle
-                checked={pause.allowed}
-                onChange={(breaks) => update({ breaks })}
-                label={t('wizard.how.breaks')}
-                help={
-                  !pause.allowed
-                    ? t('wizard.how.breaksOff')
-                    : s.protection
-                      ? t('wizard.how.breaksOn', { cost: costLabel(pause.cost) })
-                      : // The cost of a break comes from the protection, chosen in the next step.
-                        t('wizard.how.breaksOnLater')
-                }
+              <PauseEditor
+                basic
+                value={s.pause}
+                onChange={(p) => update({ pause: p })}
+                hasPassword={s.protection?.kind === 'password'}
               />
             )}
           </>
@@ -611,16 +606,8 @@ export function RuleWizard({
             <div class="option-panel row nowrap top" style={{ gap: '12px' }}>
               <Icon name="info" />
               <div class="stack stack-xs small">
-                <span>
-                  {!breaksOffered
-                    ? t('wizard.review.protection', { level: protectionLabel(protection) })
-                    : pause.allowed
-                      ? t('wizard.review.defaults', {
-                          cost: costLabel(pause.cost),
-                          level: protectionLabel(protection),
-                        })
-                      : t('wizard.review.noBreaks', { level: protectionLabel(protection) })}
-                </span>
+                {breaksOffered && <span>{pauseRulesSummary(pause)}</span>}
+                <span>{t('wizard.review.protection', { level: protectionLabel(protection) })}</span>
                 <span class="text-2">{t('wizard.review.later')}</span>
               </div>
             </div>

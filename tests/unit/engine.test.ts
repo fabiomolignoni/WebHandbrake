@@ -181,6 +181,7 @@ describe('decisions', () => {
     expect(decide({ ...c, now: at(0, 9, 11) }, 'https://site.example/a').intervention.type).toBe('delay');
     // A pass for a delay does not open a block.
     const g2 = group('P', ['site.example'], [{ intervention: BLOCK }]);
+    g2.pause.allowed = true;
     expect(decide(ctx(config([g2]), at(0, 9, 5), state), 'https://site.example/').intervention.type).toBe(
       'block',
     );
@@ -199,6 +200,7 @@ describe('decisions', () => {
       ['site.example'],
       [{ schedule: evening, intervention: BLOCK }, { intervention: delayIntervention(30) }],
     );
+    g.pause.allowed = true;
     const state = defaultState();
     state.grants.push({
       id: 'b',

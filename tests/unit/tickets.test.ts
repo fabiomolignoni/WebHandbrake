@@ -97,16 +97,11 @@ describe('tickets: costs checked in the background', () => {
     expect(await tickets.answerTicket(view!.id, 'yes')).toMatchObject({ status: 'done' });
   });
 
-  it('a reason, required or not; a reason and minutes to go in', async () => {
+  it('a reason and minutes to go in', async () => {
     const { tickets, purpose } = await load();
     const { view } = await tickets.createTicket(purpose, [
-      { type: 'reason', required: true },
       { type: 'intention', choices: [5, 10], maxMinutes: 20, seconds: 5 },
     ]);
-    expect(await tickets.answerTicket(view!.id, '  ')).toMatchObject({
-      error: 'ticket.error.reasonRequired',
-    });
-    expect(await tickets.answerTicket(view!.id, 'checking the score')).toMatchObject({ status: 'next' });
     expect(await tickets.answerTicket(view!.id, 'x', 5)).toMatchObject({ error: 'ticket.error.notYet' });
     vi.setSystemTime(T0 + 5000);
     expect(await tickets.answerTicket(view!.id, '', 5)).toMatchObject({
@@ -116,7 +111,7 @@ describe('tickets: costs checked in the background', () => {
     expect(await tickets.answerTicket(view!.id, 'news', 0)).toMatchObject({ error: 'ticket.error.minutes' });
     const t = await tickets.getTicket(view!.id);
     expect(await tickets.answerTicket(view!.id, 'news', 17)).toMatchObject({ status: 'done' });
-    expect(t!.collected).toEqual({ reason: 'checking the score', intention: 'news', minutes: 17 });
+    expect(t!.collected).toEqual({ intention: 'news', minutes: 17 });
   });
 
   it('expires an hour after its waits; can be cancelled', async () => {

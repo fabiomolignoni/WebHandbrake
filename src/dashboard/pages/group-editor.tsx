@@ -15,7 +15,6 @@ import {
   GROUP_COLORS,
   newGroup,
   newPolicy,
-  pausePolicyFor,
   targetKey,
   targetsFromLines,
 } from '../../engine/defaults';
@@ -23,7 +22,6 @@ import { clone } from '../../engine/json';
 import type { Group, Policy, Protection, Target } from '../../engine/types';
 import { hasErrors, type Issue, validateGroup } from '../../engine/validate';
 import { t } from '../../i18n/i18n';
-import { formatDuration } from '../../shared/format';
 import { call } from '../../shared/rpc';
 import { describeCondition, describeIntervention } from '../../shared/summary';
 import {
@@ -41,10 +39,9 @@ import {
 } from '../../ui/components';
 import { downloadText } from '../../ui/download';
 import { GROUP_ICONS, Icon } from '../../ui/icons';
-import { costLabel } from '../../ui/pause';
 import { useSaveFlow } from '../../ui/saveflow';
 import { interventionIcon, LADDER, toneOf } from '../../ui/status';
-import { PauseEditor } from '../components/pause-editor';
+import { PauseEditor, pauseRulesSummary } from '../components/pause-editor';
 import { PolicyCard } from '../components/policy';
 import { ProtectionPicker, protectionIcon, protectionLabel } from '../components/protection-picker';
 import { TargetsEditor } from '../components/targets';
@@ -53,8 +50,9 @@ import { useDashboard } from '../context';
 import { sitesPhrase } from '../plan';
 import { navigate, setNavigationGuard } from '../router';
 
-// When a condition applies and what happens then are two parts, as in the wizard.
-const STEPS = ['overview', 'sites', 'when', 'how', 'protection', 'breaks', 'details'] as const;
+// When a condition applies and what happens then are two parts, as in the wizard; the breaks of a
+// rule that blocks are part of what happens.
+const STEPS = ['overview', 'sites', 'when', 'how', 'protection', 'details'] as const;
 type StepId = (typeof STEPS)[number];
 
 const STEP_ICON: Record<StepId, string> = {
@@ -63,7 +61,6 @@ const STEP_ICON: Record<StepId, string> = {
   when: 'calendar',
   how: 'brake',
   protection: 'shield',
-  breaks: 'pause',
   details: 'sliders',
 };
 const STEP_LABEL: Record<StepId, string> = {
@@ -72,7 +69,6 @@ const STEP_LABEL: Record<StepId, string> = {
   when: 'wizard.step.when',
   how: 'wizard.step.how',
   protection: 'editor.step.protection',
-  breaks: 'editor.step.breaks',
   details: 'editor.step.details',
 };
 const STEP_TITLE: Record<StepId, string> = {
@@ -81,7 +77,6 @@ const STEP_TITLE: Record<StepId, string> = {
   when: 'wizard.when.title',
   how: 'wizard.how.title',
   protection: 'wizard.protection.title',
-  breaks: 'editor.breaks.title',
   details: 'editor.details.title',
 };
 const STEP_INTRO: Record<StepId, string> = {
@@ -90,29 +85,29 @@ const STEP_INTRO: Record<StepId, string> = {
   when: 'editor.when.intro',
   how: 'editor.how.intro',
   protection: 'wizard.protection.intro',
-  breaks: 'editor.breaksHelp',
   details: 'editor.details.intro',
 };
-/** The Next button, by the part it opens (the parts shown depend on the rule). */
+/** The Next button, by the part it opens. */
 const NEXT_LABEL: Partial<Record<StepId, string>> = {
   sites: 'editor.next.sites',
   when: 'wizard.next.when',
   how: 'wizard.next.how',
   protection: 'editor.next.protection',
-  breaks: 'editor.next.breaks',
   details: 'editor.next.details',
 };
-/** Links from before the two parts were separate (`?step=rules`) open the first one. */
-const OLD_STEPS: Record<string, StepId> = { rules: 'when' };
+/**
+ * Links to parts that are gone: conditions (`?step=rules`) open when they apply, and breaks
+ * (`?step=breaks`) what happens.
+ */
+const OLD_STEPS: Record<string, StepId> = { rules: 'when', breaks: 'how' };
 
 /** What each step edits: a step is marked when it changed. */
 const STEP_PART: Record<StepId, (g: Group) => unknown> = {
   overview: () => null,
   sites: (g) => g.targets,
   when: (g) => g.policies.map((p) => [p.id, p.schedule, p.budget]),
-  how: (g) => g.policies.map((p) => [p.id, p.intervention]),
+  how: (g) => [g.policies.map((p) => [p.id, p.intervention]), g.pause],
   protection: (g) => g.protection,
-  breaks: (g) => g.pause,
   details: (g) => [g.name, g.note, g.color, g.icon, g.message, g.options],
 };
 
@@ -122,18 +117,14 @@ const HOW_ISSUES = new Set([
   'validate.phrase',
   'validate.askChoices',
   'validate.onlyTracking',
+  'validate.pauseDuration',
 ]);
-
-/** The parts of a rule: a break lifts a block only, so a rule that never blocks has no Breaks part. */
-const stepsOf = (g: Group): readonly StepId[] =>
-  canHaveBreaks(g) ? STEPS : STEPS.filter((s) => s !== 'breaks');
 
 /** The step where a problem found by validateGroup() is fixed. */
 function stepOf(issue: Issue): StepId {
   if (HOW_ISSUES.has(issue.key)) return 'how';
   if (issue.policy !== undefined || issue.key === 'validate.noPolicies') return 'when';
   if (issue.key === 'validate.noName') return 'details';
-  if (issue.key === 'validate.pauseDuration') return 'breaks';
   return 'sites';
 }
 
@@ -143,7 +134,6 @@ export function groupFromTemplate(templateId: string | null, protection: Protect
     return newGroup({
       name: '',
       policies: [newPolicy({ intervention: frictionIntervention() })],
-      pause: pausePolicyFor(protection),
       protection,
     });
   }
@@ -153,7 +143,6 @@ export function groupFromTemplate(templateId: string | null, protection: Protect
     icon: tpl.icon,
     targets: addTemplate([], tpl.entries),
     policies: [newPolicy({ intervention: frictionIntervention() })],
-    pause: pausePolicyFor(protection),
     protection,
   });
 }
@@ -235,7 +224,7 @@ export function GroupEditorPage({
     setSynced(JSON.stringify(g));
   };
   const [step, setStep] = useState<StepId>(() =>
-    stepsOf(base).includes(initialStep as StepId)
+    STEPS.includes(initialStep as StepId)
       ? (initialStep as StepId)
       : (OLD_STEPS[initialStep ?? ''] ?? 'overview'),
   );
@@ -338,10 +327,9 @@ export function GroupEditorPage({
   };
 
   const groupState = model.groups[draft.id];
-  const steps = stepsOf(draft);
-  const index = steps.indexOf(step);
+  const index = STEPS.indexOf(step);
   const stepIssues = step === 'overview' ? issues : issues.filter((i) => stepOf(i) === step);
-  const nextStep: StepId | null = steps[index + 1] ?? null;
+  const nextStep: StepId | null = STEPS[index + 1] ?? null;
 
   return (
     <div class="stack stack-lg wizard-page editor-page">
@@ -390,7 +378,7 @@ export function GroupEditorPage({
 
       <nav aria-label={t('editor.sections')}>
         <ol class="wizard-progress editor-steps">
-          {steps.map((id) => {
+          {STEPS.map((id) => {
             const bad = issues.some((i) => i.level === 'error' && id !== 'overview' && stepOf(i) === id);
             const edited = changed(id);
             return (
@@ -423,7 +411,7 @@ export function GroupEditorPage({
 
       <section class="card stack stack-lg" aria-labelledby="editor-step-title">
         <div>
-          <p class="overline">{t('editor.partOf', { n: index + 1, total: steps.length })}</p>
+          <p class="overline">{t('editor.partOf', { n: index + 1, total: STEPS.length })}</p>
           <h2 id="editor-step-title" ref={titleRef} tabIndex={-1}>
             {t(STEP_TITLE[step])}
           </h2>
@@ -557,6 +545,17 @@ export function GroupEditorPage({
                 </div>
               </div>
             )}
+            {/* A break lifts a block only: a rule that never blocks has no breaks. */}
+            {canHaveBreaks(draft) && (
+              <section class="stack editor-breaks" aria-labelledby="editor-breaks-title">
+                <h3 id="editor-breaks-title">{t('editor.breaks')}</h3>
+                <PauseEditor
+                  value={draft.pause}
+                  onChange={(pause) => set({ pause })}
+                  hasPassword={draft.protection.kind === 'password'}
+                />
+              </section>
+            )}
           </div>
         )}
 
@@ -569,14 +568,6 @@ export function GroupEditorPage({
             name={draft.name}
             label={t('editor.level')}
             breaks={canHaveBreaks(draft) && draft.pause.allowed}
-          />
-        )}
-
-        {step === 'breaks' && (
-          <PauseEditor
-            value={draft.pause}
-            onChange={(pause) => set({ pause })}
-            hasPassword={draft.protection.kind === 'password'}
           />
         )}
 
@@ -825,7 +816,6 @@ function Overview({
 }) {
   const sites = draft.targets.filter((x) => !x.allow);
   const exceptions = draft.targets.length - sites.length;
-  const p = draft.pause;
   const row = (id: StepId, value: preact.ComponentChildren) => (
     <div class="summary-row">
       <dt>{t(STEP_LABEL[id])}</dt>
@@ -872,9 +862,14 @@ function Overview({
         {row('when', t('editor.overview.conditions', { count: draft.policies.length }))}
         {row(
           'how',
-          draft.policies.length
-            ? [...new Set(draft.policies.map((x) => describeIntervention(x.intervention)))].join(' · ')
-            : t('editor.overview.openNormally'),
+          <span class="stack stack-xs">
+            <span>
+              {draft.policies.length
+                ? [...new Set(draft.policies.map((x) => describeIntervention(x.intervention)))].join(' · ')
+                : t('editor.overview.openNormally')}
+            </span>
+            {canHaveBreaks(draft) && <span>{pauseRulesSummary(draft.pause)}</span>}
+          </span>,
         )}
         {row(
           'protection',
@@ -883,18 +878,6 @@ function Overview({
             {protectionLabel(draft.protection)}
           </span>,
         )}
-        {canHaveBreaks(draft) &&
-          row(
-            'breaks',
-            !p.allowed
-              ? t('editor.overview.breaksOff')
-              : p.cost.type === 'none'
-                ? t('editor.overview.breaksFree', { duration: formatDuration(p.duration.minutes * 60) })
-                : t('editor.overview.breaksOn', {
-                    duration: formatDuration(p.duration.minutes * 60),
-                    cost: costLabel(p.cost),
-                  }),
-          )}
         {row(
           'details',
           <>

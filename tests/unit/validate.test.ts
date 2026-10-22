@@ -91,7 +91,7 @@ describe('rule validation', () => {
 
   it('a break of no minutes is an error', () => {
     const g = valid([{ intervention: BLOCK }]);
-    g.pause = { ...g.pause, allowed: true, duration: { mode: 'upTo', minutes: 0 } };
+    g.pause = { ...g.pause, allowed: true, maxMinutes: 0 };
     expect(keys(g)).toEqual(['validate.pauseDuration']);
     // A rule that never blocks has no breaks: their settings are not checked.
     const asks = valid([{ intervention: delayIntervention(30) }]);

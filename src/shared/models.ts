@@ -57,7 +57,7 @@ export interface GroupDecisionView {
   intervention: Intervention;
   source: 'policy' | 'session' | 'cooldown' | 'none';
   policies: PolicyView[];
-  pause: Pick<Grant, 'id' | 'until' | 'remaining' | 'scope'> | null;
+  pause: Pick<Grant, 'id' | 'until' | 'scope'> | null;
   pass: Pick<Grant, 'id' | 'until' | 'visit' | 'intention' | 'scope'> | null;
   pausable: boolean;
   cooldownUntil: number | null;
@@ -116,7 +116,7 @@ export interface GroupStatus {
   until: number | null;
   next: Intervention | null;
   budgets: BudgetView[];
-  pause: { until?: number; remaining?: number } | null;
+  pause: { until?: number } | null;
   /** The rule's protection now (after its date, Locked asks only for a reminder). */
   protection: Protection;
   /** Loosening refused right now (Locked or Permanent). */
@@ -165,42 +165,36 @@ export interface ConfigModel {
   browserPagesBlocked: boolean;
 }
 
+/** A break covers the rules of the page that allow breaks, whole, for up to `maxMinutes`. */
 export interface PauseOptions {
   available: boolean;
   /** i18n key explaining why a pause is not available. */
   reason?: string;
   groups: { id: string; name: string }[];
-  scopes: PauseScope[];
-  duration: { mode: 'fixed' | 'upTo' | 'choices'; minutes: number; choices?: number[] };
+  /** The longest the break can last (or, extending, the minutes it can still be extended by). */
+  maxMinutes: number;
   /** Cost of every group covered, all of them to pay (strictest first); empty when free. */
   costs: Cost[];
-  reasonMode: 'none' | 'optional' | 'required';
   remainingCount: number | null;
   remainingMinutes: number | null;
   /** Periods of the limits the remaining breaks and minutes come from ("3 breaks left today"). */
   countPeriod: Period | null;
   minutesPeriod: Period | null;
-  metered: boolean;
-  site: string | null;
   url: string | null;
   /** Window context the options were computed for (groups limited to private/normal windows). */
   incognito: boolean | null;
-  /** Options of the "all" scope, which also covers the groups that are not on this page. */
-  all?: PauseOptions;
   /**
    * A break already lets the page through: these are the options of extending it (no break is
    * counted), with the minutes it has been taken for so far.
    */
-  extend?: { grantId: string; scope: PauseScope; minutes: number };
+  extend?: { grantId: string; minutes: number };
 }
 
 export interface PauseRequest {
   url?: string;
   incognito?: boolean | null;
   groupId?: string;
-  scope: PauseScope;
   minutes: number;
-  reason?: string;
   /** The running break to extend. */
   extend?: string;
 }
@@ -215,7 +209,6 @@ export type StepView =
   | { type: 'rulePassword'; names: string[] }
   /** The code of the partner of the rules named. */
   | { type: 'partner'; names: string[] }
-  | { type: 'reason'; required: boolean }
   | {
       type: 'intention';
       choices: number[];

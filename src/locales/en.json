@@ -610,11 +610,8 @@
   "editor.advancedModeHint": {
     "message": "Turn on Advanced mode in Settings for more options."
   },
-  "editor.breaks.title": {
-    "message": "Can you take a break from this rule?"
-  },
-  "editor.breaksHelp": {
-    "message": "A break opens this rule’s blocked sites for a few minutes. Choose what it costs and how many you get."
+  "editor.breaks": {
+    "message": "Breaks"
   },
   "editor.change": {
     "message": "Change"
@@ -697,9 +694,6 @@
   "editor.namePlaceholder": {
     "message": "Name this rule, e.g. Social media"
   },
-  "editor.next.breaks": {
-    "message": "Next: breaks"
-  },
   "editor.next.details": {
     "message": "Next: details"
   },
@@ -720,15 +714,6 @@
   },
   "editor.otherwise": {
     "message": "At other times the sites open normally, and only their time is counted."
-  },
-  "editor.overview.breaksFree": {
-    "message": "Up to {duration} each, free."
-  },
-  "editor.overview.breaksOff": {
-    "message": "Not allowed"
-  },
-  "editor.overview.breaksOn": {
-    "message": "Up to {duration} each. Cost: {cost}."
   },
   "editor.overview.conditions": {
     "message": "{count, plural, =0 {No conditions yet} one {# condition} other {# conditions}}"
@@ -801,9 +786,6 @@
   },
   "editor.sitesHint": {
     "message": "Type or paste sites. youtube.com also covers m.youtube.com."
-  },
-  "editor.step.breaks": {
-    "message": "Breaks"
   },
   "editor.step.changed": {
     "message": "changed"
@@ -1403,7 +1385,7 @@
     "message": "Firefox for Android"
   },
   "help.pauses.p1": {
-    "message": "A break opens blocked pages for a few minutes. Only Block has breaks: Ask first, Wait and Challenge have their own way in. Each rule that blocks decides whether breaks are allowed, how long they last, how many you get and what they cost."
+    "message": "A break opens all the sites of a rule for a while. Only Block has breaks: Ask first, Wait and Challenge have their own way in. In What happens, each rule that blocks decides whether breaks are allowed, how long they can last, how many you get and what they cost."
   },
   "help.pauses.p2": {
     "message": "A break ends by itself. You can end it early, or extend it from the popup without using another break."
@@ -1806,7 +1788,7 @@
     "message": "{count, plural, one {break} other {breaks}} ({minutes} min)"
   },
   "insights.pausesLog": {
-    "message": "Breaks and reasons"
+    "message": "Breaks"
   },
   "insights.period": {
     "message": "Period"
@@ -2209,9 +2191,6 @@
   "level.locked.desc": {
     "message": "Not possible until a date you choose."
   },
-  "level.locked.pauses": {
-    "message": "No breaks."
-  },
   "level.locked.tag": {
     "message": "Locked until {when}"
   },
@@ -2224,12 +2203,6 @@
   "level.partner.desc": {
     "message": "A code from someone you trust."
   },
-  "level.partner.pauses": {
-    "message": "Breaks cost a confirmation, or the partner’s code if you choose. A few per day."
-  },
-  "level.partner.pausesCode": {
-    "message": "Breaks also need the partner’s code. A few per day."
-  },
   "level.partner.weaken": {
     "message": "Loosening the rule needs a code from your partner’s phone. Each code works once."
   },
@@ -2238,9 +2211,6 @@
   },
   "level.password.desc": {
     "message": "The rule’s password."
-  },
-  "level.password.pauses": {
-    "message": "Breaks cost the password. A few per day."
   },
   "level.password.weaken": {
     "message": "Loosening the rule needs its password. Give it to someone you trust, or keep it out of easy reach."
@@ -2251,9 +2221,6 @@
   "level.permanent.desc": {
     "message": "Not possible, with no end date."
   },
-  "level.permanent.pauses": {
-    "message": "No breaks."
-  },
   "level.permanent.weaken": {
     "message": "No loosening, with no end date. Only the emergency exit removes this protection."
   },
@@ -2263,9 +2230,6 @@
   "level.reminder.desc": {
     "message": "Just a confirmation."
   },
-  "level.reminder.pauses": {
-    "message": "Breaks cost a confirmation."
-  },
   "level.reminder.weaken": {
     "message": "Loosening the rule asks for a confirmation."
   },
@@ -2274,9 +2238,6 @@
   },
   "level.wait.desc": {
     "message": "A wait of your choice."
-  },
-  "level.wait.pauses": {
-    "message": "Breaks cost the same wait, or typing characters if the wait is long. A few per day."
   },
   "level.wait.tag": {
     "message": "Wait · {duration}"
@@ -2479,8 +2440,9 @@
   "pause.cost": {
     "message": "Cost"
   },
-  "pause.duration": {
-    "message": "For how long"
+  "pause.covers": {
+    "message": "Opens all the sites of {rules} for {duration}. You can end it sooner.",
+    "description": "rules: the names of the rules, e.g. \"Social and News\"; duration: e.g. \"15 min\""
   },
   "pause.error.duration": {
     "message": "This length is not allowed."
@@ -2488,23 +2450,14 @@
   "pause.error.ended": {
     "message": "This break has already ended."
   },
-  "pause.error.scope": {
-    "message": "This kind of break is not allowed."
-  },
   "pause.extend": {
     "message": "Extend the break"
   },
-  "pause.extendBy": {
-    "message": "How much longer"
-  },
   "pause.extendHelp": {
-    "message": "On a break for {scope} ({minutes} min so far). Extending it does not use another break."
+    "message": "Adds {duration} to your break ({minutes} min so far), without using another break."
   },
   "pause.extended": {
     "message": "Break extended by {minutes} minutes."
-  },
-  "pause.for": {
-    "message": "Break for"
   },
   "pause.left.both": {
     "message": "{count, plural, =0 {no breaks} one {# break} other {# breaks}} left {period}, {minutes} min in total",
@@ -2518,17 +2471,8 @@
     "message": "{minutes} min of breaks left {period}",
     "description": "period: pause.period.*, e.g. \"30 min of breaks left this week\""
   },
-  "pause.leftMetered": {
-    "message": "{duration} left on the site"
-  },
   "pause.leftUntil": {
     "message": "Until {when}"
-  },
-  "pause.max": {
-    "message": "at most {duration}"
-  },
-  "pause.metered": {
-    "message": "Minutes are used only while you are on the site."
   },
   "pause.period.day": {
     "message": "today"
@@ -2544,30 +2488,6 @@
   },
   "pause.period.week": {
     "message": "this week"
-  },
-  "pause.reasonOptional": {
-    "message": "Reason (optional)"
-  },
-  "pause.reasonRequired": {
-    "message": "Reason"
-  },
-  "pause.scope.all": {
-    "message": "everything"
-  },
-  "pause.scope.group": {
-    "message": "the whole rule"
-  },
-  "pause.scope.groupNamed": {
-    "message": "all of {group}"
-  },
-  "pause.scope.page": {
-    "message": "this page"
-  },
-  "pause.scope.site": {
-    "message": "this site"
-  },
-  "pause.scope.siteNamed": {
-    "message": "{site}"
   },
   "pause.start": {
     "message": "Start the break"
@@ -2619,10 +2539,10 @@
     "message": "Breaks are not available during this focus session."
   },
   "pauseRules.allowed": {
-    "message": "Breaks allowed"
+    "message": "Allow breaks"
   },
-  "pauseRules.choices": {
-    "message": "Durations (minutes)"
+  "pauseRules.allowedHelp": {
+    "message": "A break opens all the rule’s sites for a while."
   },
   "pauseRules.costKind.confirm": {
     "message": "Confirmation"
@@ -2645,6 +2565,9 @@
   "pauseRules.costKind.random": {
     "message": "Random characters"
   },
+  "pauseRules.durationHelp": {
+    "message": "A break lasts this long unless you end it sooner."
+  },
   "pauseRules.duringSessions": {
     "message": "Also during focus sessions"
   },
@@ -2654,23 +2577,8 @@
   "pauseRules.limitMinutes": {
     "message": "At most this much time"
   },
-  "pauseRules.metered": {
-    "message": "Count only time on the site"
-  },
-  "pauseRules.meteredHelp": {
-    "message": "Time spent elsewhere does not use up the break."
-  },
   "pauseRules.minutes": {
-    "message": "How long"
-  },
-  "pauseRules.mode.choices": {
-    "message": "Choose from a list"
-  },
-  "pauseRules.mode.fixed": {
-    "message": "Fixed"
-  },
-  "pauseRules.mode.upTo": {
-    "message": "Up to a maximum"
+    "message": "At most"
   },
   "pauseRules.noPassword": {
     "message": "This rule has no password, so a break asks you to type 32 random characters instead."
@@ -2684,20 +2592,15 @@
   "pauseRules.q.limit": {
     "message": "How many breaks?"
   },
-  "pauseRules.q.reason": {
-    "message": "Ask for a reason?"
+  "pauseRules.summary.free": {
+    "message": "Breaks: up to {duration} each, free."
   },
-  "pauseRules.q.scopes": {
-    "message": "What can a break cover?"
+  "pauseRules.summary.off": {
+    "message": "No breaks."
   },
-  "pauseRules.reason.none": {
-    "message": "Not asked"
-  },
-  "pauseRules.reason.optional": {
-    "message": "Optional"
-  },
-  "pauseRules.reason.required": {
-    "message": "Required"
+  "pauseRules.summary.on": {
+    "message": "Breaks: up to {duration} each. Cost: {cost}.",
+    "description": "cost: cost.*, e.g. \"a 30 s wait\""
   },
   "pending.applied": {
     "message": "Change applied."
@@ -3672,9 +3575,6 @@
   "status.paused": {
     "message": "On a break"
   },
-  "status.pausedLeft": {
-    "message": "On a break · {duration} left"
-  },
   "status.pausedUntil": {
     "message": "On a break until {when}"
   },
@@ -4006,9 +3906,6 @@
   "ticket.error.partnerCode": {
     "message": "This code is wrong or already used. Ask your partner for the current one."
   },
-  "ticket.error.reasonRequired": {
-    "message": "Give a reason."
-  },
   "ticket.error.tooMany": {
     "message": "Too many attempts. Try again in a few seconds."
   },
@@ -4044,15 +3941,6 @@
   },
   "ticket.phrase.input": {
     "message": "Sentence"
-  },
-  "ticket.reason.input": {
-    "message": "Reason"
-  },
-  "ticket.reason.optional": {
-    "message": "Why do you want this? (optional)"
-  },
-  "ticket.reason.required": {
-    "message": "Why do you want this?"
   },
   "ticket.rulePassword.body": {
     "message": "{count, plural, one {Type the password of the rule {names}.} other {Type the password shared by the rules {names}.}}"
@@ -4557,18 +4445,6 @@
     "message": "Allowed for at most",
     "description": "Followed by a number and a unit: the longest time the person can choose after the question."
   },
-  "wizard.how.breaks": {
-    "message": "Allow breaks"
-  },
-  "wizard.how.breaksOff": {
-    "message": "No breaks from the block page."
-  },
-  "wizard.how.breaksOn": {
-    "message": "You can take a short break from the block page. Cost: {cost}."
-  },
-  "wizard.how.breaksOnLater": {
-    "message": "You can take a short break from the block page. Its cost depends on the protection you choose next."
-  },
   "wizard.how.intro": {
     "message": "From gentlest to strongest. You can change it later."
   },
@@ -4619,17 +4495,11 @@
   "wizard.resumed": {
     "message": "You are continuing the rule you started earlier."
   },
-  "wizard.review.defaults": {
-    "message": "Breaks cost: {cost}. Protection: {level}."
-  },
   "wizard.review.intro": {
     "message": "Give your rule a name and, if you like, a reason to see when it stops you."
   },
   "wizard.review.later": {
     "message": "You can add exceptions and more conditions later."
-  },
-  "wizard.review.noBreaks": {
-    "message": "No breaks. Protection: {level}."
   },
   "wizard.review.noteHelp": {
     "message": "Optional. Shown when the rule stops you."
