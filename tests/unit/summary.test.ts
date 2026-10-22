@@ -1,8 +1,8 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { planSentence, sitesPhrase } from '../../src/dashboard/plan';
+import { planSentence, rulePlan, sitesPhrase } from '../../src/dashboard/plan';
 import type { ChangeUnit } from '../../src/engine/changes';
-import { delayIntervention } from '../../src/engine/defaults';
-import type { Intervention, Policy, TimeWindow } from '../../src/engine/types';
+import { defaultIntervention, delayIntervention, withCountingGap } from '../../src/engine/defaults';
+import type { Intervention, Period, Policy, TimeWindow } from '../../src/engine/types';
 
 import { setFormatPrefs } from '../../src/shared/format';
 import {
@@ -80,7 +80,9 @@ describe('conditions in words', () => {
     expect(describeIntervention(delayIntervention(20))).toBe('Wait 20 s');
     const random = { ...(delayIntervention(20) as DelayIntervention), randomTo: 40, hideCountdown: true };
     expect(describeIntervention(random)).toBe('Wait 20–40 s (countdown hidden)');
-    expect(describeIntervention({ type: 'ask', choices: [5], maxMinutes: 15 })).toBe(
+    const growing = { ...(delayIntervention(20) as DelayIntervention), increase: 10 };
+    expect(describeIntervention(growing)).toBe('Wait 20 s, 10 s more each time');
+    expect(describeIntervention({ type: 'ask', maxMinutes: 15, minReasonLength: 1 })).toBe(
       'Ask first (up to 15 min)',
     );
     expect(
@@ -91,8 +93,7 @@ describe('conditions in words', () => {
         grant: { scope: 'site', mode: 'visit' },
       }),
     ).toBe('Type 30 random characters');
-    expect(describeIntervention({ type: 'filter', filter: 'blur', mute: true })).toBe('Blur, muted');
-    expect(describeIntervention({ type: 'filter', filter: 'none', mute: true })).toBe('Mute the tab');
+    expect(describeIntervention({ type: 'filter', filter: 'blur' })).toBe('Blur');
     expect(describeIntervention({ type: 'redirect', url: 'https://x.test' })).toBe('Go to https://x.test');
     expect(describeIntervention({ type: 'allow' })).toBe('Allowed, time not counted');
     expect(describeIntervention(BLOCK)).toBe('Block');
@@ -106,11 +107,11 @@ describe('conditions in words', () => {
     };
     expect(summarizeGroup(group('A', ['a.test'], [limit]))).toEqual([
       'Mon–Fri 09:00–17:00, after 10 min per day → Block',
-      'When no condition applies, the sites open normally: WebHandbrake only keeps track of the time spent on them.',
+      'At other times the sites open normally, and only their time is counted.',
     ]);
     expect(summarizeGroup(group('A', ['a.test'], [{ intervention: BLOCK }]))).toEqual(['Always → Block']);
     expect(summarizeGroup(group('A', ['a.test']))).toEqual([
-      'No conditions yet: the sites open normally and WebHandbrake only keeps track of the time spent on them.',
+      'No conditions yet: the sites open normally and only their time is counted.',
     ]);
   });
 
@@ -151,7 +152,7 @@ describe('changes in words', () => {
   });
 });
 
-describe('the plan of a new rule', () => {
+describe('the plan of a rule', () => {
   it('names the sites, every website, or how many', () => {
     expect(sitesPhrase([target('a.test'), target('b.test'), target('c.test'), target('+a.test/x')])).toBe(
       'a.test, b.test and 1 more site',
@@ -161,34 +162,79 @@ describe('the plan of a new rule', () => {
   });
 
   it('one if-then sentence: when, then what happens', () => {
-    expect(planSentence('always', 'block', 'a.test', [], 0)).toBe(
+    expect(planSentence('always', BLOCK, 'a.test', [], 0)).toBe(
       'Every time you open a.test, WebHandbrake blocks the page.',
     );
-    expect(planSentence('schedule', 'track', 'a.test', [office], 0)).toBe(
+    expect(planSentence('schedule', { type: 'track' }, 'a.test', [office], 0)).toBe(
       'When you open a.test (Mon–Fri 09:00–17:00), WebHandbrake only counts the time; outside these times it counts nothing.',
     );
-    expect(planSentence('daily', { type: 'ask', choices: [5], maxMinutes: 10 }, 'a.test', [], 30)).toBe(
-      'After 30 min a day on a.test, WebHandbrake first asks what you want to do, for 10 min at most.',
+    // A random wait or one longer each time says so.
+    const wait = delayIntervention(20) as Extract<Intervention, { type: 'delay' }>;
+    expect(planSentence('always', { ...wait, randomTo: 40 }, 'a.test', [], 0)).toBe(
+      'Every time you open a.test, WebHandbrake makes you wait between 20 and 40 seconds.',
+    );
+    expect(planSentence('always', { ...wait, increase: 5 }, 'a.test', [], 0)).toBe(
+      'Every time you open a.test, WebHandbrake makes you wait 20 seconds, 5 more each time you go in that day.',
     );
     // The wait on the page is said too.
-    expect(planSentence('always', 'ask', 'a.test', [], 0)).toBe(
-      'Every time you open a.test, WebHandbrake first asks what you want to do, for 15 min at most, and lets you go in after waiting 10 seconds.',
+    expect(planSentence('daily', { type: 'ask', maxMinutes: 10, minReasonLength: 1 }, 'a.test', [], 30)).toBe(
+      'After 30 min a day on a.test, WebHandbrake first asks what you want to do (for 10 min at most), then lets you in after 10 seconds.',
     );
-    expect(planSentence('daily', 'block', 'a.test', [], 10, 60)).toBe(
+    expect(planSentence('always', defaultIntervention('ask'), 'a.test', [], 0)).toBe(
+      'Every time you open a.test, WebHandbrake first asks what you want to do (for 15 min at most), then lets you in after 10 seconds.',
+    );
+    expect(planSentence('daily', BLOCK, 'a.test', [], 10, 60)).toBe(
       'After 10 min an hour on a.test, WebHandbrake blocks the page.',
     );
-    expect(planSentence('daily', 'block', 'a.test', [], 120, 3 * 1440)).toBe(
+    expect(planSentence('daily', BLOCK, 'a.test', [], 120, 3 * 1440)).toBe(
       'After 2 h every 3 days on a.test, WebHandbrake blocks the page.',
     );
-    expect(planSentence('daily', 'block', 'a.test', [], 20, 180)).toBe(
+    expect(planSentence('daily', BLOCK, 'a.test', [], 20, 180)).toBe(
       'After 20 min every 3 h on a.test, WebHandbrake blocks the page.',
     );
     // With several sites, whether they share the time allowed or each has its own.
-    expect(planSentence('daily', 'block', 'a.test, b.test', [], 30, 1440, 'shared')).toBe(
+    expect(planSentence('daily', BLOCK, 'a.test, b.test', [], 30, 1440, 'shared')).toBe(
       'After 30 min a day in total on a.test, b.test, WebHandbrake blocks the page.',
     );
-    expect(planSentence('daily', 'block', 'a.test, b.test', [], 30, 1440, 'each')).toBe(
+    expect(planSentence('daily', BLOCK, 'a.test, b.test', [], 30, 1440, 'each')).toBe(
       'After 30 min a day on each of a.test, b.test, WebHandbrake blocks the page.',
     );
+  });
+
+  it('is said of a rule whose condition the first questions describe', () => {
+    const during = { schedule: { mode: 'during' as const, windows: [office] } };
+    const limit = (period: Period) => ({
+      budget: { type: 'time' as const, minutes: 30, period },
+    });
+    expect(rulePlan(group('A', ['a.test'], [{ intervention: BLOCK }]))).toBe(
+      'Every time you open a.test, WebHandbrake blocks the page.',
+    );
+    expect(rulePlan(group('A', ['a.test'], [{ ...during, intervention: BLOCK }]))).toBe(
+      'When you open a.test (Mon–Fri 09:00–17:00), WebHandbrake blocks the page.',
+    );
+    expect(
+      rulePlan(group('A', ['a.test', 'b.test'], [{ ...limit({ kind: 'days', n: 2 }), intervention: BLOCK }])),
+    ).toBe('After 30 min every 2 days in total on a.test, b.test, WebHandbrake blocks the page.');
+    // Counting at certain times leaves the other times alone: with that last condition only.
+    const counting = group('A', ['a.test'], [{ ...during, intervention: { type: 'track' } }]);
+    expect(rulePlan(counting)).toBeNull();
+    expect(rulePlan({ ...counting, policies: withCountingGap(counting.policies) })).toMatch(
+      /outside these times it counts nothing/,
+    );
+    // Anything else is listed condition by condition.
+    for (const policies of [
+      [{ schedule: { mode: 'outside' as const, windows: [office] }, intervention: BLOCK }],
+      [{ ...limit({ kind: 'week' }), intervention: BLOCK }],
+      [
+        {
+          budget: { type: 'visits' as const, count: 3, period: { kind: 'day' as const } },
+          intervention: BLOCK,
+        },
+      ],
+      [{ ...during, ...limit({ kind: 'day' }), intervention: BLOCK }],
+      [{ ...during, intervention: BLOCK }, { intervention: delayIntervention(10) }],
+      [],
+    ])
+      expect(rulePlan(group('A', ['a.test'], policies))).toBeNull();
   });
 });

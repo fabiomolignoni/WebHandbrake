@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TEMPLATES } from '../../src/data/templates';
-import { targetKey, targetsFromLines } from '../../src/engine/defaults';
+import { addTemplate, sortTargets, targetKey, targetsFromLines } from '../../src/engine/defaults';
 import { compileDnr, type DnrRuleData } from '../../src/engine/dnr';
 import {
   compilePattern,
@@ -9,6 +9,7 @@ import {
   parseTargetLine,
   representativeUrl,
 } from '../../src/engine/patterns';
+import type { Target } from '../../src/engine/types';
 import { parseUrl } from '../../src/engine/url';
 import { at, BLOCK, config, ctx, group } from './helpers';
 
@@ -87,6 +88,23 @@ describe('the ready-made lists', () => {
         expect(seen.get(line), line).toBeUndefined();
         seen.set(line, tpl.id);
       }
+  });
+
+  it('come into a rule sorted, also among sites already sorted, and after sites in another order', () => {
+    const lines = (targets: Target[]) => targets.map(targetKey);
+    const [social, video] = ['social', 'video'].map((id) => TEMPLATES.find((x) => x.id === id)!);
+    const one = addTemplate([], social.entries);
+    expect(lines(one)).toEqual(lines(sortTargets(one)));
+    expect(lines(one)).not.toEqual(social.entries);
+    const two = addTemplate(one, video.entries);
+    expect(two).toHaveLength(social.entries.length + video.entries.length);
+    expect(lines(two)).toEqual(lines(sortTargets(two)));
+    // A site already there is not added again.
+    expect(addTemplate(targetsFromLines(['youtube.com']), video.entries)).toHaveLength(video.entries.length);
+    const mine = targetsFromLines(['zzz.example', 'aaa.example']);
+    const after = addTemplate(mine, video.entries);
+    expect(lines(after).slice(0, 2)).toEqual(['zzz.example', 'aaa.example']);
+    expect(lines(after.slice(2))).toEqual(lines(sortTargets(after.slice(2))));
   });
 
   it('need neither the page script on every site nor a site name with *', () => {

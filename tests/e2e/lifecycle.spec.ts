@@ -121,7 +121,7 @@ test('diagnostics show the filters and recent decisions; the report hides addres
   expect(d.rules.limits.regex).toBeGreaterThan(0);
   expect(d.permissions.hostAccess).toBe(true);
   const p = await h.page('dashboard.html#/settings/diagnostics');
-  await p.role('heading', 'Browser blocking filters').expectVisible();
+  await p.role('heading', 'Blocking filters').expectVisible();
   await p.role('heading', 'Recent decisions').expectVisible();
   await p.text(/blocked\.test\/secret-path/).expectVisible();
   const report = (await h.rpc('diag.report', { includeUrls: false })).text;
@@ -272,7 +272,7 @@ test('without access to the sites, blocking falls back to network blocks and say
   await p.expectIntervention(true, 8000);
   expect(h.server.hits('blocked.test')).toEqual([]);
   const popup = await h.popup(p);
-  await popup.text('Access to all sites is missing.').expectVisible();
+  await popup.text('No access to websites.').expectVisible();
   expect((await h.state()).state.tamper.map((e: any) => e.kind)).toContain('host-permission');
 });
 

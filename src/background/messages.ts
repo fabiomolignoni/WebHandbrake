@@ -42,7 +42,7 @@ import { deleteStats, exportStats, getStats } from './stats';
 import { store } from './store';
 import { TEST_CONTENT_METHODS, testHandlers } from './testing';
 import { accessibleAlternative, answerTicket, cancelTicket } from './tickets';
-import { configModel, overviewModel, popupModel } from './views';
+import { configModel, dismissWarning, overviewModel, popupModel } from './views';
 
 type Handler<M extends Method> = (
   args: Api[M]['req'],
@@ -116,6 +116,7 @@ const handlers: { [M in Method]: Handler<M> } = {
   'diag.report': async (a) => ({ text: await diagReport(a.includeUrls) }),
   'diag.clearLog': () => clearLog(),
   'permissions.changed': () => permissionsChanged(),
+  'warning.dismiss': (a) => dismissWarning(a.kind),
   'onboarding.done': async () => {
     const next = clone(store.config);
     next.settings.onboarded = true;

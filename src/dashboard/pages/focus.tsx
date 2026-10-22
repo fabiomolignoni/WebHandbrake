@@ -287,7 +287,7 @@ export function QuickSession({
           ) : (
             <div class="stack stack-sm">
               <p class="help">{t('focus.allowlistHelp')}</p>
-              <TargetsEditor targets={allow} onChange={setAllow} advanced={false} exceptions={false} />
+              <TargetsEditor targets={allow} onChange={setAllow} />
             </div>
           )}
           <div class="field">
@@ -305,12 +305,7 @@ export function QuickSession({
             />
           </div>
           <div class="settings-list">
-            <Toggle
-              checked={noPauses}
-              onChange={setNoPauses}
-              label={t('focus.noPauses')}
-              help={t('focus.noPausesHelp')}
-            />
+            <Toggle checked={noPauses} onChange={setNoPauses} label={t('focus.noPauses')} />
             <Toggle
               checked={locked}
               onChange={setLocked}

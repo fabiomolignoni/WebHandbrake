@@ -150,12 +150,6 @@ function General() {
       <div class="card stack">
         <h2>{t('settings.mode')}</h2>
         <Toggle
-          checked={s.advanced}
-          onChange={(v) => void save((x) => (x.advanced = v))}
-          label={t('settings.advanced')}
-          help={t('settings.advancedHelp')}
-        />
-        <Toggle
           checked={s.contextMenu}
           onChange={(v) => void save((x) => (x.contextMenu = v))}
           label={t('settings.contextMenu')}
@@ -398,7 +392,7 @@ function TimeSettings() {
           label={t('settings.allSites')}
           help={t('settings.allSitesHelp')}
         />
-        <Field label={t('settings.retention')} help={t('settings.retentionHelp', { days: BUDGET_KEEP_DAYS })}>
+        <Field label={t('settings.retention')} help={t('settings.retentionHelp')}>
           {() => (
             <NumberInput
               commitOnBlur
@@ -748,9 +742,7 @@ function DataSettings() {
       </div>
       <div class="card stack">
         <h2>{t('data.backups')}</h2>
-        <p class="help">
-          {t('data.backupsHelp', { recent: RECENT_SNAPSHOTS, daily: DAILY_SNAPSHOTS, hours })}
-        </p>
+        <p class="help">{t('data.backupsHelp', { hours })}</p>
         {!backups ? (
           <Spinner />
         ) : backups.length === 0 ? (

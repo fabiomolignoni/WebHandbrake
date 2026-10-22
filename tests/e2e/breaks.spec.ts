@@ -1,5 +1,5 @@
 /**
- * Breaks in a real browser: scopes, durations, costs verified in the background,
+ * Breaks in a real browser: what they cover, durations, costs verified in the background,
  * budgets, expiry with immediate re-application, from the block page and the popup.
  */
 
@@ -21,7 +21,7 @@ test('a break unblocks; ending it re-blocks the open tabs at once', async ({ h }
     c.groups = [group('News', ['news.test'], [policy(BLOCK)], { pause: pause() })];
   });
   const p = await expectBlocked(h, 'http://news.test/article');
-  await startBreak(h, { url: 'http://news.test/article', scope: 'site', minutes: 5 });
+  await startBreak(h, { url: 'http://news.test/article', minutes: 5 });
   // The intervention page notices and offers to reopen.
   await p.button('Reopen the page').click();
   await p.expectReal('news.test/article');
@@ -37,39 +37,24 @@ test('a break ends by itself and the page is restricted again', async ({ h }) =>
   await h.configure((c) => {
     c.groups = [group('News', ['news.test'], [policy(BLOCK)], { pause: pause() })];
   });
-  await startBreak(h, { url: 'http://news.test/', scope: 'site', minutes: 1 });
+  await startBreak(h, { url: 'http://news.test/', minutes: 1 });
   const p = await expectAllowed(h, 'http://news.test/');
   await h.clock.advance(61_000);
   await p.expectIntervention(true, 5000);
 });
 
-test('a break for this page, this site, the rule or everything', async ({ h }) => {
+test('a break opens every site of the rule, and only of that rule', async ({ h }) => {
   await h.configure((c) => {
     c.groups = [
       group('News', ['news.test', 'paper.test'], [policy(BLOCK)], { pause: pause() }),
       group('Games', ['games.test'], [policy(BLOCK)], { pause: pause() }),
-      group('Strict', ['strict.test'], [policy(BLOCK)], { pause: pause({ allowed: false }) }),
     ];
   });
-  await startBreak(h, { url: 'http://news.test/a', scope: 'page', minutes: 5 });
+  await startBreak(h, { url: 'http://news.test/a', minutes: 5 });
   await expectAllowed(h, 'http://news.test/a');
-  await expectBlocked(h, 'http://news.test/b');
-  await h.rpc('pause.cancel', { all: true });
-
-  await startBreak(h, { url: 'http://news.test/a', scope: 'site', minutes: 5 });
   await expectAllowed(h, 'http://www.news.test/b');
-  await expectBlocked(h, 'http://paper.test/');
-  await h.rpc('pause.cancel', { all: true });
-
-  await startBreak(h, { url: 'http://news.test/a', scope: 'group', minutes: 5 });
   await expectAllowed(h, 'http://paper.test/');
   await expectBlocked(h, 'http://games.test/');
-  await h.rpc('pause.cancel', { all: true });
-
-  await startBreak(h, { url: 'http://news.test/a', scope: 'all', minutes: 5 });
-  await expectAllowed(h, 'http://games.test/');
-  // A rule that allows no breaks is not covered by a break of everything.
-  await expectBlocked(h, 'http://strict.test/');
 });
 
 test('breaks in progress on Today fit their card at 1280 and 360 px (regression)', async ({
@@ -79,19 +64,18 @@ test('breaks in progress on Today fit their card at 1280 and 360 px (regression)
   await h.configure((c) => {
     c.groups = [
       group('News', ['news.test'], [policy(BLOCK)], { pause: pause() }),
-      group('Social media and chats', ['a-very-long-subdomain.social-network.test'], [policy(BLOCK)], {
-        pause: pause(),
-      }),
+      group(
+        'Social media, chats, forums and every other place where time disappears',
+        ['a-very-long-subdomain.social-network.test'],
+        [policy(BLOCK)],
+        { pause: pause() },
+      ),
       group('Games', ['games.test'], [policy(BLOCK)], { pause: pause() }),
     ];
   });
-  await startBreak(h, { url: 'http://news.test/', scope: 'site', minutes: 5 });
-  await startBreak(h, {
-    url: 'http://a-very-long-subdomain.social-network.test/a/long/path',
-    scope: 'page',
-    minutes: 5,
-  });
-  await startBreak(h, { url: 'http://games.test/', scope: 'all', minutes: 10 });
+  await startBreak(h, { url: 'http://news.test/', minutes: 5 });
+  await startBreak(h, { url: 'http://a-very-long-subdomain.social-network.test/a/long/path', minutes: 5 });
+  await startBreak(h, { url: 'http://games.test/', minutes: 10 });
   expect((await h.rpc('overview.get')).pauses).toHaveLength(3);
   const today = await h.page('dashboard.html#/today');
   for (const width of [1280, 360]) {
@@ -116,20 +100,19 @@ test('a break from the block page, with its cost, returns to the page', async ({
   await h.configure((c) => {
     c.groups = [
       group('News', ['news.test'], [policy(BLOCK)], {
-        pause: pause({
-          cost: { type: 'confirm' },
-          duration: { mode: 'choices', minutes: 10, choices: [5, 10] },
-        }),
+        pause: pause({ cost: { type: 'confirm' }, maxMinutes: 10 }),
       }),
     ];
   });
   const p = await expectBlocked(h, 'http://news.test/story');
   await p.get('.break-offer').expectText('a confirmation');
   await p.button('Take a break').click();
-  await p.role('radio', 'news.test').expectChecked();
-  await p.role('radio', '10 min').click();
+  // It lasts the longest a break can, unless ended sooner: no length and no reason are asked.
+  await p.text('Opens all the sites of News for 10 min. You can end it sooner.').expectVisible();
+  await p.get({ role: 'textbox', within: 'dialog' }).expectCount(0);
+  await p.get({ role: 'spinbutton', within: 'dialog' }).expectCount(0);
   await p.button('Start the break').click();
-  await p.text('Do you really want to go ahead?').expectVisible();
+  await p.text('Do you want to go ahead?').expectVisible();
   await p.button('Yes, continue').click();
   await p.expectReal('news.test/story');
   const g = (await h.rpc('overview.get')).pauses[0];
@@ -144,7 +127,7 @@ test('a break that costs a wait cannot be taken before the wait is over', async 
       }),
     ];
   });
-  const r = await h.rpc('pause.start', { url: 'http://news.test/', scope: 'site', minutes: 5 });
+  const r = await h.rpc('pause.start', { url: 'http://news.test/', minutes: 5 });
   expect(r.ticket.step.type).toBe('wait');
   expect(await h.rpc('ticket.answer', { id: r.ticket.id, answer: '' })).toMatchObject({
     status: 'error',
@@ -170,7 +153,7 @@ test("a break that costs the rule's password", async ({ h }) => {
     ];
   });
   // Without the Password protection, the rule's break costs a long code instead.
-  const code = await h.rpc('pause.start', { url: 'http://news.test/', scope: 'site', minutes: 5 });
+  const code = await h.rpc('pause.start', { url: 'http://news.test/', minutes: 5 });
   expect(code.ticket.step).toMatchObject({ type: 'text', length: 32 });
   await h.rpc('ticket.cancel', { id: code.ticket.id });
   const { hash } = await h.rpc('password.hash', { password: 'correct horse' });
@@ -178,7 +161,7 @@ test("a break that costs the rule's password", async ({ h }) => {
   const set = await h.configure((c) => (c.groups[0].protection = { kind: 'password', hash }));
   expect(set.ticket).toBeNull();
   expect((await h.rpc('config.get')).config.groups[0].protection.hash).toMatch(/^pbkdf2-sha256\$/);
-  const r = await h.rpc('pause.start', { url: 'http://news.test/', scope: 'site', minutes: 5 });
+  const r = await h.rpc('pause.start', { url: 'http://news.test/', minutes: 5 });
   expect(r.ticket.step).toEqual({ type: 'rulePassword', names: ['News'] });
   expect(await h.rpc('ticket.answer', { id: r.ticket.id, answer: 'wrong' })).toMatchObject({
     status: 'error',
@@ -188,21 +171,23 @@ test("a break that costs the rule's password", async ({ h }) => {
   await expectAllowed(h, 'http://news.test/');
 });
 
-test('a required reason is asked and recorded', async ({ h }) => {
+test('a break ended sooner re-blocks the rule and counts only the minutes used', async ({ h }) => {
   await h.configure((c) => {
-    c.groups = [group('News', ['news.test'], [policy(BLOCK)], { pause: pause({ reason: 'required' }) })];
+    c.groups = [group('News', ['news.test'], [policy(BLOCK)], { pause: pause({ maxMinutes: 20 }) })];
   });
   const p = await expectBlocked(h, 'http://news.test/');
   await p.button('Take a break').click();
   await p.button('Start the break').click();
-  await p.text('Please give a reason.').expectVisible();
-  await p.label('Reason').fill('Checking the train strike');
-  await p.button('Start the break').click();
   await p.expectReal('news.test/');
-  const d = new Date();
+  await h.clock.advance(3 * 60_000);
+  const today = await h.page('dashboard.html#/today');
+  await today.button('End the break').click();
+  await p.expectIntervention(true, 5000);
+  const d = new Date(await h.clock.now());
   const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const stats = await h.rpc('stats.get', { from: day, to: day });
-  expect(stats.pauses[0].reason).toBe('Checking the train strike');
+  expect(stats.pauses[0]).toMatchObject({ minutes: 20, used: 3 });
+  expect(stats.pauses[0].reason).toBeUndefined();
   expect(stats.counters.pauses).toBe(1);
 });
 
@@ -220,13 +205,13 @@ test('breaks are limited per rule and overall', async ({ h }) => {
   const before = await expectBlocked(h, 'http://news.test/');
   await before.get('.break-cost').expectText('No cost');
   await before.get('.break-left').expectText('1 break left today');
-  await startBreak(h, { url: 'http://news.test/', scope: 'site', minutes: 1 });
+  await startBreak(h, { url: 'http://news.test/', minutes: 1 });
   await h.rpc('pause.cancel', { all: true });
   const again = await h.rpc('pause.options', { url: 'http://news.test/' });
   expect(again).toMatchObject({ available: false, reason: 'pause.unavailable.noneLeft' });
   const p = await expectBlocked(h, 'http://news.test/');
   await p.text('No breaks left for this period.').expectVisible();
-  await startBreak(h, { url: 'http://games.test/', scope: 'site', minutes: 1 });
+  await startBreak(h, { url: 'http://games.test/', minutes: 1 });
   await h.rpc('pause.cancel', { all: true });
   // The global limit (2 a day) is reached too.
   expect(await h.rpc('pause.options', { url: 'http://games.test/' })).toMatchObject({ available: false });
@@ -303,30 +288,23 @@ test('a break is visible in the popup, which can end it', async ({ h }) => {
   await site.expectIntervention(true, 5000);
 });
 
-test('during a break the popup extends it instead of taking another one (regression)', async ({ h }) => {
+test('during a break the popup offers to end it, not another break (regression)', async ({ h }) => {
   await h.configure((c) => {
     c.groups = [
       group('News', ['news.test'], [policy(BLOCK)], {
-        pause: pause({
-          duration: { mode: 'upTo', minutes: 15 },
-          limit: { count: 1, period: { kind: 'day' } },
-        }),
+        pause: pause({ maxMinutes: 15, limit: { count: 2, period: { kind: 'day' } } }),
       }),
     ];
   });
   const site = await expectBlocked(h, 'http://news.test/');
-  await startBreak(h, { url: 'http://news.test/', scope: 'site', minutes: 5 });
+  await startBreak(h, { url: 'http://news.test/', minutes: 15 });
   await site.button('Reopen the page').click();
   await site.expectReal('news.test/');
   const popup = await h.popup(site);
+  await popup.button('End the break').expectVisible();
   await popup.button(/Take a break/).expectCount(0);
-  await popup.button(/Extend the break/).click();
-  await popup.label('How much longer').fill('4');
-  await popup.button('Extend the break', { within: 'dialog' }).click();
-  await popup.text('Break extended by 4 minutes.').expectVisible();
-  const o = await h.rpc('overview.get');
-  expect(o.pauses).toHaveLength(1);
-  expect(o.pauses[0].minutes).toBe(9);
+  await popup.button(/Extend/).expectCount(0);
+  expect((await h.rpc('overview.get')).pauses).toHaveLength(1);
   const today = await h.page('dashboard.html#/today');
-  await today.text('news.test · News').expectVisible();
+  await today.get('[aria-labelledby="pauses-title"] strong').expectText('News');
 });

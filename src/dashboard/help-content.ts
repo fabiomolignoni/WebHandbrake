@@ -160,8 +160,16 @@ export const HELP_TOPICS: HelpTopic[] = [
     title: 'help.protection.title',
     blocks: [
       { p: 'help.protection.p1' },
+      { p: 'help.protection.p2' },
       {
-        p: 'help.protection.p2',
+        list: [
+          'help.protection.item1',
+          'help.protection.item2',
+          'help.protection.item3',
+          'help.protection.item4',
+          'help.protection.item5',
+          'help.protection.item6',
+        ],
         params: (f) => ({ minutes: f.waitDialogMinutes, confirmHours: f.confirmHours }),
       },
       { p: 'help.protection.p3' },

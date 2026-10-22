@@ -10,7 +10,7 @@ import {
   ruleProtection,
   unitGroups,
 } from '../../src/engine/changes';
-import { delayIntervention, newPolicy, pausePolicyFor } from '../../src/engine/defaults';
+import { defaultPause, delayIntervention, newGroup, newPolicy } from '../../src/engine/defaults';
 import type { Config, Group, Policy } from '../../src/engine/types';
 import { BLOCK, config, group, lockedUntil, PERMANENT, REMINDER, t, wait } from './helpers';
 
@@ -118,21 +118,21 @@ describe('the protection of a rule', () => {
     expect(withPw.groups[0].protection).toEqual(PW);
   });
 
-  it('Locked asks only for a reminder after its date, Permanent never ends; their breaks are none', () => {
+  it('Locked asks only for a reminder after its date, Permanent never ends', () => {
     const g = group('Bets', ['bet.test'], [{ intervention: BLOCK }], { protection: lockedUntil(1000) });
     expect(ruleProtection(g, 999)).toEqual(lockedUntil(1000));
     expect(ruleProtection(g, 1000)).toEqual(REMINDER);
     expect(ruleProtection({ ...g, protection: PERMANENT }, Number.MAX_SAFE_INTEGER)).toEqual(PERMANENT);
-    expect(pausePolicyFor(PERMANENT).allowed).toBe(false);
-    expect(pausePolicyFor(lockedUntil(1000)).allowed).toBe(false);
   });
 
-  it('the breaks of a new rule follow its protection', () => {
-    expect(pausePolicyFor(REMINDER).cost).toEqual({ type: 'confirm' });
-    expect(pausePolicyFor(wait(45)).cost).toEqual({ type: 'delay', seconds: 45 });
-    expect(pausePolicyFor(wait(3600)).cost).toMatchObject({ type: 'challenge' });
-    expect(pausePolicyFor(PW).cost).toEqual({ type: 'password' });
-    expect(pausePolicyFor(PARTNER).cost).toEqual({ type: 'confirm' });
+  it('a new rule has no breaks until they are turned on, whatever its protection', () => {
+    for (const protection of [REMINDER, wait(45), PW, PARTNER, PERMANENT])
+      expect(newGroup({ protection }).pause).toEqual(defaultPause());
+    expect(defaultPause()).toMatchObject({
+      allowed: false,
+      maxMinutes: 15,
+      cost: { type: 'delay', seconds: 30 },
+    });
   });
 });
 
@@ -196,11 +196,11 @@ describe('policy comparison', () => {
     ).toBe('weaken');
   });
 
-  it('a shorter wait before the intention question is a weakening', () => {
-    const ask = (seconds: number) =>
-      p({ intervention: { type: 'ask', seconds, choices: [5], maxMinutes: 15 } });
-    expect(comparePolicies([ask(30)], [ask(0)])).toBe('weaken');
-    expect(comparePolicies([ask(0)], [ask(30)])).toBe('strengthen');
+  it('a shorter reason at the intention question is a weakening', () => {
+    const ask = (minReasonLength: number) =>
+      p({ intervention: { type: 'ask', maxMinutes: 15, minReasonLength } });
+    expect(comparePolicies([ask(30)], [ask(1)])).toBe('weaken');
+    expect(comparePolicies([ask(1)], [ask(30)])).toBe('strengthen');
   });
 
   it('appending is strengthening, removing or reordering is weakening', () => {
@@ -302,8 +302,9 @@ describe('redirect destinations', () => {
 });
 
 describe('interventions compared with the access they give', () => {
-  const ask = (seconds = 0, maxMinutes = 5) =>
-    ({ type: 'ask', seconds, choices: [5], maxMinutes }) as const satisfies Policy['intervention'];
+  // Ask first lets one answer after ASK_WAIT_SECONDS (10).
+  const ask = (maxMinutes = 5) =>
+    ({ type: 'ask', maxMinutes, minReasonLength: 1 }) as const satisfies Policy['intervention'];
   const delay = (
     seconds: number,
     grant: { scope: 'page' | 'site' | 'group'; mode: 'visit' | 'minutes'; minutes?: number },
@@ -312,7 +313,7 @@ describe('interventions compared with the access they give', () => {
     ({ type: 'challenge', kind: 'math', grant }) as const satisfies Policy['intervention'];
 
   it('a stronger kind that opens more, or waits less, is a loosening (regression)', () => {
-    expect(compareInterventions(ask(60), delay(1, { scope: 'group', mode: 'minutes', minutes: 1440 }))).toBe(
+    expect(compareInterventions(ask(), delay(1, { scope: 'group', mode: 'minutes', minutes: 1440 }))).toBe(
       'weaken',
     );
     expect(
@@ -321,7 +322,7 @@ describe('interventions compared with the access they give', () => {
         math({ scope: 'group', mode: 'minutes', minutes: 1440 }),
       ),
     ).toBe('weaken');
-    expect(compareInterventions(ask(60), delay(1, { scope: 'site', mode: 'visit' }))).toBe('weaken');
+    expect(compareInterventions(ask(), delay(1, { scope: 'site', mode: 'visit' }))).toBe('weaken');
   });
 
   it('up the ladder with the same access stays stricter', () => {

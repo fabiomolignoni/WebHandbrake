@@ -102,9 +102,8 @@ test.describe('what is blocked', () => {
     await expectAllowed(h, 'http://tube.test/watch?v=1');
   });
 
-  test('regular expressions (advanced) are compiled to browser filters', async ({ h }) => {
+  test('regular expressions are compiled to browser filters', async ({ h }) => {
     await h.configure((c) => {
-      c.settings.advanced = true;
       c.groups = [group('Regex', ['/^https?:\\/\\/(www\\.)?rx\\.test\\/(a|b)\\//'], [policy(BLOCK)])];
     });
     const d = await h.rpc('diag.get');

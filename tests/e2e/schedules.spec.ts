@@ -88,7 +88,7 @@ test('a daily budget refills on the next day', async ({ h }) => {
   await expectAllowed(h, 'http://video.test/tomorrow');
 });
 
-test('"Test a URL" tells what applies now and what changes next', async ({ h }) => {
+test('"Test an address" tells what applies now and what changes next', async ({ h }) => {
   await h.configure((c) => {
     c.settings.hour12 = '24';
     c.groups = [
@@ -109,11 +109,11 @@ test('"Test a URL" tells what applies now and what changes next', async ({ h }) 
   expect(d.until).toBe(end.getTime());
   const e = await h.rpc('explain', { url: 'http://social.test/help/faq' });
   expect(e.excepted[0].entry.value).toBe('social.test/help');
-  // The editor's "Test a URL" panel shows the same answer.
+  // The editor's "Test an address" panel shows the same answer.
   const id = (await h.rpc('config.get')).config.groups[0].id;
   const editor = await h.page(`dashboard.html#/groups/${id}`);
   await editor.label('Address to test').fill('m.social.test/x');
   await editor.button('Test', { exact: true }).click();
-  await editor.text(/Matched by .*social\.test/).expectVisible();
+  await editor.text(/Whole site: social\.test/).expectVisible();
   await editor.text(/until .*17:00/).expectVisible();
 });

@@ -1,6 +1,7 @@
 /** Intervention page model and passes. */
 
 import { type Decision, decide, grantCovers } from '../engine/decide';
+import { ASK_WAIT_SECONDS, askChoices } from '../engine/defaults';
 import { MAX_CUSTOM_CSS_CHARS, RECHECK_GRANT_MS } from '../engine/limits';
 import { isNav, NAV_SEVERITY, SEVERITY } from '../engine/severity';
 import { dayKeyOf } from '../engine/time';
@@ -195,8 +196,6 @@ export async function interventionModel(
   if (primary?.source === 'session') {
     m.kind = 'session';
     m.locked = Boolean(primary.session?.locked);
-  } else if (primary?.source === 'cooldown') {
-    m.kind = 'cooldown';
   } else {
     switch (i.type) {
       case 'close':
@@ -235,12 +234,13 @@ export async function interventionModel(
 
 /**
  * The break offered on the page. A break lifts only the rules that allow one: when another rule
- * would still block the page, it would not open it, and the page says so instead.
+ * would still block the page, another break would not open it (nor does the one already running),
+ * and the page says so instead.
  */
 function breakOptions(d: Decision, url: string, incognito: boolean): PauseOptions {
   const opts = pauseOptions(url, undefined, incognito);
   const stays = d.groups.some((r) => !r.pausable && SEVERITY[r.intervention.type] >= SEVERITY.block);
-  return stays && opts.available
+  return stays && (opts.available || opts.reason === 'pause.unavailable.onBreak')
     ? { ...opts, available: false, reason: 'pause.unavailable.otherRule' }
     : opts;
 }
@@ -257,7 +257,6 @@ async function passTicket(url: string, i: Intervention, incognito: boolean) {
   let scope: 'page' | 'site' | 'group' = 'site';
   let mode: 'visit' | 'minutes' = 'visit';
   let minutes: number | undefined;
-  let cooldownMinutes: number | undefined;
   if (i.type === 'delay') {
     let s = i.seconds;
     if (i.randomTo && i.randomTo > s) s = randomInt(s, i.randomTo);
@@ -269,16 +268,16 @@ async function passTicket(url: string, i: Intervention, incognito: boolean) {
   } else if (i.type === 'ask') {
     steps.push({
       type: 'intention',
-      choices: i.choices,
+      choices: askChoices(i.maxMinutes),
       maxMinutes: i.maxMinutes,
-      seconds: i.seconds ?? 0,
+      seconds: ASK_WAIT_SECONDS,
+      minLength: i.minReasonLength,
     });
     mode = 'minutes';
-    cooldownMinutes = i.cooldownMinutes;
   } else if (i.type === 'challenge') {
     if (i.kind === 'phrase' && i.phrase) steps.push({ type: 'phrase', phrase: i.phrase });
     else if (i.kind === 'math') steps.push({ type: 'math' });
-    else steps.push({ type: 'text', length: i.length ?? 24, charset: i.charset });
+    else steps.push({ type: 'text', length: i.length ?? 24 });
     scope = i.grant.scope;
     mode = i.grant.mode;
     minutes = i.grant.minutes;
@@ -293,7 +292,6 @@ async function passTicket(url: string, i: Intervention, incognito: boolean) {
       mode,
       minutes,
       site: primary.site,
-      cooldownMinutes,
       incognito,
     },
     steps,
@@ -317,7 +315,6 @@ registerExecutor('pass', async (ticket) => {
     createdAt: t0,
     severity: p.severity,
     intention: ticket.collected.intention,
-    cooldownMinutes: p.cooldownMinutes,
   };
   if (p.mode === 'minutes' && minutes) {
     grant.until = t0 + minutes * 60_000;

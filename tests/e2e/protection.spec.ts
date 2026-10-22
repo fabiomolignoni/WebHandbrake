@@ -181,12 +181,13 @@ test('a Permanent rule, chosen after a preview, refuses every loosening with no 
   h,
 }) => {
   const p = await h.page('dashboard.html#/groups/new');
-  await p.label('Name', { exact: true }).fill('Casino');
   await p.placeholder('Add a site, or paste a list…').fill('casino.test poker.test');
   await p.button('Add', { exact: true }).click();
   await p.button('Next: when').click();
   await p.button('Next: what happens').click();
   await p.role('radio', 'Block').click();
+  await p.button('Next: details').click();
+  await p.label('Name', { exact: true }).fill('Casino');
   await p.button('Next: protection').click();
   await p.role('radio', /^Permanent/).click();
   // A preview first, with an explicit acknowledgement and no date to choose.
@@ -196,7 +197,7 @@ test('a Permanent rule, chosen after a preview, refuses every loosening with no 
   await p.label('I understand that only the emergency exit can loosen this rule.').click();
   await p.button('Make permanent').click();
   expect(await p.role('radio', /^Permanent/).checked()).toBe(true);
-  await p.button('Next: review').click();
+  await p.button('Next: summary').click();
   await p.button('Create rule').click();
   await p.role('heading', 'Rules', { exact: true }).expectVisible();
   const created = (await h.rpc('config.get')).config.groups.find((g: any) => g.name === 'Casino');
@@ -207,9 +208,7 @@ test('a Permanent rule, chosen after a preview, refuses every loosening with no 
   const editor = await h.page(`dashboard.html#/groups/${created.id}?step=sites`);
   await editor.button('Remove casino.test').click();
   await editor.button('Save changes').click();
-  await editor
-    .text(/A rule that this change loosens is permanent: nothing that loosens it is possible/)
-    .expectVisible();
+  await editor.text(/A rule this change loosens is permanent/).expectVisible();
   // A year later, nothing has changed.
   await h.clock.advance(400 * 24 * HOUR);
   const later = await h.configure((c) => {
@@ -251,14 +250,14 @@ test('the emergency exit always works: request, wait, type a sentence', async ({
   const p = await h.page('dashboard.html#/protection');
   await p.button('Request the emergency exit').click();
   await p.button('Request the emergency exit', { within: 'dialog' }).click();
-  await p.text(/Emergency exit requested: it can be completed from/).expectVisible();
+  await p.text(/Requested. You can complete it from/).expectVisible();
   expect(await h.rpc('emergency.start')).toMatchObject({ error: 'emergency.error.notReady' });
   await h.clock.advance(24 * HOUR + 60_000);
   await p.reload();
   await p.button('Complete the emergency exit').click();
   await p.label('Sentence').type('I understand that this removes my protections.');
   await p.button('Continue', { exact: true, within: 'dialog' }).click();
-  await p.text('Emergency exit completed: every rule now has the Reminder protection.').expectVisible();
+  await p.text('Emergency exit done. Every rule now has the Reminder protection.').expectVisible();
   const ov = await h.rpc('overview.get');
   expect(ov.sessions).toHaveLength(0);
   expect((await h.rpc('config.get')).config.groups[0].protection).toEqual(REMINDER);
@@ -285,7 +284,7 @@ test('browser settings pages are protected as the mode says; loosening it follow
   // The rule asks only for a reminder: this setting waits as long as the emergency exit instead.
   const p = await h.page('dashboard.html#/protection');
   await p.label('Block the browser’s extension and settings pages').select('never');
-  await p.text(/so it follows the emergency exit: it can be confirmed in 24 h/).expectVisible();
+  await p.text(/so it waits 24 h, like the emergency exit/).expectVisible();
   await p.button('OK', { within: 'dialog' }).click();
   await p.text(/Follows the emergency exit: confirm it by typing a sentence/).expectVisible();
   await h.clock.advance(24 * HOUR + 60_000);
@@ -351,7 +350,7 @@ test('the Password protection is chosen in the editor, asked to loosen the rule 
   await p.label('New password').type('only my sister knows');
   await p.label('Repeat the password').type('only my sister knows');
   await p.button('Save', { exact: true, within: 'dialog' }).click();
-  await p.text(/The password is set/).expectVisible();
+  await p.text(/Password set/).expectVisible();
   // From a reminder to a password is stricter: saving applies it at once.
   await p.button('Save changes').click();
   await p.text('Change the protection of Gambling').expectVisible();
@@ -379,7 +378,7 @@ test('the Password protection is chosen in the editor, asked to loosen the rule 
   expect(news.ticket?.step.type).toBe('confirm');
 
   // A break of the rule asks for its password.
-  const r = await h.rpc('pause.start', { url: 'http://bet.test/', scope: 'site', minutes: 5 });
+  const r = await h.rpc('pause.start', { url: 'http://bet.test/', minutes: 5 });
   expect(r.ticket.step).toEqual({ type: 'rulePassword', names: ['Gambling'] });
   expect((await h.rpc('ticket.answer', { id: r.ticket.id, answer: 'only my sister knows' })).status).toBe(
     'done',
@@ -411,9 +410,9 @@ test("the Partner code protection is set up with a code from the partner's app; 
   expect(secret).toMatch(/^[A-Z2-7]{32}$/);
   await p.label('Code from your partner’s app').fill('000000');
   await p.button('Confirm', { exact: true, within: 'dialog' }).click();
-  await p.text(/not the code that your partner’s app shows/).expectVisible();
+  await p.text(/That code does not match/).expectVisible();
   // Breaks need the partner's code only when asked for.
-  const breaks = p.role('checkbox', 'Breaks of this rule also need the partner’s code');
+  const breaks = p.role('checkbox', 'Breaks also need the partner’s code');
   await breaks.expectChecked(false);
   await breaks.click();
   const first = await partnerCode(h, secret);
@@ -439,7 +438,7 @@ test("the Partner code protection is set up with a code from the partner's app; 
   await p.text(/Ask the partner of the rule Social for the code/).expectVisible();
   await p.label('Code from your partner’s app').fill(first);
   await p.button('Continue', { exact: true, within: 'dialog' }).click();
-  await p.text(/wrong, expired or already used/).expectVisible();
+  await p.text(/wrong or already used/).expectVisible();
   await p.label('Code from your partner’s app').fill(await partnerCode(h, secret, 1));
   await p.button('Continue', { exact: true, within: 'dialog' }).click();
   await p.text('Done: your change is applied.').expectVisible();

@@ -12,11 +12,11 @@ import { BrakeLogo, Icon } from '../ui/icons';
 import { Ctx } from './context';
 import { FocusPage } from './pages/focus';
 import { GroupEditorPage } from './pages/group-editor';
-import { GroupWizardPage } from './pages/group-wizard';
 import { GroupsPage } from './pages/groups';
 import { HelpPage } from './pages/help';
 import { InsightsPage } from './pages/insights';
 import { LaterPage } from './pages/later';
+import { NewGroupPage } from './pages/new-group';
 import { ProtectionPage } from './pages/protection';
 import { SettingsPage } from './pages/settings';
 import { TodayPage } from './pages/today';
@@ -85,16 +85,11 @@ function App() {
   let page: preact.JSX.Element;
   switch (section) {
     case 'groups':
-      // A new rule is created step by step; "?full=1" opens the full editor instead.
       page =
-        route.path[1] === 'new' && !route.query.get('full') ? (
-          <GroupWizardPage template={route.query.get('template')} />
+        route.path[1] === 'new' ? (
+          <NewGroupPage template={route.query.get('template')} />
         ) : route.path[1] ? (
-          <GroupEditorPage
-            id={route.path[1]}
-            template={route.query.get('template')}
-            step={route.query.get('step')}
-          />
+          <GroupEditorPage key={route.path[1]} id={route.path[1]} step={route.query.get('step')} />
         ) : (
           <GroupsPage />
         );

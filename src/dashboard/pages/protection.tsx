@@ -421,10 +421,7 @@ export function ProtectionPage() {
                   <Icon name={protectionIcon(l)} />
                   <span class="stack stack-xs">
                     <strong>{t(`level.${l}`)}</strong>
-                    <span class="small text-2">{t(`level.${l}.desc`)}</span>
-                    <span class="small text-2">
-                      {t(`level.${l}.weaken`)} {t(`level.${l}.pauses`)}
-                    </span>
+                    <span class="small text-2">{t(`level.${l}.weaken`)}</span>
                   </span>
                 </li>
               ))}

@@ -6,7 +6,7 @@ import { t } from '../i18n/i18n';
 import { formatDuration, formatList } from '../shared/format';
 import type { PauseOptions, TicketView } from '../shared/models';
 import { call } from '../shared/rpc';
-import { Banner, Button, Chips, Dialog, DurationInput, toast } from './components';
+import { Banner, Button, Dialog, toast } from './components';
 import { TicketDialog } from './ticket';
 
 export function costLabel(c: Cost): string {
@@ -66,9 +66,7 @@ export function pauseSummary(o: PauseOptions): string {
   const cost = o.costs.length
     ? t('pause.summary.cost', { cost: costsLabel(o.costs) })
     : t('pause.summary.free');
-  // Extending: how much longer the break can last.
-  const more = o.extend ? t('pause.summary.more', { minutes: o.duration.minutes }) : null;
-  return [cost, more, pauseBudgetLabel(o)].filter(Boolean).join(' · ');
+  return [cost, pauseBudgetLabel(o)].filter(Boolean).join(' · ');
 }
 
 /** What a break covers: "youtube.com · Social", "Social", "All rules". */
@@ -84,8 +82,12 @@ export function breakSubject(
   return rules;
 }
 
+/**
+ * Taking a break: it covers the rules of the page whole, lasts the longest they allow and can be
+ * ended before (popup, Today).
+ */
 export function PauseDialog({
-  options,
+  options: o,
   url,
   onClose,
   onStarted,
@@ -95,44 +97,26 @@ export function PauseDialog({
   onClose: () => void;
   onStarted?: () => void;
 }) {
-  // A break already running is extended: it keeps what it covers.
-  const extend = options.extend;
-  const [scope, setScope] = useState<PauseScope>(
-    extend?.scope ?? (options.scopes.includes('site') ? 'site' : options.scopes[0]),
-  );
-  // A pause of everything has its own rules (the strictest of every group).
-  const o = scope === 'all' && options.all ? options.all : options;
-  const d = o.duration;
-  const [chosen, setMinutes] = useState<number>(
-    d.mode === 'choices' ? (d.choices?.[0] ?? d.minutes) : d.minutes,
-  );
-  const minutes = Math.min(chosen, d.minutes);
-  const [reason, setReason] = useState('');
+  // A break lasts as long as it can; it is ended sooner from the popup or Today.
+  const minutes = o.maxMinutes;
   const [error, setError] = useState<string | null>(null);
   const [ticket, setTicket] = useState<TicketView | null>(null);
-  const title = extend ? t('pause.extend') : t('pause.title');
+  const title = t('pause.title');
 
   const start = async () => {
     setError(null);
-    if (o.reasonMode === 'required' && !reason.trim()) {
-      setError(t('ticket.error.reasonRequired'));
-      return;
-    }
     const r = await call('pause.start', {
-      url: url ?? options.url ?? undefined,
-      groupId: !url && options.groups.length === 1 ? options.groups[0].id : undefined,
-      scope,
+      url: url ?? o.url ?? undefined,
+      groupId: !url && o.groups.length === 1 ? o.groups[0].id : undefined,
       minutes,
-      incognito: options.incognito,
-      reason: o.reasonMode === 'none' ? undefined : reason,
-      extend: extend?.grantId,
+      incognito: o.incognito,
     });
     if (r.error) setError(t(r.error));
     else if (r.ticket) setTicket(r.ticket);
     else done();
   };
   const done = () => {
-    toast(extend ? t('pause.extended', { minutes }) : t('pause.started', { minutes }));
+    toast(t('pause.started', { minutes }));
     onStarted?.();
     onClose();
   };
@@ -140,17 +124,7 @@ export function PauseDialog({
   if (ticket) {
     return <TicketDialog ticket={ticket} title={title} onDone={done} onCancel={() => setTicket(null)} />;
   }
-  const scopeLabel: Record<PauseScope, string> = {
-    page: t('pause.scope.page'),
-    site: options.site ? t('pause.scope.siteNamed', { site: options.site }) : t('pause.scope.site'),
-    group:
-      options.groups.length === 1
-        ? t('pause.scope.groupNamed', { group: options.groups[0].name })
-        : t('pause.scope.group'),
-    all: t('pause.scope.all'),
-  };
   const budget = pauseBudgetLabel(o);
-  const durationLabel = extend ? t('pause.extendBy') : t('pause.duration');
   return (
     <Dialog
       open
@@ -161,67 +135,17 @@ export function PauseDialog({
           <Button variant="primary" onClick={onClose}>
             {t('pause.cancel')}
           </Button>
-          <Button onClick={start}>{extend ? t('pause.extend') : t('pause.start')}</Button>
+          <Button onClick={start}>{t('pause.start')}</Button>
         </>
       }
     >
       <div class="stack">
-        {extend ? (
-          <p>{t('pause.extendHelp', { scope: scopeLabel[extend.scope], minutes: extend.minutes })}</p>
-        ) : (
-          <div class="field">
-            <span class="label">{t('pause.for')}</span>
-            <Chips
-              value={scope}
-              onChange={setScope}
-              label={t('pause.for')}
-              options={options.scopes.map((s) => ({ value: s, label: scopeLabel[s] }))}
-            />
-          </div>
-        )}
-        <div class="field">
-          <span class="label">{durationLabel}</span>
-          {d.mode === 'fixed' && <p>{t('common.minutes', { n: d.minutes })}</p>}
-          {d.mode === 'choices' && (
-            <Chips
-              value={minutes}
-              onChange={setMinutes}
-              label={durationLabel}
-              options={(d.choices?.length ? d.choices : [d.minutes]).map((m) => ({
-                value: m,
-                label: t('common.minutes', { n: m }),
-              }))}
-            />
-          )}
-          {d.mode === 'upTo' && (
-            <div class="row">
-              <DurationInput
-                units={['minutes', 'hours']}
-                value={minutes}
-                onChange={setMinutes}
-                min={1}
-                max={d.minutes}
-                label={durationLabel}
-              />
-              <span class="help">{t('pause.max', { duration: formatDuration(d.minutes * 60) })}</span>
-            </div>
-          )}
-          {o.metered && <span class="help">{t('pause.metered')}</span>}
-        </div>
-        {o.reasonMode !== 'none' && (
-          <div class="field">
-            <label for="pause-reason">
-              {o.reasonMode === 'required' ? t('pause.reasonRequired') : t('pause.reasonOptional')}
-            </label>
-            <input
-              id="pause-reason"
-              class="input"
-              value={reason}
-              maxLength={300}
-              onInput={(e) => setReason((e.target as HTMLInputElement).value)}
-            />
-          </div>
-        )}
+        <p>
+          {t('pause.covers', {
+            rules: formatList(o.groups.map((g) => g.name)),
+            duration: formatDuration(minutes * 60),
+          })}
+        </p>
         <p class="small">
           <strong>{t('pause.cost')}:</strong> {costsLabel(o.costs)}
           {budget && <> · {budget}</>}

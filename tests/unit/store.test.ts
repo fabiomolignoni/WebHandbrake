@@ -66,6 +66,18 @@ describe('store integrity', () => {
     expect((s.config as unknown as Record<string, unknown>).futureField).toEqual({ x: 1 });
   });
 
+  it('a break of an earlier version that counted only the time on the site ends by the clock', async () => {
+    vi.useFakeTimers({ now: 1_000_000 });
+    try {
+      const grant = { id: 'p', kind: 'pause', groups: ['A'], scope: 'site', createdAt: 0, severity: 99 };
+      storage.local.set('state', { grants: [{ ...grant, remaining: 90 }] });
+      const s = await freshStore();
+      expect(s.state.grants).toEqual([{ ...grant, until: 1_090_000 }]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('migrates a configuration of an earlier schema once, keeping the previous one', async () => {
     const { configChecksum, CHECKSUM_VERSION } = await import('../../src/engine/schema');
     const { defaultConfig, newGroup } = await import('../../src/engine/defaults');

@@ -25,11 +25,10 @@ describe('normalising what is read from storage or a file', () => {
       type: 'domain',
       value: 'a.test',
     });
-    expect(normalizeTarget({ type: 'nonsense', value: 'b.test', allow: 1, note: 'n' })).toMatchObject({
-      type: 'domain',
-      allow: true,
-      note: 'n',
-    });
+    // Sites had notes in earlier versions: they are dropped.
+    const old = normalizeTarget({ type: 'nonsense', value: 'b.test', allow: 1, note: 'n' });
+    expect(old).toMatchObject({ type: 'domain', allow: true });
+    expect(old).not.toHaveProperty('note');
     expect(normalizeTarget({ type: 'regex', value: '(a+)+$' })).toBeNull();
     expect(normalizeTarget({ type: 'domain', value: '' })).toBeNull();
     expect(normalizeTarget('a.test')).toBeNull();
@@ -55,27 +54,15 @@ describe('normalising what is read from storage or a file', () => {
   });
 
   it('interventions keep their settings within range; anything unknown blocks', () => {
-    expect(
-      normalizeIntervention({ type: 'filter', filter: 'neon', intensity: 300, css: 'x'.repeat(300) }),
-    ).toEqual({
+    expect(normalizeIntervention({ type: 'filter', filter: 'neon', intensity: 300 })).toEqual({
       type: 'filter',
       filter: 'grayscale',
       intensity: 100,
-      css: 'x'.repeat(200),
-      mute: false,
     });
-    expect(
-      normalizeIntervention({ type: 'ask', choices: [5, 30, -1, 'x'], maxMinutes: 20, cooldownMinutes: 5 }),
-    ).toEqual({
+    expect(normalizeIntervention({ type: 'ask', maxMinutes: 2000, minReasonLength: 999 })).toEqual({
       type: 'ask',
-      seconds: 0,
-      choices: [5],
-      maxMinutes: 20,
-      cooldownMinutes: 5,
-    });
-    // No choice under the maximum: the maximum is the choice.
-    expect(normalizeIntervention({ type: 'ask', choices: [30], maxMinutes: 10 })).toMatchObject({
-      choices: [10],
+      maxMinutes: 1440,
+      minReasonLength: 300,
     });
     expect(
       normalizeIntervention({
@@ -95,6 +82,9 @@ describe('normalising what is read from storage or a file', () => {
       hideCountdown: false,
       grant: { scope: 'site', mode: 'visit' },
     });
+    expect(normalizeIntervention({ type: 'delay', seconds: 5, increase: 1000 })).toMatchObject({
+      increase: 600,
+    });
     expect(
       normalizeIntervention({
         type: 'challenge',
@@ -107,7 +97,6 @@ describe('normalising what is read from storage or a file', () => {
       type: 'challenge',
       kind: 'phrase',
       length: 4,
-      charset: 'alnum',
       phrase: 'I choose',
       grant: { scope: 'site', mode: 'minutes', minutes: 1440 },
     });
@@ -115,6 +104,32 @@ describe('normalising what is read from storage or a file', () => {
     expect(normalizeIntervention({ type: 'close', extra: 1 })).toEqual({ type: 'close' });
     expect(normalizeIntervention({ type: 'explode' })).toEqual({ type: 'block' });
     expect(normalizeIntervention(null)).toEqual({ type: 'block' });
+  });
+
+  it('interventions of earlier versions lose the settings that are gone', () => {
+    // A custom filter or none at all is greyscale; a filter no longer mutes.
+    for (const filter of ['custom', 'none'])
+      expect(
+        normalizeIntervention({ type: 'filter', filter, intensity: 40, css: 'blur(2px)', mute: true }),
+      ).toEqual({ type: 'filter', filter: 'grayscale', intensity: 40 });
+    // Ask first: the durations offered, the wait and the block afterwards; any reason will do.
+    expect(
+      normalizeIntervention({
+        type: 'ask',
+        seconds: 30,
+        choices: [5, 30],
+        maxMinutes: 20,
+        cooldownMinutes: 5,
+      }),
+    ).toEqual({ type: 'ask', maxMinutes: 20, minReasonLength: 1 });
+    // A wait both random and longer each time stays random.
+    expect(
+      normalizeIntervention({ type: 'delay', seconds: 10, randomTo: 50, increase: 5, grant: {} }),
+    ).not.toHaveProperty('increase');
+    // A challenge of random characters uses letters and digits.
+    expect(
+      normalizeIntervention({ type: 'challenge', kind: 'random', charset: 'digits' }),
+    ).not.toHaveProperty('charset');
   });
 
   it('conditions: a schedule, a known limit, what happens', () => {
@@ -144,23 +159,21 @@ describe('normalising what is read from storage or a file', () => {
     expect(normalizePolicy({})?.id).toEqual(expect.any(String));
   });
 
-  it('breaks: known scopes once, costs within range, absent limits stay absent', () => {
+  it('breaks: a length within range, costs within range, absent limits stay absent', () => {
     const p = normalizePause({
       allowed: true,
-      scopes: ['page', 'page', 'galaxy'],
-      duration: { mode: 'choices', minutes: 0, choices: [5, 9999] },
+      maxMinutes: 9999,
       limit: { count: 2.4 },
       cost: { type: 'challenge', kind: 'phrase', phrase: 'ok', length: 1 },
-      reason: 'maybe',
     });
-    expect(p).toMatchObject({
+    expect(p).toEqual({
       allowed: true,
-      scopes: ['page'],
-      duration: { mode: 'choices', minutes: 1, choices: [5] },
+      maxMinutes: 1440,
       limit: { count: 2, period: { kind: 'day' } },
       cost: { type: 'challenge', kind: 'phrase', length: 4, phrase: 'ok' },
     });
-    expect(p.limit.minutes).toBeUndefined();
+    expect(normalizePause({ allowed: true, maxMinutes: 0 }).maxMinutes).toBe(1);
+    expect(normalizePause({}).maxMinutes).toBe(15);
     expect(normalizePause({ cost: { type: 'delay', seconds: 99999 } }).cost).toEqual({
       type: 'delay',
       seconds: 3600,
@@ -168,6 +181,31 @@ describe('normalising what is read from storage or a file', () => {
     expect(normalizePause({ cost: { type: 'none' } }).cost).toEqual({ type: 'none' });
     expect(normalizePause({ cost: { type: 'password' } }).cost).toEqual({ type: 'password' });
     expect(normalizePause({ cost: 'free' }).cost).toEqual({ type: 'confirm' });
+  });
+
+  it('breaks of earlier versions last up to their longest length, cover the rule, never ask why, count the clock and leave focus sessions to decide', () => {
+    const old = {
+      allowed: true,
+      duringSessions: true,
+      scopes: ['page', 'site'],
+      limit: { count: 3, period: { kind: 'day' } },
+      cost: { type: 'confirm' },
+      reason: 'required',
+      metered: true,
+    };
+    const choices = normalizePause({ ...old, duration: { mode: 'choices', minutes: 10, choices: [5, 20] } });
+    expect(choices).toEqual({
+      allowed: true,
+      maxMinutes: 20,
+      limit: { count: 3, period: { kind: 'day' } },
+      cost: { type: 'confirm' },
+    });
+    expect(
+      normalizePause({ ...old, duration: { mode: 'fixed', minutes: 10, choices: [5, 20] } }).maxMinutes,
+    ).toBe(10);
+    expect(normalizePause({ ...old, duration: { mode: 'upTo', minutes: 30 } }).maxMinutes).toBe(30);
+    // Fields of newer versions are kept.
+    expect(normalizePause({ ...old, future: 1 })).toMatchObject({ future: 1 });
   });
 
   it('breaks lift a block only: a rule without a condition that blocks has none', () => {
@@ -213,6 +251,27 @@ describe('normalising what is read from storage or a file', () => {
     expect(g?.targets).toHaveLength(1);
     expect(errors).toEqual(['Rule “”: an entry that could not be read was left out: {"value":""}']);
     expect(normalizeGroup([], [])).toBeNull();
+  });
+
+  it('rules: an entry repeated is kept once, without a word', () => {
+    const errors: string[] = [];
+    const g = normalizeGroup(
+      {
+        id: 'g',
+        name: 'Video',
+        targets: [
+          { id: '1', type: 'domain', value: 'a.test' },
+          { id: '2', type: 'domain', value: 'a.test' },
+          { id: '3', type: 'host', value: 'a.test' },
+          { id: '4', type: 'path', value: 'a.test/learn', allow: true },
+          { id: '5', type: 'path', value: 'a.test/learn' },
+          { id: '6', type: 'path', value: 'a.test/learn', allow: true },
+        ],
+      },
+      errors,
+    );
+    expect(g?.targets.map((x) => x.id)).toEqual(['1', '3', '4', '5']);
+    expect(errors).toEqual([]);
   });
 
   it('settings: numbers within their range', () => {

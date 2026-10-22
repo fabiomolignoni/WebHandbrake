@@ -150,6 +150,10 @@ test('a damaged configuration is restored from the last backup at start-up, with
   expect(s.state.tamper.map((e: any) => e.kind)).toContain('state-restored');
   const today = await h.page('dashboard.html#/today');
   await today.text(/Your settings were damaged and were restored from the backup of/).expectVisible();
+  // The warning is about something that happened: once read, it can be dismissed.
+  await today.button('Dismiss').click();
+  await today.text(/Your settings were damaged/).expectHidden();
+  expect((await h.rpc('overview.get')).warnings.map((w: any) => w.kind)).not.toContain('restored');
   // Blocking keeps working with the restored rules.
   await expectBlocked(h, 'http://kept.test/');
 });
@@ -234,5 +238,5 @@ test('what is stored is listed with its size, and the export of the configuratio
   const p = await h.page('dashboard.html#/settings/privacy');
   await p.text('Rules and settings', { exact: true }).expectVisible();
   await p.text('Automatic backups', { exact: true }).expectVisible();
-  await p.text(/does not contact any server/).expectVisible();
+  await p.text(/never contacts a server/).expectVisible();
 });

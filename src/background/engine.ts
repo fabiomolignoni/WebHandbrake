@@ -84,9 +84,7 @@ export function groupResultView(r: GroupResult): GroupDecisionView {
       intervention: p.policy.intervention,
       budget: p.budget ? budgetView(p.budget) : null,
     })),
-    pause: r.pause
-      ? { id: r.pause.id, until: r.pause.until, remaining: r.pause.remaining, scope: r.pause.scope }
-      : null,
+    pause: r.pause ? { id: r.pause.id, until: r.pause.until, scope: r.pause.scope } : null,
     pass: r.pass
       ? {
           id: r.pass.id,
@@ -97,7 +95,6 @@ export function groupResultView(r: GroupResult): GroupDecisionView {
         }
       : null,
     pausable: r.pausable,
-    cooldownUntil: r.cooldown?.until ?? null,
   };
 }
 
@@ -211,7 +208,7 @@ export function groupStatus(g: Group, c = ctx()): GroupStatus {
   base.source = r.source;
   base.budgets = r.policies.filter((p) => p.budget).map((p) => budgetView(p.budget!));
   const pause = r.pause;
-  if (pause) base.pause = { until: pause.until, remaining: pause.remaining };
+  if (pause) base.pause = { until: pause.until };
   // Next change for this group alone, on the site that it restricts most now.
   for (const t of candidateTimes(c, [cg])) {
     const later = evaluateGroup({ ...c, now: t }, cg, r.entry, strictest.url);

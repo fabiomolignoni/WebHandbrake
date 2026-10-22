@@ -17,7 +17,7 @@ import {
   scheduleBitmap,
   unusedExceptions,
 } from '../../src/engine/changes';
-import { defaultOptions, delayIntervention, newPolicy, pausePolicyFor } from '../../src/engine/defaults';
+import { defaultOptions, defaultPause, delayIntervention, newPolicy } from '../../src/engine/defaults';
 import { scheduleActive } from '../../src/engine/time';
 import type { Budget, Config, Intervention, PausePolicy, Policy, Schedule } from '../../src/engine/types';
 import { BLOCK, config, group, t } from './helpers';
@@ -161,33 +161,25 @@ describe('interventions of the same severity', () => {
     expect(cmp(minutes, { ...minutes, grant: { ...minutes.grant, minutes: 5 } })).toBe('strengthen');
   });
 
-  it('a challenge: longer is stricter; another kind, charset or phrase is not comparable', () => {
-    const c = {
-      type: 'challenge' as const,
-      kind: 'random' as const,
-      length: 24,
-      charset: 'alnum' as const,
-      grant: delay.grant,
-    };
+  it('a challenge: longer is stricter; another kind or phrase is not comparable', () => {
+    const c = { type: 'challenge' as const, kind: 'random' as const, length: 24, grant: delay.grant };
     expect(cmp(c, { ...c, length: 40 })).toBe('strengthen');
-    expect(cmp(c, { ...c, charset: 'digits' })).toBe('weaken');
     expect(cmp(c, { ...c, kind: 'math' })).toBe('weaken');
     const p = { ...c, kind: 'phrase' as const, phrase: 'I choose' };
     expect(cmp(p, { ...p, phrase: 'Other' })).toBe('weaken');
   });
 
-  it('a question: a longer wait, less time, a cool-down', () => {
-    const a = { type: 'ask' as const, seconds: 10, choices: [5, 10], maxMinutes: 15 };
-    expect(cmp(a, { ...a, seconds: 20 })).toBe('strengthen');
-    expect(cmp(a, { ...a, maxMinutes: 10, choices: [5] })).toBe('strengthen');
-    expect(cmp(a, { ...a, cooldownMinutes: 30 })).toBe('strengthen');
-    expect(cmp(a, { ...a, choices: [5, 15] })).toBe('weaken');
+  it('a question: less time, a longer reason', () => {
+    const a = { type: 'ask' as const, maxMinutes: 15, minReasonLength: 10 };
+    expect(cmp(a, { ...a, maxMinutes: 10 })).toBe('strengthen');
+    expect(cmp(a, { ...a, maxMinutes: 30 })).toBe('weaken');
+    expect(cmp(a, { ...a, minReasonLength: 20 })).toBe('strengthen');
+    expect(cmp(a, { ...a, minReasonLength: 1 })).toBe('weaken');
   });
 
-  it('a filter: stronger, muted; another filter is not comparable', () => {
+  it('a filter: stronger; another filter is not comparable', () => {
     const f = { type: 'filter' as const, filter: 'grayscale' as const, intensity: 50 };
     expect(cmp(f, { ...f, intensity: 80 })).toBe('strengthen');
-    expect(cmp(f, { ...f, mute: true })).toBe('strengthen');
     expect(cmp(f, { ...f, filter: 'blur' })).toBe('weaken');
   });
 
@@ -213,28 +205,21 @@ describe('protections', () => {
 });
 
 describe('breaks and options', () => {
-  const base = (): PausePolicy => pausePolicyFor({ kind: 'wait', seconds: 30 });
+  const base = (): PausePolicy => ({ ...defaultPause(), allowed: true });
 
-  it('fewer, shorter, costlier breaks, with a reason, are stricter', () => {
+  it('fewer, shorter, costlier breaks are stricter', () => {
     const p = base();
     expect(comparePause(p, structuredClone(p))).toBe('neutral');
     expect(comparePause(p, { ...p, allowed: false })).toBe('strengthen');
     expect(comparePause({ ...p, allowed: false }, p)).toBe('weaken');
-    expect(comparePause({ ...p, allowed: false }, { ...p, allowed: false, scopes: ['all'] })).toBe('neutral');
-    expect(comparePause(p, { ...p, duringSessions: true })).toBe('weaken');
-    expect(comparePause(p, { ...p, scopes: ['page'] })).toBe('strengthen');
-    expect(comparePause(p, { ...p, scopes: [...p.scopes, 'all'] })).toBe('weaken');
-    expect(comparePause(p, { ...p, duration: { mode: 'choices', minutes: 15, choices: [5, 30] } })).toBe(
-      'weaken',
-    );
+    expect(comparePause({ ...p, allowed: false }, { ...p, allowed: false, maxMinutes: 60 })).toBe('neutral');
+    expect(comparePause(p, { ...p, maxMinutes: 5 })).toBe('strengthen');
+    expect(comparePause(p, { ...p, maxMinutes: 30 })).toBe('weaken');
     expect(comparePause(p, { ...p, limit: { ...p.limit, count: 1 } })).toBe('strengthen');
     expect(comparePause(p, { ...p, limit: { count: 3, period: day } })).toBe('weaken');
     expect(comparePause(p, { ...p, limit: { ...p.limit, period: { kind: 'week' } } })).toBe('weaken');
     expect(comparePause(p, { ...p, cost: { type: 'password' } })).toBe('strengthen');
     expect(comparePause(p, { ...p, cost: { type: 'confirm' } })).toBe('weaken');
-    expect(comparePause(p, { ...p, reason: 'required' })).toBe('strengthen');
-    // A metered break lasts as long as it is not used: it opens more.
-    expect(comparePause(p, { ...p, metered: true })).toBe('weaken');
     const challenge = { ...p, cost: { type: 'challenge' as const, kind: 'random' as const, length: 24 } };
     expect(
       comparePause(challenge, { ...challenge, cost: { type: 'challenge', kind: 'math', length: 24 } }),
@@ -288,7 +273,6 @@ describe('every kind of change, from the diff to the configuration', () => {
     const b = structuredClone(a);
     b.groups.reverse(); // order
     const ga = b.groups.find((g) => g.id === 'A')!;
-    ga.targets[0].note = 'work'; // target.note
     ga.targets.push(t('a2.test')); // target.add
     ga.targets = ga.targets.filter((x) => !x.allow); // target.remove of an exception
     b.groups.find((g) => g.id === 'B')!.targets = []; // target.remove
@@ -296,7 +280,7 @@ describe('every kind of change, from the diff to the configuration', () => {
 
     const units = diffConfig(a, b);
     expect(units.map((u) => u.kind).sort()).toEqual(
-      ['order', 'setting', 'target.add', 'target.note', 'target.remove', 'target.remove'].sort(),
+      ['order', 'setting', 'target.add', 'target.remove', 'target.remove'].sort(),
     );
     const direction = Object.fromEntries(
       units.map((u) => [`${u.kind}:${JSON.stringify(u).length}`, classify(u, a)]),
@@ -305,15 +289,13 @@ describe('every kind of change, from the diff to the configuration', () => {
     // Removing a site loosens; removing an exception tightens.
     const removed = units.filter((u) => u.kind === 'target.remove');
     expect(removed.map((u) => classify(u, a)).sort()).toEqual(['strengthen', 'weaken']);
-    for (const u of units.filter((x) => ['target.note', 'order'].includes(x.kind)))
-      expect(classify(u, a)).toBe('neutral');
+    expect(classify(units.find((u) => u.kind === 'order')!, a)).toBe('neutral');
 
     const applied = applyUnits(a, units, NOW);
     expect(diffConfig(applied, b)).toEqual([]);
     expect(applied.groups.find((g) => g.id === 'A')!.rev).toBeGreaterThan(1);
-    // A note and the order can be applied again (they are neutral); every other change is done.
-    for (const u of units.filter((x) => !['order', 'target.note'].includes(x.kind)))
-      expect(isStale(u, applied), u.kind).toBe(true);
+    // The order can be applied again (it is neutral); every other change is done.
+    for (const u of units.filter((x) => x.kind !== 'order')) expect(isStale(u, applied), u.kind).toBe(true);
     // The input is never changed.
     expect(a.groups.map((g) => g.id)).toEqual(['A', 'B']);
   });

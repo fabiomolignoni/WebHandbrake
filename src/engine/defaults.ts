@@ -52,7 +52,6 @@ export function defaultSettings(): Settings {
     dateFormat: 'auto',
     weekStart: 1,
     dayStart: 0,
-    advanced: false,
     timer: { enabled: true, thresholdMinutes: 5, corner: 'bottom-right', size: 'medium', opacity: 0.94 },
     badge: { enabled: true, thresholdMinutes: 60 },
     contextMenu: true,
@@ -139,60 +138,17 @@ export const breaksLift = (i: Intervention): boolean => i.type === 'block';
 export const canHaveBreaks = (g: Pick<Group, 'policies'>): boolean =>
   g.policies.some((p) => breaksLift(p.intervention));
 
-/** Pause rules suggested for each protection. */
-export function pausePolicyFor(protection: Protection): PausePolicy {
-  const firm: PausePolicy = {
-    allowed: true,
-    duringSessions: false,
-    scopes: ['page', 'site'],
-    duration: { mode: 'choices', minutes: 10, choices: [5, 10] },
-    limit: { count: 2, minutes: 15, period: { kind: 'day' } },
-    cost: { type: 'challenge', kind: 'random', length: 24 },
-    reason: 'required',
-    metered: true,
+/**
+ * The breaks of a new rule: off until turned on; then at most 15 minutes each, three a day and half
+ * an hour in all, after a 30-second wait.
+ */
+export function defaultPause(): PausePolicy {
+  return {
+    allowed: false,
+    maxMinutes: 15,
+    limit: { count: 3, minutes: 30, period: { kind: 'day' } },
+    cost: { type: 'delay', seconds: 30 },
   };
-  switch (protection.kind) {
-    case 'reminder':
-      return {
-        allowed: true,
-        duringSessions: true,
-        scopes: ['page', 'site', 'group', 'all'],
-        duration: { mode: 'upTo', minutes: 30 },
-        limit: { count: 6, period: { kind: 'day' } },
-        cost: { type: 'confirm' },
-        reason: 'none',
-        metered: false,
-      };
-    case 'wait':
-      if (protection.seconds > WAIT_IN_DIALOG_SECONDS) return firm;
-      return {
-        allowed: true,
-        duringSessions: false,
-        scopes: ['page', 'site', 'group'],
-        duration: { mode: 'choices', minutes: 15, choices: [5, 10, 15] },
-        limit: { count: 3, minutes: 30, period: { kind: 'day' } },
-        cost: { type: 'delay', seconds: protection.seconds },
-        reason: 'optional',
-        metered: false,
-      };
-    case 'password':
-      return { ...firm, cost: { type: 'password' } };
-    case 'partner':
-      // The partner's code is asked for the breaks of the rule unless it says otherwise.
-      return { ...firm, cost: { type: 'confirm' } };
-    case 'locked':
-    case 'permanent':
-      return {
-        allowed: false,
-        duringSessions: false,
-        scopes: ['page'],
-        duration: { mode: 'fixed', minutes: 5 },
-        limit: { count: 1, period: { kind: 'day' } },
-        cost: { type: 'challenge', kind: 'random', length: 48 },
-        reason: 'required',
-        metered: true,
-      };
-  }
 }
 
 export function defaultOptions(): GroupOptions {
@@ -213,7 +169,7 @@ export function newGroup(partial: Partial<Group> = {}, now = Date.now()): Group 
     archived: false,
     targets: [],
     policies: [],
-    pause: pausePolicyFor(DEFAULT_PROTECTION),
+    pause: defaultPause(),
     protection: { ...DEFAULT_PROTECTION },
     options: defaultOptions(),
     ...partial,
@@ -236,9 +192,18 @@ export const SCHEDULE_PRESETS: Record<string, TimeWindow[]> = {
   nights: [{ days: ALL_DAYS, start: 23 * 60, end: 6 * 60 }],
 };
 
-/** Quick conditions: friction (wait + reason) for temptations, block for explicit windows and sessions. */
+/** Ask first: a reason of any length, for at most 15 minutes. */
 export function frictionIntervention(): Intervention {
-  return { type: 'ask', seconds: 10, choices: [5, 10, 15], maxMinutes: 15 };
+  return { type: 'ask', maxMinutes: 15, minReasonLength: 1 };
+}
+
+/** Ask first lets one answer after this wait. */
+export const ASK_WAIT_SECONDS = 10;
+
+/** The durations Ask first offers, in minutes: those of 5, 10 and 15 within its longest time, or that. */
+export function askChoices(maxMinutes: number): number[] {
+  const choices = [5, 10, 15].filter((c) => c <= maxMinutes);
+  return choices.length ? choices : [maxMinutes];
 }
 
 export function delayIntervention(seconds = 30): Intervention {
@@ -265,7 +230,7 @@ export function newPolicy(partial: Partial<Policy> = {}): Policy {
 export function defaultIntervention(type: InterventionType): Intervention {
   switch (type) {
     case 'filter':
-      return { type: 'filter', filter: 'grayscale', intensity: 100, mute: false };
+      return { type: 'filter', filter: 'grayscale', intensity: 100 };
     case 'ask':
       return frictionIntervention();
     case 'delay':
@@ -275,7 +240,6 @@ export function defaultIntervention(type: InterventionType): Intervention {
         type: 'challenge',
         kind: 'random',
         length: 24,
-        charset: 'alnum',
         grant: { scope: 'site', mode: 'visit' },
       };
     case 'redirect':
@@ -285,17 +249,7 @@ export function defaultIntervention(type: InterventionType): Intervention {
   }
 }
 
-/** When a new rule applies, as chosen in the creation wizard and in onboarding. */
-export type QuickWhen = 'always' | 'schedule' | 'daily';
-/** What happens: any intervention, from "only count" to "redirect". */
-export type QuickHow = Exclude<InterventionType, 'allow'>;
-
 export const QUICK_DELAY_SECONDS = 30;
-
-export function quickIntervention(how: QuickHow, redirectUrl?: string): Intervention {
-  if (how === 'redirect') return { type: 'redirect', url: redirectUrl?.trim() || 'https://' };
-  return defaultIntervention(how);
-}
 
 /** A day, in minutes: the period of a new rule's time limit unless another is chosen. */
 export const DAY_MINUTES = 1440;
@@ -330,34 +284,16 @@ export function periodMinutes(p: Period): number {
   }
 }
 
-/** The starting condition of a rule: "when" × "what happens" (an if-then plan). */
-export function quickPolicies(
-  when: QuickWhen,
-  how: QuickHow | Intervention,
-  windows: TimeWindow[],
-  minutes: number,
-  /** The period of the time limit, in minutes: it starts again every so often. */
-  every = DAY_MINUTES,
-  /** Each site of the rule gets its own time allowed. */
-  perSite = false,
-): Policy[] {
-  // The wizard passes the intervention with the settings chosen (#14); a type takes the defaults.
-  const intervention = typeof how === 'string' ? quickIntervention(how) : how;
-  // Counting only at certain times (#21): outside them the sites are allowed and not counted.
-  if (when === 'schedule' && intervention.type === 'track')
-    return [
-      newPolicy({ schedule: { mode: 'during', windows }, intervention }),
-      newPolicy({ intervention: { type: 'allow' } }),
-    ];
-  if (when === 'schedule') return [newPolicy({ schedule: { mode: 'during', windows }, intervention })];
-  if (when === 'daily')
-    return [
-      newPolicy({
-        budget: { type: 'time', minutes, period: everyPeriod(every), ...(perSite ? { perSite } : {}) },
-        intervention,
-      }),
-    ];
-  return [newPolicy({ intervention })];
+/**
+ * Counting at certain times leaves the other times alone (#21): a new rule that only counts during
+ * its times gets a last condition that neither restricts nor counts, so that outside them the
+ * sites are allowed and not counted.
+ */
+export function withCountingGap(policies: Policy[]): Policy[] {
+  const [p] = policies;
+  return policies.length === 1 && p.intervention.type === 'track' && p.schedule.mode === 'during' && !p.budget
+    ? [...policies, newPolicy({ intervention: { type: 'allow' } })]
+    : policies;
 }
 
 /** The targets of lines in the address syntax, such as the entries of a ready-made list. */
@@ -368,7 +304,24 @@ export function targetsFromLines(lines: string[]): Target[] {
   });
 }
 
-/** What makes two targets the same entry, whatever their id and note: their line. */
+/** What makes two targets the same entry, whatever their id: their line. */
 export function targetKey(t: Pick<Target, 'type' | 'value' | 'allow'>): string {
   return targetToLine({ type: t.type, value: t.value, allow: t.allow });
+}
+
+/** The order of Sort in a rule's sites: by address. */
+export function sortTargets(targets: Target[]): Target[] {
+  return [...targets].sort((a, b) => a.value.localeCompare(b.value));
+}
+
+/**
+ * A rule's sites with the entries of a ready-made list that it does not have yet, sorted. Sites
+ * already sorted (none is) stay so with them; otherwise the list goes after them, so that an order
+ * chosen by hand is kept.
+ */
+export function addTemplate(targets: Target[], entries: string[]): Target[] {
+  const have = new Set(targets.map(targetKey));
+  const added = sortTargets(targetsFromLines(entries).filter((x) => !have.has(targetKey(x))));
+  const sorted = sortTargets(targets).every((x, i) => x === targets[i]);
+  return sorted ? sortTargets([...targets, ...added]) : [...targets, ...added];
 }

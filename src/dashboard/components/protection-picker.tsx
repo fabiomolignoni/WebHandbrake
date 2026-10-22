@@ -32,16 +32,14 @@ export const PROTECTION_KINDS: ProtectionKind[] = [
 ];
 
 /**
- * What loosening the rule and, when it has breaks, taking a break will take; and, for a firm
- * protection, that the browser's extension and settings pages are blocked while it restricts.
+ * What loosening the rule will take; and, for a firm protection, that the browser's extension and
+ * settings pages are blocked while it restricts. What a break costs is chosen with the breaks.
  */
 export function ProtectionExplanation({
   protection: p,
-  breaks,
   browserPages,
 }: {
   protection: Protection;
-  breaks: boolean;
   /** Whether a firmly protected rule blocks the browser's extension and settings pages. */
   browserPages: boolean;
 }) {
@@ -51,11 +49,9 @@ export function ProtectionExplanation({
           duration: formatDuration(p.seconds),
         })
       : t(`level.${p.kind}.weaken`);
-  const pauses = p.kind === 'partner' && p.breaks ? 'level.partner.pausesCode' : `level.${p.kind}.pauses`;
   return (
     <ul class="small bullets">
       <li>{weaken}</li>
-      {breaks && <li>{t(pauses)}</li>}
       {browserPages && firmProtection(p) && <li>{t('level.firm.browserPages')}</li>}
     </ul>
   );
@@ -149,7 +145,7 @@ export function ProtectionPicker({
   /** Its name, for the password dialog and the partner's app. */
   name: string;
   label: string;
-  /** Whether the rule can have breaks (it blocks): what they take is said only then. */
+  /** Whether the rule allows breaks: only then can they need the partner's code too. */
   breaks: boolean;
 }) {
   // Each kind keeps what was chosen for it, so that going back to a password or a partner code
@@ -202,7 +198,7 @@ export function ProtectionPicker({
       />
       {value && (
         <div class="option-panel stack stack-sm" aria-live="polite">
-          <ProtectionExplanation protection={value} breaks={breaks} browserPages={browserPages} />
+          <ProtectionExplanation protection={value} browserPages={browserPages} />
           {value.kind === 'wait' && (
             <div class="stack stack-xs">
               <span class="label" id={`wait-${groupId}`}>

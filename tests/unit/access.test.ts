@@ -8,7 +8,7 @@ const ITERATIONS = 1000;
 const HOUR = 3_600_000;
 
 function pausable(g: Group, cost: Group['pause']['cost']): Group {
-  g.pause = { ...g.pause, allowed: true, scopes: ['page', 'site', 'group', 'all'], reason: 'none', cost };
+  g.pause = { ...g.pause, allowed: true, cost };
   return g;
 }
 
@@ -336,16 +336,17 @@ describe('the Password protection', () => {
 
   it("a break that costs a password asks for the rule's own, or a long code without one", async () => {
     const t = await setup([
-      pausable(group('A', ['a.test'], [{ intervention: BLOCK }]), { type: 'password' }),
-      pausable(group('B', ['b.test'], [{ intervention: BLOCK }]), { type: 'password' }),
+      pausable(group('A', ['a.test', 'both.test'], [{ intervention: BLOCK }]), { type: 'password' }),
+      pausable(group('B', ['b.test', 'both.test'], [{ intervention: BLOCK }]), { type: 'password' }),
     ]);
     t.store.config.groups[0].protection = { kind: 'password', hash: await t.hash('pw-a') };
-    const own = await t.pauses.startPause({ groupId: 'A', scope: 'group', minutes: 5 });
+    const own = await t.pauses.startPause({ groupId: 'A', minutes: 5 });
     expect(await t.steps(own.ticket?.id)).toEqual([{ type: 'rulePassword', groups: ['A'], names: ['A'] }]);
-    const none = await t.pauses.startPause({ groupId: 'B', scope: 'group', minutes: 5 });
+    const none = await t.pauses.startPause({ groupId: 'B', minutes: 5 });
     expect(await t.steps(none.ticket?.id)).toEqual([{ type: 'text', length: 32 }]);
-    const all = await t.pauses.startPause({ groupId: 'A', scope: 'all', minutes: 5 });
-    expect(await t.types(all.ticket?.id)).toEqual(['rulePassword', 'text']);
+    // A break on a page of both rules covers both.
+    const both = await t.pauses.startPause({ url: 'https://both.test/', minutes: 5 });
+    expect(await t.types(both.ticket?.id)).toEqual(['rulePassword', 'text']);
     expect(await t.answer(own.ticket?.id ?? '', 'pw-a')).toMatchObject({ status: 'done' });
   });
 
@@ -454,12 +455,12 @@ describe('the Partner code protection', () => {
     ]);
     const p = await t.partner('A');
     t.store.config.groups[0].protection = p;
-    const brk = await t.pauses.startPause({ groupId: 'A', scope: 'group', minutes: 5 });
+    const brk = await t.pauses.startPause({ groupId: 'A', minutes: 5 });
     expect(await t.types(brk.ticket?.id)).toEqual(['confirm', 'partner']);
-    const other = await t.pauses.startPause({ groupId: 'B', scope: 'group', minutes: 5 });
+    const other = await t.pauses.startPause({ groupId: 'B', minutes: 5 });
     expect(await t.types(other.ticket?.id)).toEqual(['confirm']);
     t.store.config.groups[0].protection = { ...p, breaks: false };
-    const free = await t.pauses.startPause({ groupId: 'A', scope: 'group', minutes: 5 });
+    const free = await t.pauses.startPause({ groupId: 'A', minutes: 5 });
     expect(await t.types(free.ticket?.id)).toEqual(['confirm']);
 
     const session = await t.sessions.startSession({

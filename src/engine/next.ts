@@ -144,16 +144,8 @@ export function nextRestriction(
     const grant = r.pause ?? r.pass;
     if (grant) {
       const kind = r.pause ? 'pause' : 'pass';
-      if (grant.until !== undefined) {
+      if (grant.until !== undefined)
         consider({ at: grant.until, kind, intervention: r.base, groupId: r.group.id });
-      } else if (grant.remaining !== undefined) {
-        consider({
-          at: ctx.now + grant.remaining * 1000,
-          kind,
-          intervention: r.base,
-          groupId: r.group.id,
-        });
-      }
       continue;
     }
     // Budgets running out with continuous use.

@@ -1,20 +1,18 @@
 /**
- * The plan of a new rule as one if-then sentence ("When you open …, WebHandbrake …"), shared by
- * the rule wizard and onboarding (implementation intentions).
+ * The plan of a rule as one if-then sentence ("When you open …, WebHandbrake …"), shown at the top
+ * of the rule editor's summary (implementation intentions).
  */
 
-import {
-  DAY_MINUTES,
-  everyPeriod,
-  type QuickHow,
-  type QuickWhen,
-  quickIntervention,
-} from '../engine/defaults';
+import { ASK_WAIT_SECONDS, DAY_MINUTES, everyPeriod, periodMinutes } from '../engine/defaults';
 import { ALL_SITES } from '../engine/patterns';
-import type { Intervention, Target, TimeWindow } from '../engine/types';
+import type { Group, Intervention, Policy, Target, TimeWindow } from '../engine/types';
 import { t } from '../i18n/i18n';
 import { formatDuration } from '../shared/format';
 import { describePeriod, describeWindows } from '../shared/summary';
+import { everyKind, whenKind } from './rule-form';
+
+/** When the condition of a rule applies, as the first question of the rule editor asks. */
+type PlanWhen = 'always' | 'schedule' | 'daily';
 
 /** "a.com, b.com and 3 more sites". */
 export function sitesPhrase(targets: Target[]): string {
@@ -27,8 +25,8 @@ export function sitesPhrase(targets: Target[]): string {
   return t('wizard.sitesList', { first: first.join(', '), count: values.length - first.length });
 }
 
-/** What happens, with the settings chosen in the wizard (#14). */
-function outcomeOf(when: QuickWhen, i: Intervention): string {
+/** What happens, with its main settings. */
+function outcomeOf(when: PlanWhen, i: Intervention): string {
   switch (i.type) {
     // Counting at certain times leaves the other times alone (#21): the plan says so.
     case 'track':
@@ -37,10 +35,10 @@ function outcomeOf(when: QuickWhen, i: Intervention): string {
       return t('wizard.then.filter', { filter: t(`filter.${i.filter}`) });
     case 'ask':
       // The wait on the page is part of the deal: the plan says so.
-      return i.seconds
-        ? t('wizard.then.askWait', { max: formatDuration(i.maxMinutes * 60), seconds: i.seconds })
-        : t('wizard.then.ask', { max: formatDuration(i.maxMinutes * 60) });
+      return t('wizard.then.ask', { max: formatDuration(i.maxMinutes * 60), seconds: ASK_WAIT_SECONDS });
     case 'delay':
+      if (i.randomTo) return t('wizard.then.delayRandom', { from: i.seconds, to: i.randomTo });
+      if (i.increase) return t('wizard.then.delayGrowing', { seconds: i.seconds, increase: i.increase });
       return t('wizard.then.delay', { seconds: i.seconds });
     case 'challenge':
       if (i.kind === 'phrase') return t('wizard.then.challengePhrase');
@@ -56,8 +54,8 @@ function outcomeOf(when: QuickWhen, i: Intervention): string {
 }
 
 export function planSentence(
-  when: QuickWhen,
-  how: QuickHow | Intervention,
+  when: PlanWhen,
+  intervention: Intervention,
   sites: string,
   windows: TimeWindow[],
   minutes: number,
@@ -65,7 +63,7 @@ export function planSentence(
   /** Whether a time limit is for one site, shared by several or for each of them. */
   limitSites: 'one' | 'shared' | 'each' = 'one',
 ): string {
-  const outcome = outcomeOf(when, typeof how === 'string' ? quickIntervention(how) : how);
+  const outcome = outcomeOf(when, intervention);
   const cond = when === 'daily' && limitSites !== 'one' ? `daily.${limitSites}` : when;
   return t('wizard.review.plan', {
     cond: t(`wizard.cond.${cond}`, {
@@ -76,6 +74,46 @@ export function planSentence(
     }),
     outcome,
   });
+}
+
+/** The last condition of a rule that counts at certain times: at other times, nothing. */
+const leavesAlone = (p: Policy) =>
+  p.intervention.type === 'allow' && p.schedule.mode === 'always' && !p.budget;
+
+/**
+ * The plan of a rule as a sentence, when its condition is one that the first questions describe:
+ * every time, during certain times, or after some time that starts again every so often. Null for
+ * any other rule, whose conditions are listed instead.
+ */
+export function rulePlan(g: Group): string | null {
+  let policies = g.policies;
+  const counting = policies[0]?.intervention.type === 'track' && policies[0].schedule.mode === 'during';
+  // Counting at certain times, and nothing at the others (#21).
+  if (policies.length === 2 && counting && !policies[0].budget && leavesAlone(policies[1]))
+    policies = [policies[0]];
+  else if (counting) return null;
+  if (policies.length !== 1) return null;
+  const [p] = policies;
+  const i = p.intervention;
+  if (i.type === 'allow') return null;
+  const sites = sitesPhrase(g.targets);
+  const kind = whenKind(p);
+  if (kind === 'always') return planSentence('always', i, sites, [], 0);
+  if (kind === 'schedule')
+    return p.schedule.mode === 'during' ? planSentence('schedule', i, sites, p.schedule.windows, 0) : null;
+  const b = p.budget;
+  if (b?.type !== 'time' || p.schedule.mode !== 'always' || !everyKind(b.period) || b.period.offset)
+    return null;
+  const several = g.targets.filter((x) => !x.allow).length > 1;
+  return planSentence(
+    'daily',
+    i,
+    sites,
+    [],
+    b.minutes,
+    periodMinutes(b.period),
+    several ? (b.perSite ? 'each' : 'shared') : 'one',
+  );
 }
 
 /** "a day", "an hour", "every 3 days": how often the time allowed starts again. */

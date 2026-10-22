@@ -130,8 +130,11 @@ export function interventionName(type: Intervention['type']): string {
 export function describeIntervention(i: Intervention): string {
   switch (i.type) {
     case 'delay': {
+      const hidden = i.hideCountdown ? 'yes' : 'no';
+      if (i.increase)
+        return t('intervention.delay.growingSummary', { seconds: i.seconds, increase: i.increase, hidden });
       const seconds = i.randomTo && i.randomTo > i.seconds ? `${i.seconds}–${i.randomTo}` : String(i.seconds);
-      return t('intervention.delay.summary', { seconds, hidden: i.hideCountdown ? 'yes' : 'no' });
+      return t('intervention.delay.summary', { seconds, hidden });
     }
     case 'ask':
       return t('intervention.ask.summary', { max: formatDuration(i.maxMinutes * 60) });
@@ -140,9 +143,7 @@ export function describeIntervention(i: Intervention): string {
       if (i.kind === 'math') return t('intervention.challenge.math');
       return t('intervention.challenge.random', { length: i.length ?? 24 });
     case 'filter':
-      return i.filter === 'none' && i.mute
-        ? t('intervention.filter.muteOnly')
-        : t(`filter.${i.filter}`) + (i.mute ? `, ${t('intervention.filter.muted')}` : '');
+      return t(`filter.${i.filter}`);
     case 'redirect':
       return t('intervention.redirect.summary', { url: i.url });
     case 'allow':
@@ -205,8 +206,6 @@ export function describeUnit(u: ChangeUnit): string {
         value: u.target.value,
         owner: u.ownerName,
       });
-    case 'target.note':
-      return t('unit.targetNote', { value: u.target.value });
     case 'order':
       return t('unit.order');
     case 'setting':

@@ -7,7 +7,7 @@ import { INACTIVE_GAP_MS } from '../engine/limits';
 import { initI18n } from '../i18n/i18n';
 import { api, extensionUrl, quiet, sessionStore } from '../platform/api';
 import { captureErrors } from '../shared/test-hooks';
-import { forgetTab, initIdle, releaseMute, setIdleState } from './accounting';
+import { forgetTab, initIdle, setIdleState } from './accounting';
 import { updateBadge } from './badge';
 import { initClockObserver, restoreTestClock } from './clock';
 import { registerNavigationListeners, registerTabListeners } from './enforce';
@@ -59,8 +59,7 @@ api.alarms.onAlarm.addListener((alarm) => {
 
 api.idle?.onStateChanged?.addListener((s) => setIdleState(s as 'active' | 'idle' | 'locked'));
 
-registerNavigationListeners((tabId, url) => {
-  void releaseMute(tabId, url);
+registerNavigationListeners(() => {
   void endLeftVisits();
 });
 registerTabListeners(

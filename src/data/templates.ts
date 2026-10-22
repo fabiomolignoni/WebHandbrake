@@ -35,7 +35,7 @@ export interface TemplateDef {
   nameKey: string;
   icon: string;
   color: string;
-  /** Lines in the address syntax, as typed in a rule's sites. */
+  /** Lines in the address syntax, as typed in a rule's sites. A rule gets them sorted. */
   entries: string[];
 }
 

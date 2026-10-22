@@ -21,9 +21,6 @@ export const MAX_PROTECTION_EVENTS = 200;
 /** Intentions typed when answering an Ask question that are kept; older ones are dropped. */
 export const MAX_INTENTIONS = 500;
 
-/** Length kept of the reason given for a break or a change. */
-export const MAX_REASON_CHARS = 500;
-
 /** Pages saved for later that are kept; the oldest ones are dropped. */
 export const MAX_LATER_ITEMS = 1000;
 

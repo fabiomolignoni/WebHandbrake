@@ -88,7 +88,7 @@ test('"Block site" blocks: a rule that does not block now is not the default, an
   await popup.button('Block site').click();
   await popup.text('A new rule that blocks it at all times.').expectVisible();
   await popup.label('Add to').select(rule.id);
-  await popup.text(/^“Never now” does not block it/).expectVisible();
+  await popup.text(/^“Never now” does not block/).expectVisible();
   await popup.label('Add to').select('new');
   await popup.button('Block', { exact: true }).click();
   await site.expectIntervention(true, 5000);

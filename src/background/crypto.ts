@@ -49,19 +49,13 @@ export async function verifyPassword(password: string, stored: string): Promise<
   return diff === 0;
 }
 
-const CHARSETS = {
-  // Ambiguous characters (O/0, I/l/1) omitted.
-  alnum: 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789',
-  letters: 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz',
-  digits: '0123456789',
-  symbols: 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*?+=-',
-} as const;
+// Letters and digits; ambiguous characters (O/0, I/l/1) omitted.
+const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
 
-export function randomText(length: number, charset: keyof typeof CHARSETS = 'alnum'): string {
-  const chars = CHARSETS[charset] ?? CHARSETS.alnum;
+export function randomText(length: number): string {
   const bytes = crypto.getRandomValues(new Uint32Array(length));
   let out = '';
-  for (let i = 0; i < length; i++) out += chars[bytes[i] % chars.length];
+  for (let i = 0; i < length; i++) out += CHARS[bytes[i] % CHARS.length];
   return out;
 }
 

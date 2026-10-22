@@ -22,9 +22,15 @@ All notable changes to WebHandbrake are documented here. The format follows
   settings. A new rule’s **After some time** is no longer only “each day”: the time allowed can
   start again every so many minutes, hours or days. A limit as long as its period, which would
   never be reached, is pointed out.
+- **Ask first** can ask for a reason of at least a number of characters (**Reason of at least**),
+  so that “x” no longer lets you in; the block page says how long it must be.
 
 ### Changed
 
+- Shorter, plainer texts on every page. Help lines that repeated their label are gone, the
+  others say one thing in everyday words, and Help gets to the point (the six protections are now
+  a list). The page WebHandbrake shows instead of a site is the block page everywhere, and the
+  Settings tab **Interventions** is now **Blocking**.
 - The ready-made lists are rewritten. They cover the platforms of more countries (all of Amazon's
   and eBay's stores, Mercado Livre in Brazil, Zalando, Vinted, Shopee and more), and each list
   holds only addresses that people open, written out country by country: no list now needs a site
@@ -47,8 +53,7 @@ All notable changes to WebHandbrake are documented here. The format follows
   instead says why and where to change it.
 - A new rule from the wizard allows no breaks until you turn on **Allow breaks**, as in the full
   editor; and with the Partner code protection, breaks need your partner's code only if you tick
-  the box (it was ticked from the start). What a protection says about breaks shows only while
-  the rule allows them.
+  the box (it was ticked from the start).
 - Clearer texts: a rule says that its sites open normally when none of its conditions applies
   (instead of "time is only counted"); the popup and **Why?** say "Your break lasts until 10:23.
   After that: Block." instead of "The break or access ends", and the on-page timer of an access
@@ -56,17 +61,76 @@ All notable changes to WebHandbrake are documented here. The format follows
   its page; **Later** says when a saved page opens again, or that the current rules never open it,
   instead of "not yet available" for every page.
 
+- Breaks are set up in **What happens**, under Block, in the rule editor and in the wizard alike:
+  whether they are allowed, how long a break can last, what it costs and how many you get. The
+  rule editor no longer has a Breaks part, and a protection no longer decides what breaks cost: a
+  new rule's breaks are off until you turn them on, then cost a 30-second wait unless you choose
+  otherwise. A break opens all the sites of its rule for the longest time allowed, and you can end
+  it sooner from the popup or Today. Breaks set up before keep their cost and limits, and last the
+  longest of their lengths.
+- In the rule wizard, **Back** sits next to **Next** instead of at the other end of the bar.
+- One rule editor creates a rule and changes it: the wizard and the full editor are now the same
+  pages. A rule has six parts, **Sites**, **When**, **What happens**, **Details**, **Protection**
+  and **Summary**; a new rule goes through them in order with **Back** and **Next** (the name is
+  asked in Details, before the protection), a rule that exists opens on its summary and any part can
+  be opened. When and Details ask the wizard's questions and keep everything else under **Advanced
+  options**, folded away unless the rule already uses it: outside certain times, limits on visits or
+  continuous use, weekly, monthly and rolling periods, a limit only at certain times and more
+  conditions in When; windows, tabs, frames and quick focus sessions in Details. What happens shows
+  every setting of the chosen intervention. Sites has no advanced options: exceptions, typed with +
+  like any other address, sit in the list among the sites and stand out, and **Edit as text** is
+  next to **Sort** (**Edit as list**, in the same place, goes back to the list). The type of an
+  address changes with how it is written (`=m.youtube.com`, `example.com/page$`), as everywhere
+  else. A time limit as long as its period, which would never be reached, can no longer be saved.
+- The two kinds of site address are called **Whole site** (`youtube.com`, subdomains included) and
+  **Site without subdomains** (`=m.youtube.com`), instead of Site and Exact site, in a rule's
+  sites, in **Why?** and in the popup's **Block this site**.
+- An address already in a rule is never added twice, whether typed, pasted, changed in place or
+  edited as text; repeated entries saved by earlier versions are dropped.
+- **What happens** is simpler. A **Wait** is **Fixed**, **Random** (between two lengths) or
+  **Longer each time** you go in that day, one at a time, chosen right where its length is set,
+  with an example of the waits to come; its other settings say what they do (“If you switch to
+  another tab during the wait”, **Show the countdown**, “Open the page as soon as the wait is
+  over”). There are no advanced options: every setting is in view, including what a wait or a
+  challenge opens once you are through. “What should a break
+  cost?” is now “What must you do to take a break?”, with answers such as **Confirm it** or
+  **Type a phrase**.
+- Whether a rule's breaks can be taken during a focus session is up to the session: **No breaks
+  during the session** on Focus now does what it says for every rule, and quick sessions started
+  from the popup, the right-click menu or the keyboard shortcut allow no breaks.
+
 ### Removed
 
+- **Advanced mode** (Settings › General) and **Use the full editor**: every option of a rule is
+  in its part, under Advanced options.
+- **Remove duplicates** in a rule's sites: the list never holds the same address twice.
+- In What happens: **No visual filter**, the custom filter and **Mute the tab** of a Filter (a
+  filter saved with them is greyscale and leaves the sound alone); the durations offered, the wait
+  before answering and the block once the chosen time is over of Ask first (the block page offers
+  5, 10 and 15 minutes within the longest time and lets you answer after 10 seconds); the
+  characters of a Challenge (always letters and digits); breaks during focus sessions as a setting
+  of the rule; the line “From gentlest to strongest” and the note that a rule only counts time.
+
+- What a break covered (this page, this site, the rule or every rule), its fixed length or list of
+  lengths, the length asked when taking it, the reason asked before taking it and breaks that
+  counted only the time on the site: a break now always covers its whole rule, asks for nothing
+  but its cost and lasts by the clock.
 - Shared lists and the **Always allowed** list, with their pages under Rules: a rule's sites and
   exceptions are now all in the rule. When you update, the sites of a shared list move into the
   rules that used it, and an Always allowed site becomes an exception of the rules whose sites it
   may open. Files exported by earlier versions are read the same way.
 - The four bars next to the current site's status in the popup: the status already says in words
   how much the site is restricted.
+- Notes on the sites and exceptions of a rule: the pencil edits only the address, and in **Edit as
+  text** “entry  # …” is a comment. Notes saved by earlier versions are dropped. The reason a rule
+  matters to you, shown on its block page, stays.
 
 ### Fixed
 
+- The warnings on Today about something that happened (settings restored from a backup, unusual
+  events such as a clock change) can be dismissed: they stayed for a week with no way to close
+  them. A restore no longer also shows the unusual-events warning, and a restore to the defaults
+  no longer names an empty backup date.
 - A limit's period no longer shows "per day" twice (in the list and again below it) in the rule
   editor and in Settings › Interventions; and the wizard's step names are no longer cut, such as
   "What ha…" at 1280 pixels.
@@ -77,12 +141,12 @@ All notable changes to WebHandbrake are documented here. The format follows
   1280 pixels, and on a phone-sized screen the page scrolled sideways. The text of a break now
   wraps and the button stays in the card.
 - During a break, the popup offered **Take a break** again, which started a second break and used
-  up another break of the limit. It now offers **Extend the break**: the running break lasts
-  longer, at the same cost, up to the longest a break can last, and no other break is counted.
+  up another break of the limit. It now offers only **End the break**.
 - The pencil next to a site or an exception of a rule opened an empty box without a label, for a
-  note only: correcting a mistyped address meant removing it and adding it again. It now edits the
-  entry, with the address and an optional note, each labelled. A corrected address follows the
-  rule's protection like removing the old one and adding the new one.
+  note only: correcting a mistyped address meant removing it and adding it again. The pencil, or a
+  click on the address, now turns the address into a field right where it is shown: Enter or
+  leaving the field applies it, Escape puts it back. A corrected address follows the rule's
+  protection like removing the old one and adding the new one.
 - A number typed quickly in a field could lose a digit (“120” became “10”).
 - A new rule left without a name no longer takes the name of its first site, which made texts such
   as “Remove tiktok.com from tiktok.com” and the popup’s “Add to: tiktok.com”. As in the rule

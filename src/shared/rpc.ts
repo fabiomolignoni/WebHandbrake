@@ -21,6 +21,7 @@ import type {
   TicketAnswer,
   TicketView,
   TickResponse,
+  WarningKind,
 } from './models';
 
 export type { Granularity };
@@ -114,6 +115,7 @@ export interface Api {
   'diag.report': { req: { includeUrls: boolean }; res: { text: string } };
   'diag.clearLog': { req: Record<string, never>; res: void };
   'permissions.changed': { req: Record<string, never>; res: void };
+  'warning.dismiss': { req: { kind: WarningKind }; res: void };
   'onboarding.done': { req: Record<string, never>; res: void };
 
   'cs.tick': { req: TickRequest; res: TickResponse };

@@ -178,8 +178,7 @@ function Hero({ m, reload }: { m: PopupModel; reload: () => void }) {
 /** What adding the page to a rule will do: block it now (and until when), from a time, or not at all. */
 function addOutcome(g: PopupModel['groups'][number] | undefined): string {
   if (!g) return t('popup.add.outcomeNew');
-  if (g.blocksNow && g.change)
-    return t('popup.add.outcomeUntil', { rule: g.name, when: formatWhen(g.change) });
+  if (g.blocksNow && g.change) return t('popup.add.outcomeUntil', { when: formatWhen(g.change) });
   if (g.blocksNow) return t('popup.add.outcomeNow');
   if (g.change) return t('popup.add.outcomeLater', { rule: g.name, when: formatWhen(g.change) });
   return t('popup.add.outcomeNever', { rule: g.name });
@@ -384,7 +383,8 @@ function FocusPanel({ m, reload }: { m: PopupModel; reload: () => void }) {
             allow: [],
             minutes,
             locked: false,
-            noPauses: false,
+            // A quick session allows no breaks of its rules.
+            noPauses: true,
           });
           toast(t('focus.started', { minutes }));
           reload();
@@ -478,7 +478,7 @@ function App() {
                 onClick={() => setPausing(true)}
               >
                 <Icon name="pause" />
-                {pause.extend ? t('pause.extend') : t('popup.pause')}
+                {t('popup.pause')}
                 <span class="sub">
                   {pause.available ? pauseSummary(pause) : pause.reason ? t(pause.reason) : ''}
                 </span>
@@ -529,11 +529,9 @@ function App() {
                   <ToneIcon tone="calm" icon="pause" size={26} />
                   <span class="stack break-subject" style={{ gap: 0 }}>
                     <span>{breakSubject(p, groupName)}</span>
-                    <span class="text-2">
-                      {p.until
-                        ? t('pause.leftUntil', { when: formatWhen(p.until, now) })
-                        : t('pause.leftMetered', { duration: formatDuration(p.remaining ?? 0) })}
-                    </span>
+                    {p.until !== undefined && (
+                      <span class="text-2">{t('pause.leftUntil', { when: formatWhen(p.until, now) })}</span>
+                    )}
                   </span>
                 </span>
                 <Button

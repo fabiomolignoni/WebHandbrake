@@ -64,13 +64,13 @@ describe('tickets: costs checked in the background', () => {
   it('typed codes, phrases and sums; the code is never in the step shown', async () => {
     const { tickets, purpose } = await load();
     const { view } = await tickets.createTicket(purpose, [
-      { type: 'text', length: 12, charset: 'digits' },
+      { type: 'text', length: 12 },
       { type: 'phrase', phrase: 'I  choose to  wait' },
       { type: 'math' },
     ]);
     const ticket = await tickets.getTicket(view!.id);
     const code = ticket!.active.text!;
-    expect(code).toMatch(/^\d{12}$/);
+    expect(code).toMatch(/^[A-HJ-NP-Za-km-z2-9]{12}$/);
     expect(view!.step).toEqual({ type: 'text', text: code, length: 12 });
     expect(await tickets.answerTicket(view!.id, `${code}x`)).toMatchObject({
       error: 'ticket.error.mismatch',
@@ -97,26 +97,26 @@ describe('tickets: costs checked in the background', () => {
     expect(await tickets.answerTicket(view!.id, 'yes')).toMatchObject({ status: 'done' });
   });
 
-  it('a reason, required or not; a reason and minutes to go in', async () => {
+  it('a reason long enough and minutes to go in', async () => {
     const { tickets, purpose } = await load();
     const { view } = await tickets.createTicket(purpose, [
-      { type: 'reason', required: true },
-      { type: 'intention', choices: [5, 10], maxMinutes: 20, seconds: 5 },
+      { type: 'intention', choices: [5, 10], maxMinutes: 20, seconds: 5, minLength: 4 },
     ]);
-    expect(await tickets.answerTicket(view!.id, '  ')).toMatchObject({
-      error: 'ticket.error.reasonRequired',
-    });
-    expect(await tickets.answerTicket(view!.id, 'checking the score')).toMatchObject({ status: 'next' });
+    expect(view!.step).toMatchObject({ type: 'intention', minLength: 4 });
     expect(await tickets.answerTicket(view!.id, 'x', 5)).toMatchObject({ error: 'ticket.error.notYet' });
     vi.setSystemTime(T0 + 5000);
     expect(await tickets.answerTicket(view!.id, '', 5)).toMatchObject({
       error: 'ticket.error.intentionRequired',
     });
+    // Spaces around the reason do not count.
+    expect(await tickets.answerTicket(view!.id, '  new  ', 5)).toMatchObject({
+      error: 'ticket.error.intentionShort',
+    });
     expect(await tickets.answerTicket(view!.id, 'news', 21)).toMatchObject({ error: 'ticket.error.minutes' });
     expect(await tickets.answerTicket(view!.id, 'news', 0)).toMatchObject({ error: 'ticket.error.minutes' });
     const t = await tickets.getTicket(view!.id);
     expect(await tickets.answerTicket(view!.id, 'news', 17)).toMatchObject({ status: 'done' });
-    expect(t!.collected).toEqual({ reason: 'checking the score', intention: 'news', minutes: 17 });
+    expect(t!.collected).toEqual({ intention: 'news', minutes: 17 });
   });
 
   it('expires an hour after its waits; can be cancelled', async () => {

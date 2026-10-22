@@ -9,12 +9,11 @@ import { useRef, useState } from 'preact/hooks';
 import { SCHEDULE_PRESETS } from '../../engine/defaults';
 import { clone } from '../../engine/json';
 import { formatHM, isFullDay } from '../../engine/time';
-import type { Schedule, ScheduleMode, TimeWindow } from '../../engine/types';
+import type { TimeWindow } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { formatMinutesOfDay, weekdayNames } from '../../shared/format';
 import { describeWindows } from '../../shared/summary';
-import { Button, IconButton, RadioCards } from '../../ui/components';
-import { Icon } from '../../ui/icons';
+import { Button, IconButton } from '../../ui/components';
 import { useDashboard } from '../context';
 
 const SLOT = 30;
@@ -291,60 +290,6 @@ export function WindowsEditor({
         </div>
       )}
       {windows.length > 0 && <p class="small text-2">{describeWindows(windows)}</p>}
-    </div>
-  );
-}
-
-const MODES: ScheduleMode[] = ['always', 'during', 'outside'];
-const MODE: Record<ScheduleMode, { icon: string; label: string; desc: string }> = {
-  always: { icon: 'zap', label: 'wizard.when.always', desc: 'wizard.when.always.desc' },
-  during: { icon: 'calendar', label: 'schedule.mode.during', desc: 'schedule.mode.during.desc' },
-  outside: { icon: 'moon', label: 'schedule.mode.outside', desc: 'schedule.mode.outside.desc' },
-};
-
-/** "When should it apply?": always, during or outside time windows, as the wizard's cards. */
-export function ScheduleEditor({
-  schedule,
-  onChange,
-}: {
-  schedule: Schedule;
-  onChange: (s: Schedule) => void;
-}) {
-  return (
-    <div class="stack">
-      <RadioCards<ScheduleMode>
-        value={schedule.mode}
-        onChange={(mode) =>
-          onChange({
-            mode,
-            windows:
-              mode !== 'always' && !schedule.windows.length
-                ? clone(SCHEDULE_PRESETS.office)
-                : schedule.windows,
-          })
-        }
-        label={t('schedule.when')}
-        class="choice-grid"
-        itemClass="choice compact"
-        options={MODES.map((value) => ({ value }))}
-        render={(o) => (
-          <>
-            <Icon name={MODE[o.value].icon} />
-            <span>
-              <strong>{t(MODE[o.value].label)}</strong>
-              <span class="small muted">{t(MODE[o.value].desc)}</span>
-            </span>
-          </>
-        )}
-      />
-      {schedule.mode !== 'always' && (
-        <div class="option-panel">
-          <WindowsEditor
-            windows={schedule.windows}
-            onChange={(windows) => onChange({ ...schedule, windows })}
-          />
-        </div>
-      )}
     </div>
   );
 }

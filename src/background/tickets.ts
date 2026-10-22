@@ -6,14 +6,13 @@
 
 import type { ChangeUnit } from '../engine/changes';
 import {
-  MAX_REASON_CHARS,
   SECRET_LOCK_MS,
   SECRET_MAX_FAILURES,
   TICKET_LOCK_MS,
   TICKET_MAX_FAILURES,
   TICKET_TTL_MS,
 } from '../engine/limits';
-import type { Charset, Cost, Group, PauseScope } from '../engine/types';
+import type { Cost, Group } from '../engine/types';
 import { sessionStore } from '../platform/api';
 import type { StepView, TicketPurposeKind, TicketView } from '../shared/models';
 import { now } from './clock';
@@ -24,16 +23,18 @@ import { matchStep } from './totp';
 export type Step =
   | { type: 'confirm' }
   | { type: 'wait'; seconds: number }
-  | { type: 'text'; length: number; charset?: Charset }
+  | { type: 'text'; length: number }
   | { type: 'phrase'; phrase: string }
   | { type: 'math' }
   /** The password that these rules share. */
   | { type: 'rulePassword'; groups: string[]; names: string[] }
   /** The code that the app of the partner these rules share shows. */
   | { type: 'partner'; groups: string[]; names: string[] }
-  | { type: 'reason'; required: boolean }
-  /** A reason is always required; the minutes are one of the choices or any other up to the maximum. */
-  | { type: 'intention'; choices: number[]; maxMinutes: number; seconds: number };
+  /**
+   * A reason of at least `minLength` characters is always required; the minutes are one of the
+   * choices or any other up to the maximum.
+   */
+  | { type: 'intention'; choices: number[]; maxMinutes: number; seconds: number; minLength: number };
 
 export type Purpose =
   /** `base`: the checksum of the configuration when the cost was shown. */
@@ -41,16 +42,11 @@ export type Purpose =
   | { kind: 'pending'; id: string }
   | {
       kind: 'pause';
-      groups: string[] | '*';
-      scope: PauseScope;
+      /** The rules the break covers, whole. */
+      groups: string[];
       minutes: number;
-      url?: string;
-      site?: string;
-      metered: boolean;
       /** The intervention page that the break lets through, if one is shown (statistics). */
       shown?: { tabId: number; groupId: string };
-      /** The running break this extends, instead of taking another one. */
-      extend?: string;
     }
   | {
       kind: 'pass';
@@ -61,7 +57,6 @@ export type Purpose =
       mode: 'visit' | 'minutes';
       minutes?: number;
       site: string;
-      cooldownMinutes?: number;
       incognito: boolean;
     }
   | { kind: 'session.end'; id: string }
@@ -76,7 +71,7 @@ export interface Ticket {
   expiresAt: number;
   /** Secret data of the active step. */
   active: { readyAt?: number; text?: string; answer?: number; question?: string };
-  collected: { reason?: string; intention?: string; minutes?: number };
+  collected: { intention?: string; minutes?: number };
   failures: number;
   lockedUntil?: number;
 }
@@ -119,7 +114,7 @@ function activate(t: Ticket) {
       t.active.readyAt = n + step.seconds * 1000;
       break;
     case 'text':
-      t.active.text = randomText(step.length, step.charset ?? 'alnum');
+      t.active.text = randomText(step.length);
       break;
     case 'math': {
       const op = MATH_OPS[randomInt(0, 2)];
@@ -147,6 +142,8 @@ function stepView(t: Ticket): StepView {
         choices: step.choices,
         maxMinutes: step.maxMinutes,
         seconds: step.seconds,
+        // A ticket of an earlier version has no shortest reason.
+        minLength: step.minLength ?? 1,
         readyAt: t.active.readyAt ?? now(),
       };
     case 'rulePassword':
@@ -169,15 +166,10 @@ export function ticketView(t: Ticket): TicketView {
   };
 }
 
-/**
- * Creates a ticket. With no steps the purpose is executed immediately and null is returned.
- * `collected` holds answers already given, such as a reason typed before the ticket starts: kept
- * with the ticket, they survive a restart of the background.
- */
+/** Creates a ticket. With no steps the purpose is executed immediately and null is returned. */
 export async function createTicket(
   purpose: Purpose,
   steps: Step[],
-  collected: Ticket['collected'] = {},
 ): Promise<{ view: TicketView | null; result?: unknown }> {
   await load();
   if (!steps.length) {
@@ -191,7 +183,7 @@ export async function createTicket(
           createdAt: now(),
           expiresAt: now(),
           active: {},
-          collected,
+          collected: {},
           failures: 0,
         })
       : undefined;
@@ -210,7 +202,7 @@ export async function createTicket(
     createdAt: now(),
     expiresAt: now() + waits + TICKET_TTL_MS,
     active: {},
-    collected,
+    collected: {},
     failures: 0,
   };
   activate(t);
@@ -304,16 +296,13 @@ export async function answerTicket(
         return failSecret('ticket.error.partnerCode');
       break;
     }
-    case 'reason':
-      if (step.required && !a.trim())
-        return { status: 'error', error: 'ticket.error.reasonRequired', ticket: ticketView(t) };
-      t.collected.reason = a.trim().slice(0, MAX_REASON_CHARS) || undefined;
-      break;
     case 'intention': {
       if (n < (t.active.readyAt ?? 0) - 500)
         return { status: 'error', error: 'ticket.error.notYet', ticket: ticketView(t) };
       if (!a.trim())
         return { status: 'error', error: 'ticket.error.intentionRequired', ticket: ticketView(t) };
+      if ([...a.trim()].length < (step.minLength ?? 1))
+        return { status: 'error', error: 'ticket.error.intentionShort', ticket: ticketView(t) };
       const m = Number(minutes);
       if (!Number.isFinite(m) || m <= 0 || m > step.maxMinutes)
         return { status: 'error', error: 'ticket.error.minutes', ticket: ticketView(t) };

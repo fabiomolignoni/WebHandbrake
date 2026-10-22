@@ -49,13 +49,7 @@ describe('what the popup and the dashboard show', () => {
     const soft = group('A', ['a.test'], [{ schedule: office, intervention: BLOCK }], {
       protection: REMINDER,
     });
-    soft.pause = {
-      ...soft.pause,
-      allowed: true,
-      scopes: ['site'],
-      cost: { type: 'confirm' },
-      reason: 'none',
-    };
+    soft.pause = { ...soft.pause, allowed: true, cost: { type: 'confirm' } };
     await setup([soft, group('Off', ['off.test'], [], { enabled: false })]);
     const { popupModel } = await import('../../src/background/views');
     const m = await popupModel();
@@ -67,6 +61,14 @@ describe('what the popup and the dashboard show', () => {
     expect(m).toMatchObject({ canAdd: true, canFocus: true, restorable: 0, quickMinutes: [25, 50, 90] });
     // The tab of an intervention page shows the page it replaced.
     expect((await popupModel(2)).tab?.url).toBe('https://a.test/x');
+    // During a break the popup offers to end it, not another break.
+    const { startPause } = await import('../../src/background/pauses');
+    const { answerTicket } = await import('../../src/background/tickets');
+    const { ticket } = await startPause({ url: 'https://a.test/', minutes: 5 });
+    expect(await answerTicket(ticket!.id, '')).toMatchObject({ status: 'done' });
+    const onBreak = await popupModel();
+    expect(onBreak.pause).toBeNull();
+    expect(onBreak.activePauses).toHaveLength(1);
   });
 
   it('"Block this site" goes to a rule that keeps blocking the page, and says what each rule would do', async () => {
@@ -134,13 +136,36 @@ describe('what the popup and the dashboard show', () => {
     expect(o.warnings.map((w) => w.kind)).toEqual(['incognito', 'clock']);
   });
 
-  it('a break or an access on one site of a rule leaves the rule restricting its other sites', async () => {
+  it('a warning about something that happened can be dismissed, until something new happens', async () => {
+    const t = await setup([]);
+    t.store.meta.restored = { at: T0, snapshotAt: T0 - 3_600_000 };
+    t.store.state.tamper.push(
+      { at: T0, kind: 'state-restored', detail: String(T0 - 3_600_000) },
+      { at: T0, kind: 'clock-backward', detail: '60' },
+    );
+    const { dismissWarning, warnings } = await import('../../src/background/views');
+    const kinds = async () => (await warnings()).map((w) => w.kind);
+    // The restore has its own warning, not also the one about protection events.
+    expect(await kinds()).toEqual(['restored', 'tamper']);
+    await dismissWarning('restored');
+    await dismissWarning('tamper');
+    expect(await kinds()).toEqual([]);
+    expect((fake.local.get('meta') as { restored: unknown }).restored).toBeNull();
+    // A lasting problem is not dismissed.
+    await dismissWarning('clock');
+    t.store.state.clockOffset = 20 * 60_000;
+    vi.setSystemTime(T0 + 60_000);
+    t.store.state.tamper.push({ at: T0 + 60_000, kind: 'clock-skew', detail: '20' });
+    expect(await kinds()).toEqual(['tamper', 'clock']);
+  });
+
+  it('a break of an earlier version or an access on one site of a rule leaves the rule restricting its other sites', async () => {
     const blocked = group('A', ['a.test', 'b.test'], [{ schedule: office, intervention: BLOCK }]);
-    blocked.pause = { ...blocked.pause, allowed: true, scopes: ['site'] };
+    blocked.pause = { ...blocked.pause, allowed: true };
     const asks = group(
       'Q',
       ['q.test', 'r.test'],
-      [{ intervention: { type: 'ask', choices: [5], maxMinutes: 5 } }],
+      [{ intervention: { type: 'ask', maxMinutes: 5, minReasonLength: 1 } }],
     );
     const t = await setup([blocked, asks]);
     const grant = { createdAt: T0, groups: [] as string[], scope: 'site' as const, until: T0 + 5 * 60_000 };

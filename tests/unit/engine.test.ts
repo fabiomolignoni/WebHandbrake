@@ -181,6 +181,7 @@ describe('decisions', () => {
     expect(decide({ ...c, now: at(0, 9, 11) }, 'https://site.example/a').intervention.type).toBe('delay');
     // A pass for a delay does not open a block.
     const g2 = group('P', ['site.example'], [{ intervention: BLOCK }]);
+    g2.pause.allowed = true;
     expect(decide(ctx(config([g2]), at(0, 9, 5), state), 'https://site.example/').intervention.type).toBe(
       'block',
     );
@@ -199,6 +200,7 @@ describe('decisions', () => {
       ['site.example'],
       [{ schedule: evening, intervention: BLOCK }, { intervention: delayIntervention(30) }],
     );
+    g.pause.allowed = true;
     const state = defaultState();
     state.grants.push({
       id: 'b',
@@ -241,6 +243,11 @@ describe('decisions', () => {
     });
     const c = ctx(config([g]), at(0, 9, 30), state);
     expect(decide(c, 'https://news.example/').source).toBe('session');
+    // The session decides whether the rule's breaks are allowed during it.
+    g.pause = { ...g.pause, allowed: true };
+    expect(decide(c, 'https://news.example/').groups[0].pausable).toBe(false);
+    state.sessions[0].noPauses = false;
+    expect(decide(c, 'https://news.example/').groups[0].pausable).toBe(true);
     state.sessions = [
       {
         id: 's2',
@@ -433,7 +440,7 @@ describe('rules over every website and address wildcards', () => {
   it('the filters of every rule on the page add up, the stronger of each kind', () => {
     const all = group('Gray', ['*'], [{ intervention: { ...FILTER, intensity: 60 } }]);
     const video = group('Video', ['video.test'], [{ intervention: delayIntervention(10) }]);
-    const darker = group('Darker', ['video.test'], [{ intervention: { ...FILTER, mute: true } }]);
+    const darker = group('Darker', ['video.test'], [{ intervention: { ...FILTER, intensity: 90 } }]);
     const blur = group('Blur', ['video.test'], [{ intervention: { type: 'filter', filter: 'blur' } }]);
     const state = defaultState();
     const c = ctx(config([all, video, darker, blur]), at(0, 9), state);
@@ -451,7 +458,7 @@ describe('rules over every website and address wildcards', () => {
       severity: SEVERITY.delay,
     });
     expect(pageFilters(decide(c, 'https://video.test/'))).toEqual([
-      { ...FILTER, mute: true },
+      { ...FILTER, intensity: 90 },
       { type: 'filter', filter: 'blur' },
     ]);
     expect(pageFilters(decide(c, 'https://news.test/'))).toEqual([{ ...FILTER, intensity: 60 }]);

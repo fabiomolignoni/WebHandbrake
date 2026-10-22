@@ -17,12 +17,14 @@ import type {
   TodayStats,
   UpcomingChange,
   Warning,
+  WarningKind,
 } from '../shared/models';
 import { dnrStatus } from './dnr-sync';
 import { internalPagesBlocked, restorableTabs } from './enforce';
 import { ctx, decisionView, groupActiveNow, groupProtection, groupStatus, lockedNow } from './engine';
 import { blockingIn, defaultAddGroup } from './pages';
 import { activePauses, pauseOptions } from './pauses';
+import { broadcast } from './reconcile';
 import { store } from './store';
 
 export function todayStats(): TodayStats {
@@ -61,7 +63,11 @@ export async function warnings(): Promise<Warning[]> {
   if (dnrStatus.lastError) out.push({ kind: 'dnr-error', detail: dnrStatus.lastError });
   if (dnrStatus.overflow.length)
     out.push({ kind: 'dnr-overflow', detail: String(dnrStatus.overflow.length) });
-  const recent = store.state.tamper.filter((e) => t0 - e.at < 7 * 86_400_000 && e.kind !== 'emergency');
+  // A restore has its own warning; dismissed events stay listed in Protection.
+  const seen = store.meta.tamperSeen ?? 0;
+  const recent = store.state.tamper.filter(
+    (e) => t0 - e.at < 7 * 86_400_000 && e.at > seen && e.kind !== 'emergency' && e.kind !== 'state-restored',
+  );
   if (recent.length)
     out.push({ kind: 'tamper', at: recent[recent.length - 1].at, detail: recent[recent.length - 1].kind });
   const ready = store.state.pending.filter((p) => p.readyAt <= t0).length;
@@ -69,6 +75,15 @@ export async function warnings(): Promise<Warning[]> {
   if (store.state.clockOffset)
     out.push({ kind: 'clock', detail: String(Math.round(store.state.clockOffset / 60_000)) });
   return out;
+}
+
+/** Hides the warning about something that happened, until something new happens. */
+export async function dismissWarning(kind: WarningKind) {
+  if (kind === 'restored') store.meta.restored = null;
+  else if (kind === 'tamper') store.meta.tamperSeen = Math.max(0, ...store.state.tamper.map((e) => e.at));
+  else return;
+  await store.saveMeta();
+  broadcast(['state']);
 }
 
 export async function overviewModel(): Promise<Overview> {
@@ -153,7 +168,9 @@ export async function popupModel(tabId?: number): Promise<PopupModel> {
   // A break lifts a block only: where no rule blocks the page (it asks, waits, filters, counts, or
   // is within its limit), no break is offered.
   const blocked = d?.groups.some((r) => breaksLift(r.base));
-  const pause = blocked ? pauseOptions(url, undefined, incognito) : null;
+  const options = blocked ? pauseOptions(url, undefined, incognito) : null;
+  // During a break the popup offers to end it, not to take another one.
+  const pause = options?.reason === 'pause.unavailable.onBreak' ? null : options;
   return {
     tab:
       tab && tab.id !== undefined

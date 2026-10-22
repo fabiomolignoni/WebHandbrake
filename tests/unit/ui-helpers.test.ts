@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { pickIntervention, quickInterventionReady } from '../../src/dashboard/components/how-picker';
+import { pickIntervention } from '../../src/dashboard/components/how-picker';
 import { gridToWindows, windowsToGrid } from '../../src/dashboard/components/schedule';
 import { SEVERITY } from '../../src/engine/severity';
 import type { TimeWindow } from '../../src/engine/types';
@@ -85,15 +85,6 @@ describe('the cost and the breaks left, in words', () => {
       pauseSummary(options({ costs: [{ type: 'delay', seconds: 30 }], remainingCount: 3, countPeriod: day })),
     ).toBe('Cost: a 30 s wait · 3 breaks left today');
     expect(pauseSummary(options({}))).toBe('No cost');
-    // Extending a break: how much longer it can last, no break counted.
-    expect(
-      pauseSummary(
-        options({
-          extend: { grantId: 'x', scope: 'site', minutes: 5 },
-          duration: { mode: 'upTo', minutes: 10 },
-        }),
-      ),
-    ).toBe('No cost · up to 10 min more');
   });
 
   it('what a break covers: its site or page and its rules', () => {
@@ -159,8 +150,8 @@ describe('"Why?"', () => {
   });
 });
 
-describe('"What should happen?" in the wizard', () => {
-  it('starts from the defaults, keeps what was set, and a redirect needs an address', () => {
+describe('"What should happen?" in the rule editor', () => {
+  it('starts from the defaults, keeps what was set, and a redirect has no address yet', () => {
     expect(pickIntervention('block')).toEqual(BLOCK);
     expect(pickIntervention('redirect')).toEqual({ type: 'redirect', url: '' });
     const kept = {
@@ -171,18 +162,6 @@ describe('"What should happen?" in the wizard', () => {
       },
     };
     expect(pickIntervention('delay', kept)).toBe(kept.delay);
-    expect(quickInterventionReady(null)).toBe(false);
-    expect(quickInterventionReady({ type: 'redirect', url: 'https://x.test' })).toBe(true);
-    expect(quickInterventionReady({ type: 'redirect', url: '' })).toBe(false);
-    expect(
-      quickInterventionReady({
-        type: 'challenge',
-        kind: 'phrase',
-        phrase: ' ',
-        grant: { scope: 'site', mode: 'visit' },
-      }),
-    ).toBe(false);
-    expect(quickInterventionReady(BLOCK)).toBe(true);
   });
 });
 

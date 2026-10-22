@@ -2,7 +2,7 @@
 
 import type { CompiledGroup } from '../engine/compile';
 import { evaluateGroup } from '../engine/decide';
-import { breaksLift, DEFAULT_PROTECTION, newGroup, newPolicy, pausePolicyFor } from '../engine/defaults';
+import { breaksLift, newGroup, newPolicy } from '../engine/defaults';
 import { clone } from '../engine/json';
 import { candidateTimes } from '../engine/next';
 import { type Granularity, targetFor } from '../engine/page-target';
@@ -67,7 +67,6 @@ export async function addPage(
     group = newGroup({
       name: newGroupName?.trim() || t('addPage.newGroupName'),
       policies: [newPolicy({ intervention: { type: 'block' } })],
-      pause: { ...pausePolicyFor(DEFAULT_PROTECTION), allowed: false },
     });
     next.groups.push(group);
   }

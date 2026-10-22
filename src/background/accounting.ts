@@ -113,13 +113,6 @@ function credit(d: Decision, incognito: boolean, t: number) {
       store.usage.add(key, t, sec, visit ? 1 : 0, cal);
     }
     checkSessionBudgets(r.group, r.site, t);
-    // Metered pauses are consumed only while on the site.
-    const pause = r.pause;
-    if (pause && pause.remaining !== undefined) {
-      const sec = creditSeconds(`pause:${pause.id}`, t);
-      pause.remaining = Math.max(0, pause.remaining - sec);
-      store.scheduleState();
-    }
   }
   // No per-site detail for private windows; budgets above are still consumed.
   if (parsed?.web && !incognito && (counted.length || s.tracking.allSites)) {
@@ -142,27 +135,19 @@ const FILTERS: Record<string, (i: number) => string> = {
   fade: (i) => `opacity(${Math.max(5, 100 - Math.round(i * 0.9))}%)`,
   invert: (i) => `invert(${i}%)`,
   sepia: (i) => `sepia(${i}%)`,
-  none: () => 'none',
 };
 
-/** CSS filter value for the Filter intervention (custom filters accept only CSS filter functions). */
-export function filterCss(kind: string, intensity: number, custom?: string): string {
-  if (kind === 'custom') {
-    const safe = (custom ?? '').replace(/[^a-z0-9%().,\s-]/gi, '');
-    return /url\(/i.test(safe) ? 'none' : safe || 'none';
-  }
-  return (FILTERS[kind] ?? FILTERS.none)(intensity);
+/** CSS filter value for the Filter intervention. */
+export function filterCss(kind: string, intensity: number): string {
+  return (FILTERS[kind] ?? FILTERS.grayscale)(intensity);
 }
 
 /** The filters of every rule on the page, in one CSS value (null without any). */
 export function combinedFilter(d: Decision): TickResponse['filter'] {
-  const filters = pageFilters(d);
-  const css = filters
-    .map((f) => filterCss(f.filter, f.intensity ?? 100, f.css))
-    .filter((v) => v !== 'none')
+  const css = pageFilters(d)
+    .map((f) => filterCss(f.filter, f.intensity ?? 100))
     .join(' ');
-  const mute = filters.some((f) => f.mute);
-  return css || mute ? { css: css || 'none', mute } : null;
+  return css ? { css } : null;
 }
 
 /**
@@ -280,40 +265,11 @@ export async function onTick(req: TickRequest, sender: chrome.runtime.MessageSen
   }
   const res = responseFor(d, t, incognito, req.active && !locked);
   if (req.labels) res.labels = overlayLabels();
-  await applyMute(tab, res.filter?.mute ?? false);
   return res;
-}
-
-const mutedByUs = new Set<number>();
-
-/** Mute the tab while the filter asks for it, and give the sound back afterwards. */
-async function applyMute(tab: chrome.tabs.Tab | undefined, mute: boolean) {
-  if (!tab?.id) return;
-  if (mute && !tab.mutedInfo?.muted) {
-    mutedByUs.add(tab.id);
-    await api.tabs.update(tab.id, { muted: true }).catch(() => undefined);
-  } else if (!mute && mutedByUs.has(tab.id)) {
-    mutedByUs.delete(tab.id);
-    await api.tabs.update(tab.id, { muted: false }).catch(() => undefined);
-  }
-}
-
-/**
- * Gives the sound back when a tab muted by a filter navigates to a page that is not muted: that
- * page may have no content script to send the tick that would do it.
- */
-export async function releaseMute(tabId: number, url: string) {
-  if (!mutedByUs.has(tabId)) return;
-  await store.ready();
-  const tab = await api.tabs.get(tabId).catch(() => undefined);
-  const d = decide(ctx(), url, { incognito: Boolean(tab?.incognito) });
-  if (combinedFilter(d)?.mute) return;
-  await applyMute(tab ?? ({ id: tabId } as chrome.tabs.Tab), false);
 }
 
 /** Forgets the per-tab state of a closed tab. */
 export function forgetTab(tabId: number) {
-  mutedByUs.delete(tabId);
   lastSeverity.delete(tabId);
 }
 

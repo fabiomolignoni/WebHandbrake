@@ -4,14 +4,7 @@ import { installFakeBrowser } from './fake-browser';
 import { BLOCK, group, PERMANENT, REMINDER, wait } from './helpers';
 
 function pausable(g: Group, cost: Group['pause']['cost'], patch: Partial<Group['pause']> = {}): Group {
-  g.pause = {
-    ...g.pause,
-    allowed: true,
-    scopes: ['page', 'site', 'group', 'all'],
-    reason: 'none',
-    cost,
-    ...patch,
-  };
+  g.pause = { ...g.pause, allowed: true, cost, ...patch };
   return g;
 }
 
@@ -28,7 +21,7 @@ describe('pauses covering several groups', () => {
     store.config = { ...store.config, groups };
     const { compileConfig } = await import('../../src/engine/compile');
     store.cc = compileConfig(store.config);
-    return pauses;
+    return { store, ...pauses };
   }
 
   it('pays the cost of every group on the page, not only the first one', async () => {
@@ -41,89 +34,53 @@ describe('pauses covering several groups', () => {
     expect(o.costs).toEqual([{ type: 'delay', seconds: 60 }]);
   });
 
-  it('a pause of everything follows the rules of the groups that are not on the page (regression)', async () => {
-    const { pauseOptions, startPause } = await setup([
-      pausable(group('Free', ['news.test'], [{ intervention: BLOCK }]), { type: 'none' }),
-      pausable(
-        group('Strict', ['games.test'], [{ intervention: BLOCK }]),
-        { type: 'challenge', kind: 'random', length: 40 },
-        { duration: { mode: 'upTo', minutes: 5 } },
-      ),
+  it('a break covers the rules of the page whole, up to the shortest longest break', async () => {
+    const { pauseOptions, startPause, store } = await setup([
+      pausable(group('A', ['news.test', 'paper.test'], [{ intervention: BLOCK }]), { type: 'none' }),
+      pausable(group('B', ['news.test'], [{ intervention: BLOCK }]), { type: 'none' }, { maxMinutes: 5 }),
+      pausable(group('C', ['games.test'], [{ intervention: BLOCK }]), { type: 'none' }),
     ]);
-    const o = pauseOptions('https://news.test/');
-    expect(o.costs).toEqual([]);
-    expect(o.all?.costs).toEqual([{ type: 'challenge', kind: 'random', length: 40 }]);
-    expect(o.all?.duration.minutes).toBe(5);
-    // The page pause is free, a pause of everything is not.
-    const all = await startPause({ url: 'https://news.test/', scope: 'all', minutes: 5 });
-    expect(all.ticket?.step.type).toBe('text');
-    expect(await startPause({ url: 'https://news.test/', scope: 'all', minutes: 10 })).toEqual({
+    const o = pauseOptions('https://news.test/a');
+    expect(o.groups.map((g) => g.id)).toEqual(['A', 'B']);
+    expect(o.maxMinutes).toBe(5);
+    expect(await startPause({ url: 'https://news.test/a', minutes: 10 })).toEqual({
       ticket: null,
       error: 'pause.error.duration',
     });
+    // Shorter than the longest is fine: it can also be ended sooner.
+    expect(await startPause({ url: 'https://news.test/a', minutes: 3 })).toEqual({ ticket: null });
+    expect(store.state.grants).toMatchObject([{ kind: 'pause', groups: ['A', 'B'], scope: 'group' }]);
+    expect(store.state.pauses).toMatchObject([{ groups: ['A', 'B'], scope: 'group', minutes: 3 }]);
+    const { ctx } = await import('../../src/background/engine');
+    const { decide } = await import('../../src/engine/decide');
+    expect(decide(ctx(), 'https://paper.test/').groups[0].pause).toBeDefined();
+    expect(decide(ctx(), 'https://games.test/').groups[0].pause).toBeUndefined();
   });
 
-  it('the reason typed before starting a break survives a restart of the background', async () => {
-    const { store } = await import('../../src/background/store');
-    await store.ready();
-    const g = pausable(
-      group('A', ['news.test'], [{ intervention: BLOCK }]),
-      { type: 'confirm' },
-      {
-        reason: 'required',
-      },
-    );
-    await store.writeConfig({ ...store.config, groups: [g] }, 'test');
-    const { startPause } = await import('../../src/background/pauses');
-    const { ticket } = await startPause({
-      url: 'https://news.test/',
-      scope: 'site',
-      minutes: 5,
-      reason: '  a video for my course  ',
-    });
-    expect(ticket?.step.type).toBe('confirm');
-    // The browser stops the background while the cost is being paid.
-    vi.resetModules();
-    const again = await import('../../src/background/store');
-    await import('../../src/background/pauses');
-    const { answerTicket } = await import('../../src/background/tickets');
-    expect(await answerTicket(ticket!.id, '')).toMatchObject({ status: 'done' });
-    expect(again.store.state.pauses.map((p) => p.reason)).toEqual(['a video for my course']);
-  });
-
-  it('does not offer "all" when a group elsewhere does not allow it', async () => {
-    const { pauseOptions } = await setup([
-      pausable(group('Free', ['news.test'], [{ intervention: BLOCK }]), { type: 'none' }),
-      pausable(
-        group('Strict', ['games.test'], [{ intervention: BLOCK }]),
-        { type: 'none' },
-        {
-          scopes: ['page', 'site'],
-        },
-      ),
+  it('a break asks for no reason', async () => {
+    const { startPause } = await setup([
+      pausable(group('A', ['news.test'], [{ intervention: BLOCK }]), { type: 'confirm' }),
     ]);
-    expect(pauseOptions('https://news.test/').scopes).toEqual(['page', 'site', 'group']);
+    const { ticket } = await startPause({ url: 'https://news.test/', minutes: 5 });
+    expect(ticket?.stepCount).toBe(1);
+    expect(ticket?.step.type).toBe('confirm');
   });
 });
 
-describe('extending a break', () => {
+describe('a running break', () => {
   beforeEach(() => {
     vi.resetModules();
     installFakeBrowser();
   });
 
-  async function setup(patch: Partial<Group['pause']> = {}) {
+  async function setup() {
     const { store } = await import('../../src/background/store');
     const pauses = await import('../../src/background/pauses');
     await store.ready();
     const g = pausable(
       group('G', ['video.test'], [{ intervention: BLOCK }]),
       { type: 'none' },
-      {
-        duration: { mode: 'upTo', minutes: 15 },
-        limit: { count: 1, period: { kind: 'day' } },
-        ...patch,
-      },
+      { maxMinutes: 15, limit: { count: 2, period: { kind: 'day' } } },
     );
     store.config = { ...store.config, groups: [g] };
     const { compileConfig } = await import('../../src/engine/compile');
@@ -133,65 +90,24 @@ describe('extending a break', () => {
 
   const url = 'https://video.test/watch?v=1';
 
-  it('a running break is extended, not taken again, so the limit of breaks is untouched (regression)', async () => {
+  it('is not taken again, so it uses up no other break (regression)', async () => {
     const { store, pauseOptions, startPause } = await setup();
-    await startPause({ url, scope: 'site', minutes: 5 });
-    const [grant] = store.state.grants;
-    const until = grant.until!;
-    const o = pauseOptions(url);
-    // The last break of the day is running: extending it is still possible.
-    expect(o.available).toBe(true);
-    expect(o.extend).toEqual({ grantId: grant.id, scope: 'site', minutes: 5 });
-    expect(o.scopes).toEqual(['site']);
-    expect(o.duration.minutes).toBe(10);
-    expect(o.remainingCount).toBeNull();
-
-    expect(await startPause({ url, scope: 'site', minutes: 4, extend: grant.id })).toEqual({ ticket: null });
+    await startPause({ url, minutes: 15 });
+    expect(pauseOptions(url)).toMatchObject({ available: false, reason: 'pause.unavailable.onBreak' });
+    expect(await startPause({ url, minutes: 15 })).toEqual({
+      ticket: null,
+      error: 'pause.unavailable.onBreak',
+    });
     expect(store.state.grants).toHaveLength(1);
-    expect(store.state.grants[0].until).toBe(until + 4 * 60_000);
-    expect(store.state.grants[0].minutes).toBe(9);
     expect(store.state.pauses).toHaveLength(1);
-    expect(store.state.pauses[0]).toMatchObject({ minutes: 9, site: 'video.test' });
   });
 
-  it('a break is extended at most to the longest a break can last', async () => {
-    const { pauseOptions, startPause, store } = await setup();
-    await startPause({ url, scope: 'site', minutes: 10 });
-    const id = store.state.grants[0].id;
-    expect(await startPause({ url, scope: 'site', minutes: 6, extend: id })).toEqual({
-      ticket: null,
-      error: 'pause.error.duration',
-    });
-    await startPause({ url, scope: 'site', minutes: 5, extend: id });
-    const o = pauseOptions(url);
-    expect(o.available).toBe(false);
-    expect(o.reason).toBe('pause.unavailable.longest');
-    expect(o.extend?.minutes).toBe(15);
-  });
-
-  it('extending costs what a break costs, without asking the reason again', async () => {
-    const { pauseOptions, startPause, store } = await setup({
-      cost: { type: 'confirm' },
-      reason: 'required',
-    });
-    const first = await startPause({ url, scope: 'site', minutes: 5, reason: 'a call' });
-    const { answerTicket } = await import('../../src/background/tickets');
-    expect(await answerTicket(first.ticket!.id, '')).toMatchObject({ status: 'done' });
-    expect(store.state.grants).toHaveLength(1);
-    expect(pauseOptions(url).reasonMode).toBe('none');
-    const more = await startPause({ url, scope: 'site', minutes: 5, extend: store.state.grants[0].id });
-    expect(more.ticket?.step.type).toBe('confirm');
-  });
-
-  it('a break that has ended cannot be extended', async () => {
-    const { startPause, cancelPause, store } = await setup();
-    await startPause({ url, scope: 'site', minutes: 5 });
-    const id = store.state.grants[0].id;
-    await cancelPause(id);
-    expect(await startPause({ url, scope: 'site', minutes: 5, extend: id })).toEqual({
-      ticket: null,
-      error: 'pause.error.ended',
-    });
+  it('ended sooner, it counts only the minutes used and the next one can be taken', async () => {
+    const { startPause, cancelPause, pauseOptions, store } = await setup();
+    await startPause({ url, minutes: 15 });
+    await cancelPause(store.state.grants[0].id);
+    expect(store.state.pauses[0]).toMatchObject({ minutes: 15, used: 0 });
+    expect(pauseOptions(url)).toMatchObject({ available: true, remainingCount: 1 });
   });
 });
 

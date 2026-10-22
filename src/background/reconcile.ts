@@ -66,22 +66,6 @@ export async function maintenance() {
   for (const g of expiredGrants(c)) {
     state.grants = state.grants.filter((x) => x !== g);
     changed = true;
-    if (g.kind === 'pass' && g.cooldownMinutes && g.until && g.groups !== '*') {
-      // The chosen time is over, a cool-down follows.
-      for (const groupId of g.groups) {
-        state.cooldowns[`ask:${groupId}:${g.site ?? ''}`] = {
-          until: g.until + g.cooldownMinutes * 60_000,
-          group: groupId,
-          site: g.scope === 'site' ? g.site : undefined,
-          kind: 'ask',
-        };
-      }
-    }
-    if (g.kind === 'pause') {
-      const rec = state.pauses.find((p) => p.grantId === g.id);
-      if (rec && g.remaining !== undefined)
-        rec.used = Math.round(((g.minutes ?? rec.minutes) * 60 - Math.max(0, g.remaining)) / 60);
-    }
   }
   for (const [k, cd] of Object.entries(state.cooldowns)) {
     if (cd.until <= t0) {

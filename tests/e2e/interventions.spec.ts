@@ -283,15 +283,16 @@ test.describe('delay', () => {
 test.describe('intention question', () => {
   test('grants the chosen time, records the reason and recalls it on the page', async ({ h }) => {
     await h.configure((c) => {
-      c.groups = [group('Video', ['tube.test'], [policy(ask({ choices: [5, 10, 30], maxMinutes: 10 }))])];
+      c.groups = [group('Video', ['tube.test'], [policy(ask({ maxMinutes: 10 }))])];
     });
     const p = await expectBlocked(h, 'http://tube.test/watch');
     await p.role('heading', 'What do you want to do on tube.test?').expectVisible();
     // Durations above the maximum are not offered.
-    await p.role('radio', '30 min').expectCount(0);
+    await p.role('radio', '15 min').expectCount(0);
     await p.label('Your reason').fill('Reply to a message');
     await p.role('radio', '10 min').click();
-    await p.button('Continue for 10 min').click();
+    // One can answer after a 10 s wait.
+    await p.button('Continue for 10 min').click(15_000);
     await p.expectReal('tube.test/watch');
     const d = await h.rpc('explain', { url: 'http://tube.test/other' });
     expect(d.groups[0].pass.intention).toBe('Reply to a message');
@@ -309,27 +310,28 @@ test.describe('intention question', () => {
       c.groups = [group('Video', ['tube.test'], [policy(ask())])];
     });
     const p = await expectBlocked(h, 'http://tube.test/');
-    await p.button('Continue for 5 min').click();
-    await p.text('Please say in a few words what you want to do.').expectVisible();
+    await p.button('Continue for 5 min').click(15_000);
+    await p.text('Say in a few words what you want to do.').expectVisible();
     // Spaces are not a reason.
     await p.label('Your reason').fill('   ');
     await p.button('Continue for 5 min').click();
-    await p.text('Please say in a few words what you want to do.').expectVisible();
+    await p.text('Say in a few words what you want to do.').expectVisible();
     await p.expectIntervention();
-    // The background refuses it too, whatever the page sends.
+    // The background refuses it too, whatever the page sends, once the wait of its question is over.
     const m = await h.rpc('intervention.get', { url: 'http://tube.test/' });
+    await h.clock.advance(11_000);
     expect(await h.rpc('ticket.answer', { id: m.ticket.id, answer: ' ', minutes: 5 })).toMatchObject({
       status: 'error',
       error: 'ticket.error.intentionRequired',
     });
     await p.label('Your reason').fill('Watch the lecture');
-    await p.button('Continue for 5 min').click();
+    await p.button('Continue for 5 min').click(15_000);
     await p.expectReal('tube.test/');
   });
 
   test('another duration can be typed, up to the maximum', async ({ h }) => {
     await h.configure((c) => {
-      c.groups = [group('Video', ['tube.test'], [policy(ask({ choices: [5, 10], maxMinutes: 45 }))])];
+      c.groups = [group('Video', ['tube.test'], [policy(ask({ maxMinutes: 45 }))])];
     });
     const p = await expectBlocked(h, 'http://tube.test/');
     await p.label('Your reason').fill('Watch the lecture');
@@ -337,7 +339,7 @@ test.describe('intention question', () => {
     await p.label('How long?', { exact: true }).fill('90');
     await p.button('Continue for 45 min').expectVisible();
     await p.label('How long?', { exact: true }).fill('25');
-    await p.button('Continue for 25 min').click();
+    await p.button('Continue for 25 min').click(15_000);
     await p.expectReal('tube.test/');
     const d = await h.rpc('explain', { url: 'http://tube.test/other' });
     const left = d.groups[0].pass.until - (await h.clock.now());
@@ -354,22 +356,22 @@ test.describe('intention question', () => {
     await expect.poll(async () => (await h.tabs()).some((t) => t.url.includes('tube.test'))).toBe(false);
   });
 
-  test('when the chosen time is over, a cool-down blocks the site', async ({ h }) => {
+  test('a reason shorter than the rule asks for is refused; once the time is over, it asks again', async ({
+    h,
+  }) => {
     await h.configure((c) => {
-      c.groups = [
-        group('Video', ['tube.test'], [policy(ask({ choices: [5], maxMinutes: 5, cooldownMinutes: 20 }))]),
-      ];
+      c.groups = [group('Video', ['tube.test'], [policy(ask({ maxMinutes: 5, minReasonLength: 12 }))])];
     });
     const p = await expectBlocked(h, 'http://tube.test/');
+    await p.text('At least 12 characters.').expectVisible();
     await p.label('Your reason').fill('One video');
+    await p.button('Continue for 5 min').click(15_000);
+    await p.text('Your reason is too short: add a few words.').expectVisible();
+    await p.label('Your reason').fill('One video, then work');
     await p.button('Continue for 5 min').click();
     await p.expectReal('tube.test/');
     await h.clock.advance(5 * 60_000 + 5000);
     await p.expectIntervention(true, 5000);
-    await p.role('heading', /The time you chose is over/).expectVisible();
-    await p.button(/^Continue/).expectCount(0);
-    await h.clock.advance(20 * 60_000);
-    await p.reload();
     await p.role('heading', /What do you want to do/).expectVisible();
   });
 });
@@ -422,7 +424,7 @@ test.describe('challenges', () => {
     const p = await expectBlocked(h, 'http://type.test/');
     await p.button(/screen reader/).click();
     const phrase = await p.get('form blockquote').text();
-    expect(phrase).toBe('I am choosing to continue on purpose, and I remember why I set this limit.');
+    expect(phrase).toBe('I choose to continue, and I remember why I set this limit.');
     await p.label('Sentence').type(phrase);
     await p.button('Continue', { exact: true }).click();
     await p.expectReal('type.test/');
@@ -491,7 +493,7 @@ test.describe('several rules on a page', () => {
     await p.get('.others').expectCount(0);
     expect(await p.isIntervention()).toBe(true);
     await p.label('Your reason').fill('Watch the lecture');
-    await p.button('Continue for 5 min').click();
+    await p.button('Continue for 5 min').click(15_000);
     await p.expectReal('tube.test/watch');
     const d = await h.rpc('explain', { url: 'http://tube.test/watch' });
     expect(d.groups.map((g: any) => [g.name, Boolean(g.pass)])).toEqual([
@@ -502,9 +504,9 @@ test.describe('several rules on a page', () => {
 });
 
 test.describe('in-page interventions', () => {
-  test('a filter is applied to the page and the tab can be muted', async ({ h }) => {
+  test('a filter is applied to the page, which keeps its sound', async ({ h }) => {
     await h.configure((c) => {
-      c.groups = [group('Gray', ['gray.test'], [policy(filter('grayscale', { intensity: 80, mute: true }))])];
+      c.groups = [group('Gray', ['gray.test'], [policy(filter('grayscale', { intensity: 80 }))])];
     });
     const p = await expectAllowed(h, 'http://gray.test/');
     await p.front();
@@ -517,18 +519,9 @@ test.describe('in-page interventions', () => {
       .poll(() => p.eval(() => getComputedStyle(document.documentElement).filter))
       .toBe('grayscale(0.8)');
     const id = await p.id();
-    await expect
-      .poll(() =>
-        h.control.eval((tabId: number) => chrome.tabs.get(tabId).then((t) => t.mutedInfo?.muted), id),
-      )
-      .toBe(true);
-    // The sound comes back on a page without the filter.
-    await p.goto('http://other.test/');
-    await expect
-      .poll(() =>
-        h.control.eval((tabId: number) => chrome.tabs.get(tabId).then((t) => t.mutedInfo?.muted), id),
-      )
-      .toBe(false);
+    expect(
+      await h.control.eval((tabId: number) => chrome.tabs.get(tabId).then((t) => t.mutedInfo?.muted), id),
+    ).toBe(false);
   });
 
   test('the filters of every rule add up, also once another rule has let the page through', async ({ h }) => {

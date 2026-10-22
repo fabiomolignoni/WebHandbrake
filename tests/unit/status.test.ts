@@ -1,5 +1,10 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { delayIntervention, quickPolicies } from '../../src/engine/defaults';
+import {
+  delayIntervention,
+  frictionIntervention,
+  newPolicy,
+  withCountingGap,
+} from '../../src/engine/defaults';
 import { SEVERITY } from '../../src/engine/severity';
 import type { Intervention, Policy, TimeWindow } from '../../src/engine/types';
 import { setFormatPrefs } from '../../src/shared/format';
@@ -8,15 +13,20 @@ import { groupTone, interventionStatus, LADDER, ruleTypes, siteStatus, toneOf } 
 import { BLOCK } from './helpers';
 
 const office: TimeWindow[] = [{ days: [1, 2, 3, 4, 5], start: 9 * 60, end: 17 * 60 }];
-const policy = (intervention: Intervention): Policy =>
-  ({ ...quickPolicies('always', 'block', office, 30)[0], intervention }) as Policy;
+const policy = (intervention: Intervention): Policy => newPolicy({ intervention });
+const during = (intervention: Intervention): Policy =>
+  newPolicy({ schedule: { mode: 'during', windows: office }, intervention });
 
 describe('rule types: what a rule does, whatever the time', () => {
-  it('names the intervention of every rule the wizard creates, also outside its times', () => {
-    expect(ruleTypes(quickPolicies('schedule', 'block', office, 30))).toEqual(['block']);
-    expect(ruleTypes(quickPolicies('daily', 'ask', office, 30))).toEqual(['ask']);
+  it('names the intervention of every new rule, also outside its times', () => {
+    expect(ruleTypes([during({ type: 'block' })])).toEqual(['block']);
+    const limit = newPolicy({
+      budget: { type: 'time', minutes: 30, period: { kind: 'day' } },
+      intervention: frictionIntervention(),
+    });
+    expect(ruleTypes([limit])).toEqual(['ask']);
     // Counting at certain times adds a "Don't count" condition for the other times.
-    expect(ruleTypes(quickPolicies('schedule', 'track', office, 30))).toEqual(['track']);
+    expect(ruleTypes(withCountingGap([during({ type: 'track' })]))).toEqual(['track']);
   });
 
   it('lists several restrictions from the gentlest to the strongest, without the free ones', () => {
@@ -91,7 +101,7 @@ describe('the state of the current site', () => {
     const on = (patch: Partial<GroupDecisionView>, d: Partial<DecisionView> = {}) =>
       siteStatus(view({ groups: [rule(patch)], ...d }), NOW).title;
     expect(on({ pause: { id: 'p', until: later, scope: 'site' } })).toBe('On a break until 17:00');
-    expect(on({ pause: { id: 'p', remaining: 300, scope: 'site' } })).toBe('On a break · 5 min left');
+    expect(on({ pause: { id: 'p', scope: 'group' } })).toBe('On a break');
     expect(on({ pass: { id: 'g', until: later, scope: 'site' } })).toBe('Access granted until 17:00');
     expect(on({ pass: { id: 'g', visit: true, scope: 'site' } })).toBe('Access granted for this visit');
     const budget = { type: 'visits', used: 2, limit: 3, remaining: 1, exhausted: false } as BudgetView;
@@ -134,7 +144,11 @@ describe('the state of the current site', () => {
     expect(groupTone({ ...g, pause: { until: later } })).toBe('calm');
     expect(groupTone({ ...g, enabled: false })).toBe('neutral');
     expect(
-      groupTone({ ...g, intervention: { type: 'ask', choices: [5], maxMinutes: 5 }, source: 'session' }),
+      groupTone({
+        ...g,
+        intervention: { type: 'ask', maxMinutes: 5, minReasonLength: 1 },
+        source: 'session',
+      }),
     ).toBe('protected');
   });
 });

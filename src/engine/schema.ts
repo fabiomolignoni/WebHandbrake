@@ -6,13 +6,12 @@
 
 import {
   canHaveBreaks,
-  DEFAULT_PROTECTION,
   defaultConfig,
   defaultOptions,
+  defaultPause,
   defaultSettings,
   GROUP_COLORS,
   newId,
-  pausePolicyFor,
 } from './defaults';
 import { clone, isObj } from './json';
 import { MAX_WAIT_SECONDS, MIN_WAIT_SECONDS, PBKDF2_MAX_ITERATIONS, PBKDF2_MIN_ITERATIONS } from './limits';
@@ -68,19 +67,25 @@ export function normalizeTarget(raw: unknown): Target | null {
   const t: Target = { ...raw, id: str(raw.id) || newId(), type, value };
   if (raw.allow) t.allow = true;
   else delete t.allow;
-  if (typeof raw.note === 'string' && raw.note) t.note = raw.note.slice(0, 500);
-  else delete t.note;
+  // Sites no longer have notes: those of earlier versions are dropped.
+  delete (t as { note?: unknown }).note;
   if (!compilePattern(t)) return null;
   return t;
 }
 
+const targetKey = (t: Record<string, any>) => `${t.type}|${t.value}|${Boolean(t.allow)}`;
+
+/** A rule's entries, each once: a repeated entry is left out without a word. */
 function normalizeTargets(raw: unknown, errors: string[], where: string): Target[] {
   if (!Array.isArray(raw)) return [];
   const out: Target[] = [];
+  const seen = new Set<string>();
   for (const r of raw) {
     const t = normalizeTarget(r);
-    if (t) out.push(t);
-    else
+    if (t) {
+      if (!seen.has(targetKey(t))) out.push(t);
+      seen.add(targetKey(t));
+    } else
       errors.push(
         `${where}: an entry that could not be read was left out: ${JSON.stringify(r).slice(0, 80)}`,
       );
@@ -139,45 +144,30 @@ export function normalizeIntervention(raw: unknown): Intervention {
     // keeps both, where the fallback below would block.
     case 'remind':
       return { type: 'track' };
+    // A custom filter or no filter of earlier versions is greyscale; a filter no longer mutes the tab.
     case 'filter':
       return {
         type: 'filter',
-        filter: oneOf(
-          raw.filter,
-          ['grayscale', 'blur', 'fade', 'invert', 'sepia', 'custom', 'none'] as const,
-          'grayscale',
-        ),
+        filter: oneOf(raw.filter, ['grayscale', 'blur', 'fade', 'invert', 'sepia'] as const, 'grayscale'),
         intensity: num(raw.intensity, 100, 0, 100),
-        ...(raw.css ? { css: str(raw.css, '', 200) } : {}),
-        mute: bool(raw.mute, false),
       };
-    case 'ask': {
-      const maxMinutes = num(raw.maxMinutes, 15, 1, 1440);
-      const given: number[] = Array.isArray(raw.choices)
-        ? raw.choices.filter((c: unknown) => typeof c === 'number' && c > 0 && c <= 1440).slice(0, 6)
-        : [];
-      // Only durations that can be granted: a choice above the maximum could never be picked.
-      const choices = (given.length ? given : [5, 10, 15]).filter((c) => c <= maxMinutes);
+    // The durations offered, the wait and the block afterwards of earlier versions are no longer set.
+    case 'ask':
       return {
         type: 'ask',
-        seconds: num(raw.seconds, 0, 0, 600),
-        choices: choices.length ? choices : [maxMinutes],
-        maxMinutes,
-        ...(typeof raw.cooldownMinutes === 'number' && raw.cooldownMinutes > 0
-          ? { cooldownMinutes: num(raw.cooldownMinutes, 0, 1, 1440) }
-          : {}),
+        maxMinutes: num(raw.maxMinutes, 15, 1, 1440),
+        minReasonLength: Math.round(num(raw.minReasonLength, 1, 1, 300)),
       };
-    }
+    // A wait is either random or longer at each pass: a random one of earlier versions stays so.
     case 'delay':
       return {
         type: 'delay',
         seconds: num(raw.seconds, 30, 1, 3600),
         ...(typeof raw.randomTo === 'number' && raw.randomTo > 0
           ? { randomTo: num(raw.randomTo, 0, 1, 3600) }
-          : {}),
-        ...(typeof raw.increase === 'number' && raw.increase > 0
-          ? { increase: num(raw.increase, 0, 1, 600) }
-          : {}),
+          : typeof raw.increase === 'number' && raw.increase > 0
+            ? { increase: num(raw.increase, 0, 1, 600) }
+            : {}),
         autoContinue: bool(raw.autoContinue, false),
         onBlur: oneOf(raw.onBlur, ['pause', 'restart', 'ignore'] as const, 'pause'),
         hideCountdown: bool(raw.hideCountdown, false),
@@ -188,7 +178,6 @@ export function normalizeIntervention(raw: unknown): Intervention {
         type: 'challenge',
         kind: oneOf(raw.kind, ['random', 'phrase', 'math'] as const, 'random'),
         length: num(raw.length, 24, 4, 500),
-        charset: oneOf(raw.charset, ['alnum', 'letters', 'digits', 'symbols'] as const, 'alnum'),
         ...(raw.phrase ? { phrase: str(raw.phrase, '', 500) } : {}),
         grant: normalizeGrantSpec(raw.grant),
       };
@@ -248,7 +237,6 @@ export function normalizePolicy(raw: unknown): Policy | null {
 }
 
 const COST_TYPES = ['none', 'confirm', 'delay', 'challenge', 'password'] as const;
-const PAUSE_SCOPES = ['page', 'site', 'group', 'all'] as const;
 
 function normalizeCost(raw: unknown): Cost {
   const r = isObj(raw) ? raw : {};
@@ -273,38 +261,33 @@ function normalizeCost(raw: unknown): Cost {
 
 /**
  * Pause policy. Optional limits stay absent when absent: merging with the defaults would turn
- * "no limit" into the default limit.
+ * "no limit" into the default limit. A break of earlier versions could last a fixed time or one
+ * of a few lengths, cover less than the rule, ask for a reason, count only the time on the site or
+ * be allowed during focus sessions: it now lasts up to the longest of its lengths and covers the
+ * rule, and the focus session decides.
  */
 export function normalizePause(raw: unknown): PausePolicy {
-  const def = pausePolicyFor(DEFAULT_PROTECTION);
+  const def = defaultPause();
   if (!isObj(raw)) return def;
   const d = isObj(raw.duration) ? raw.duration : {};
   const l = isObj(raw.limit) ? raw.limit : {};
-  const choices = Array.isArray(d.choices)
-    ? d.choices.filter((c: unknown) => typeof c === 'number' && c > 0 && c <= 1440).slice(0, 6)
-    : undefined;
-  const scopes = Array.isArray(raw.scopes)
-    ? [...new Set(raw.scopes.filter((x: unknown) => PAUSE_SCOPES.includes(x as never)))]
-    : def.scopes;
-  return {
+  const choices: unknown[] = d.mode === 'choices' && Array.isArray(d.choices) ? d.choices : [];
+  const lengths = [raw.maxMinutes, d.minutes, ...choices].filter(
+    (m): m is number => typeof m === 'number' && Number.isFinite(m),
+  );
+  const pause = {
     ...raw,
     allowed: bool(raw.allowed, def.allowed),
-    duringSessions: bool(raw.duringSessions, def.duringSessions),
-    scopes: scopes as PausePolicy['scopes'],
-    duration: {
-      mode: oneOf(d.mode, ['fixed', 'upTo', 'choices'] as const, def.duration.mode),
-      minutes: num(d.minutes, def.duration.minutes, 1, 1440),
-      ...(choices?.length ? { choices } : {}),
-    },
+    maxMinutes: lengths.length ? num(Math.max(...lengths), def.maxMinutes, 1, 1440) : def.maxMinutes,
     limit: {
       ...(typeof l.count === 'number' ? { count: Math.round(num(l.count, 0, 0, 1000)) } : {}),
       ...(typeof l.minutes === 'number' ? { minutes: num(l.minutes, 0, 0, 100_000) } : {}),
       period: normalizePeriod(l.period),
     },
     cost: normalizeCost(raw.cost),
-    reason: oneOf(raw.reason, ['none', 'optional', 'required'] as const, def.reason),
-    metered: bool(raw.metered, def.metered),
-  } as PausePolicy;
+  } as PausePolicy & Record<string, unknown>;
+  for (const old of ['duration', 'scopes', 'reason', 'metered', 'duringSessions']) delete pause[old];
+  return pause;
 }
 
 const KINDS = ['reminder', 'wait', 'password', 'partner', 'locked', 'permanent'] as const;
@@ -470,6 +453,8 @@ export function normalizeGroup(
  */
 const OBSOLETE_SETTINGS = [
   'accent',
+  // Advanced mode: the rule editor has advanced options in each part instead.
+  'advanced',
   'interventions.alternatives',
   'protection.level',
   'protection.lockedUntil',
@@ -602,8 +587,6 @@ export function checksum(text: string): string {
 // ---------------------------------------------------------------------------
 
 type Migration = (raw: Record<string, any>) => Record<string, any>;
-
-const targetKey = (t: Record<string, any>) => `${t.type}|${t.value}|${Boolean(t.allow)}`;
 
 /** migrations[n] upgrades schema n to n + 1. */
 const MIGRATIONS: Record<number, Migration> = {

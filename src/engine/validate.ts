@@ -1,7 +1,7 @@
 /** Validation that prevents configurations that block nothing, with clear messages. */
 
 import { unusedExceptions } from './changes';
-import { canHaveBreaks } from './defaults';
+import { canHaveBreaks, periodMinutes } from './defaults';
 import { ALL_SITES, checkRegex } from './patterns';
 import type { Group, Policy, Target } from './types';
 
@@ -35,6 +35,9 @@ function policyIssues(p: Policy, i: number): Issue[] {
   if (b) {
     if (b.type === 'time' && b.minutes <= 0)
       out.push({ level: 'warning', key: 'validate.zeroBudget', params: { n }, policy: i });
+    // A limit as long as its period is never reached.
+    if (b.type === 'time' && b.minutes >= periodMinutes(b.period))
+      out.push({ level: 'error', key: 'validate.neverReached', params: { n }, policy: i });
     if (b.type === 'visits' && b.count <= 0)
       out.push({ level: 'warning', key: 'validate.zeroVisits', params: { n }, policy: i });
   }
@@ -45,8 +48,8 @@ function policyIssues(p: Policy, i: number): Issue[] {
   if (iv.type === 'challenge' && iv.kind === 'phrase' && !iv.phrase?.trim()) {
     out.push({ level: 'error', key: 'validate.phrase', params: { n }, policy: i });
   }
-  if (iv.type === 'ask' && !iv.choices.some((c) => c <= iv.maxMinutes)) {
-    out.push({ level: 'error', key: 'validate.askChoices', params: { n }, policy: i });
+  if (iv.type === 'delay' && iv.randomTo !== undefined && iv.randomTo <= iv.seconds) {
+    out.push({ level: 'error', key: 'validate.randomWait', params: { n }, policy: i });
   }
   return out;
 }
@@ -94,17 +97,11 @@ export function validateGroup(g: Group): Issue[] {
       });
     } else if (p.schedule.mode === 'always' && !p.budget) unconditional = i;
   });
-  if (
-    g.policies.length &&
-    g.policies.every((p) => p.intervention.type === 'track' || p.intervention.type === 'allow')
-  ) {
-    out.push({ level: 'info', key: 'validate.onlyTracking' });
-  }
   for (const e of unusedExceptions(g.targets)) {
     out.push({ level: 'info', key: 'validate.unusedException', params: { value: e.value } });
   }
   // Without a condition that blocks, the rule has no breaks (they are turned off when it is saved).
-  if (g.pause.allowed && canHaveBreaks(g) && g.pause.duration.minutes <= 0)
+  if (g.pause.allowed && canHaveBreaks(g) && g.pause.maxMinutes <= 0)
     out.push({ level: 'error', key: 'validate.pauseDuration' });
   return out;
 }

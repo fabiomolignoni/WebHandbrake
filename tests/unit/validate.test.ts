@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { delayIntervention } from '../../src/engine/defaults';
-import type { Group, Policy } from '../../src/engine/types';
+import type { Group, Period, Policy } from '../../src/engine/types';
 import { hasErrors, isRedirectUrl, validateGroup, validateTargets } from '../../src/engine/validate';
 import { BLOCK, group, t } from './helpers';
 
@@ -45,6 +45,16 @@ describe('rule validation', () => {
     expect(keys(valid([{ schedule: allDay, intervention: BLOCK }]))).toEqual([]);
   });
 
+  it('a time limit as long as its period is never reached', () => {
+    const limit = (minutes: number, period: Period) =>
+      valid([{ budget: { type: 'time', minutes, period }, intervention: BLOCK }]);
+    const never = validateGroup(limit(60, { kind: 'hour' })).find((i) => i.key === 'validate.neverReached');
+    expect(never).toEqual({ level: 'error', key: 'validate.neverReached', params: { n: 1 }, policy: 0 });
+    expect(keys(limit(30 * 60, { kind: 'minutes', n: 120 }))).toContain('validate.neverReached');
+    expect(keys(limit(59, { kind: 'hour' }))).toEqual([]);
+    expect(keys(limit(30 * 60, { kind: 'days', n: 2 }))).toEqual([]);
+  });
+
   it('limits of nothing, and what happens: redirect address, phrase, durations', () => {
     expect(
       keys(valid([{ budget: { type: 'time', minutes: 0, period: { kind: 'day' } }, intervention: BLOCK }])),
@@ -69,9 +79,10 @@ describe('rule validation', () => {
         ]),
       ),
     ).toContain('validate.phrase');
-    expect(keys(valid([{ intervention: { type: 'ask', choices: [30], maxMinutes: 10 } }]))).toContain(
-      'validate.askChoices',
-    );
+    // A random wait needs a longest wait over the shortest.
+    const random = (randomTo: number) => ({ ...delayIntervention(30), randomTo }) as Policy['intervention'];
+    expect(keys(valid([{ intervention: random(30) }]))).toContain('validate.randomWait');
+    expect(keys(valid([{ intervention: random(31) }]))).not.toContain('validate.randomWait');
   });
 
   it('conditions after one that always applies are never reached', () => {
@@ -84,14 +95,14 @@ describe('rule validation', () => {
     ]);
   });
 
-  it('notes a rule without conditions, or one that only counts time', () => {
+  it('notes a rule without conditions; one that only counts time is fine', () => {
     expect(keys(valid([]))).toEqual(['validate.noPolicies']);
-    expect(keys(valid([{ intervention: { type: 'track' } }]))).toEqual(['validate.onlyTracking']);
+    expect(keys(valid([{ intervention: { type: 'track' } }]))).toEqual([]);
   });
 
   it('a break of no minutes is an error', () => {
     const g = valid([{ intervention: BLOCK }]);
-    g.pause = { ...g.pause, allowed: true, duration: { mode: 'upTo', minutes: 0 } };
+    g.pause = { ...g.pause, allowed: true, maxMinutes: 0 };
     expect(keys(g)).toEqual(['validate.pauseDuration']);
     // A rule that never blocks has no breaks: their settings are not checked.
     const asks = valid([{ intervention: delayIntervention(30) }]);

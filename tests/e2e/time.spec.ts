@@ -164,7 +164,7 @@ test('typing in a page gives a grace period with a countdown and a copy button',
     c.settings.interventions.graceSeconds = 4;
     c.groups = [group('Forum', ['forum.test'], [policy(BLOCK)], { pause: pauseFree })];
   });
-  const start = await h.rpc('pause.start', { url: 'http://forum.test/', scope: 'group', minutes: 10 });
+  const start = await h.rpc('pause.start', { url: 'http://forum.test/', minutes: 10 });
   if (start.ticket) await h.completeTicket(start.ticket);
   const p = await expectAllowed(h, 'http://forum.test/thread');
   await p.label('Comment').type('a long comment I do not want to lose');

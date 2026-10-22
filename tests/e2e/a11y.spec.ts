@@ -72,25 +72,46 @@ test('WCAG 2.2 AA on every dashboard page, in the light and the dark theme', asy
   expect(all).toEqual([]);
 });
 
-test('WCAG 2.2 AA in every step of the rule editor, the wizard and the first run, in both themes', async ({
+/** Opens every "Advanced options" of the page, so that their settings are checked too. */
+async function openAdvanced(p: Tab) {
+  await p.eval(() => {
+    for (const d of Array.from(document.querySelectorAll('details.advanced')))
+      (d as HTMLDetailsElement).open = true;
+  });
+}
+
+test('WCAG 2.2 AA in every part of the rule editor, for a new rule and in the first run, in both themes', async ({
   h,
 }) => {
   const { p, id } = await dashboard(h, 'today');
   const all: string[] = [];
-  // Every part of the rule editor; its only condition is open, with the friction picker.
+  // Every part of a rule, with its advanced options open; its only condition is asked in place.
   await go(p, `groups/${id}`);
-  for (const part of ['Sites', 'When', 'What happens', 'Protection', 'Breaks', 'Details']) {
+  for (const part of ['Sites', 'When', 'What happens', 'Details', 'Protection']) {
     await openPart(p, part);
-    if (part === 'What happens') await p.role('radiogroup', 'What happens').expectVisible();
+    // What happens with its breaks allowed, so that their settings are shown.
+    if (part === 'What happens') {
+      await p.role('radiogroup', 'What happens').expectVisible();
+      await p.role('switch', 'Allow breaks').expectChecked(true);
+    }
+    await openAdvanced(p);
     all.push(...(await check(p, `rule editor, ${part}`)));
   }
-  // Every step of the rule wizard.
+  // Every part of a new rule, in order.
   await go(p, 'groups/new?template=social');
-  for (const step of ['when', 'what happens', 'protection', 'review']) {
-    if (step === 'protection') await p.role('radio', 'Ask first').click();
-    if (step === 'review') await p.role('radio', /^Wait/).click();
+  for (const step of ['when', 'what happens', 'details', 'protection', 'summary']) {
+    if (step === 'details') {
+      // What happens with breaks, whose settings show under Block.
+      await p.role('radio', 'Block').click();
+      await p.role('switch', 'Allow breaks').click();
+      await openAdvanced(p);
+      all.push(...(await check(p, 'new rule what happens, breaks')));
+      await p.role('radio', 'Ask first').click();
+    }
+    if (step === 'summary') await p.role('radio', /^Wait/).click();
     await p.button(`Next: ${step}`).click();
-    all.push(...(await check(p, `wizard ${step}`)));
+    await openAdvanced(p);
+    all.push(...(await check(p, `new rule ${step}`)));
   }
   // Every screen of the first run.
   await p.eval(() => {
@@ -100,9 +121,9 @@ test('WCAG 2.2 AA in every step of the rule editor, the wizard and the first run
   await p.button('Set up in about a minute').click();
   all.push(...(await check(p, 'first run sites')));
   await p.button(/^Social media/).click();
-  for (const step of ['when', 'what happens', 'protection', 'review']) {
-    if (step === 'protection') await p.role('radio', 'Ask first').click();
-    if (step === 'review') await p.role('radio', /^Wait/).click();
+  for (const step of ['when', 'what happens', 'details', 'protection', 'summary']) {
+    if (step === 'details') await p.role('radio', 'Ask first').click();
+    if (step === 'summary') await p.role('radio', /^Wait/).click();
     await p.button(`Next: ${step}`).click();
     all.push(...(await check(p, `first run ${step}`)));
   }
@@ -128,7 +149,7 @@ test('the popup and the intervention pages pass WCAG checks', async ({ h }) => {
   all.push(...(await type.axe()).map((v) => `challenge: ${v}`));
   // The question with its error and the typed duration.
   const askPage = await expectBlocked(h, 'http://ask.test/');
-  await askPage.button('Continue for 5 min').click();
+  await askPage.button('Continue for 5 min').click(15_000);
   await askPage.role('radio', 'Other').click();
   await askPage.label('How long?', { exact: true }).expectVisible();
   all.push(...(await askPage.axe()).map((v) => `ask: ${v}`));
