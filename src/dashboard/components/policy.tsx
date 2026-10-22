@@ -337,26 +337,20 @@ export function InterventionEditor({
   const v = value;
   return (
     <div class="stack">
-      <div>
-        <div class="friction-scale" aria-hidden="true">
-          <span>← {t('policy.gentler')}</span>
-          <span>{t('policy.stronger')} →</span>
-        </div>
-        <RadioCards<InterventionType>
-          value={v.type}
-          onChange={(type) => onChange(defaultIntervention(type))}
-          label={t('intervention.label')}
-          class="friction-picker"
-          itemClass="friction-option"
-          options={EDITOR_LADDER.map((x) => ({ value: x, tone: toneOf(x) }))}
-          render={(o) => (
-            <>
-              <Icon name={interventionIcon(o.value)} />
-              <span>{t(`intervention.short.${o.value}`)}</span>
-            </>
-          )}
-        />
-      </div>
+      <RadioCards<InterventionType>
+        value={v.type}
+        onChange={(type) => onChange(defaultIntervention(type))}
+        label={t('intervention.label')}
+        class="friction-picker"
+        itemClass="friction-option"
+        options={EDITOR_LADDER.map((x) => ({ value: x, tone: toneOf(x) }))}
+        render={(o) => (
+          <>
+            <Icon name={interventionIcon(o.value)} />
+            <span>{t(`intervention.short.${o.value}`)}</span>
+          </>
+        )}
+      />
       <div class={`option-panel tone-${toneOf(v.type)}`}>
         <p class="small">
           <strong>{t(`intervention.${v.type}`)}</strong> — {t(`intervention.help.${v.type}`)}

@@ -2822,9 +2822,6 @@
   "policy.edit": {
     "message": "Edit condition"
   },
-  "policy.gentler": {
-    "message": "Gentler"
-  },
   "policy.number": {
     "message": "Condition {n}"
   },
@@ -2836,9 +2833,6 @@
   },
   "policy.remove": {
     "message": "Remove condition"
-  },
-  "policy.stronger": {
-    "message": "Stronger"
   },
   "policy.up": {
     "message": "Move condition up"

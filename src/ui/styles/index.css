@@ -2540,18 +2540,6 @@ a.kpi:hover .caption {
 }
 
 /* Friction picker: every intervention from gentlest to strongest. */
-.friction-scale {
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--fs-xs);
-  color: var(--muted);
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-.friction-scale span::after,
-.friction-scale span::before {
-  color: var(--border-strong);
-}
 .friction-picker {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));

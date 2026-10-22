@@ -50,26 +50,20 @@ export function HowPicker({
   const set = (i: Intervention) => onChange(i, { ...kept, [i.type]: i });
   return (
     <div class="stack">
-      <div>
-        <div class="friction-scale" aria-hidden="true">
-          <span>← {t('policy.gentler')}</span>
-          <span>{t('policy.stronger')} →</span>
-        </div>
-        <RadioCards<QuickHow>
-          value={how ?? ('' as QuickHow)}
-          onChange={(x) => set(pickIntervention(x, kept))}
-          label={label}
-          class="friction-picker how-grid"
-          itemClass="friction-option"
-          options={(LADDER as QuickHow[]).map((x) => ({ value: x, tone: toneOf(x) }))}
-          render={(o) => (
-            <>
-              <Icon name={interventionIcon(o.value)} />
-              <span>{t(`intervention.short.${o.value}`)}</span>
-            </>
-          )}
-        />
-      </div>
+      <RadioCards<QuickHow>
+        value={how ?? ('' as QuickHow)}
+        onChange={(x) => set(pickIntervention(x, kept))}
+        label={label}
+        class="friction-picker how-grid"
+        itemClass="friction-option"
+        options={(LADDER as QuickHow[]).map((x) => ({ value: x, tone: toneOf(x) }))}
+        render={(o) => (
+          <>
+            <Icon name={interventionIcon(o.value)} />
+            <span>{t(`intervention.short.${o.value}`)}</span>
+          </>
+        )}
+      />
       {value && how && (
         <div class={`option-panel tone-${toneOf(how)} stack stack-sm`} aria-live="polite">
           <p class="small">
