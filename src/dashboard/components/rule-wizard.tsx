@@ -616,19 +616,23 @@ export function RuleWizard({
         )}
       </section>
 
+      {/* Back sits next to Next; Cancel (first step) or the full editor (review) at the other end. */}
       <div class="sticky-actions row between">
-        <Button
-          variant="ghost"
-          icon={s.step || onBack ? 'chevron-left' : undefined}
-          onClick={() => (s.step ? go(s.step - 1) : first())}
-        >
-          {s.step || onBack ? t('wizard.back') : t('common.cancel')}
-        </Button>
-        <div class="row">
-          {step === 'review' && onFullEditor && (
-            <button type="button" class="link-btn small" onClick={fullEditor}>
-              {t('wizard.customize')}
-            </button>
+        {!s.step && !onBack && (
+          <Button variant="ghost" onClick={first}>
+            {t('common.cancel')}
+          </Button>
+        )}
+        {step === 'review' && onFullEditor && (
+          <button type="button" class="link-btn small" onClick={fullEditor}>
+            {t('wizard.customize')}
+          </button>
+        )}
+        <div class="row wizard-nav">
+          {(s.step > 0 || onBack) && (
+            <Button icon="chevron-left" onClick={() => (s.step ? go(s.step - 1) : first())}>
+              {t('wizard.back')}
+            </Button>
           )}
           {step === 'review' ? (
             <Button variant="primary" icon="check" disabled={!name || busy} onClick={save}>

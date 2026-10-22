@@ -66,6 +66,7 @@ All notable changes to WebHandbrake are documented here. The format follows
   otherwise. A break opens all the sites of its rule for the longest time allowed, and you can end
   it sooner from the popup or Today. Breaks set up before keep their cost and limits, and last the
   longest of their lengths.
+- In the rule wizard, **Back** sits next to **Next** instead of at the other end of the bar.
 
 ### Removed
 
