@@ -445,7 +445,6 @@ const NEUTRAL_SETTINGS = [
   'highContrast',
   'hour12',
   'dateFormat',
-  'advanced',
   'timer.',
   'badge.',
   'contextMenu',

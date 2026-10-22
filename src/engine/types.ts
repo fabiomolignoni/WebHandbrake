@@ -286,7 +286,6 @@ export interface Settings {
   weekStart: number;
   /** Minutes after midnight at which a day begins. */
   dayStart: number;
-  advanced: boolean;
   timer: {
     enabled: boolean;
     thresholdMinutes: number;

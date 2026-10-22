@@ -67,8 +67,23 @@ All notable changes to WebHandbrake are documented here. The format follows
   it sooner from the popup or Today. Breaks set up before keep their cost and limits, and last the
   longest of their lengths.
 - In the rule wizard, **Back** sits next to **Next** instead of at the other end of the bar.
+- One rule editor creates a rule and changes it: the wizard and the full editor are now the same
+  pages. A rule has six parts, **Sites**, **When**, **What happens**, **Details**, **Protection**
+  and **Summary**; a new rule goes through them in order with **Back** and **Next** (the name is
+  asked in Details, before the protection), a rule that exists opens on its summary and any part
+  can be opened. Each part asks the wizard's questions and keeps everything else under **Advanced
+  options**, folded away unless the rule already uses it: exceptions and editing the list as text
+  in Sites; outside certain times, limits on visits or continuous use, weekly, monthly and rolling
+  periods, a limit only at certain times and more conditions in When; the finer settings of each
+  kind of intervention and breaks during focus sessions in What happens; windows, tabs, frames
+  and quick focus sessions in Details. The type of an address changes with how it is written
+  (`=m.youtube.com`, `example.com/page$`), as everywhere else. A time limit as long as its period,
+  which would never be reached, can no longer be saved.
 
 ### Removed
+
+- **Advanced mode** (Settings › General) and **Use the full editor**: every option of a rule is
+  in its part, under Advanced options.
 
 - What a break covered (this page, this site, the rule or every rule), its fixed length or list of
   lengths, the length asked when taking it, the reason asked before taking it and breaks that

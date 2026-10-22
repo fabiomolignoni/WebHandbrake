@@ -1,8 +1,8 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { planSentence, sitesPhrase } from '../../src/dashboard/plan';
+import { planSentence, rulePlan, sitesPhrase } from '../../src/dashboard/plan';
 import type { ChangeUnit } from '../../src/engine/changes';
-import { delayIntervention } from '../../src/engine/defaults';
-import type { Intervention, Policy, TimeWindow } from '../../src/engine/types';
+import { defaultIntervention, delayIntervention, withCountingGap } from '../../src/engine/defaults';
+import type { Intervention, Period, Policy, TimeWindow } from '../../src/engine/types';
 
 import { setFormatPrefs } from '../../src/shared/format';
 import {
@@ -151,7 +151,7 @@ describe('changes in words', () => {
   });
 });
 
-describe('the plan of a new rule', () => {
+describe('the plan of a rule', () => {
   it('names the sites, every website, or how many', () => {
     expect(sitesPhrase([target('a.test'), target('b.test'), target('c.test'), target('+a.test/x')])).toBe(
       'a.test, b.test and 1 more site',
@@ -161,34 +161,71 @@ describe('the plan of a new rule', () => {
   });
 
   it('one if-then sentence: when, then what happens', () => {
-    expect(planSentence('always', 'block', 'a.test', [], 0)).toBe(
+    expect(planSentence('always', BLOCK, 'a.test', [], 0)).toBe(
       'Every time you open a.test, WebHandbrake blocks the page.',
     );
-    expect(planSentence('schedule', 'track', 'a.test', [office], 0)).toBe(
+    expect(planSentence('schedule', { type: 'track' }, 'a.test', [office], 0)).toBe(
       'When you open a.test (Mon–Fri 09:00–17:00), WebHandbrake only counts the time; outside these times it counts nothing.',
     );
     expect(planSentence('daily', { type: 'ask', choices: [5], maxMinutes: 10 }, 'a.test', [], 30)).toBe(
       'After 30 min a day on a.test, WebHandbrake first asks what you want to do (for 10 min at most).',
     );
     // The wait on the page is said too.
-    expect(planSentence('always', 'ask', 'a.test', [], 0)).toBe(
+    expect(planSentence('always', defaultIntervention('ask'), 'a.test', [], 0)).toBe(
       'Every time you open a.test, WebHandbrake first asks what you want to do (for 15 min at most), then lets you in after 10 seconds.',
     );
-    expect(planSentence('daily', 'block', 'a.test', [], 10, 60)).toBe(
+    expect(planSentence('daily', BLOCK, 'a.test', [], 10, 60)).toBe(
       'After 10 min an hour on a.test, WebHandbrake blocks the page.',
     );
-    expect(planSentence('daily', 'block', 'a.test', [], 120, 3 * 1440)).toBe(
+    expect(planSentence('daily', BLOCK, 'a.test', [], 120, 3 * 1440)).toBe(
       'After 2 h every 3 days on a.test, WebHandbrake blocks the page.',
     );
-    expect(planSentence('daily', 'block', 'a.test', [], 20, 180)).toBe(
+    expect(planSentence('daily', BLOCK, 'a.test', [], 20, 180)).toBe(
       'After 20 min every 3 h on a.test, WebHandbrake blocks the page.',
     );
     // With several sites, whether they share the time allowed or each has its own.
-    expect(planSentence('daily', 'block', 'a.test, b.test', [], 30, 1440, 'shared')).toBe(
+    expect(planSentence('daily', BLOCK, 'a.test, b.test', [], 30, 1440, 'shared')).toBe(
       'After 30 min a day in total on a.test, b.test, WebHandbrake blocks the page.',
     );
-    expect(planSentence('daily', 'block', 'a.test, b.test', [], 30, 1440, 'each')).toBe(
+    expect(planSentence('daily', BLOCK, 'a.test, b.test', [], 30, 1440, 'each')).toBe(
       'After 30 min a day on each of a.test, b.test, WebHandbrake blocks the page.',
     );
+  });
+
+  it('is said of a rule whose condition the first questions describe', () => {
+    const during = { schedule: { mode: 'during' as const, windows: [office] } };
+    const limit = (period: Period) => ({
+      budget: { type: 'time' as const, minutes: 30, period },
+    });
+    expect(rulePlan(group('A', ['a.test'], [{ intervention: BLOCK }]))).toBe(
+      'Every time you open a.test, WebHandbrake blocks the page.',
+    );
+    expect(rulePlan(group('A', ['a.test'], [{ ...during, intervention: BLOCK }]))).toBe(
+      'When you open a.test (Mon–Fri 09:00–17:00), WebHandbrake blocks the page.',
+    );
+    expect(
+      rulePlan(group('A', ['a.test', 'b.test'], [{ ...limit({ kind: 'days', n: 2 }), intervention: BLOCK }])),
+    ).toBe('After 30 min every 2 days in total on a.test, b.test, WebHandbrake blocks the page.');
+    // Counting at certain times leaves the other times alone: with that last condition only.
+    const counting = group('A', ['a.test'], [{ ...during, intervention: { type: 'track' } }]);
+    expect(rulePlan(counting)).toBeNull();
+    expect(rulePlan({ ...counting, policies: withCountingGap(counting.policies) })).toMatch(
+      /outside these times it counts nothing/,
+    );
+    // Anything else is listed condition by condition.
+    for (const policies of [
+      [{ schedule: { mode: 'outside' as const, windows: [office] }, intervention: BLOCK }],
+      [{ ...limit({ kind: 'week' }), intervention: BLOCK }],
+      [
+        {
+          budget: { type: 'visits' as const, count: 3, period: { kind: 'day' as const } },
+          intervention: BLOCK,
+        },
+      ],
+      [{ ...during, ...limit({ kind: 'day' }), intervention: BLOCK }],
+      [{ ...during, intervention: BLOCK }, { intervention: delayIntervention(10) }],
+      [],
+    ])
+      expect(rulePlan(group('A', ['a.test'], policies))).toBeNull();
   });
 });

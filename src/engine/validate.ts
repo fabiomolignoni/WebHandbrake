@@ -1,7 +1,7 @@
 /** Validation that prevents configurations that block nothing, with clear messages. */
 
 import { unusedExceptions } from './changes';
-import { canHaveBreaks } from './defaults';
+import { canHaveBreaks, periodMinutes } from './defaults';
 import { ALL_SITES, checkRegex } from './patterns';
 import type { Group, Policy, Target } from './types';
 
@@ -35,6 +35,9 @@ function policyIssues(p: Policy, i: number): Issue[] {
   if (b) {
     if (b.type === 'time' && b.minutes <= 0)
       out.push({ level: 'warning', key: 'validate.zeroBudget', params: { n }, policy: i });
+    // A limit as long as its period is never reached.
+    if (b.type === 'time' && b.minutes >= periodMinutes(b.period))
+      out.push({ level: 'error', key: 'validate.neverReached', params: { n }, policy: i });
     if (b.type === 'visits' && b.count <= 0)
       out.push({ level: 'warning', key: 'validate.zeroVisits', params: { n }, policy: i });
   }

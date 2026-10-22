@@ -3248,7 +3248,7 @@ input[type="radio"] {
   accent-color: var(--accent);
 }
 
-/* Creation wizard */
+/* Rule editor: a new rule goes through its parts in order, as in a wizard. */
 .wizard-page {
   max-width: 820px;
 }
@@ -3369,7 +3369,7 @@ input[type="radio"] {
   overflow-y: auto;
 }
 
-/* Rule editor: the wizard's progress bar lists the parts of the rule, all open. */
+/* A rule that exists: the progress bar lists the parts of the rule, all open. */
 .editor-title {
   display: flex;
   align-items: center;
@@ -3494,20 +3494,6 @@ input[type="radio"] {
 .question > .segmented {
   align-self: flex-start;
   max-width: 100%;
-}
-.choice-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--s2);
-}
-.choice-grid.two {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-@media (max-width: 600px) {
-  .choice-grid,
-  .choice-grid.two {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 /* First run */

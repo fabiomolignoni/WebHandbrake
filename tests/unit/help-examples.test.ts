@@ -74,7 +74,7 @@ const EXPECTATIONS: Record<string, Expectation> = {
       stillBlocked: ['https://reddit.com/r/funny', 'https://reddit.com/'],
     },
   },
-  // A regular expression: the parser accepts it in every mode; the editor offers it in advanced mode.
+  // A regular expression.
   '/^https?:\\/\\/(www\\.)?example\\.com\\/a+$/': {
     match: ['https://example.com/aaa', 'http://www.example.com/a'],
     noMatch: ['https://example.com/ab', 'https://sub.example.com/a'],

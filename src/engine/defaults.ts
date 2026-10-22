@@ -52,7 +52,6 @@ export function defaultSettings(): Settings {
     dateFormat: 'auto',
     weekStart: 1,
     dayStart: 0,
-    advanced: false,
     timer: { enabled: true, thresholdMinutes: 5, corner: 'bottom-right', size: 'medium', opacity: 0.94 },
     badge: { enabled: true, thresholdMinutes: 60 },
     contextMenu: true,
@@ -243,17 +242,7 @@ export function defaultIntervention(type: InterventionType): Intervention {
   }
 }
 
-/** When a new rule applies, as chosen in the creation wizard and in onboarding. */
-export type QuickWhen = 'always' | 'schedule' | 'daily';
-/** What happens: any intervention, from "only count" to "redirect". */
-export type QuickHow = Exclude<InterventionType, 'allow'>;
-
 export const QUICK_DELAY_SECONDS = 30;
-
-export function quickIntervention(how: QuickHow, redirectUrl?: string): Intervention {
-  if (how === 'redirect') return { type: 'redirect', url: redirectUrl?.trim() || 'https://' };
-  return defaultIntervention(how);
-}
 
 /** A day, in minutes: the period of a new rule's time limit unless another is chosen. */
 export const DAY_MINUTES = 1440;
@@ -288,34 +277,16 @@ export function periodMinutes(p: Period): number {
   }
 }
 
-/** The starting condition of a rule: "when" × "what happens" (an if-then plan). */
-export function quickPolicies(
-  when: QuickWhen,
-  how: QuickHow | Intervention,
-  windows: TimeWindow[],
-  minutes: number,
-  /** The period of the time limit, in minutes: it starts again every so often. */
-  every = DAY_MINUTES,
-  /** Each site of the rule gets its own time allowed. */
-  perSite = false,
-): Policy[] {
-  // The wizard passes the intervention with the settings chosen (#14); a type takes the defaults.
-  const intervention = typeof how === 'string' ? quickIntervention(how) : how;
-  // Counting only at certain times (#21): outside them the sites are allowed and not counted.
-  if (when === 'schedule' && intervention.type === 'track')
-    return [
-      newPolicy({ schedule: { mode: 'during', windows }, intervention }),
-      newPolicy({ intervention: { type: 'allow' } }),
-    ];
-  if (when === 'schedule') return [newPolicy({ schedule: { mode: 'during', windows }, intervention })];
-  if (when === 'daily')
-    return [
-      newPolicy({
-        budget: { type: 'time', minutes, period: everyPeriod(every), ...(perSite ? { perSite } : {}) },
-        intervention,
-      }),
-    ];
-  return [newPolicy({ intervention })];
+/**
+ * Counting at certain times leaves the other times alone (#21): a new rule that only counts during
+ * its times gets a last condition that neither restricts nor counts, so that outside them the
+ * sites are allowed and not counted.
+ */
+export function withCountingGap(policies: Policy[]): Policy[] {
+  const [p] = policies;
+  return policies.length === 1 && p.intervention.type === 'track' && p.schedule.mode === 'during' && !p.budget
+    ? [...policies, newPolicy({ intervention: { type: 'allow' } })]
+    : policies;
 }
 
 /** The targets of lines in the address syntax, such as the entries of a ready-made list. */

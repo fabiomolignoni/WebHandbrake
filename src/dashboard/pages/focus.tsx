@@ -287,7 +287,7 @@ export function QuickSession({
           ) : (
             <div class="stack stack-sm">
               <p class="help">{t('focus.allowlistHelp')}</p>
-              <TargetsEditor targets={allow} onChange={setAllow} advanced={false} exceptions={false} />
+              <TargetsEditor targets={allow} onChange={setAllow} />
             </div>
           )}
           <div class="field">

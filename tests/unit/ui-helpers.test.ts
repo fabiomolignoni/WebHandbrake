@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { pickIntervention, quickInterventionReady } from '../../src/dashboard/components/how-picker';
+import { pickIntervention } from '../../src/dashboard/components/how-picker';
 import { gridToWindows, windowsToGrid } from '../../src/dashboard/components/schedule';
 import { SEVERITY } from '../../src/engine/severity';
 import type { TimeWindow } from '../../src/engine/types';
@@ -150,8 +150,8 @@ describe('"Why?"', () => {
   });
 });
 
-describe('"What should happen?" in the wizard', () => {
-  it('starts from the defaults, keeps what was set, and a redirect needs an address', () => {
+describe('"What should happen?" in the rule editor', () => {
+  it('starts from the defaults, keeps what was set, and a redirect has no address yet', () => {
     expect(pickIntervention('block')).toEqual(BLOCK);
     expect(pickIntervention('redirect')).toEqual({ type: 'redirect', url: '' });
     const kept = {
@@ -162,18 +162,6 @@ describe('"What should happen?" in the wizard', () => {
       },
     };
     expect(pickIntervention('delay', kept)).toBe(kept.delay);
-    expect(quickInterventionReady(null)).toBe(false);
-    expect(quickInterventionReady({ type: 'redirect', url: 'https://x.test' })).toBe(true);
-    expect(quickInterventionReady({ type: 'redirect', url: '' })).toBe(false);
-    expect(
-      quickInterventionReady({
-        type: 'challenge',
-        kind: 'phrase',
-        phrase: ' ',
-        grant: { scope: 'site', mode: 'visit' },
-      }),
-    ).toBe(false);
-    expect(quickInterventionReady(BLOCK)).toBe(true);
   });
 });
 

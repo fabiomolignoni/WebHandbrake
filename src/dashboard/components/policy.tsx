@@ -1,42 +1,36 @@
 /**
- * Policy editors: condition (schedule + budget) → intervention. As in the
- * wizard, the rule editor asks when a condition applies and what happens in two parts: an open
- * condition shows the questions of its part, each answered with cards.
+ * The conditions of a rule: when one applies (`ConditionEditor`) and the card that holds each
+ * condition of a rule that has several (`PolicyCard`). A condition asks the first question of a
+ * new rule ("When should it apply?": every time, at certain times, after some time); the rest
+ * (outside certain times, visits, continuous use, other periods, a limit only at certain times)
+ * is in its advanced options.
  */
 
-import { useState } from 'preact/hooks';
-import { DAY_MINUTES, defaultIntervention, periodMinutes } from '../../engine/defaults';
-import type {
-  Budget,
-  ChallengeKind,
-  Charset,
-  FilterKind,
-  GrantSpec,
-  Intervention,
-  InterventionType,
-  Period,
-  Policy,
-} from '../../engine/types';
+import type { ComponentChildren } from 'preact';
+import { useId, useState } from 'preact/hooks';
+import { DAY_MINUTES, everyPeriod, periodMinutes, SCHEDULE_PRESETS } from '../../engine/defaults';
+import { clone } from '../../engine/json';
+import type { Budget, Period, Policy, Schedule, TimeWindow } from '../../engine/types';
 import { t } from '../../i18n/i18n';
+import { formatDuration } from '../../shared/format';
 import { describeCondition, describeIntervention, describePeriod } from '../../shared/summary';
 import {
   Button,
   DurationInput,
-  Field,
   Menu,
   NumberInput,
   RadioCards,
+  Segmented,
   Select,
   StatusPill,
   Toggle,
 } from '../../ui/components';
 import { Icon } from '../../ui/icons';
-import { interventionIcon, LADDER, toneOf } from '../../ui/status';
-
-/** The editor also offers "Don't count", for the times a rule should leave alone. */
-const EDITOR_LADDER: InterventionType[] = ['allow', ...LADDER];
-
-import { ScheduleEditor } from './schedule';
+import { interventionIcon, toneOf } from '../../ui/status';
+import { conditionAdvanced, everyKind, type WhenKind, whenKind } from '../rule-form';
+import { AdvancedOptions } from './advanced';
+import { DailyMinutes } from './daily-minutes';
+import { WindowsEditor } from './schedule';
 
 /** "every 2 hours" and "every 3 days" are one choice in the list, with a number and a unit. */
 type PeriodChoice = 'hour' | 'day' | 'week' | 'month' | 'every' | 'rolling';
@@ -129,125 +123,149 @@ export function PeriodSelect({
   );
 }
 
-type BudgetChoice = 'none' | Budget['type'];
-const BUDGET_CHOICES: BudgetChoice[] = ['none', 'time', 'visits', 'session'];
-const BUDGET_CHOICE: Record<BudgetChoice, { icon: string; label: string; desc: string }> = {
-  none: { icon: 'arrow-right', label: 'budget.choice.none', desc: 'budget.choice.none.desc' },
-  time: { icon: 'hourglass', label: 'budget.choice.time', desc: 'budget.choice.time.desc' },
-  visits: { icon: 'door', label: 'budget.choice.visits', desc: 'budget.choice.visits.desc' },
-  session: { icon: 'timer', label: 'budget.choice.session', desc: 'budget.choice.session.desc' },
+const WHEN_KINDS: WhenKind[] = ['always', 'schedule', 'limit'];
+const WHEN_CARD: Record<WhenKind, { icon: string; label: string; desc: string }> = {
+  always: { icon: 'zap', label: 'wizard.when.always', desc: 'wizard.when.always.desc' },
+  schedule: { icon: 'calendar', label: 'wizard.when.schedule', desc: 'wizard.when.schedule.desc' },
+  limit: { icon: 'hourglass', label: 'wizard.when.daily', desc: 'wizard.when.daily.desc' },
 };
 
-/** "Right away, or after a limit?": the limit of a condition as cards, its settings below. */
-export function BudgetEditor({
-  budget,
+/** A limit as long as its period would never be reached. */
+export const neverReached = (b: Budget | undefined): boolean =>
+  b?.type === 'time' && b.minutes >= periodMinutes(b.period);
+
+/** What a condition had before another answer was chosen, to give it back when chosen again. */
+export interface ConditionMemo {
+  windows?: TimeWindow[];
+  budget?: Budget;
+  /** "Other" is chosen for the time allowed, even when the amount typed is one of the usual ones. */
+  custom?: boolean;
+}
+
+/**
+ * When a condition applies: the cards of the first question with their settings, then the advanced
+ * options. `more` goes at the end of the advanced options (adding conditions, when the rule has one).
+ */
+export function ConditionEditor({
+  policy,
   onChange,
-  advanced,
+  severalSites,
+  memo,
+  onMemo,
+  more,
 }: {
-  budget: Budget | undefined;
-  onChange: (b: Budget | undefined) => void;
-  advanced: boolean;
+  policy: Policy;
+  onChange: (p: Policy) => void;
+  /** The rule has several sites: a time limit is shared by them unless each gets its own. */
+  severalSites: boolean;
+  memo: ConditionMemo;
+  onMemo: (m: ConditionMemo) => void;
+  more?: ComponentChildren;
 }) {
-  const type = budget?.type ?? 'none';
+  const id = useId();
+  const kind = whenKind(policy);
+  const { schedule, budget } = policy;
+  const setBudget = (b: Budget) => onChange({ ...policy, budget: b });
+  const setSchedule = (s: Schedule) => onChange({ ...policy, schedule: s });
+  const windowsOr = () =>
+    schedule.windows.length ? schedule.windows : (memo.windows ?? clone(SCHEDULE_PRESETS.office));
+
+  const choose = (k: WhenKind) => {
+    if (k === kind) return;
+    // What the condition had stays at hand for when it is chosen again.
+    onMemo({
+      ...memo,
+      windows: schedule.windows.length ? schedule.windows : memo.windows,
+      budget: budget ?? memo.budget,
+    });
+    if (k === 'always') onChange({ ...policy, schedule: { mode: 'always', windows: [] }, budget: undefined });
+    else if (k === 'schedule')
+      onChange({
+        ...policy,
+        schedule: { mode: schedule.mode === 'outside' ? 'outside' : 'during', windows: windowsOr() },
+        budget: undefined,
+      });
+    else
+      onChange({
+        ...policy,
+        schedule: { mode: 'always', windows: [] },
+        budget: memo.budget ?? { type: 'time', minutes: 30, period: { kind: 'day' } },
+      });
+  };
+
+  const advanced =
+    kind === 'schedule' ? (
+      <ScheduleMode schedule={schedule} onChange={setSchedule} />
+    ) : kind === 'limit' && budget ? (
+      <LimitAdvanced
+        budget={budget}
+        onChange={setBudget}
+        schedule={schedule}
+        onSchedule={setSchedule}
+        windows={windowsOr}
+      />
+    ) : null;
+
   return (
     <div class="stack">
-      <RadioCards<BudgetChoice>
-        value={type}
-        label={t('budget.label')}
-        class="choice-grid two"
-        itemClass="choice compact"
-        onChange={(v) => {
-          if (v === type) return;
-          if (v === 'none') onChange(undefined);
-          else if (v === 'time') onChange({ type: 'time', minutes: 30, period: { kind: 'day' } });
-          else if (v === 'visits') onChange({ type: 'visits', count: 3, period: { kind: 'day' } });
-          else onChange({ type: 'session', maxMinutes: 15, cooldownMinutes: 60 });
-        }}
-        options={BUDGET_CHOICES.map((value) => ({ value }))}
+      <RadioCards<WhenKind>
+        value={kind}
+        onChange={choose}
+        label={t('wizard.when.title')}
+        itemClass="choice"
+        options={WHEN_KINDS.map((value) => ({ value }))}
         render={(o) => (
           <>
-            <Icon name={BUDGET_CHOICE[o.value].icon} />
+            <Icon name={WHEN_CARD[o.value].icon} />
             <span>
-              <strong>{t(BUDGET_CHOICE[o.value].label)}</strong>
-              <span class="small muted">{t(BUDGET_CHOICE[o.value].desc)}</span>
+              <strong>{t(WHEN_CARD[o.value].label)}</strong>
+              <span class="small muted">{t(WHEN_CARD[o.value].desc)}</span>
             </span>
           </>
         )}
       />
-      {budget && (
+      {kind === 'schedule' && (
         <div class="option-panel">
-          {budget?.type === 'time' && (
-            <div class="stack stack-sm">
-              <div class="row">
-                <span>{t('budget.after')}</span>
-                <DurationInput
-                  value={budget.minutes}
-                  units={['minutes', 'hours']}
-                  min={0.5}
-                  max={129600}
-                  step={0.5}
-                  label={t('budget.minutes')}
-                  onChange={(minutes) => onChange({ ...budget, minutes })}
-                />
-              </div>
-              <PeriodSelect
-                period={budget.period}
-                onChange={(period) => onChange({ ...budget, period })}
-                allowRolling={advanced}
+          <WindowsEditor
+            windows={schedule.windows}
+            onChange={(windows) => setSchedule({ ...schedule, windows })}
+          />
+        </div>
+      )}
+      {kind === 'limit' && budget && (
+        <div class="option-panel">
+          {budget.type === 'time' && (
+            <>
+              <span class="label" id={`${id}-minutes`}>
+                {t('wizard.when.minutes')}
+              </span>
+              <DailyMinutes
+                minutes={budget.minutes}
+                custom={Boolean(memo.custom)}
+                onChange={(minutes, custom) => {
+                  onMemo({ ...memo, custom });
+                  setBudget({ ...budget, minutes });
+                }}
+                labelledBy={`${id}-minutes`}
               />
-              {budget.minutes >= periodMinutes(budget.period) && (
-                <span class="error-text">{t('budget.neverReached')}</span>
-              )}
+            </>
+          )}
+          {budget.type === 'visits' && (
+            <div class="row">
+              <span class="label" aria-hidden="true">
+                {t('budget.visitsQuestion')}
+              </span>
+              <NumberInput
+                value={budget.count}
+                min={0}
+                max={1000}
+                label={t('budget.visitsQuestion')}
+                suffix={t('budget.visitsUnit')}
+                onChange={(count) => setBudget({ ...budget, count })}
+              />
             </div>
           )}
-          {budget?.type === 'visits' && (
-            <div class="stack stack-sm">
-              <div class="row">
-                <span>{t('budget.afterVisits')}</span>
-                <NumberInput
-                  value={budget.count}
-                  min={0}
-                  max={1000}
-                  label={t('budget.visitsLabel')}
-                  suffix={t('budget.visitsUnit')}
-                  onChange={(count) => onChange({ ...budget, count })}
-                />
-              </div>
-              <PeriodSelect
-                period={budget.period}
-                onChange={(period) => onChange({ ...budget, period })}
-                allowRolling={advanced}
-              />
-              <div class="row">
-                <label class="check small">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(budget.maxVisitMinutes)}
-                    onChange={(e) =>
-                      onChange({
-                        ...budget,
-                        maxVisitMinutes: (e.target as HTMLInputElement).checked ? 10 : undefined,
-                      })
-                    }
-                  />
-                  {t('budget.visitMaxLabel')}
-                </label>
-                {budget.maxVisitMinutes !== undefined && (
-                  <DurationInput
-                    value={budget.maxVisitMinutes}
-                    units={['minutes', 'hours']}
-                    min={0.5}
-                    max={1440}
-                    step={0.5}
-                    label={t('budget.visitMaxLabel')}
-                    onChange={(m) => onChange({ ...budget, maxVisitMinutes: m })}
-                  />
-                )}
-              </div>
-              <span class="help">{t('budget.visitHelp')}</span>
-            </div>
-          )}
-          {budget?.type === 'session' && (
+          {budget.type === 'session' && (
             <div class="row">
               <span>{t('budget.sessionMax')}</span>
               <DurationInput
@@ -257,7 +275,7 @@ export function BudgetEditor({
                 max={1440}
                 step={0.5}
                 label={t('budget.sessionMax')}
-                onChange={(maxMinutes) => onChange({ ...budget, maxMinutes })}
+                onChange={(maxMinutes) => setBudget({ ...budget, maxMinutes })}
               />
               <span>{t('budget.sessionCooldown')}</span>
               <DurationInput
@@ -265,384 +283,286 @@ export function BudgetEditor({
                 min={1}
                 max={10080}
                 label={t('budget.sessionCooldown')}
-                onChange={(cooldownMinutes) => onChange({ ...budget, cooldownMinutes })}
+                onChange={(cooldownMinutes) => setBudget({ ...budget, cooldownMinutes })}
               />
             </div>
           )}
-          {budget && (
+          {budget.type !== 'session' && everyKind(budget.period) && (
+            <div class="row">
+              <span class="label" aria-hidden="true">
+                {t('wizard.when.every')}
+              </span>
+              <DurationInput
+                value={periodMinutes(budget.period)}
+                min={5}
+                max={90 * DAY_MINUTES}
+                unitMax={{ minutes: DAY_MINUTES, hours: DAY_MINUTES }}
+                label={t('wizard.when.every')}
+                describedBy={`${id}-every-help`}
+                onChange={(every, unit) =>
+                  // A period of days counts whole days.
+                  setBudget({
+                    ...budget,
+                    period: withOffset(
+                      everyPeriod(
+                        unit === 'days' ? Math.max(1, Math.round(every / DAY_MINUTES)) * DAY_MINUTES : every,
+                      ),
+                      budget.period,
+                    ),
+                  })
+                }
+              />
+            </div>
+          )}
+          {neverReached(budget) ? (
+            <span class="error-text" id={`${id}-every-help`}>
+              {t('wizard.when.tooLong')}
+            </span>
+          ) : (
+            budget.type === 'time' &&
+            everyKind(budget.period) && (
+              <span class="help" id={`${id}-every-help`}>
+                {t('wizard.when.everyHelp')}
+              </span>
+            )
+          )}
+          {(severalSites || budget.perSite) && (
             <Toggle
               checked={Boolean(budget.perSite)}
-              onChange={(perSite) => onChange({ ...budget, perSite } as Budget)}
+              onChange={(perSite) => setBudget({ ...budget, perSite } as Budget)}
               label={t('budget.perSite')}
-              help={t('budget.perSiteHelp')}
+              help={
+                budget.type === 'time'
+                  ? t(budget.perSite ? 'wizard.when.perSiteOn' : 'wizard.when.perSiteOff', {
+                      duration: formatDuration(budget.minutes * 60),
+                    })
+                  : t('budget.perSiteHelp')
+              }
             />
           )}
         </div>
+      )}
+      {(advanced || more) && (
+        <AdvancedOptions open={conditionAdvanced(policy)}>
+          {advanced}
+          {more}
+        </AdvancedOptions>
       )}
     </div>
   );
 }
 
-function GrantEditor({ grant, onChange }: { grant: GrantSpec; onChange: (g: GrantSpec) => void }) {
+/** The offset of a period, kept when the new period has the same unit and still contains it. */
+function withOffset(next: Period, prev: Period): Period {
+  const offset = prev.offset;
+  return offset && next.kind === prev.kind && offset < (next.n ?? 1) ? { ...next, offset } : next;
+}
+
+/** At certain times: during them, or at any time except them. */
+function ScheduleMode({ schedule, onChange }: { schedule: Schedule; onChange: (s: Schedule) => void }) {
+  const id = useId();
   return (
     <div class="stack stack-sm">
-      <span class="label small">{t('grant.label')}</span>
-      <div class="row">
-        <Select<GrantSpec['scope']>
-          value={grant.scope}
-          label={t('grant.scope')}
-          onChange={(scope) => onChange({ ...grant, scope })}
-          options={[
-            { value: 'page', label: t('grant.scope.page') },
-            { value: 'site', label: t('grant.scope.site') },
-            { value: 'group', label: t('grant.scope.group') },
-          ]}
-        />
-        <Select<GrantSpec['mode']>
-          value={grant.mode}
-          label={t('grant.mode')}
-          onChange={(mode) =>
-            onChange({ ...grant, mode, ...(mode === 'minutes' ? { minutes: grant.minutes ?? 10 } : {}) })
-          }
-          options={[
-            { value: 'visit', label: t('grant.mode.visit') },
-            { value: 'minutes', label: t('grant.mode.minutes') },
-          ]}
-        />
-        {grant.mode === 'minutes' && (
-          <DurationInput
-            units={['minutes', 'hours']}
-            value={grant.minutes ?? 10}
-            min={1}
-            max={1440}
-            label={t('grant.minutes')}
-            onChange={(minutes) => onChange({ ...grant, minutes })}
-          />
-        )}
-      </div>
-      {grant.mode === 'visit' && <p class="help">{t('grant.mode.visitHelp')}</p>}
+      <span class="label" id={`${id}-mode`}>
+        {t('schedule.when')}
+      </span>
+      <Segmented<'during' | 'outside'>
+        value={schedule.mode === 'outside' ? 'outside' : 'during'}
+        onChange={(mode) => onChange({ ...schedule, mode })}
+        labelledBy={`${id}-mode`}
+        options={[
+          { value: 'during', label: t('schedule.mode.during') },
+          { value: 'outside', label: t('schedule.mode.outside') },
+        ]}
+      />
+      <span class="help">
+        {t(schedule.mode === 'outside' ? 'schedule.mode.outside.desc' : 'schedule.mode.during.desc')}
+      </span>
     </div>
   );
 }
 
-export function InterventionEditor({
-  value,
+const COUNTS_HELP: Record<Budget['type'], string> = {
+  time: 'budget.choice.time.desc',
+  visits: 'budget.choice.visits.desc',
+  session: 'budget.choice.session.desc',
+};
+
+type PeriodStyle = 'every' | 'week' | 'month' | 'rolling';
+const styleOf = (p: Period): PeriodStyle =>
+  p.kind === 'week' || p.kind === 'month' || p.kind === 'rolling' ? p.kind : 'every';
+
+/**
+ * The advanced options of a limit: what it counts (time, visits, time in a row), when it starts
+ * again other than every so often, how long a visit can be, and only at certain times.
+ */
+function LimitAdvanced({
+  budget,
   onChange,
-  advanced,
+  schedule,
+  onSchedule,
+  windows,
 }: {
-  value: Intervention;
-  onChange: (i: Intervention) => void;
-  advanced: boolean;
+  budget: Budget;
+  onChange: (b: Budget) => void;
+  schedule: Schedule;
+  onSchedule: (s: Schedule) => void;
+  windows: () => TimeWindow[];
 }) {
-  const v = value;
+  const id = useId();
+  const keep = { ...(budget.perSite ? { perSite: true } : {}) };
+  const period: Period = budget.type === 'session' ? { kind: 'day' } : budget.period;
+  const setPeriod = (p: Period) => budget.type !== 'session' && onChange({ ...budget, period: p });
   return (
     <div class="stack">
-      <RadioCards<InterventionType>
-        value={v.type}
-        onChange={(type) => onChange(defaultIntervention(type))}
-        label={t('intervention.label')}
-        class="friction-picker"
-        itemClass="friction-option"
-        options={EDITOR_LADDER.map((x) => ({ value: x, tone: toneOf(x) }))}
-        render={(o) => (
-          <>
-            <Icon name={interventionIcon(o.value)} />
-            <span>{t(`intervention.short.${o.value}`)}</span>
-          </>
-        )}
-      />
-      <div class={`option-panel tone-${toneOf(v.type)}`}>
-        <p class="small">
-          <strong>{t(`intervention.${v.type}`)}</strong> — {t(`intervention.help.${v.type}`)}
-        </p>
-        {v.type === 'filter' && (
-          <div class="stack stack-sm">
-            <div class="row">
-              <Select<FilterKind>
-                value={v.filter}
-                label={t('filter.label')}
-                onChange={(filter) => onChange({ ...v, filter })}
-                options={(
-                  [
-                    'grayscale',
-                    'blur',
-                    'fade',
-                    'invert',
-                    'sepia',
-                    'none',
-                    ...(advanced ? (['custom'] as const) : []),
-                  ] as FilterKind[]
-                ).map((f) => ({ value: f, label: t(`filter.${f}`) }))}
-              />
-              {v.filter !== 'none' && v.filter !== 'custom' && (
-                <label class="row nowrap small">
-                  {t('filter.intensity')}
-                  <input
-                    type="range"
-                    min={10}
-                    max={100}
-                    step={5}
-                    value={v.intensity ?? 100}
-                    onInput={(e) =>
-                      onChange({ ...v, intensity: Number((e.target as HTMLInputElement).value) })
-                    }
-                  />
-                  <span class="num">{v.intensity ?? 100}%</span>
-                </label>
-              )}
-            </div>
-            {v.filter === 'custom' && (
-              <Field label={t('filter.custom')} help={t('filter.customHelp')}>
-                {(id, d) => (
-                  <input
-                    id={id}
-                    aria-describedby={d}
-                    class="input mono"
-                    value={v.css ?? ''}
-                    maxLength={200}
-                    onInput={(e) => onChange({ ...v, css: (e.target as HTMLInputElement).value })}
-                  />
-                )}
-              </Field>
-            )}
-            <Toggle
-              checked={Boolean(v.mute)}
-              onChange={(mute) => onChange({ ...v, mute })}
-              label={t('filter.mute')}
-            />
-          </div>
-        )}
-        {v.type === 'ask' && (
-          <div class="stack stack-sm">
-            <div class="row">
-              <span>{t('ask.choices')}</span>
-              <input
-                class="input inline mono"
-                style={{ width: '10em' }}
-                value={v.choices.join(', ')}
-                aria-label={t('ask.choices')}
-                onChange={(e) => {
-                  const choices = (e.target as HTMLInputElement).value
-                    .split(/[,\s]+/)
-                    .map(Number)
-                    .filter((n) => n > 0 && n <= 1440)
-                    .slice(0, 6);
-                  if (choices.length) onChange({ ...v, choices });
+      <div class="stack stack-sm">
+        <span class="label" id={`${id}-type`}>
+          {t('budget.counts')}
+        </span>
+        <Segmented<Budget['type']>
+          value={budget.type}
+          labelledBy={`${id}-type`}
+          onChange={(type) => {
+            if (type === budget.type) return;
+            if (type === 'time') onChange({ type, minutes: 30, period, ...keep });
+            else if (type === 'visits') onChange({ type, count: 3, period, ...keep });
+            else onChange({ type, maxMinutes: 15, cooldownMinutes: 60, ...keep });
+          }}
+          options={[
+            { value: 'time', label: t('budget.kind.time') },
+            { value: 'visits', label: t('budget.kind.visits') },
+            { value: 'session', label: t('budget.kind.session') },
+          ]}
+        />
+        <span class="help">{t(COUNTS_HELP[budget.type])}</span>
+      </div>
+      {budget.type !== 'session' && (
+        <div class="stack stack-sm">
+          <div class="row">
+            <span style={{ minWidth: '160px' }}>
+              <Select<PeriodStyle>
+                value={styleOf(budget.period)}
+                label={t('period.label')}
+                onChange={(style) => {
+                  if (style === styleOf(budget.period)) return;
+                  if (style === 'every') setPeriod({ kind: 'day' });
+                  else if (style === 'rolling') setPeriod({ kind: 'rolling', n: 120 });
+                  else setPeriod({ kind: style });
                 }}
+                options={(['every', 'week', 'month', 'rolling'] as PeriodStyle[]).map((s) => ({
+                  value: s,
+                  label: t(`period.style.${s}`),
+                }))}
               />
-              <span>{t('ask.max')}</span>
+            </span>
+            {budget.period.kind === 'rolling' && (
               <DurationInput
+                value={budget.period.n ?? 120}
                 units={['minutes', 'hours']}
-                value={v.maxMinutes}
-                min={1}
-                max={1440}
-                label={t('ask.max')}
-                onChange={(maxMinutes) => onChange({ ...v, maxMinutes })}
+                min={5}
+                max={DAY_MINUTES}
+                label={t('period.rollingLength')}
+                onChange={(n) => setPeriod({ kind: 'rolling', n })}
               />
-            </div>
-            <p class="help">{t('ask.help')}</p>
-            <div class="row">
-              <span>{t('ask.wait')}</span>
-              <DurationInput
-                base="seconds"
-                units={['seconds', 'minutes']}
-                value={v.seconds ?? 0}
-                min={0}
-                max={600}
-                label={t('ask.wait')}
-                onChange={(seconds) => onChange({ ...v, seconds })}
-              />
-            </div>
-            <div class="row">
-              <label class="check small">
-                <input
-                  type="checkbox"
-                  checked={Boolean(v.cooldownMinutes)}
-                  onChange={(e) =>
-                    onChange({
-                      ...v,
-                      cooldownMinutes: (e.target as HTMLInputElement).checked ? 30 : undefined,
-                    })
-                  }
-                />
-                {t('ask.cooldown')}
-              </label>
-              {v.cooldownMinutes !== undefined && (
-                <DurationInput
-                  units={['minutes', 'hours']}
-                  value={v.cooldownMinutes}
-                  min={1}
-                  max={1440}
-                  label={t('ask.cooldown')}
-                  onChange={(cooldownMinutes) => onChange({ ...v, cooldownMinutes })}
-                />
-              )}
-            </div>
-          </div>
-        )}
-        {v.type === 'delay' && (
-          <div class="stack stack-sm">
-            <div class="row">
-              <span>{t('delay.seconds')}</span>
-              <DurationInput
-                base="seconds"
-                units={['seconds', 'minutes']}
-                value={v.seconds}
-                min={1}
-                max={3600}
-                label={t('delay.seconds')}
-                onChange={(seconds) => onChange({ ...v, seconds })}
-              />
-              {advanced && (
-                <>
-                  <span>{t('delay.randomTo')}</span>
-                  <DurationInput
-                    base="seconds"
-                    units={['seconds', 'minutes']}
-                    value={v.randomTo ?? 0}
-                    min={0}
-                    max={3600}
-                    label={t('delay.randomTo')}
-                    onChange={(randomTo) => onChange({ ...v, randomTo: randomTo || undefined })}
-                  />
-                </>
-              )}
-            </div>
-            {advanced && (
-              <div class="row">
-                <span>{t('delay.increase')}</span>
-                <DurationInput
-                  base="seconds"
-                  units={['seconds', 'minutes']}
-                  value={v.increase ?? 0}
+            )}
+            {(budget.period.kind === 'minutes' || budget.period.kind === 'days') && (
+              <>
+                <span class="small">{t('period.offset')}</span>
+                <NumberInput
+                  value={budget.period.offset ?? 0}
                   min={0}
-                  max={600}
-                  label={t('delay.increase')}
-                  onChange={(increase) => onChange({ ...v, increase: increase || undefined })}
+                  max={Math.max(0, (budget.period.n ?? 1) - 1)}
+                  label={t('period.offset')}
+                  suffix={budget.period.kind === 'minutes' ? t('common.minutesUnit') : t('common.daysUnit')}
+                  onChange={(offset) => setPeriod({ ...budget.period, offset: offset || undefined })}
                 />
-              </div>
+              </>
             )}
-            <div class="row">
-              <span>{t('delay.onBlur')}</span>
-              <Select<'pause' | 'restart' | 'ignore'>
-                value={v.onBlur ?? 'pause'}
-                label={t('delay.onBlur')}
-                onChange={(onBlur) => onChange({ ...v, onBlur })}
-                options={[
-                  { value: 'pause', label: t('delay.onBlur.pause') },
-                  { value: 'restart', label: t('delay.onBlur.restart') },
-                  { value: 'ignore', label: t('delay.onBlur.ignore') },
-                ]}
-              />
-            </div>
-            <Toggle
-              checked={Boolean(v.autoContinue)}
-              onChange={(autoContinue) => onChange({ ...v, autoContinue })}
-              label={t('delay.auto')}
-            />
-            <Toggle
-              checked={Boolean(v.hideCountdown)}
-              onChange={(hideCountdown) => onChange({ ...v, hideCountdown })}
-              label={t('delay.hide')}
-            />
-            <GrantEditor grant={v.grant} onChange={(grant) => onChange({ ...v, grant })} />
           </div>
-        )}
-        {v.type === 'challenge' && (
-          <div class="stack stack-sm">
-            <div class="row">
-              <Select<ChallengeKind>
-                value={v.kind}
-                label={t('challenge.kind')}
-                onChange={(kind) => onChange({ ...v, kind })}
-                options={[
-                  { value: 'random', label: t('challenge.kind.random') },
-                  { value: 'phrase', label: t('challenge.kind.phrase') },
-                  { value: 'math', label: t('challenge.kind.math') },
-                ]}
-              />
-              {v.kind === 'random' && (
-                <>
-                  <NumberInput
-                    value={v.length ?? 24}
-                    min={4}
-                    max={500}
-                    label={t('challenge.length')}
-                    suffix={t('challenge.chars')}
-                    onChange={(length) => onChange({ ...v, length })}
-                  />
-                  {advanced && (
-                    <Select<Charset>
-                      value={v.charset ?? 'alnum'}
-                      label={t('challenge.charset')}
-                      onChange={(charset) => onChange({ ...v, charset })}
-                      options={(['alnum', 'letters', 'digits', 'symbols'] as Charset[]).map((c) => ({
-                        value: c,
-                        label: t(`challenge.charset.${c}`),
-                      }))}
-                    />
-                  )}
-                </>
-              )}
-            </div>
-            {v.kind === 'phrase' && (
-              <Field label={t('challenge.phrase')} help={t('challenge.phraseHelp')}>
-                {(id, d) => (
-                  <input
-                    id={id}
-                    aria-describedby={d}
-                    class="input"
-                    value={v.phrase ?? ''}
-                    maxLength={300}
-                    onInput={(e) => onChange({ ...v, phrase: (e.target as HTMLInputElement).value })}
-                  />
-                )}
-              </Field>
-            )}
-            <GrantEditor grant={v.grant} onChange={(grant) => onChange({ ...v, grant })} />
-          </div>
-        )}
-        {v.type === 'redirect' && (
-          <Field label={t('redirect.url')} help={t('redirect.help')}>
-            {(id, d) => (
+          {budget.period.kind === 'rolling' && <span class="help">{describePeriod(budget.period)}</span>}
+        </div>
+      )}
+      {budget.type === 'visits' && (
+        <div class="stack stack-sm">
+          <div class="row">
+            <label class="check small">
               <input
-                id={id}
-                aria-describedby={d}
-                class="input mono"
-                value={v.url}
-                maxLength={2000}
-                onInput={(e) => onChange({ ...v, url: (e.target as HTMLInputElement).value })}
+                type="checkbox"
+                checked={budget.maxVisitMinutes !== undefined}
+                onChange={(e) =>
+                  onChange({
+                    ...budget,
+                    maxVisitMinutes: (e.target as HTMLInputElement).checked ? 10 : undefined,
+                  })
+                }
+              />
+              {t('budget.visitMaxLabel')}
+            </label>
+            {budget.maxVisitMinutes !== undefined && (
+              <DurationInput
+                value={budget.maxVisitMinutes}
+                units={['minutes', 'hours']}
+                min={0.5}
+                max={1440}
+                step={0.5}
+                label={t('budget.visitMaxLabel')}
+                onChange={(m) => onChange({ ...budget, maxVisitMinutes: m })}
               />
             )}
-          </Field>
+          </div>
+          <span class="help">{t('budget.visitHelp')}</span>
+        </div>
+      )}
+      <div class="stack stack-sm">
+        <label class="check">
+          <input
+            type="checkbox"
+            checked={schedule.mode !== 'always'}
+            onChange={(e) =>
+              onSchedule(
+                (e.target as HTMLInputElement).checked
+                  ? { mode: 'during', windows: windows() }
+                  : { mode: 'always', windows: [] },
+              )
+            }
+          />
+          {t('budget.onlyAt')}
+        </label>
+        {schedule.mode !== 'always' && (
+          <div class="option-panel">
+            <ScheduleMode schedule={schedule} onChange={onSchedule} />
+            <WindowsEditor
+              windows={schedule.windows}
+              onChange={(w) => onSchedule({ ...schedule, windows: w })}
+            />
+          </div>
         )}
       </div>
     </div>
   );
 }
 
+/**
+ * One condition of a rule that has several: its sentence ("Mon–Fri 9:00–17:00 → Block") opens the
+ * part being edited; in When, a menu moves and removes it.
+ */
 export function PolicyCard({
   policy,
   index,
   count,
-  part,
-  onChange,
   onMove,
   onRemove,
-  advanced,
   open: initialOpen,
+  children,
 }: {
   policy: Policy;
   index: number;
   count: number;
-  /** The part of the rule editor: when the condition applies, or what happens then. */
-  part: 'when' | 'how';
-  onChange: (p: Policy) => void;
-  /** Conditions are ordered and removed where they are defined, in the "when" part. */
+  /** Conditions are ordered and removed where they are defined, in When. */
   onMove?: (dir: -1 | 1) => void;
   onRemove?: () => void;
-  advanced: boolean;
   open?: boolean;
+  children: ComponentChildren;
 }) {
   const [open, setOpen] = useState(Boolean(initialOpen));
   return (
@@ -691,31 +611,7 @@ export function PolicyCard({
       </div>
       {open && (
         <div class="policy-body">
-          {part === 'when' ? (
-            <>
-              <div class="question">
-                <h3>{t('policy.q.times')}</h3>
-                <ScheduleEditor
-                  schedule={policy.schedule}
-                  onChange={(schedule) => onChange({ ...policy, schedule })}
-                />
-              </div>
-              <div class="question">
-                <h3>{t('policy.q.limit')}</h3>
-                <BudgetEditor
-                  budget={policy.budget}
-                  advanced={advanced}
-                  onChange={(budget) => onChange({ ...policy, budget })}
-                />
-              </div>
-            </>
-          ) : (
-            <InterventionEditor
-              value={policy.intervention}
-              advanced={advanced}
-              onChange={(intervention) => onChange({ ...policy, intervention })}
-            />
-          )}
+          {children}
           <div class="row end">
             <Button size="small" icon="check" onClick={() => setOpen(false)}>
               {t('common.done')}

@@ -181,12 +181,13 @@ test('a Permanent rule, chosen after a preview, refuses every loosening with no 
   h,
 }) => {
   const p = await h.page('dashboard.html#/groups/new');
-  await p.label('Name', { exact: true }).fill('Casino');
   await p.placeholder('Add a site, or paste a list…').fill('casino.test poker.test');
   await p.button('Add', { exact: true }).click();
   await p.button('Next: when').click();
   await p.button('Next: what happens').click();
   await p.role('radio', 'Block').click();
+  await p.button('Next: details').click();
+  await p.label('Name', { exact: true }).fill('Casino');
   await p.button('Next: protection').click();
   await p.role('radio', /^Permanent/).click();
   // A preview first, with an explicit acknowledgement and no date to choose.
@@ -196,7 +197,7 @@ test('a Permanent rule, chosen after a preview, refuses every loosening with no 
   await p.label('I understand that only the emergency exit can loosen this rule.').click();
   await p.button('Make permanent').click();
   expect(await p.role('radio', /^Permanent/).checked()).toBe(true);
-  await p.button('Next: review').click();
+  await p.button('Next: summary').click();
   await p.button('Create rule').click();
   await p.role('heading', 'Rules', { exact: true }).expectVisible();
   const created = (await h.rpc('config.get')).config.groups.find((g: any) => g.name === 'Casino');

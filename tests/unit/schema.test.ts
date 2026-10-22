@@ -21,6 +21,15 @@ describe('settings removed from earlier versions', () => {
     expect(diffConfig(normalizeConfig(defaultConfig()).config, config)).toEqual([]);
   });
 
+  it('Advanced mode is dropped: each part of a rule has its advanced options', () => {
+    const old = legacy((c) => {
+      c.settings.advanced = true;
+    });
+    const { config } = normalizeConfig(old);
+    expect(config.settings).not.toHaveProperty('advanced');
+    expect(diffConfig(normalizeConfig(defaultConfig()).config, config)).toEqual([]);
+  });
+
   it('the alternatives of intervention pages are dropped (#16)', () => {
     const old = legacy((c) => {
       c.settings.interventions.alternatives = [{ id: 'a', label: 'Read a book', url: 'https://x.test/' }];

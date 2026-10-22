@@ -27,9 +27,6 @@
   "ask.help": {
     "message": "You always have to give a reason. On the page you can also type a different length, up to the maximum."
   },
-  "ask.max": {
-    "message": "up to"
-  },
   "ask.wait": {
     "message": "Wait before you can answer"
   },
@@ -84,44 +81,29 @@
   "badge.title": {
     "message": "WebHandbrake — {group}: {time} left"
   },
-  "budget.after": {
-    "message": "After"
-  },
-  "budget.afterVisits": {
-    "message": "After"
-  },
-  "budget.choice.none": {
-    "message": "Right away"
-  },
-  "budget.choice.none.desc": {
-    "message": "From the first minute."
-  },
-  "budget.choice.session": {
-    "message": "After continuous use"
-  },
   "budget.choice.session.desc": {
     "message": "When you stay too long in one go. A few minutes away start the count again."
-  },
-  "budget.choice.time": {
-    "message": "After some time"
   },
   "budget.choice.time.desc": {
     "message": "After a set amount of time on these sites."
   },
-  "budget.choice.visits": {
-    "message": "After some visits"
-  },
   "budget.choice.visits.desc": {
     "message": "After a set number of visits to these sites."
   },
-  "budget.label": {
-    "message": "Limit"
+  "budget.counts": {
+    "message": "What counts"
   },
-  "budget.minutes": {
-    "message": "Time allowed"
+  "budget.kind.session": {
+    "message": "Time in a row"
   },
-  "budget.neverReached": {
-    "message": "Make the limit shorter than its period, or it is never reached."
+  "budget.kind.time": {
+    "message": "Time"
+  },
+  "budget.kind.visits": {
+    "message": "Visits"
+  },
+  "budget.onlyAt": {
+    "message": "Only at certain times"
   },
   "budget.perSite": {
     "message": "Count each site separately"
@@ -164,8 +146,8 @@
   "budget.visits": {
     "message": "after {count, plural, one {# visit} other {# visits}} {period}"
   },
-  "budget.visitsLabel": {
-    "message": "Visits"
+  "budget.visitsQuestion": {
+    "message": "How many visits?"
   },
   "budget.visitsUnit": {
     "message": "visits"
@@ -607,9 +589,6 @@
   "editor.advanced": {
     "message": "Advanced options"
   },
-  "editor.advancedModeHint": {
-    "message": "Turn on Advanced mode in Settings for more options."
-  },
   "editor.breaks": {
     "message": "Breaks"
   },
@@ -621,9 +600,6 @@
   },
   "editor.colorN": {
     "message": "Colour {n}"
-  },
-  "editor.create": {
-    "message": "Create rule"
   },
   "editor.details.intro": {
     "message": "How you recognise this rule, and what you see when it stops you."
@@ -688,6 +664,9 @@
   "editor.moreActions": {
     "message": "More actions"
   },
+  "editor.moreConditions": {
+    "message": "More conditions"
+  },
   "editor.name": {
     "message": "Name"
   },
@@ -697,11 +676,8 @@
   "editor.next.details": {
     "message": "Next: details"
   },
-  "editor.next.protection": {
-    "message": "Next: protection"
-  },
-  "editor.next.sites": {
-    "message": "Next: sites"
+  "editor.next.summary": {
+    "message": "Next: summary"
   },
   "editor.note": {
     "message": "Why does this rule matter to you?"
@@ -784,26 +760,17 @@
   "editor.sections": {
     "message": "Parts of the rule"
   },
-  "editor.sitesHint": {
-    "message": "Type or paste sites. youtube.com also covers m.youtube.com."
-  },
   "editor.step.changed": {
     "message": "changed"
   },
   "editor.step.details": {
     "message": "Details"
   },
-  "editor.step.overview": {
-    "message": "Overview"
-  },
   "editor.step.problem": {
     "message": "has a problem to fix"
   },
-  "editor.step.protection": {
-    "message": "Protection"
-  },
-  "editor.step.sites": {
-    "message": "Sites"
+  "editor.step.summary": {
+    "message": "Summary"
   },
   "editor.tabs": {
     "message": "When the rule starts, apply it to"
@@ -1307,7 +1274,7 @@
     "message": "Type or paste addresses, one or many. youtube.com also covers its subdomains, such as m.youtube.com. To be more precise, use the forms in the table below."
   },
   "help.groups.p2": {
-    "message": "Exceptions, starting with +, keep part of a blocked site open. The most precise entry wins: with reddit.com blocked and +reddit.com/r/*/comments/* allowed, single discussions open and the rest of Reddit stays blocked. An exception only works in its own rule."
+    "message": "Exceptions, starting with +, keep part of a blocked site open (in a rule: Sites › Advanced options). The most precise entry wins: with reddit.com blocked and +reddit.com/r/*/comments/* allowed, single discussions open and the rest of Reddit stays blocked. An exception only works in its own rule."
   },
   "help.groups.title": {
     "message": "Rules and sites"
@@ -1322,7 +1289,7 @@
     "message": "Insights"
   },
   "help.interventions.p1": {
-    "message": "From the gentlest: Count only, Filter (grey, blurred…), Ask first, Wait, Challenge (type something or solve a small calculation), Block, Redirect and Close tab. In the full editor, Don’t count leaves the sites alone and counts nothing."
+    "message": "From the gentlest: Count only, Filter (grey, blurred…), Ask first, Wait, Challenge (type something or solve a small calculation), Block, Redirect and Close tab. In a rule with several conditions, Don’t count leaves the sites alone and counts nothing."
   },
   "help.interventions.p2": {
     "message": "On every block page you can close the tab or go back. You can also save the page for later: you find it in Later once it opens again."
@@ -1508,7 +1475,7 @@
     "message": "The popup shows what applies to the current site. From there you can take a break, save the page for later, block the site or start a focus session. The dashboard, this page, is where you manage everything."
   },
   "help.start.p4": {
-    "message": "To begin, open Rules › New rule. Choose the sites, when the rule applies and what happens, then choose Create rule.",
+    "message": "To begin, open Rules › New rule. Choose the sites, when the rule applies, what happens, its name and its protection, then choose Create rule. Each part keeps its less common settings under Advanced options.",
     "description": "Help, Getting started. \"Rules\", \"New rule\" and \"Create rule\" are interface labels."
   },
   "help.start.title": {
@@ -1563,7 +1530,7 @@
     "message": "Pages with this parameter in their address."
   },
   "help.syntax.regex": {
-    "message": "A regular expression (Advanced mode)."
+    "message": "A regular expression."
   },
   "help.syntax.wildcard": {
     "message": "* stands for any text between two slashes."
@@ -2686,6 +2653,18 @@
   "period.rollingLength": {
     "message": "In any"
   },
+  "period.style.every": {
+    "message": "Every so often"
+  },
+  "period.style.month": {
+    "message": "Each calendar month"
+  },
+  "period.style.rolling": {
+    "message": "In any window of…"
+  },
+  "period.style.week": {
+    "message": "Each calendar week"
+  },
   "permanent.ack": {
     "message": "I understand that only the emergency exit can loosen this rule."
   },
@@ -2712,12 +2691,6 @@
   },
   "policy.number": {
     "message": "Condition {n}"
-  },
-  "policy.q.limit": {
-    "message": "Right away, or after a limit?"
-  },
-  "policy.q.times": {
-    "message": "At what times?"
   },
   "policy.remove": {
     "message": "Remove condition"
@@ -3042,7 +3015,7 @@
     "message": "How long to wait"
   },
   "redirect.help": {
-    "message": "For example your to-do list. You can use '{url}' (the page you were opening), '{group}' (the rule’s name) and '{until}' (when it ends)."
+    "message": "In the address, '{url}' becomes the page you were opening, '{group}' the rule’s name and '{until}' when it ends."
   },
   "redirect.url": {
     "message": "Address"
@@ -3160,9 +3133,6 @@
   },
   "session.error.notFound": {
     "message": "This session no longer exists."
-  },
-  "setting.advanced": {
-    "message": "Advanced mode"
   },
   "setting.badge.enabled": {
     "message": "Toolbar badge"
@@ -3286,12 +3256,6 @@
   },
   "setting.weekStart": {
     "message": "Weeks start on"
-  },
-  "settings.advanced": {
-    "message": "Advanced mode"
-  },
-  "settings.advancedHelp": {
-    "message": "Shows expert options, such as patterns and editing lists as text."
   },
   "settings.allSites": {
     "message": "Track time on all sites"
@@ -3825,9 +3789,6 @@
   "targets.textMode": {
     "message": "Edit as text"
   },
-  "targets.type": {
-    "message": "Type of {value}"
-  },
   "template.forums": {
     "message": "Forums"
   },
@@ -4107,6 +4068,9 @@
   },
   "validate.emptyWindow": {
     "message": "Condition {n}: a time window starts and ends at the same time."
+  },
+  "validate.neverReached": {
+    "message": "Condition {n}: the time allowed must be shorter than its period, or it is never reached."
   },
   "validate.noDays": {
     "message": "Condition {n}: a time window has no days selected."
@@ -4417,24 +4381,15 @@
   "wizard.created": {
     "message": "Rule “{name}” created."
   },
-  "wizard.customize": {
-    "message": "Customise all options first"
-  },
   "wizard.done": {
     "message": "done, go back to this step"
-  },
-  "wizard.fullEditor": {
-    "message": "Use the full editor"
   },
   "wizard.how.askMax": {
     "message": "Allowed for at most",
     "description": "Followed by a number and a unit: the longest time the person can choose after the question."
   },
   "wizard.how.intro": {
-    "message": "From gentlest to strongest. You can change it later."
-  },
-  "wizard.how.later": {
-    "message": "You can fine-tune the details later."
+    "message": "From gentlest to strongest."
   },
   "wizard.how.redirectDesc": {
     "message": "Opens another address instead, for example your to-do list."
@@ -4445,17 +4400,11 @@
   "wizard.how.title": {
     "message": "What should happen?"
   },
-  "wizard.name": {
-    "message": "Name"
-  },
   "wizard.next.how": {
     "message": "Next: what happens"
   },
   "wizard.next.protection": {
     "message": "Next: protection"
-  },
-  "wizard.next.review": {
-    "message": "Next: review"
   },
   "wizard.next.when": {
     "message": "Next: when"
@@ -4481,19 +4430,10 @@
     "message": "You are continuing the rule you started earlier."
   },
   "wizard.review.intro": {
-    "message": "Give your rule a name and, if you like, a reason to see when it stops you."
-  },
-  "wizard.review.later": {
-    "message": "You can add exceptions and more conditions later."
-  },
-  "wizard.review.noteHelp": {
-    "message": "Optional. Shown when the rule stops you."
+    "message": "Check the rule before you create it. Choose Change to edit a part."
   },
   "wizard.review.plan": {
     "message": "{cond}, {outcome}"
-  },
-  "wizard.review.protection": {
-    "message": "Protection: {level}."
   },
   "wizard.review.title": {
     "message": "Check and create"
@@ -4528,9 +4468,6 @@
   },
   "wizard.step.protection": {
     "message": "Protection"
-  },
-  "wizard.step.review": {
-    "message": "Review"
   },
   "wizard.step.sites": {
     "message": "Sites"
@@ -4602,7 +4539,7 @@
     "message": "For example 30 min a day, or 2 hours every 3 days."
   },
   "wizard.when.intro": {
-    "message": "Pick the moment that matters most. You can add more conditions later."
+    "message": "Pick the moment that matters most. More conditions are in Advanced options."
   },
   "wizard.when.minutes": {
     "message": "How much time?"

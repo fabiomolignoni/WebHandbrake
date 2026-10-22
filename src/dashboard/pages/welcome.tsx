@@ -1,7 +1,7 @@
 /**
  * First run: a welcome that states the value and the privacy
- * promise, then the steps of the rule wizard (`RuleWizard`) for a first rule, and a "you're set"
- * screen with the next steps. Skippable and resumable within the session.
+ * promise, then the parts of the rule editor (`RuleEditor`) in order for a first rule, and a
+ * "you're set" screen with the next steps. Skippable and resumable within the session.
  */
 
 import { useEffect, useRef, useState } from 'preact/hooks';
@@ -16,7 +16,7 @@ import { call } from '../../shared/rpc';
 import { Button, ToneIcon } from '../../ui/components';
 import { BrakeLogo, Icon } from '../../ui/icons';
 import { useSaveFlow } from '../../ui/saveflow';
-import { discardRuleDraft, hasRuleDraft, RuleWizard } from '../components/rule-wizard';
+import { discardRuleDraft, hasRuleDraft, RuleEditor } from '../components/rule-editor';
 import { useDashboard } from '../context';
 import { navigate } from '../router';
 
@@ -224,10 +224,11 @@ export function WelcomePage() {
     );
   }
 
-  // ---------------------------------------------------------------- the rule wizard's steps
+  // ---------------------------------------------------------------- the parts of the rule
   return (
     <>
-      <RuleWizard
+      <RuleEditor
+        mode="create"
         store={STORE}
         class="onb"
         head={

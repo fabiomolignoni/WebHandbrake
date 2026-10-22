@@ -463,6 +463,8 @@ export function normalizeGroup(
  */
 const OBSOLETE_SETTINGS = [
   'accent',
+  // Advanced mode: the rule editor has advanced options in each part instead.
+  'advanced',
   'interventions.alternatives',
   'protection.level',
   'protection.lockedUntil',
