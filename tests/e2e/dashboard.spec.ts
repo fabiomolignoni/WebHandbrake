@@ -703,17 +703,27 @@ test('the editor normalises a pasted address and saves a renamed rule', async ({
   await expectBlocked(h, 'http://stream.test/watch?v=1');
 });
 
-test('the pencil corrects an address in place', async ({ h }) => {
+test('an address is corrected where it is shown', async ({ h }) => {
   await setup(h, REMINDER);
   const cfg = (await h.rpc('config.get')).config;
   const p = await h.page(`dashboard.html#/groups/${cfg.groups[1].id}?step=sites`);
   await p.button('Edit video.test').click();
+  // The address itself turns into a field, in its row: no box with Save and Cancel.
   await p.label('Address').expectValue('video.test');
+  await p.get('.target-row').expectCount(1);
+  await p.button('Save', { exact: true }).expectCount(0);
   await p.label('Address').fill('two.test three.test');
-  await p.button('Save', { exact: true }).click();
+  await p.label('Address').press('Enter');
   await p.text('Enter one address. To add more, use the box above.').expectVisible();
+  // Escape puts the entry back as it was.
+  await p.label('Address').press('Escape');
+  await p.label('Address').expectCount(0);
+  await p.text('Enter one address. To add more, use the box above.').expectCount(0);
+  // A click on the address edits it too, and Enter applies it.
+  await p.text('video.test', { within: '.target-row' }).click();
   await p.label('Address').fill('vide0.test');
-  await p.button('Save', { exact: true }).click();
+  await p.label('Address').press('Enter');
+  await p.label('Address').expectCount(0);
   await p.text('vide0.test', { within: '.target-row' }).expectVisible();
   await p.text('video.test', { within: '.target-row' }).expectCount(0);
   await p.button('Save changes').click();
@@ -724,6 +734,18 @@ test('the pencil corrects an address in place', async ({ h }) => {
   expect(after.map((t: any) => t.value)).toEqual(['vide0.test']);
   await expectBlocked(h, 'http://vide0.test/');
   await expectAllowed(h, 'http://video.test/');
+});
+
+test('the bin of an address being edited removes the entry', async ({ h }) => {
+  await setup(h, REMINDER);
+  const cfg = (await h.rpc('config.get')).config;
+  const p = await h.page(`dashboard.html#/groups/${cfg.groups[0].id}?step=sites`);
+  await p.button('Edit chat.test').click();
+  await p.label('Address').fill('chat2.test');
+  // Leaving the field applies the address first; the row stays the same, so the click lands.
+  await p.button('Remove chat.test').click();
+  await p.get('.target-row').expectCount(1);
+  await p.text('social.test', { within: '.target-row' }).expectVisible();
 });
 
 test('the rule editor follows changes made elsewhere while nothing is edited', async ({ h }) => {

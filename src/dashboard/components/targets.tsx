@@ -5,13 +5,13 @@
  */
 
 import type { Ref } from 'preact';
-import { useRef, useState } from 'preact/hooks';
+import { useEffect, useId, useRef, useState } from 'preact/hooks';
 import { newId } from '../../engine/defaults';
 import { parseTargetList, targetToLine } from '../../engine/patterns';
 import type { Target, TargetType } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { describeTarget, targetTypeLabel } from '../../shared/summary';
-import { Banner, Button, Field, IconButton, Select } from '../../ui/components';
+import { Banner, Button, IconButton, Select } from '../../ui/components';
 import { Icon } from '../../ui/icons';
 import { ADDRESS_TOPIC, helpRoute } from '../help-content';
 
@@ -159,72 +159,14 @@ function AddBox({
   );
 }
 
-/** The address of an entry as typed in the input, without the exception mark. */
+/** The address of an entry as typed, without the exception mark. */
 const addressOf = (tg: Target) => targetToLine({ ...tg, allow: false });
 
-function RowEditor({
-  tg,
-  onSave,
-  onCancel,
-}: {
-  tg: Target;
-  /** Returns the error to show, or null when the entry was saved. */
-  onSave: (next: Omit<Target, 'id'>) => string | null;
-  onCancel: () => void;
-}) {
-  const [address, setAddress] = useState(addressOf(tg));
-  const [error, setError] = useState<string | null>(null);
-  const save = () => {
-    const { targets: parsed, errors } = parseTargetList(address.replace(/^\s*(\+|@@)\s*/, ''));
-    if (errors.length) return setError(t(errors[0].error));
-    if (parsed.length !== 1)
-      return setError(t(parsed.length ? 'targets.error.oneAddress' : 'targets.error.empty'));
-    const next: Omit<Target, 'id'> = { ...parsed[0], allow: tg.allow };
-    if (!next.allow) delete next.allow;
-    setError(onSave(next));
-  };
-  const keys = (e: KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      save();
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      e.stopPropagation();
-      onCancel();
-    }
-  };
-  return (
-    <li class={`target-row editing${tg.allow ? ' exception' : ''}`}>
-      <div class="stack stack-sm">
-        <Field label={tg.allow ? t('targets.exceptionAddress') : t('targets.address')} error={error}>
-          {(id, describedBy) => (
-            <input
-              id={id}
-              class="input mono"
-              value={address}
-              aria-describedby={describedBy}
-              aria-invalid={error ? true : undefined}
-              autoCapitalize="off"
-              spellcheck={false}
-              autoFocus
-              onInput={(e) => setAddress((e.target as HTMLInputElement).value)}
-              onKeyDown={keys}
-            />
-          )}
-        </Field>
-        <div class="row end">
-          <Button size="small" variant="ghost" onClick={onCancel}>
-            {t('common.cancel')}
-          </Button>
-          <Button size="small" variant="primary" onClick={save}>
-            {t('common.save')}
-          </Button>
-        </div>
-      </div>
-    </li>
-  );
-}
-
+/**
+ * One entry. Its address is edited where it is shown: the pencil, or a click on the address, turns
+ * it into a field with the address as typed ("=m.youtube.com" for an exact site). Enter or leaving
+ * the field applies it, Escape puts the entry back as it was.
+ */
 function Row({
   tg,
   advanced,
@@ -235,28 +177,102 @@ function Row({
   tg: Target;
   advanced: boolean;
   onChange: (t: Target) => void;
+  /** Returns the error to show, or null when the entry was changed. */
   onEdit: (next: Omit<Target, 'id'>) => string | null;
   onRemove: () => void;
 }) {
-  const [editing, setEditing] = useState(false);
+  const row = useRef<HTMLLIElement>(null);
+  const field = useRef<HTMLInputElement>(null);
+  // The address being typed, null when the entry is not being edited. Also kept in a ref, so that
+  // Enter and the blur that follows apply it once.
+  const [draft, setDraftState] = useState<string | null>(null);
+  const typed = useRef<string | null>(null);
+  const setDraft = (v: string | null) => {
+    typed.current = v;
+    setDraftState(v);
+  };
+  const [error, setError] = useState<string | null>(null);
+  const errorId = useId();
+  const editing = draft !== null;
+  useEffect(() => {
+    if (editing) field.current?.focus();
+  }, [editing]);
   const display = tg.type === 'regex' ? `/${tg.value}/` : describeTarget({ ...tg, allow: false });
   const options = COMPATIBLE[tg.type].map((x) => ({ value: x, label: targetTypeLabel(x) }));
-  if (editing) {
-    return (
-      <RowEditor
-        tg={tg}
-        onCancel={() => setEditing(false)}
-        onSave={(next) => {
-          const error = onEdit(next);
-          if (!error) setEditing(false);
-          return error;
-        }}
-      />
-    );
-  }
+  const focusPencil = () =>
+    requestAnimationFrame(() => row.current?.querySelector<HTMLButtonElement>('[data-edit]')?.focus());
+
+  const start = () => {
+    if (typed.current === null) setDraft(addressOf(tg));
+  };
+  const stop = () => {
+    setDraft(null);
+    setError(null);
+  };
+  /** Applies the typed address. Returns false, and shows why, when it cannot be applied. */
+  const apply = (): boolean => {
+    if (typed.current === null) return true;
+    // The field itself: a value set without an input event (autofill, automation) counts too.
+    const value = field.current?.value ?? typed.current;
+    if (value !== typed.current) setDraft(value);
+    if (value.trim() === addressOf(tg)) {
+      stop();
+      return true;
+    }
+    const { targets: parsed, errors } = parseTargetList(value.replace(/^\s*(\+|@@)\s*/, ''));
+    let err: string | null = null;
+    if (errors.length) err = t(errors[0].error);
+    else if (parsed.length !== 1) err = t(parsed.length ? 'targets.error.oneAddress' : 'targets.error.empty');
+    else {
+      const next: Omit<Target, 'id'> = { ...parsed[0], allow: tg.allow };
+      if (!next.allow) delete next.allow;
+      err = onEdit(next);
+    }
+    if (err) setError(err);
+    else stop();
+    return !err;
+  };
+
   return (
-    <li class={`target-row${tg.allow ? ' exception' : ''}`}>
-      <span class="value">{display}</span>
+    <li ref={row} class={`target-row${tg.allow ? ' exception' : ''}`}>
+      {!editing ? (
+        // The pencil is the way in from the keyboard; a click on the address is a shortcut.
+        // biome-ignore lint/a11y/useKeyWithClickEvents: the pencil next to it does the same
+        // biome-ignore lint/a11y/noStaticElementInteractions: the pencil next to it does the same
+        <span class="value" onClick={start}>
+          {display}
+        </span>
+      ) : (
+        <span class="value editing">
+          <input
+            ref={field}
+            class="input mono"
+            value={draft}
+            aria-label={tg.allow ? t('targets.exceptionAddress') : t('targets.address')}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? errorId : undefined}
+            autoCapitalize="off"
+            spellcheck={false}
+            onFocus={(e) => {
+              const el = e.target as HTMLInputElement;
+              el.setSelectionRange(el.value.length, el.value.length);
+            }}
+            onInput={(e) => setDraft((e.target as HTMLInputElement).value)}
+            onBlur={apply}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                if (apply()) focusPencil();
+              } else if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                stop();
+                focusPencil();
+              }
+            }}
+          />
+        </span>
+      )}
       {advanced && options.length > 1 ? (
         <span style={{ minWidth: '150px' }}>
           <Select
@@ -269,13 +285,29 @@ function Row({
       ) : (
         <span class="tag">{targetTypeLabel(tg.type)}</span>
       )}
-      <IconButton
-        icon="edit"
-        size="small"
-        variant="ghost"
-        label={t('targets.edit', { value: display })}
-        onClick={() => setEditing(true)}
-      />
+      {!editing ? (
+        <IconButton
+          icon="edit"
+          size="small"
+          variant="ghost"
+          data-edit
+          label={t('targets.edit', { value: display })}
+          onClick={start}
+        />
+      ) : (
+        <IconButton
+          icon="check"
+          size="small"
+          variant="ghost"
+          data-edit
+          label={t('common.done')}
+          // Keeps the focus in the field, so that a refused address can be corrected at once.
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
+            if (apply()) focusPencil();
+          }}
+        />
+      )}
       <IconButton
         icon="trash"
         size="small"
@@ -283,6 +315,11 @@ function Row({
         label={t('targets.remove', { value: tg.value })}
         onClick={onRemove}
       />
+      {error && (
+        <span class="error-text" id={errorId} role="alert">
+          {error}
+        </span>
+      )}
     </li>
   );
 }
@@ -305,6 +342,10 @@ export function TargetsEditor({
   const [textErrors, setTextErrors] = useState<string[]>([]);
   const [draft, setDraft] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  // An entry whose address changes gets a new id: its row keeps the key it had, so that it is not
+  // rebuilt under the pointer (a click on its bin would be lost) or the keyboard.
+  const rowKeys = useRef(new Map<string, string>());
+  const rowKey = (tg: Target) => rowKeys.current.get(tg.id) ?? tg.id;
   const blocks = targets.filter((x) => !x.allow);
   const allows = targets.filter((x) => x.allow);
   const pick = (example: string) => {
@@ -339,6 +380,7 @@ export function TargetsEditor({
     if (!same && targets.some((x) => x.id !== old.id && key(x) === key(next)))
       return t('targets.error.duplicate');
     const id = same ? old.id : newId();
+    if (!same) rowKeys.current.set(id, rowKey(old));
     onChange(targets.map((x) => (x.id === old.id ? { ...next, id } : x)));
     return null;
   };
@@ -454,7 +496,7 @@ export function TargetsEditor({
         <ul class="list compact" aria-label={t('targets.sites')}>
           {blocks.map((tg) => (
             <Row
-              key={tg.id}
+              key={rowKey(tg)}
               tg={tg}
               advanced={advanced}
               onChange={update}
@@ -472,7 +514,7 @@ export function TargetsEditor({
             <ul class="list compact" aria-label={t('targets.exceptions')}>
               {allows.map((tg) => (
                 <Row
-                  key={tg.id}
+                  key={rowKey(tg)}
                   tg={tg}
                   advanced={advanced}
                   onChange={update}

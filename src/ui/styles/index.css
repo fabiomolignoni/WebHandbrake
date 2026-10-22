@@ -2420,9 +2420,28 @@ a.kpi:hover .caption {
   font-size: 0.9rem;
   overflow-wrap: anywhere;
 }
-.target-row.editing {
-  grid-template-columns: minmax(0, 1fr);
-  padding-block: var(--s2);
+.target-row .value:not(.editing) {
+  cursor: text;
+}
+/* The address edited in place: the field's text stays where the address was. */
+.target-row .value.editing {
+  display: flex;
+  align-items: center;
+}
+.target-row .value.editing .input {
+  min-height: 0;
+  padding: 2px 6px;
+  margin-inline-start: -7px;
+}
+/* An exception keeps its "+" before the field. */
+.target-row.exception .value.editing::before {
+  margin-inline-end: var(--s1);
+}
+.target-row.exception .value.editing .input {
+  margin-inline-start: 0;
+}
+.target-row > .error-text {
+  grid-column: 1 / -1;
 }
 .target-row.exception .value::before {
   content: "+ ";

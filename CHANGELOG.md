@@ -91,9 +91,10 @@ All notable changes to WebHandbrake are documented here. The format follows
   up another break of the limit. It now offers **Extend the break**: the running break lasts
   longer, at the same cost, up to the longest a break can last, and no other break is counted.
 - The pencil next to a site or an exception of a rule opened an empty box without a label, for a
-  note only: correcting a mistyped address meant removing it and adding it again. It now edits the
-  address, with a label. A corrected address follows the rule's protection like removing the old
-  one and adding the new one.
+  note only: correcting a mistyped address meant removing it and adding it again. The pencil, or a
+  click on the address, now turns the address into a field right where it is shown: Enter or
+  leaving the field applies it, Escape puts it back. A corrected address follows the rule's
+  protection like removing the old one and adding the new one.
 - A number typed quickly in a field could lose a digit (“120” became “10”).
 - A new rule left without a name no longer takes the name of its first site, which made texts such
   as “Remove tiktok.com from tiktok.com” and the popup’s “Add to: tiktok.com”. As in the rule
