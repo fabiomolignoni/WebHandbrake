@@ -99,8 +99,7 @@ All notable changes to WebHandbrake are documented here. The format follows
   1280 pixels, and on a phone-sized screen the page scrolled sideways. The text of a break now
   wraps and the button stays in the card.
 - During a break, the popup offered **Take a break** again, which started a second break and used
-  up another break of the limit. It now offers **Extend the break**: the running break lasts
-  longer, at the same cost, up to the longest a break can last, and no other break is counted.
+  up another break of the limit. It now offers only **End the break**.
 - The pencil next to a site or an exception of a rule opened an empty box without a label, for a
   note only: correcting a mistyped address meant removing it and adding it again. The pencil, or a
   click on the address, now turns the address into a field right where it is shown: Enter or

@@ -44,8 +44,6 @@ export type Purpose =
       minutes: number;
       /** The intervention page that the break lets through, if one is shown (statistics). */
       shown?: { tabId: number; groupId: string };
-      /** The running break this extends, instead of taking another one. */
-      extend?: string;
     }
   | {
       kind: 'pass';

@@ -235,12 +235,13 @@ export async function interventionModel(
 
 /**
  * The break offered on the page. A break lifts only the rules that allow one: when another rule
- * would still block the page, it would not open it, and the page says so instead.
+ * would still block the page, another break would not open it (nor does the one already running),
+ * and the page says so instead.
  */
 function breakOptions(d: Decision, url: string, incognito: boolean): PauseOptions {
   const opts = pauseOptions(url, undefined, incognito);
   const stays = d.groups.some((r) => !r.pausable && SEVERITY[r.intervention.type] >= SEVERITY.block);
-  return stays && opts.available
+  return stays && (opts.available || opts.reason === 'pause.unavailable.onBreak')
     ? { ...opts, available: false, reason: 'pause.unavailable.otherRule' }
     : opts;
 }

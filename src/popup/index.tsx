@@ -477,7 +477,7 @@ function App() {
                 onClick={() => setPausing(true)}
               >
                 <Icon name="pause" />
-                {pause.extend ? t('pause.extend') : t('popup.pause')}
+                {t('popup.pause')}
                 <span class="sub">
                   {pause.available ? pauseSummary(pause) : pause.reason ? t(pause.reason) : ''}
                 </span>

@@ -66,9 +66,7 @@ export function pauseSummary(o: PauseOptions): string {
   const cost = o.costs.length
     ? t('pause.summary.cost', { cost: costsLabel(o.costs) })
     : t('pause.summary.free');
-  // Extending: how much longer the break can last.
-  const more = o.extend ? t('pause.summary.more', { minutes: o.maxMinutes }) : null;
-  return [cost, more, pauseBudgetLabel(o)].filter(Boolean).join(' · ');
+  return [cost, pauseBudgetLabel(o)].filter(Boolean).join(' · ');
 }
 
 /** What a break covers: "youtube.com · Social", "Social", "All rules". */
@@ -85,8 +83,8 @@ export function breakSubject(
 }
 
 /**
- * Taking a break, or extending the one running: it covers the rules of the page whole, lasts the
- * longest they allow and can be ended before (popup, Today).
+ * Taking a break: it covers the rules of the page whole, lasts the longest they allow and can be
+ * ended before (popup, Today).
  */
 export function PauseDialog({
   options: o,
@@ -99,13 +97,11 @@ export function PauseDialog({
   onClose: () => void;
   onStarted?: () => void;
 }) {
-  const extend = o.extend;
   // A break lasts as long as it can; it is ended sooner from the popup or Today.
   const minutes = o.maxMinutes;
-  const duration = formatDuration(minutes * 60);
   const [error, setError] = useState<string | null>(null);
   const [ticket, setTicket] = useState<TicketView | null>(null);
-  const title = extend ? t('pause.extend') : t('pause.title');
+  const title = t('pause.title');
 
   const start = async () => {
     setError(null);
@@ -114,14 +110,13 @@ export function PauseDialog({
       groupId: !url && o.groups.length === 1 ? o.groups[0].id : undefined,
       minutes,
       incognito: o.incognito,
-      extend: extend?.grantId,
     });
     if (r.error) setError(t(r.error));
     else if (r.ticket) setTicket(r.ticket);
     else done();
   };
   const done = () => {
-    toast(extend ? t('pause.extended', { minutes }) : t('pause.started', { minutes }));
+    toast(t('pause.started', { minutes }));
     onStarted?.();
     onClose();
   };
@@ -140,15 +135,16 @@ export function PauseDialog({
           <Button variant="primary" onClick={onClose}>
             {t('pause.cancel')}
           </Button>
-          <Button onClick={start}>{extend ? t('pause.extend') : t('pause.start')}</Button>
+          <Button onClick={start}>{t('pause.start')}</Button>
         </>
       }
     >
       <div class="stack">
         <p>
-          {extend
-            ? t('pause.extendHelp', { duration, minutes: extend.minutes })
-            : t('pause.covers', { rules: formatList(o.groups.map((g) => g.name)), duration })}
+          {t('pause.covers', {
+            rules: formatList(o.groups.map((g) => g.name)),
+            duration: formatDuration(minutes * 60),
+          })}
         </p>
         <p class="small">
           <strong>{t('pause.cost')}:</strong> {costsLabel(o.costs)}

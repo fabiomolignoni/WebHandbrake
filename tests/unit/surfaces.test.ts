@@ -61,6 +61,14 @@ describe('what the popup and the dashboard show', () => {
     expect(m).toMatchObject({ canAdd: true, canFocus: true, restorable: 0, quickMinutes: [25, 50, 90] });
     // The tab of an intervention page shows the page it replaced.
     expect((await popupModel(2)).tab?.url).toBe('https://a.test/x');
+    // During a break the popup offers to end it, not another break.
+    const { startPause } = await import('../../src/background/pauses');
+    const { answerTicket } = await import('../../src/background/tickets');
+    const { ticket } = await startPause({ url: 'https://a.test/', minutes: 5 });
+    expect(await answerTicket(ticket!.id, '')).toMatchObject({ status: 'done' });
+    const onBreak = await popupModel();
+    expect(onBreak.pause).toBeNull();
+    expect(onBreak.activePauses).toHaveLength(1);
   });
 
   it('"Block this site" goes to a rule that keeps blocking the page, and says what each rule would do', async () => {

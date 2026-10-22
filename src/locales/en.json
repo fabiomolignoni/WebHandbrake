@@ -1388,7 +1388,7 @@
     "message": "A break opens all the sites of a rule for a while. Only Block has breaks: Ask first, Wait and Challenge have their own way in. In What happens, each rule that blocks decides whether breaks are allowed, how long they can last, how many you get and what they cost."
   },
   "help.pauses.p2": {
-    "message": "A break ends by itself. You can end it early, or extend it from the popup without using another break."
+    "message": "A break ends by itself, or sooner when you end it from the popup or Today."
   },
   "help.pauses.title": {
     "message": "Breaks"
@@ -2447,18 +2447,6 @@
   "pause.error.duration": {
     "message": "This length is not allowed."
   },
-  "pause.error.ended": {
-    "message": "This break has already ended."
-  },
-  "pause.extend": {
-    "message": "Extend the break"
-  },
-  "pause.extendHelp": {
-    "message": "Adds {duration} to your break ({minutes} min so far), without using another break."
-  },
-  "pause.extended": {
-    "message": "Break extended by {minutes} minutes."
-  },
   "pause.left.both": {
     "message": "{count, plural, =0 {no breaks} one {# break} other {# breaks}} left {period}, {minutes} min in total",
     "description": "period: pause.period.*, e.g. \"3 breaks left today, 30 min in total\""
@@ -2511,14 +2499,8 @@
   "pause.summary.free": {
     "message": "No cost"
   },
-  "pause.summary.more": {
-    "message": "up to {minutes} min more"
-  },
   "pause.title": {
     "message": "Take a break"
-  },
-  "pause.unavailable.longest": {
-    "message": "This break is already as long as allowed."
   },
   "pause.unavailable.noGroup": {
     "message": "No rule applies to this page."
@@ -2531,6 +2513,9 @@
   },
   "pause.unavailable.notAllowed": {
     "message": "Breaks are not allowed for this rule."
+  },
+  "pause.unavailable.onBreak": {
+    "message": "You are already on a break."
   },
   "pause.unavailable.otherRule": {
     "message": "A break would not open this page: another rule here does not allow breaks."

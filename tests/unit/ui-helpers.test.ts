@@ -85,15 +85,6 @@ describe('the cost and the breaks left, in words', () => {
       pauseSummary(options({ costs: [{ type: 'delay', seconds: 30 }], remainingCount: 3, countPeriod: day })),
     ).toBe('Cost: a 30 s wait · 3 breaks left today');
     expect(pauseSummary(options({}))).toBe('No cost');
-    // Extending a break: how much longer it can last, no break counted.
-    expect(
-      pauseSummary(
-        options({
-          extend: { grantId: 'x', minutes: 5 },
-          maxMinutes: 10,
-        }),
-      ),
-    ).toBe('No cost · up to 10 min more');
   });
 
   it('what a break covers: its site or page and its rules', () => {

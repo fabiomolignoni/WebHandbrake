@@ -288,31 +288,23 @@ test('a break is visible in the popup, which can end it', async ({ h }) => {
   await site.expectIntervention(true, 5000);
 });
 
-test('during a break the popup extends it instead of taking another one (regression)', async ({ h }) => {
+test('during a break the popup offers to end it, not another break (regression)', async ({ h }) => {
   await h.configure((c) => {
     c.groups = [
       group('News', ['news.test'], [policy(BLOCK)], {
-        pause: pause({
-          maxMinutes: 15,
-          limit: { count: 1, period: { kind: 'day' } },
-        }),
+        pause: pause({ maxMinutes: 15, limit: { count: 2, period: { kind: 'day' } } }),
       }),
     ];
   });
   const site = await expectBlocked(h, 'http://news.test/');
-  await startBreak(h, { url: 'http://news.test/', minutes: 5 });
+  await startBreak(h, { url: 'http://news.test/', minutes: 15 });
   await site.button('Reopen the page').click();
   await site.expectReal('news.test/');
   const popup = await h.popup(site);
+  await popup.button('End the break').expectVisible();
   await popup.button(/Take a break/).expectCount(0);
-  // Extending adds what is left of the longest break.
-  await popup.button(/Extend the break/).click();
-  await popup.text('Adds 10 min to your break (5 min so far), without using another break.').expectVisible();
-  await popup.button('Extend the break', { within: 'dialog' }).click();
-  await popup.text('Break extended by 10 minutes.').expectVisible();
-  const o = await h.rpc('overview.get');
-  expect(o.pauses).toHaveLength(1);
-  expect(o.pauses[0].minutes).toBe(15);
+  await popup.button(/Extend/).expectCount(0);
+  expect((await h.rpc('overview.get')).pauses).toHaveLength(1);
   const today = await h.page('dashboard.html#/today');
   await today.get('[aria-labelledby="pauses-title"] strong').expectText('News');
 });

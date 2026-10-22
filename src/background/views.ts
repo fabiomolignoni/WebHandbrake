@@ -168,7 +168,9 @@ export async function popupModel(tabId?: number): Promise<PopupModel> {
   // A break lifts a block only: where no rule blocks the page (it asks, waits, filters, counts, or
   // is within its limit), no break is offered.
   const blocked = d?.groups.some((r) => breaksLift(r.base));
-  const pause = blocked ? pauseOptions(url, undefined, incognito) : null;
+  const options = blocked ? pauseOptions(url, undefined, incognito) : null;
+  // During a break the popup offers to end it, not to take another one.
+  const pause = options?.reason === 'pause.unavailable.onBreak' ? null : options;
   return {
     tab:
       tab && tab.id !== undefined

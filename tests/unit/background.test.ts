@@ -67,24 +67,20 @@ describe('pauses covering several groups', () => {
   });
 });
 
-describe('extending a break', () => {
+describe('a running break', () => {
   beforeEach(() => {
     vi.resetModules();
     installFakeBrowser();
   });
 
-  async function setup(patch: Partial<Group['pause']> = {}) {
+  async function setup() {
     const { store } = await import('../../src/background/store');
     const pauses = await import('../../src/background/pauses');
     await store.ready();
     const g = pausable(
       group('G', ['video.test'], [{ intervention: BLOCK }]),
       { type: 'none' },
-      {
-        maxMinutes: 15,
-        limit: { count: 1, period: { kind: 'day' } },
-        ...patch,
-      },
+      { maxMinutes: 15, limit: { count: 2, period: { kind: 'day' } } },
     );
     store.config = { ...store.config, groups: [g] };
     const { compileConfig } = await import('../../src/engine/compile');
@@ -94,61 +90,24 @@ describe('extending a break', () => {
 
   const url = 'https://video.test/watch?v=1';
 
-  it('a running break is extended, not taken again, so the limit of breaks is untouched (regression)', async () => {
+  it('is not taken again, so it uses up no other break (regression)', async () => {
     const { store, pauseOptions, startPause } = await setup();
-    await startPause({ url, minutes: 5 });
-    const [grant] = store.state.grants;
-    const until = grant.until!;
-    const o = pauseOptions(url);
-    // The last break of the day is running: extending it is still possible.
-    expect(o.available).toBe(true);
-    expect(o.extend).toEqual({ grantId: grant.id, minutes: 5 });
-    expect(o.maxMinutes).toBe(10);
-    expect(o.remainingCount).toBeNull();
-
-    expect(await startPause({ url, minutes: 4, extend: grant.id })).toEqual({ ticket: null });
+    await startPause({ url, minutes: 15 });
+    expect(pauseOptions(url)).toMatchObject({ available: false, reason: 'pause.unavailable.onBreak' });
+    expect(await startPause({ url, minutes: 15 })).toEqual({
+      ticket: null,
+      error: 'pause.unavailable.onBreak',
+    });
     expect(store.state.grants).toHaveLength(1);
-    expect(store.state.grants[0].until).toBe(until + 4 * 60_000);
-    expect(store.state.grants[0].minutes).toBe(9);
     expect(store.state.pauses).toHaveLength(1);
-    expect(store.state.pauses[0]).toMatchObject({ minutes: 9, groups: ['G'] });
   });
 
-  it('a break is extended at most to the longest a break can last', async () => {
-    const { pauseOptions, startPause, store } = await setup();
-    await startPause({ url, minutes: 10 });
-    const id = store.state.grants[0].id;
-    expect(await startPause({ url, minutes: 6, extend: id })).toEqual({
-      ticket: null,
-      error: 'pause.error.duration',
-    });
-    await startPause({ url, minutes: 5, extend: id });
-    const o = pauseOptions(url);
-    expect(o.available).toBe(false);
-    expect(o.reason).toBe('pause.unavailable.longest');
-    expect(o.extend?.minutes).toBe(15);
-  });
-
-  it('extending costs what a break costs', async () => {
-    const { startPause, store } = await setup({ cost: { type: 'confirm' } });
-    const first = await startPause({ url, minutes: 5 });
-    const { answerTicket } = await import('../../src/background/tickets');
-    expect(await answerTicket(first.ticket!.id, '')).toMatchObject({ status: 'done' });
-    expect(store.state.grants).toHaveLength(1);
-    const more = await startPause({ url, minutes: 5, extend: store.state.grants[0].id });
-    expect(more.ticket?.step.type).toBe('confirm');
-  });
-
-  it('a break ended sooner counts only the minutes used, and cannot be extended', async () => {
-    const { startPause, cancelPause, store } = await setup();
-    await startPause({ url, minutes: 5 });
-    const id = store.state.grants[0].id;
-    await cancelPause(id);
-    expect(store.state.pauses[0]).toMatchObject({ minutes: 5, used: 0 });
-    expect(await startPause({ url, minutes: 5, extend: id })).toEqual({
-      ticket: null,
-      error: 'pause.error.ended',
-    });
+  it('ended sooner, it counts only the minutes used and the next one can be taken', async () => {
+    const { startPause, cancelPause, pauseOptions, store } = await setup();
+    await startPause({ url, minutes: 15 });
+    await cancelPause(store.state.grants[0].id);
+    expect(store.state.pauses[0]).toMatchObject({ minutes: 15, used: 0 });
+    expect(pauseOptions(url)).toMatchObject({ available: true, remainingCount: 1 });
   });
 });
 

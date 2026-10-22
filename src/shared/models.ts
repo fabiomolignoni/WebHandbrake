@@ -171,7 +171,7 @@ export interface PauseOptions {
   /** i18n key explaining why a pause is not available. */
   reason?: string;
   groups: { id: string; name: string }[];
-  /** The longest the break can last (or, extending, the minutes it can still be extended by). */
+  /** How long the break lasts, unless it is ended sooner. */
   maxMinutes: number;
   /** Cost of every group covered, all of them to pay (strictest first); empty when free. */
   costs: Cost[];
@@ -183,11 +183,6 @@ export interface PauseOptions {
   url: string | null;
   /** Window context the options were computed for (groups limited to private/normal windows). */
   incognito: boolean | null;
-  /**
-   * A break already lets the page through: these are the options of extending it (no break is
-   * counted), with the minutes it has been taken for so far.
-   */
-  extend?: { grantId: string; minutes: number };
 }
 
 export interface PauseRequest {
@@ -195,8 +190,6 @@ export interface PauseRequest {
   incognito?: boolean | null;
   groupId?: string;
   minutes: number;
-  /** The running break to extend. */
-  extend?: string;
 }
 
 export type StepView =
