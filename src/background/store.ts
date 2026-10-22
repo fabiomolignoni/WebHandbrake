@@ -60,6 +60,8 @@ export interface Meta {
   version: string;
   lastDaily: string;
   restored: { at: number; snapshotAt: number | null } | null;
+  /** Time of the latest protection event whose warning was dismissed. */
+  tamperSeen?: number;
   selftest: { at: number; ok: boolean } | null;
   lastFlush: number;
   lastAddGroup?: string;

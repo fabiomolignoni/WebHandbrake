@@ -296,6 +296,9 @@
   "common.daysUnit": {
     "message": "days"
   },
+  "common.dismiss": {
+    "message": "Dismiss"
+  },
   "common.done": {
     "message": "Done"
   },
@@ -4323,7 +4326,10 @@
     "message": "{detail, plural, one {A pending change is ready to confirm.} other {# pending changes are ready to confirm.}}"
   },
   "warning.restored": {
-    "message": "Your settings were damaged and were restored from the backup of {when}. Please check your rules."
+    "message": "Your settings were damaged and were restored from the backup of {when}. Check your rules."
+  },
+  "warning.restored.defaults": {
+    "message": "Your settings were damaged and no backup could be used, so the defaults were restored."
   },
   "warning.review": {
     "message": "Review"

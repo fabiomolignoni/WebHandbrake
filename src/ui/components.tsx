@@ -782,11 +782,14 @@ export function Banner({
   icon,
   children,
   action,
+  onDismiss,
 }: {
   kind?: 'info' | 'warning' | 'danger' | 'ok' | 'accent';
   icon?: string;
   children: ComponentChildren;
   action?: ComponentChildren;
+  /** Shows a close button: for a banner about something that happened, not a lasting problem. */
+  onDismiss?: () => void;
 }) {
   const defaultIcon = kind === 'warning' || kind === 'danger' ? 'alert' : kind === 'ok' ? 'check' : 'info';
   return (
@@ -794,6 +797,9 @@ export function Banner({
       <Icon name={icon ?? defaultIcon} />
       <div class="grow stack stack-sm">{children}</div>
       {action}
+      {onDismiss && (
+        <IconButton icon="x" label={t('common.dismiss')} variant="ghost" size="small" onClick={onDismiss} />
+      )}
     </div>
   );
 }

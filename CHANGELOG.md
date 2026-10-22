@@ -71,6 +71,10 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ### Fixed
 
+- The warnings on Today about something that happened (settings restored from a backup, unusual
+  events such as a clock change) can be dismissed: they stayed for a week with no way to close
+  them. A restore no longer also shows the unusual-events warning, and a restore to the defaults
+  no longer names an empty backup date.
 - A limit's period no longer shows "per day" twice (in the list and again below it) in the rule
   editor and in Settings › Interventions; and the wizard's step names are no longer cut, such as
   "What ha…" at 1280 pixels.

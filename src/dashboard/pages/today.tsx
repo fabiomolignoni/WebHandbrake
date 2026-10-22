@@ -25,6 +25,9 @@ import { QuickSession } from './focus';
 /** Setup steps rather than problems: shown as a quiet card, not as an alert. */
 const SETUP_WARNINGS: Warning['kind'][] = ['incognito'];
 
+/** About something that happened rather than a lasting problem: can be dismissed. */
+const DISMISSIBLE_WARNINGS: Warning['kind'][] = ['restored', 'tamper'];
+
 export function WarningBanner({ w }: { w: Warning }) {
   const actions: Partial<Record<Warning['kind'], { label: string; run: () => void }>> = {
     'host-permission': {
@@ -42,9 +45,16 @@ export function WarningBanner({ w }: { w: Warning }) {
   };
   const a = actions[w.kind];
   const kind = w.kind === 'pending-ready' || w.kind === 'incognito' ? 'info' : 'warning';
+  // Restored to the defaults: there is no backup to name.
+  const text = w.kind === 'restored' && !w.at ? 'warning.restored.defaults' : `warning.${w.kind}`;
   return (
     <Banner
       kind={kind}
+      onDismiss={
+        DISMISSIBLE_WARNINGS.includes(w.kind)
+          ? () => void call('warning.dismiss', { kind: w.kind })
+          : undefined
+      }
       action={
         a && (
           <Button size="small" onClick={a.run}>
@@ -53,9 +63,7 @@ export function WarningBanner({ w }: { w: Warning }) {
         )
       }
     >
-      <span>
-        {t(`warning.${w.kind}`, { detail: w.detail ?? '', when: w.at ? formatDateTime(w.at) : '' })}
-      </span>
+      <span>{t(text, { detail: w.detail ?? '', when: w.at ? formatDateTime(w.at) : '' })}</span>
     </Banner>
   );
 }
