@@ -106,11 +106,11 @@ describe('conditions in words', () => {
     };
     expect(summarizeGroup(group('A', ['a.test'], [limit]))).toEqual([
       'Mon–Fri 09:00–17:00, after 10 min per day → Block',
-      'When no condition applies, the sites open normally: WebHandbrake only keeps track of the time spent on them.',
+      'At other times the sites open normally, and only their time is counted.',
     ]);
     expect(summarizeGroup(group('A', ['a.test'], [{ intervention: BLOCK }]))).toEqual(['Always → Block']);
     expect(summarizeGroup(group('A', ['a.test']))).toEqual([
-      'No conditions yet: the sites open normally and WebHandbrake only keeps track of the time spent on them.',
+      'No conditions yet: the sites open normally and only their time is counted.',
     ]);
   });
 
@@ -168,11 +168,11 @@ describe('the plan of a new rule', () => {
       'When you open a.test (Mon–Fri 09:00–17:00), WebHandbrake only counts the time; outside these times it counts nothing.',
     );
     expect(planSentence('daily', { type: 'ask', choices: [5], maxMinutes: 10 }, 'a.test', [], 30)).toBe(
-      'After 30 min a day on a.test, WebHandbrake first asks what you want to do, for 10 min at most.',
+      'After 30 min a day on a.test, WebHandbrake first asks what you want to do (for 10 min at most).',
     );
     // The wait on the page is said too.
     expect(planSentence('always', 'ask', 'a.test', [], 0)).toBe(
-      'Every time you open a.test, WebHandbrake first asks what you want to do, for 15 min at most, and lets you go in after waiting 10 seconds.',
+      'Every time you open a.test, WebHandbrake first asks what you want to do (for 15 min at most), then lets you in after 10 seconds.',
     );
     expect(planSentence('daily', 'block', 'a.test', [], 10, 60)).toBe(
       'After 10 min an hour on a.test, WebHandbrake blocks the page.',

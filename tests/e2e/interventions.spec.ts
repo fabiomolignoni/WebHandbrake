@@ -310,11 +310,11 @@ test.describe('intention question', () => {
     });
     const p = await expectBlocked(h, 'http://tube.test/');
     await p.button('Continue for 5 min').click();
-    await p.text('Please say in a few words what you want to do.').expectVisible();
+    await p.text('Say in a few words what you want to do.').expectVisible();
     // Spaces are not a reason.
     await p.label('Your reason').fill('   ');
     await p.button('Continue for 5 min').click();
-    await p.text('Please say in a few words what you want to do.').expectVisible();
+    await p.text('Say in a few words what you want to do.').expectVisible();
     await p.expectIntervention();
     // The background refuses it too, whatever the page sends.
     const m = await h.rpc('intervention.get', { url: 'http://tube.test/' });
@@ -422,7 +422,7 @@ test.describe('challenges', () => {
     const p = await expectBlocked(h, 'http://type.test/');
     await p.button(/screen reader/).click();
     const phrase = await p.get('form blockquote').text();
-    expect(phrase).toBe('I am choosing to continue on purpose, and I remember why I set this limit.');
+    expect(phrase).toBe('I choose to continue, and I remember why I set this limit.');
     await p.label('Sentence').type(phrase);
     await p.button('Continue', { exact: true }).click();
     await p.expectReal('type.test/');

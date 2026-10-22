@@ -129,7 +129,7 @@ test('a break from the block page, with its cost, returns to the page', async ({
   await p.role('radio', 'news.test').expectChecked();
   await p.role('radio', '10 min').click();
   await p.button('Start the break').click();
-  await p.text('Do you really want to go ahead?').expectVisible();
+  await p.text('Do you want to go ahead?').expectVisible();
   await p.button('Yes, continue').click();
   await p.expectReal('news.test/story');
   const g = (await h.rpc('overview.get')).pauses[0];
@@ -195,7 +195,7 @@ test('a required reason is asked and recorded', async ({ h }) => {
   const p = await expectBlocked(h, 'http://news.test/');
   await p.button('Take a break').click();
   await p.button('Start the break').click();
-  await p.text('Please give a reason.').expectVisible();
+  await p.text('Give a reason.').expectVisible();
   await p.label('Reason').fill('Checking the train strike');
   await p.button('Start the break').click();
   await p.expectReal('news.test/');

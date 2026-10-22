@@ -398,7 +398,7 @@ function TimeSettings() {
           label={t('settings.allSites')}
           help={t('settings.allSitesHelp')}
         />
-        <Field label={t('settings.retention')} help={t('settings.retentionHelp', { days: BUDGET_KEEP_DAYS })}>
+        <Field label={t('settings.retention')} help={t('settings.retentionHelp')}>
           {() => (
             <NumberInput
               commitOnBlur
@@ -748,9 +748,7 @@ function DataSettings() {
       </div>
       <div class="card stack">
         <h2>{t('data.backups')}</h2>
-        <p class="help">
-          {t('data.backupsHelp', { recent: RECENT_SNAPSHOTS, daily: DAILY_SNAPSHOTS, hours })}
-        </p>
+        <p class="help">{t('data.backupsHelp', { hours })}</p>
         {!backups ? (
           <Spinner />
         ) : backups.length === 0 ? (

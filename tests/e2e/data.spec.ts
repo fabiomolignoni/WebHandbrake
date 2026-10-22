@@ -234,5 +234,5 @@ test('what is stored is listed with its size, and the export of the configuratio
   const p = await h.page('dashboard.html#/settings/privacy');
   await p.text('Rules and settings', { exact: true }).expectVisible();
   await p.text('Automatic backups', { exact: true }).expectVisible();
-  await p.text(/does not contact any server/).expectVisible();
+  await p.text(/never contacts a server/).expectVisible();
 });

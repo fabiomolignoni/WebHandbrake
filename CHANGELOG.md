@@ -25,6 +25,10 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ### Changed
 
+- Shorter, plainer texts on every page. Help lines that repeated their label are gone, the
+  others say one thing in everyday words, and Help gets to the point (the six protections are now
+  a list). The page WebHandbrake shows instead of a site is the block page everywhere, and the
+  Settings tab **Interventions** is now **Blocking**.
 - The ready-made lists are rewritten. They cover the platforms of more countries (all of Amazon's
   and eBay's stores, Mercado Livre in Brazil, Zalando, Vinted, Shopee and more), and each list
   holds only addresses that people open, written out country by country: no list now needs a site

@@ -84,7 +84,7 @@ test('extending is immediate; ending early costs a confirmation, whatever the pr
   const blocked = await expectBlocked(h, 'http://games.test/');
   await p.front();
   await p.button('End now').click();
-  await p.text('Do you really want to go ahead?').expectVisible();
+  await p.text('Do you want to go ahead?').expectVisible();
   await p.button('Yes, continue').click();
   await expect.poll(async () => (await h.rpc('overview.get')).sessions.length).toBe(0);
   await blocked.button('Reopen the page').click();

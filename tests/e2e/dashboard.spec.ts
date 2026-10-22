@@ -164,7 +164,7 @@ test('a rule is created step by step: sites → when → what happens → protec
   await p.button('Next: review').expectEnabled(false);
   await p.role('radio', /^Wait/).click();
   await p.role('radio', '1 h').click();
-  await p.text(/becomes a pending change, which you can confirm 1 h later/).expectVisible();
+  await p.text(/waits 1 h, then you confirm it in Protection/).expectVisible();
   await p.button('Next: review').click();
   // The review states the plan: when (the schedule) and what happens.
   await p.get('.plan-text').expectText('Mon–Fri');
@@ -209,13 +209,13 @@ test("the wizard's Password protection is hashed in the background and never kep
   await p.label('New password').type('only my sister knows');
   await p.label('Repeat the password').type('only my sister knows');
   await p.button('Save', { exact: true, within: 'dialog' }).click();
-  await p.text(/The password is set/).expectVisible();
+  await p.text(/Password set/).expectVisible();
   expect(await p.role('radio', /^Password/).checked()).toBe(true);
   // The wizard keeps its state for the session, but never the password hash.
   expect(await wizardState(p)).toContain('Gambling');
   expect(await wizardState(p)).not.toContain('pbkdf2');
   await p.button('Next: review').click();
-  await p.text(/Loosening this rule later takes: Password/).expectVisible();
+  await p.text(/Protection: Password/).expectVisible();
   // Resumed without the password (here after a reload), the wizard asks for the protection again
   // instead of creating the rule with the default one.
   await p.reload();
@@ -227,7 +227,7 @@ test("the wizard's Password protection is hashed in the background and never kep
   await p.label('Repeat the password').type('only my sister knows');
   await p.button('Save', { exact: true, within: 'dialog' }).click();
   await p.button('Next: review').click();
-  await p.text(/Loosening this rule later takes: Password/).expectVisible();
+  await p.text(/Protection: Password/).expectVisible();
   await p.button('Create rule').click();
   await p.role('heading', 'Rules', { exact: true }).expectVisible();
   const created = (await h.rpc('config.get')).config.groups.find((g: any) => g.name === 'Gambling');
@@ -250,7 +250,7 @@ test("the wizard's Partner code protection is set up with a code from the partne
   const secret = (await p.get('.partner-key').text()).replace(/\s/g, '');
   await p.label('Code from your partner’s app').fill('000000');
   await p.button('Confirm', { exact: true, within: 'dialog' }).click();
-  await p.text(/not the code that your partner’s app shows/).expectVisible();
+  await p.text(/That code does not match/).expectVisible();
   await p.label('Code from your partner’s app').fill(await totp(secret, timeStep(await h.clock.now())));
   await p.button('Confirm', { exact: true, within: 'dialog' }).click();
   await p.text('Your partner’s app shows the codes for this rule.').expectVisible();
@@ -308,16 +308,12 @@ test('the address guide shows the five common forms and links to every address t
   await p.button('Use the example *news*').click();
   await p.placeholder('Add a site, or paste a list…').expectValue('*news*');
   // Every other address type is in Help, opened in a new tab at its address table.
-  const link = p.role('link', /Help, under Rules and sites/);
+  const link = p.role('link', /^Help \(opens in a new tab\)/);
   expect(await link.attr('href')).toBe('#/help/groups');
   const help = await h.newTab(() => link.click());
   await help.role('heading', 'Rules and sites', { exact: true }).expectVisible();
   await expect.poll(() => help.eval(() => document.activeElement?.textContent)).toBe('Rules and sites');
-  await help
-    .text('Without a site name, * matches any characters in the whole address', {
-      exact: false,
-    })
-    .expectVisible();
+  await help.text('Any address that contains “news”.', { exact: false }).expectVisible();
   expect(
     await help.eval(() => {
       const r = document.getElementById('help-groups')!.getBoundingClientRect();
@@ -368,11 +364,7 @@ test('"count only" at certain times counts nothing outside them (#21)', async ({
   // The editor shows the second condition, and no "otherwise" after it.
   const editor = await h.page(`dashboard.html#/groups/${created.id}`);
   await editor.text('Allowed, time not counted', { within: '.plan' }).expectVisible();
-  await editor
-    .text(
-      'When no condition applies, the sites open normally: WebHandbrake only keeps track of the time spent on them.',
-    )
-    .expectCount(0);
+  await editor.text('At other times the sites open normally, and only their time is counted.').expectCount(0);
   await openPart(editor, 'When');
   await editor.text('Allowed, time not counted', { within: '.policy' }).expectVisible();
   await editor.get('.policy.otherwise').expectCount(0);
@@ -391,7 +383,7 @@ test('the main settings of what happens are chosen in the wizard (#14)', async (
   await p.role('radio', 'Filter').click();
   await p.get('select[aria-label="Filter"]').select('blur');
   await toReview(p);
-  await p.get('.plan-text').expectText('applies a filter (Blur)');
+  await p.get('.plan-text').expectText('makes the page less appealing (Blur)');
   await p.button(/^What happens/).click();
   // A wait: how long.
   await p.role('radio', 'Wait').click();
@@ -441,7 +433,7 @@ test('the wizard decides whether a new rule allows breaks (#15)', async ({ h }) 
   // Back in what happens, breaks cost what the protection says until they are turned off.
   await p.button(/^What happens/).click();
   await breaks.expectChecked(true);
-  await p.text(/A break costs: a 30 s wait/).expectVisible();
+  await p.text(/Cost: a 30 s wait/).expectVisible();
   await breaks.click();
   await breaks.expectChecked(false);
   await p.button('Next: protection').click();
@@ -507,7 +499,7 @@ test('only a rule that blocks gets breaks from the wizard (#15)', async ({ h }) 
   await p.text('Breaks cost a confirmation.').expectCount(0);
   await p.button('Next: review').click();
   // The review does not mention breaks at all.
-  await p.text(/^Loosening this rule later takes: Reminder\./).expectVisible();
+  await p.text(/^Protection: Reminder\./).expectVisible();
   await p.text(/breaks? cost/i).expectCount(0);
   await p.button('Create rule').click();
   await p.role('heading', 'Rules', { exact: true }).expectVisible();
@@ -587,9 +579,9 @@ test('in the editor a limit and its period are a number and a unit', async ({ h 
   await p.label('Every', { exact: true }).expectValue('2');
   await p.label('Every: unit').expectValue('hours');
   // 30 hours every 2 hours would never be reached.
-  await p.text('This limit is as long as its period or longer, so it is never reached.').expectVisible();
+  await p.text('Make the limit shorter than its period, or it is never reached.').expectVisible();
   await p.label('Every: unit').select('days');
-  await p.text('This limit is as long as its period or longer, so it is never reached.').expectCount(0);
+  await p.text('Make the limit shorter than its period, or it is never reached.').expectCount(0);
   await p.button('Save changes').click();
   await p.button('Yes, continue').click();
   await expect
@@ -613,7 +605,7 @@ test("first run, welcome → the rule wizard's steps → done", async ({ h }) =>
   await p.role('radio', /^After some time/).click();
   await p.role('radio', '45 min').click();
   // The sites of the list share the time allowed unless each one gets its own.
-  await p.text(/^The sites share the time allowed: 45 min in total/).expectVisible();
+  await p.text(/^45 min in total, shared by all the sites/).expectVisible();
   await p.button('Next: what happens').click();
   // Nothing is pre-selected: we do not know why the extension was installed.
   await p.get('.choice[aria-checked="true"]').expectCount(0);
@@ -626,9 +618,7 @@ test("first run, welcome → the rule wizard's steps → done", async ({ h }) =>
   await p.role('heading', 'You’re set').expectVisible();
   await p.text('“Video” is active.', { exact: false }).expectVisible();
   // Within its limit the site opens normally: no "Try it", which would show it open.
-  await p
-    .text(/opens normally: WebHandbrake steps in once the time or the visits allowed are used up/)
-    .expectVisible();
+  await p.text(/opens normally. WebHandbrake steps in once your limit is used up/).expectVisible();
   await p.button('Try it').expectCount(0);
   const cfg = (await h.rpc('config.get')).config;
   expect(cfg.groups).toHaveLength(1);
@@ -669,7 +659,7 @@ test('Back from the first step returns to the welcome and keeps the draft; the r
   await p.get('.choice').expectCount(6);
   await p.role('radio', /^Wait/).click();
   // A short wait is not a firm protection; a long one blocks the browser's own pages too, and says so.
-  const pages = p.text(/the browser’s extension and settings pages are blocked too/);
+  const pages = p.text(/the browser’s extension pages are blocked too/);
   await pages.expectCount(0);
   await p.role('radio', '24 h').click();
   await pages.expectVisible();

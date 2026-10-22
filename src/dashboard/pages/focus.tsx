@@ -305,12 +305,7 @@ export function QuickSession({
             />
           </div>
           <div class="settings-list">
-            <Toggle
-              checked={noPauses}
-              onChange={setNoPauses}
-              label={t('focus.noPauses')}
-              help={t('focus.noPausesHelp')}
-            />
+            <Toggle checked={noPauses} onChange={setNoPauses} label={t('focus.noPauses')} />
             <Toggle
               checked={locked}
               onChange={setLocked}

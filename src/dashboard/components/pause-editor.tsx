@@ -53,17 +53,14 @@ export function PauseEditor({
 }) {
   const p = value;
   const id = useId();
+  // Without a password, a break that costs one asks for random characters instead.
+  const noPassword = costKind(p.cost) === 'password' && !hasPassword;
   const set = (patch: Partial<PausePolicy>) => onChange({ ...p, ...patch });
   const toggleScope = (s: PauseScope) =>
     set({ scopes: p.scopes.includes(s) ? p.scopes.filter((x) => x !== s) : [...p.scopes, s] });
   return (
     <div class="stack stack-lg">
-      <Toggle
-        checked={p.allowed}
-        onChange={(allowed) => set({ allowed })}
-        label={t('pauseRules.allowed')}
-        help={t('pauseRules.allowedHelp')}
-      />
+      <Toggle checked={p.allowed} onChange={(allowed) => set({ allowed })} label={t('pauseRules.allowed')} />
       {p.allowed && (
         <>
           <div class="question">
@@ -121,7 +118,7 @@ export function PauseEditor({
             <div class="row">
               <Select<CostKind>
                 label={t('pauseRules.q.cost')}
-                describedBy={`${id}-cost-help`}
+                describedBy={noPassword ? `${id}-cost-help` : undefined}
                 value={costKind(p.cost)}
                 onChange={(k) => set({ cost: costFrom(k, p.cost) })}
                 options={(['none', 'confirm', 'delay', 'random', 'phrase', 'math', 'password'] as CostKind[])
@@ -167,11 +164,11 @@ export function PauseEditor({
                 />
               )}
             </div>
-            <span class="help" id={`${id}-cost-help`}>
-              {costKind(p.cost) === 'password' && !hasPassword
-                ? t('pauseRules.noPassword')
-                : t('pauseRules.costHelp')}
-            </span>
+            {noPassword && (
+              <span class="help" id={`${id}-cost-help`}>
+                {t('pauseRules.noPassword')}
+              </span>
+            )}
           </div>
           <div class="question">
             <h3>{t('pauseRules.q.limit')}</h3>

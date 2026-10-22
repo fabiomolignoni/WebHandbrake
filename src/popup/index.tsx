@@ -178,8 +178,7 @@ function Hero({ m, reload }: { m: PopupModel; reload: () => void }) {
 /** What adding the page to a rule will do: block it now (and until when), from a time, or not at all. */
 function addOutcome(g: PopupModel['groups'][number] | undefined): string {
   if (!g) return t('popup.add.outcomeNew');
-  if (g.blocksNow && g.change)
-    return t('popup.add.outcomeUntil', { rule: g.name, when: formatWhen(g.change) });
+  if (g.blocksNow && g.change) return t('popup.add.outcomeUntil', { when: formatWhen(g.change) });
   if (g.blocksNow) return t('popup.add.outcomeNow');
   if (g.change) return t('popup.add.outcomeLater', { rule: g.name, when: formatWhen(g.change) });
   return t('popup.add.outcomeNever', { rule: g.name });

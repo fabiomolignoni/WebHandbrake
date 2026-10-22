@@ -99,14 +99,22 @@ class FirefoxTab implements TabDriver {
     if (!id) throw new Error('element not found');
     return id;
   }
-  async click(q: WireQuery) {
-    const id = await this.element(q);
-    // WebDriver scrolls only an element outside the viewport, so a sticky bar can still cover it:
-    // an element that a sticky or fixed element covers at its centre is centred first.
+  /**
+   * WebDriver scrolls only an element outside the viewport, so a sticky bar can still cover it:
+   * an element that a sticky or fixed element covers at its centre is centred first. An option
+   * is clicked through its list, which WebDriver scrolls to the bottom edge, under the dashboard's
+   * sticky action bar: a list outside the viewport is centred too.
+   */
+  private async uncover(id: string) {
     await this.s.wd.classic('POST', '/execute/sync', {
-      script: `const el = arguments[0];
+      script: `const list = arguments[0].closest('select');
+        const el = list ?? arguments[0];
         const r = el.getBoundingClientRect();
         let top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        if (!top && list) {
+          el.scrollIntoView({ block: 'center', inline: 'nearest' });
+          return;
+        }
         if (!top || top === el || el.contains(top)) return;
         for (; top; top = top.parentElement) {
           if (['sticky', 'fixed'].includes(getComputedStyle(top).position)) {
@@ -116,6 +124,10 @@ class FirefoxTab implements TabDriver {
         }`,
       args: [elementRef(id)],
     });
+  }
+  async click(q: WireQuery) {
+    const id = await this.element(q);
+    await this.uncover(id);
     await this.s.wd.classic('POST', `/element/${id}/click`);
   }
   async type(q: WireQuery, text: string, clear: boolean) {
@@ -133,6 +145,7 @@ class FirefoxTab implements TabDriver {
     });
     const id = elementId(ref);
     if (!id) throw new Error('option not found');
+    await this.uncover(id);
     await this.s.wd.classic('POST', `/element/${id}/click`);
   }
   async press(key: string) {
