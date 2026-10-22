@@ -54,13 +54,13 @@ import { interventionIcon, LADDER, toneOf } from '../../ui/status';
 import { useDashboard } from '../context';
 import { rulePlan, sitesPhrase } from '../plan';
 import { navigate, setNavigationGuard } from '../router';
-import { optionsAdvanced, targetsAdvanced } from '../rule-form';
+import { optionsAdvanced } from '../rule-form';
 import { AdvancedOptions } from './advanced';
 import { InterventionPicker, type KeptInterventions } from './how-picker';
 import { PauseEditor, pauseRulesSummary } from './pause-editor';
 import { ConditionEditor, type ConditionMemo, PolicyCard } from './policy';
 import { ProtectionPicker, protectionIcon, protectionLabel } from './protection-picker';
-import { TargetsAdvanced, TargetsEditor } from './targets';
+import { TargetsEditor } from './targets';
 import { TestUrl } from './test-url';
 
 // The name comes before the protection: a password or a partner code is set up for a named rule.
@@ -554,9 +554,6 @@ export function RuleEditor(props: Props) {
           <TargetsEditor targets={draft.targets} onChange={(targets) => set({ targets })} />
           {creating && !sites.length && <span class="help">{t('wizard.sites.none')}</span>}
         </div>
-        <AdvancedOptions open={targetsAdvanced(draft.targets)}>
-          <TargetsAdvanced targets={draft.targets} onChange={(targets) => set({ targets })} />
-        </AdvancedOptions>
       </>
     ),
 

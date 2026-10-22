@@ -73,13 +73,19 @@ export function normalizeTarget(raw: unknown): Target | null {
   return t;
 }
 
+const targetKey = (t: Record<string, any>) => `${t.type}|${t.value}|${Boolean(t.allow)}`;
+
+/** A rule's entries, each once: a repeated entry is left out without a word. */
 function normalizeTargets(raw: unknown, errors: string[], where: string): Target[] {
   if (!Array.isArray(raw)) return [];
   const out: Target[] = [];
+  const seen = new Set<string>();
   for (const r of raw) {
     const t = normalizeTarget(r);
-    if (t) out.push(t);
-    else
+    if (t) {
+      if (!seen.has(targetKey(t))) out.push(t);
+      seen.add(targetKey(t));
+    } else
       errors.push(
         `${where}: an entry that could not be read was left out: ${JSON.stringify(r).slice(0, 80)}`,
       );
@@ -597,8 +603,6 @@ export function checksum(text: string): string {
 // ---------------------------------------------------------------------------
 
 type Migration = (raw: Record<string, any>) => Record<string, any>;
-
-const targetKey = (t: Record<string, any>) => `${t.type}|${t.value}|${Boolean(t.allow)}`;
 
 /** migrations[n] upgrades schema n to n + 1. */
 const MIGRATIONS: Record<number, Migration> = {

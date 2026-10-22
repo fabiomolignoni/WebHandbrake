@@ -239,6 +239,27 @@ describe('normalising what is read from storage or a file', () => {
     expect(normalizeGroup([], [])).toBeNull();
   });
 
+  it('rules: an entry repeated is kept once, without a word', () => {
+    const errors: string[] = [];
+    const g = normalizeGroup(
+      {
+        id: 'g',
+        name: 'Video',
+        targets: [
+          { id: '1', type: 'domain', value: 'a.test' },
+          { id: '2', type: 'domain', value: 'a.test' },
+          { id: '3', type: 'host', value: 'a.test' },
+          { id: '4', type: 'path', value: 'a.test/learn', allow: true },
+          { id: '5', type: 'path', value: 'a.test/learn' },
+          { id: '6', type: 'path', value: 'a.test/learn', allow: true },
+        ],
+      },
+      errors,
+    );
+    expect(g?.targets.map((x) => x.id)).toEqual(['1', '3', '4', '5']);
+    expect(errors).toEqual([]);
+  });
+
   it('settings: numbers within their range', () => {
     const s = normalizeSettings({
       dayStart: 9999,

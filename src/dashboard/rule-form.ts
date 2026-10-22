@@ -5,7 +5,7 @@
  */
 
 import { defaultIntervention, defaultOptions } from '../engine/defaults';
-import type { GroupOptions, Intervention, PausePolicy, Period, Policy, Target } from '../engine/types';
+import type { GroupOptions, Intervention, PausePolicy, Period, Policy } from '../engine/types';
 
 /** "When should it apply?": every time, at certain times, or after some time. */
 export type WhenKind = 'always' | 'schedule' | 'limit';
@@ -19,9 +19,6 @@ export function whenKind(p: Policy): WhenKind {
 export function everyKind(p: Period): boolean {
   return p.kind === 'hour' || p.kind === 'day' || p.kind === 'days' || p.kind === 'minutes';
 }
-
-/** The rule's sites have exceptions. */
-export const targetsAdvanced = (targets: Target[]): boolean => targets.some((x) => x.allow);
 
 /** Outside certain times; a limit on visits or continuous use, with another period or only at certain times. */
 export function conditionAdvanced(p: Policy): boolean {

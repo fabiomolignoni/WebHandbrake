@@ -4,7 +4,6 @@ import {
   interventionAdvanced,
   optionsAdvanced,
   pauseAdvanced,
-  targetsAdvanced,
   whenKind,
 } from '../../src/dashboard/rule-form';
 import {
@@ -15,7 +14,7 @@ import {
   newPolicy,
 } from '../../src/engine/defaults';
 import type { Intervention } from '../../src/engine/types';
-import { BLOCK, t } from './helpers';
+import { BLOCK } from './helpers';
 
 const office = [{ days: [1, 2, 3, 4, 5], start: 540, end: 1020 }];
 const day = { kind: 'day' as const };
@@ -74,9 +73,7 @@ describe('the rule editor: first questions and advanced options', () => {
     expect(interventionAdvanced(BLOCK)).toBe(false);
   });
 
-  it('sites with exceptions, breaks during focus sessions, other windows and tabs', () => {
-    expect(targetsAdvanced([t('a.test')])).toBe(false);
-    expect(targetsAdvanced([t('a.test'), t('+a.test/learn')])).toBe(true);
+  it('breaks during focus sessions, other windows and tabs', () => {
     expect(pauseAdvanced(defaultPause())).toBe(false);
     expect(pauseAdvanced({ ...defaultPause(), allowed: true, duringSessions: true })).toBe(true);
     expect(optionsAdvanced(defaultOptions())).toBe(false);

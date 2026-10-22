@@ -114,6 +114,6 @@ test('"Test an address" tells what applies now and what changes next', async ({ 
   const editor = await h.page(`dashboard.html#/groups/${id}`);
   await editor.label('Address to test').fill('m.social.test/x');
   await editor.button('Test', { exact: true }).click();
-  await editor.text(/Site: social\.test/).expectVisible();
+  await editor.text(/Whole site: social\.test/).expectVisible();
   await editor.text(/until .*17:00/).expectVisible();
 });

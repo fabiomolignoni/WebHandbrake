@@ -1274,7 +1274,7 @@
     "message": "Type or paste addresses, one or many. youtube.com also covers its subdomains, such as m.youtube.com. To be more precise, use the forms in the table below."
   },
   "help.groups.p2": {
-    "message": "Exceptions, starting with +, keep part of a blocked site open (in a rule: Sites › Advanced options). The most precise entry wins: with reddit.com blocked and +reddit.com/r/*/comments/* allowed, single discussions open and the rest of Reddit stays blocked. An exception only works in its own rule."
+    "message": "Exceptions start with + and keep part of a blocked site open; add them like any other site. The most precise entry wins: with reddit.com blocked and +reddit.com/r/*/comments/* allowed, single discussions open and the rest of Reddit stays blocked. An exception only works in its own rule."
   },
   "help.groups.title": {
     "message": "Rules and sites"
@@ -1475,7 +1475,7 @@
     "message": "The popup shows what applies to the current site. From there you can take a break, save the page for later, block the site or start a focus session. The dashboard, this page, is where you manage everything."
   },
   "help.start.p4": {
-    "message": "To begin, open Rules › New rule. Choose the sites, when the rule applies, what happens, its name and its protection, then choose Create rule. Each part keeps its less common settings under Advanced options.",
+    "message": "To begin, open Rules › New rule. Choose the sites, when the rule applies, what happens, its name and its protection, then choose Create rule. Less common settings are under Advanced options.",
     "description": "Help, Getting started. \"Rules\", \"New rule\" and \"Create rule\" are interface labels."
   },
   "help.start.title": {
@@ -1497,7 +1497,7 @@
     "message": "The site in every country: amazon.com, amazon.it, amazon.co.uk…"
   },
   "help.syntax.domain": {
-    "message": "The site and its subdomains."
+    "message": "The whole site, subdomains included."
   },
   "help.syntax.doubleWildcard": {
     "message": "** stands for any text, slashes included."
@@ -1512,7 +1512,7 @@
     "message": "Only the home page."
   },
   "help.syntax.host": {
-    "message": "Only this exact site, without its subdomains."
+    "message": "Only this site, not its subdomains."
   },
   "help.syntax.import": {
     "message": "Imported formats from uBlock Origin, AdGuard and uBlacklist are converted automatically."
@@ -2714,10 +2714,10 @@
     "message": "Add to"
   },
   "popup.add.host": {
-    "message": "Exact site"
+    "message": "Site without subdomains"
   },
   "popup.add.host.scope": {
-    "message": "Subdomains not included"
+    "message": "Subdomains stay open"
   },
   "popup.add.newGroup": {
     "message": "New rule…"
@@ -3643,13 +3643,13 @@
     "message": "except {value}"
   },
   "targetType.domain": {
-    "message": "Site"
+    "message": "Whole site"
   },
   "targetType.homepage": {
     "message": "Home page"
   },
   "targetType.host": {
-    "message": "Exact site"
+    "message": "Site without subdomains"
   },
   "targetType.page": {
     "message": "Page"
@@ -3666,12 +3666,6 @@
   "targets.add": {
     "message": "Add"
   },
-  "targets.addException": {
-    "message": "Add exception"
-  },
-  "targets.addExceptionPlaceholder": {
-    "message": "Allowed part, e.g. youtube.com/feed/subscriptions"
-  },
   "targets.addPlaceholder": {
     "message": "Add a site, or paste a list…"
   },
@@ -3681,20 +3675,14 @@
   "targets.allSites": {
     "message": "Every website"
   },
-  "targets.applyText": {
-    "message": "Apply"
-  },
   "targets.count": {
     "message": "{sites, plural, one {# site} other {# sites}}, {exceptions, plural, one {# exception} other {# exceptions}}"
   },
-  "targets.dedupe": {
-    "message": "Remove duplicates"
+  "targets.discardText": {
+    "message": "Discard text changes"
   },
   "targets.edit": {
     "message": "Edit {value}"
-  },
-  "targets.error.duplicate": {
-    "message": "This address is already in the list."
   },
   "targets.error.empty": {
     "message": "Empty entry."
@@ -3732,14 +3720,11 @@
   "targets.errors": {
     "message": "{count, plural, one {# line was not added:} other {# lines were not added:}}"
   },
+  "targets.exception": {
+    "message": "Exception"
+  },
   "targets.exceptionAddress": {
     "message": "Exception address"
-  },
-  "targets.exceptions": {
-    "message": "Exceptions"
-  },
-  "targets.exceptionsHelp": {
-    "message": "Parts of these sites that stay open."
   },
   "targets.guide.allSites": {
     "message": "Every website. Add exceptions with + for the sites you still need."
@@ -3751,7 +3736,7 @@
     "message": "More ways to write an address are in"
   },
   "targets.guide.moreLink": {
-    "message": "Help (opens in a new tab)"
+    "message": "Help"
   },
   "targets.guide.page": {
     "message": "One page only: $ at the end leaves out the pages under it."
@@ -3773,6 +3758,9 @@
   },
   "targets.lineError": {
     "message": "Line {line} “{text}”: {error}"
+  },
+  "targets.listMode": {
+    "message": "Edit as list"
   },
   "targets.remove": {
     "message": "Remove {value}"

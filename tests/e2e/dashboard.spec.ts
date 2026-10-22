@@ -739,18 +739,8 @@ test('each part folds its advanced options away, and opens them when the rule us
     ];
   });
   const id = (await h.rpc('config.get')).config.groups[0].id;
-  const p = await h.page(`dashboard.html#/groups/${id}?step=sites`);
-  // The rule has an exception: the advanced options of its sites are open.
-  await p.text('video.test/learn', { within: '.target-row' }).expectVisible();
-  await p.button('Edit as text').expectVisible();
-  // A new rule has none: its advanced options start folded.
-  const fresh = await h.page('dashboard.html#/groups/new');
-  await fresh.button('Edit as text').expectHidden();
-  await fresh.text('Advanced options', { exact: true }).click();
-  await fresh.button('Edit as text').expectVisible();
+  const p = await h.page(`dashboard.html#/groups/${id}?step=when`);
   // When: outside certain times.
-  await p.front();
-  await openPart(p, 'When');
   await p.role('radio', /^At certain times/).click();
   await p.role('radio', 'Outside these times').expectHidden();
   await p.text('Advanced options', { exact: true }).click();
@@ -780,6 +770,54 @@ test('each part folds its advanced options away, and opens them when the rule us
   await again.label('If you leave the page').expectValue('restart');
   await openPart(again, 'Details');
   await again.label('Windows').expectValue('normal');
+});
+
+test('exceptions stand out among the sites, which are edited as text and never repeated', async ({ h }) => {
+  await h.configure((c) => {
+    c.groups = [group('Video', ['video.test', 'clips.test'], [policy(BLOCK)], { protection: REMINDER })];
+  });
+  const id = (await h.rpc('config.get')).config.groups[0].id;
+  const p = await h.page(`dashboard.html#/groups/${id}?step=sites`);
+  // The sites have no advanced options: an exception is typed in the same box as a site.
+  await p.text('Advanced options', { exact: true }).expectCount(0);
+  const box = p.placeholder('Add a site, or paste a list…');
+  await box.fill('+video.test/learn');
+  await p.button('Add', { exact: true }).click();
+  await p.get('.target-row.exception').expectCount(1);
+  await p.text('Exception', { exact: true, within: '.target-row.exception' }).expectVisible();
+  await p.text('2 sites, 1 exception').expectVisible();
+  // An entry already in the list is not added again, and nothing is said about it.
+  await box.fill('video.test');
+  await p.button('Add', { exact: true }).click();
+  await p.get('.target-row').expectCount(3);
+  await p.button('Remove duplicates').expectCount(0);
+  // An address changed into one already in the list merges into it.
+  await p.button('Edit clips.test').click();
+  await p.label('Address').fill('video.test');
+  await p.label('Address').press('Enter');
+  await p.label('Address').expectCount(0);
+  await p.get('.target-row').expectCount(2);
+  // The whole list as text, exceptions with +. Its changes can be discarded…
+  const text = p.get('textarea.textarea');
+  await p.button('Edit as text').click();
+  await text.expectValue('video.test\n+video.test/learn');
+  await text.fill('other.test');
+  await p.button('Discard text changes').click();
+  await p.get('.target-row').expectCount(2);
+  // …or applied by going back to the list, where a repeated line is kept once.
+  await p.button('Edit as text').click();
+  await text.fill('video.test\n+video.test/learn\nstream.test\nstream.test');
+  await p.button('Edit as list').click();
+  await p.get('.target-row').expectCount(3);
+  await p.button('Save changes').click();
+  await p.button('Yes, continue').click();
+  await p.text('Done: your change is applied.').expectVisible();
+  const after = (await h.rpc('config.get')).config.groups[0].targets;
+  expect(after.map((t: any) => `${t.allow ? '+' : ''}${t.value}`).sort()).toEqual([
+    '+video.test/learn',
+    'stream.test',
+    'video.test',
+  ]);
 });
 
 test('the editor normalises a pasted address and saves a renamed rule', async ({ h }) => {

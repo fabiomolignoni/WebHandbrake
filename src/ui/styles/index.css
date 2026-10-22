@@ -2444,15 +2444,20 @@ a.kpi:hover .caption {
   grid-column: 1 / -1;
 }
 .target-row.exception .value::before {
-  content: "+ ";
+  content: "+\00a0";
   color: var(--free);
   font-weight: 700;
+}
+/* An exception stands out from the sites it opens. */
+.list.compact > li.target-row.exception {
+  border-inline-start: 3px solid var(--free);
+  padding-inline-start: calc(var(--s3) - 3px);
 }
 @media (max-width: 600px) {
   .target-row {
     gap: 2px;
   }
-  .target-row .tag {
+  .target-row:not(.exception) .tag {
     display: none;
   }
 }
@@ -3632,6 +3637,13 @@ details.disclosure.guide > summary .icon-svg {
 .guide-example:hover {
   border-color: var(--accent);
   color: var(--accent-strong);
+}
+/* The link to Help opens a new tab: an arrow says so, in the line of text. */
+.guide a .icon-svg {
+  width: 1em;
+  height: 1em;
+  margin-inline-start: 2px;
+  vertical-align: -0.125em;
 }
 @media (max-width: 640px) {
   .guide-list li {

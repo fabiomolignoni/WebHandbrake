@@ -1,8 +1,8 @@
 /**
  * Target list editor: paste anything (URLs, lists, uBlock/uBlacklist
- * syntax), see line-by-line errors, sort and de-duplicate. A short guide with examples sits next to
- * the input. Exceptions and editing everything as text are in the rule's advanced options
- * (`TargetsAdvanced`).
+ * syntax), see line-by-line errors, sort, or edit the whole list as text. A short guide with
+ * examples sits next to the input. Exceptions ("+…") are added like any other entry and stand out
+ * in the list. An entry already in the list is never added twice.
  */
 
 import type { Ref } from 'preact';
@@ -59,6 +59,8 @@ function Guide({ onPick }: { onPick: (example: string) => void }) {
           {t('targets.guide.more')} {/* A new tab keeps the rule being edited (#11). */}
           <a href={helpRoute(ADDRESS_TOPIC)} target="_blank" rel="noopener">
             {t('targets.guide.moreLink')}
+            <Icon name="external" />
+            <span class="sr-only"> {t('common.newTab')}</span>
           </a>
         </p>
       </div>
@@ -68,14 +70,12 @@ function Guide({ onPick }: { onPick: (example: string) => void }) {
 
 function AddBox({
   onAdd,
-  exception,
   placeholder,
   text: outerText,
   setText: setOuterText,
   inputRef,
 }: {
   onAdd: (lines: string) => string[];
-  exception: boolean;
   placeholder: string;
   text?: string;
   setText?: (text: string) => void;
@@ -128,7 +128,7 @@ function AddBox({
           />
         )}
         <Button icon="plus" onClick={submit}>
-          {exception ? t('targets.addException') : t('targets.add')}
+          {t('targets.add')}
         </Button>
       </div>
       {errors.length > 0 && (
@@ -150,9 +150,9 @@ const addressOf = (tg: Target) => targetToLine({ ...tg, allow: false });
 
 /**
  * One entry. Its address is edited where it is shown: the pencil, or a click on the address, turns
- * it into a field with the address as typed ("=m.youtube.com" for an exact site). Enter or leaving
- * the field applies it, Escape puts the entry back as it was. Its type follows the address as
- * typed ("=m.youtube.com", "example.com/page$").
+ * it into a field with the address as typed ("=m.youtube.com" for a site without subdomains).
+ * Enter or leaving the field applies it, Escape puts the entry back as it was. Its type follows the
+ * address as typed ("=m.youtube.com", "example.com/page$"). An exception stands out in the list.
  */
 function Row({
   tg,
@@ -160,7 +160,7 @@ function Row({
   onRemove,
 }: {
   tg: Target;
-  /** Returns the error to show, or null when the entry was changed. */
+  /** Returns the error to show, or null when the entry was changed (or merged into the same one). */
   onEdit: (next: Omit<Target, 'id'>) => string | null;
   onRemove: () => void;
 }) {
@@ -255,7 +255,11 @@ function Row({
           />
         </span>
       )}
-      <span class="tag">{targetTypeLabel(tg.type)}</span>
+      {tg.allow ? (
+        <span class="tag ok">{t('targets.exception')}</span>
+      ) : (
+        <span class="tag">{targetTypeLabel(tg.type)}</span>
+      )}
       {!editing ? (
         <IconButton
           icon="edit"
@@ -295,57 +299,122 @@ function Row({
   );
 }
 
-/** What both parts of the list do to the entries: add, edit in place, remove. */
-function useTargetList(targets: Target[], onChange: (t: Target[]) => void) {
+/** Keeps the first of the entries that are the same. */
+const distinct = <T extends Pick<Target, 'type' | 'value' | 'allow'>>(list: T[]): T[] => {
+  const seen = new Set<string>();
+  return list.filter((x) => !seen.has(key(x)) && Boolean(seen.add(key(x))));
+};
+
+/**
+ * The whole list as text in the address syntax. "Edit as list", where "Edit as text" was, applies
+ * it and goes back to the list; a text with errors stays until it is corrected or its changes are
+ * discarded.
+ */
+function TextEditor({
+  targets,
+  onApply,
+  onCancel,
+}: {
+  targets: Target[];
+  onApply: (t: Target[]) => void;
+  onCancel: () => void;
+}) {
+  const [initial] = useState(() => targets.map(targetToLine).join('\n'));
+  const [text, setText] = useState(initial);
+  const [errors, setErrors] = useState<string[]>([]);
+  const area = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => area.current?.focus(), []);
+  const apply = () => {
+    const { targets: parsed, errors } = parseTargetList(text);
+    if (errors.length) {
+      setErrors(errors.map((e) => t('targets.lineError', { line: e.line, text: e.text, error: t(e.error) })));
+      return;
+    }
+    // Keep the ids of unchanged entries so that the change classifier sees real differences only.
+    const byKey = new Map(targets.map((x) => [key(x), x]));
+    onApply(
+      distinct(parsed).map((p) => byKey.get(key({ ...p, allow: Boolean(p.allow) })) ?? { ...p, id: newId() }),
+    );
+  };
+  return (
+    <div class="stack">
+      <div class="row between">
+        <span class="help">{t('targets.textHelp')}</span>
+        <div class="row">
+          {text !== initial && (
+            <Button size="small" variant="ghost" icon="x" onClick={onCancel}>
+              {t('targets.discardText')}
+            </Button>
+          )}
+          <Button size="small" variant="ghost" icon="list" onClick={apply}>
+            {t('targets.listMode')}
+          </Button>
+        </div>
+      </div>
+      <textarea
+        ref={area}
+        class="textarea mono"
+        rows={14}
+        value={text}
+        aria-label={t('targets.textMode')}
+        onInput={(e) => setText((e.target as HTMLTextAreaElement).value)}
+      />
+      {errors.length > 0 && (
+        <Banner kind="warning">
+          <ul class="small" style={{ margin: 0, paddingInlineStart: '18px' }}>
+            {errors.slice(0, 10).map((e, i) => (
+              <li key={i}>{e}</li>
+            ))}
+          </ul>
+        </Banner>
+      )}
+    </div>
+  );
+}
+
+/** The sites of a rule (or of a focus session's allowlist), exceptions included. */
+export function TargetsEditor({ targets, onChange }: { targets: Target[]; onChange: (t: Target[]) => void }) {
+  const [draft, setDraft] = useState('');
+  const [textMode, setTextModeState] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const root = useRef<HTMLDivElement>(null);
+  // Back from the text, the focus goes where it left: on "Edit as text".
+  const setTextMode = (on: boolean) => {
+    setTextModeState(on);
+    if (!on)
+      requestAnimationFrame(() => root.current?.querySelector<HTMLElement>('[data-text-mode]')?.focus());
+  };
   // An entry whose address changes gets a new id: its row keeps the key it had, so that it is not
   // rebuilt under the pointer (a click on its bin would be lost) or the keyboard.
   const rowKeys = useRef(new Map<string, string>());
   const rowKey = (tg: Target) => rowKeys.current.get(tg.id) ?? tg.id;
+  const sites = targets.filter((x) => !x.allow).length;
+  const exceptions = targets.length - sites;
 
-  const addLines = (lines: string, asException: boolean): string[] => {
+  const addLines = (lines: string): string[] => {
     const { targets: parsed, errors } = parseTargetList(lines);
     const existing = new Set(targets.map(key));
-    const added: Target[] = [];
-    for (const p of parsed) {
-      const tg: Target = { ...p, id: newId(), ...(asException || p.allow ? { allow: true } : {}) };
-      if (!tg.allow) delete tg.allow;
-      if (existing.has(key(tg))) continue;
-      existing.add(key(tg));
-      added.push(tg);
-    }
+    const added = distinct(parsed)
+      .filter((p) => !existing.has(key(p)))
+      .map((p): Target => ({ ...p, id: newId() }));
     if (added.length) onChange([...targets, ...added]);
     return errors.map((e) => t('targets.lineError', { line: e.line, text: e.text, error: t(e.error) }));
   };
   /** Replaces an entry in place. A different address gets a new id, as in text mode, so the
-   *  change is a removal plus an addition, each following the rule's protection. */
+   *  change is a removal plus an addition, each following the rule's protection. An address
+   *  already in the list merges into it. */
   const edit = (old: Target, next: Omit<Target, 'id'>): string | null => {
     const same = key(next) === key(old);
-    if (!same && targets.some((x) => x.id !== old.id && key(x) === key(next)))
-      return t('targets.error.duplicate');
+    if (!same && targets.some((x) => x.id !== old.id && key(x) === key(next))) {
+      onChange(targets.filter((x) => x.id !== old.id));
+      return null;
+    }
     const id = same ? old.id : newId();
     if (!same) rowKeys.current.set(id, rowKey(old));
     onChange(targets.map((x) => (x.id === old.id ? { ...next, id } : x)));
     return null;
   };
   const remove = (id: string) => onChange(targets.filter((x) => x.id !== id));
-  const rows = (list: Target[], label: string) =>
-    list.length > 0 && (
-      <ul class="list compact" aria-label={label}>
-        {list.map((tg) => (
-          <Row key={rowKey(tg)} tg={tg} onEdit={(next) => edit(tg, next)} onRemove={() => remove(tg.id)} />
-        ))}
-      </ul>
-    );
-  return { addLines, rows };
-}
-
-/** The sites of a rule (or of a focus session's allowlist). */
-export function TargetsEditor({ targets, onChange }: { targets: Target[]; onChange: (t: Target[]) => void }) {
-  const [draft, setDraft] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-  const { addLines, rows } = useTargetList(targets, onChange);
-  const blocks = targets.filter((x) => !x.allow);
-  const allows = targets.filter((x) => x.allow);
   const pick = (example: string) => {
     setDraft(example);
     requestAnimationFrame(() => {
@@ -354,23 +423,23 @@ export function TargetsEditor({ targets, onChange }: { targets: Target[]; onChan
       el?.select();
     });
   };
-  const sort = () => onChange(sortTargets(targets));
-  const dedupe = () => {
-    const seen = new Set<string>();
-    onChange(
-      targets.filter((x) => {
-        if (seen.has(key(x))) return false;
-        seen.add(key(x));
-        return true;
-      }),
+
+  if (textMode)
+    return (
+      <TextEditor
+        targets={targets}
+        onApply={(next) => {
+          onChange(next);
+          setTextMode(false);
+        }}
+        onCancel={() => setTextMode(false)}
+      />
     );
-  };
 
   return (
-    <div class="stack">
+    <div class="stack" ref={root}>
       <AddBox
-        onAdd={(l) => addLines(l, false)}
-        exception={false}
+        onAdd={addLines}
         placeholder={t('targets.addPlaceholder')}
         text={draft}
         setText={setDraft}
@@ -379,120 +448,30 @@ export function TargetsEditor({ targets, onChange }: { targets: Target[]; onChan
       <Guide onPick={pick} />
       <div class="row between">
         <span class="small muted">
-          {allows.length
-            ? t('targets.count', { sites: blocks.length, exceptions: allows.length })
-            : t('groups.sites', { count: blocks.length })}
+          {exceptions ? t('targets.count', { sites, exceptions }) : t('groups.sites', { count: sites })}
         </span>
         <div class="row">
-          <Button size="small" variant="ghost" icon="list" onClick={sort} disabled={targets.length < 2}>
+          <Button
+            size="small"
+            variant="ghost"
+            icon="list"
+            onClick={() => onChange(sortTargets(targets))}
+            disabled={targets.length < 2}
+          >
             {t('targets.sort')}
           </Button>
-          <Button size="small" variant="ghost" icon="copy" onClick={dedupe} disabled={targets.length < 2}>
-            {t('targets.dedupe')}
+          <Button size="small" variant="ghost" icon="code" data-text-mode onClick={() => setTextMode(true)}>
+            {t('targets.textMode')}
           </Button>
         </div>
       </div>
-      {rows(blocks, t('targets.sites'))}
-    </div>
-  );
-}
-
-/**
- * The advanced options of a rule's sites: exceptions, the parts of its sites that stay open, and
- * the whole list as text in the address syntax.
- */
-export function TargetsAdvanced({
-  targets,
-  onChange,
-}: {
-  targets: Target[];
-  onChange: (t: Target[]) => void;
-}) {
-  const [textMode, setTextMode] = useState(false);
-  const [text, setText] = useState('');
-  const [textErrors, setTextErrors] = useState<string[]>([]);
-  const { addLines, rows } = useTargetList(targets, onChange);
-  const allows = targets.filter((x) => x.allow);
-
-  if (textMode) {
-    return (
-      <div class="stack">
-        <p class="help">{t('targets.textHelp')}</p>
-        <textarea
-          class="textarea mono"
-          rows={14}
-          value={text}
-          aria-label={t('targets.textMode')}
-          onInput={(e) => setText((e.target as HTMLTextAreaElement).value)}
-        />
-        {textErrors.length > 0 && (
-          <Banner kind="warning">
-            <ul class="small" style={{ margin: 0, paddingInlineStart: '18px' }}>
-              {textErrors.slice(0, 10).map((e, i) => (
-                <li key={i}>{e}</li>
-              ))}
-            </ul>
-          </Banner>
-        )}
-        <div class="row end">
-          <Button variant="ghost" onClick={() => setTextMode(false)}>
-            {t('common.cancel')}
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => {
-              const { targets: parsed, errors } = parseTargetList(text);
-              if (errors.length) {
-                setTextErrors(
-                  errors.map((e) =>
-                    t('targets.lineError', { line: e.line, text: e.text, error: t(e.error) }),
-                  ),
-                );
-                return;
-              }
-              // Keep the ids of unchanged entries so that the change classifier sees real differences only.
-              const byKey = new Map(targets.map((x) => [key(x), x]));
-              onChange(
-                parsed.map((p) => {
-                  const old = byKey.get(key({ ...p, allow: Boolean(p.allow) }));
-                  return old ?? { ...p, id: newId() };
-                }),
-              );
-              setTextMode(false);
-            }}
-          >
-            {t('targets.applyText')}
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div class="stack">
-      <div class="stack stack-sm">
-        <h4>{t('targets.exceptions')}</h4>
-        <p class="help">{t('targets.exceptionsHelp')}</p>
-        {rows(allows, t('targets.exceptions'))}
-        <AddBox
-          onAdd={(l) => addLines(l, true)}
-          exception
-          placeholder={t('targets.addExceptionPlaceholder')}
-        />
-      </div>
-      <div>
-        <Button
-          size="small"
-          icon="edit"
-          onClick={() => {
-            setText(targets.map(targetToLine).join('\n'));
-            setTextErrors([]);
-            setTextMode(true);
-          }}
-        >
-          {t('targets.textMode')}
-        </Button>
-      </div>
+      {targets.length > 0 && (
+        <ul class="list compact" aria-label={t('targets.sites')}>
+          {targets.map((tg) => (
+            <Row key={rowKey(tg)} tg={tg} onEdit={(next) => edit(tg, next)} onRemove={() => remove(tg.id)} />
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
