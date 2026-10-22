@@ -15,7 +15,7 @@ import { BLOCK, config, ctx, group } from './helpers';
 type Expectation =
   /** Addresses the entry must and must not match (the engine's parser and matcher). */
   | { match: string[]; noMatch: string[] }
-  /** A comment line, and an entry followed by a note. */
+  /** A comment line, and an entry followed by a comment. */
   | { comment: true }
   /** An exception in a rule that blocks the site, checked with the engine's decision. */
   | { exception: { blocked: string; allowed: string[]; stillBlocked: string[] } }
@@ -122,10 +122,9 @@ describe('the address syntax examples of Help do what their meaning says', () =>
           expect(matches(entry, url), `help example '${entry}' matched ${url}`).toBe(false);
       } else if ('comment' in e) {
         expect(parseTargetLine(entry)).toEqual({ comment: true });
-        expect(parseTargetLine('example.com  # note')?.target).toEqual({
+        expect(parseTargetLine('example.com  # comment')?.target).toEqual({
           type: 'domain',
           value: 'example.com',
-          note: 'note',
         });
       } else if ('exception' in e) {
         const { blocked, allowed, stillBlocked } = e.exception;

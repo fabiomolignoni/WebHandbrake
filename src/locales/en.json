@@ -1539,7 +1539,7 @@
     "message": "Every website. Add exceptions for the sites you need."
   },
   "help.syntax.comment": {
-    "message": "Lines starting with # are comments; “entry  # note” adds a note."
+    "message": "Lines starting with # are comments, and so is “  # …” after an entry."
   },
   "help.syntax.contains": {
     "message": "Any address that contains “news”."
@@ -3931,9 +3931,6 @@
   "targets.lineError": {
     "message": "Line {line} “{text}”: {error}"
   },
-  "targets.noteOptional": {
-    "message": "Note (optional)"
-  },
   "targets.remove": {
     "message": "Remove {value}"
   },
@@ -4231,9 +4228,6 @@
   },
   "unit.targetAdd": {
     "message": "Add {value} to {owner}"
-  },
-  "unit.targetNote": {
-    "message": "Edit the note of {value}"
   },
   "unit.targetRemove": {
     "message": "Remove {value} from {owner}"

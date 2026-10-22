@@ -52,7 +52,6 @@ export type ChangeUnit =
   | { kind: 'group.field'; groupId: string; name: string; field: GroupField; value: unknown; base: unknown }
   | { kind: 'target.add'; owner: Owner; ownerName: string; target: Target }
   | { kind: 'target.remove'; owner: Owner; ownerName: string; target: Target }
-  | { kind: 'target.note'; owner: Owner; ownerName: string; target: Target; base: string | undefined }
   | { kind: 'order'; ids: string[] }
   | { kind: 'setting'; path: string; value: unknown; base: unknown };
 
@@ -559,8 +558,6 @@ function diffTargets(owner: Owner, ownerName: string, a: Target[], b: Target[], 
     else if (n.type !== t.type || n.value !== t.value || Boolean(n.allow) !== Boolean(t.allow)) {
       units.push({ kind: 'target.remove', owner, ownerName, target: t });
       units.push({ kind: 'target.add', owner, ownerName, target: n });
-    } else if ((n.note ?? '') !== (t.note ?? '')) {
-      units.push({ kind: 'target.note', owner, ownerName, target: n, base: t.note });
     }
   }
   for (const t of b) if (!oldById.has(t.id)) units.push({ kind: 'target.add', owner, ownerName, target: t });
@@ -681,7 +678,6 @@ export function classify(unit: ChangeUnit, config: Config): Direction {
     case 'target.remove':
       if (!groupIsActive(config, unit.owner.id)) return 'neutral';
       return unit.target.allow ? 'strengthen' : 'weaken';
-    case 'target.note':
     case 'order':
       return 'neutral';
     case 'setting':
@@ -700,7 +696,6 @@ export function unitGroups(unit: ChangeUnit, config: Config): string[] {
       return [unit.groupId];
     case 'target.add':
     case 'target.remove':
-    case 'target.note':
       return [unit.owner.id];
     case 'setting':
       return config.groups.filter(isGroupActive).map((g) => g.id);
@@ -750,8 +745,7 @@ export function isStale(unit: ChangeUnit, config: Config): boolean {
       return !deepEqual(current, unit.base);
     }
     case 'target.add':
-    case 'target.remove':
-    case 'target.note': {
+    case 'target.remove': {
       // A pending unit of an earlier version may change a shared list or Always allowed.
       const list = unit.owner.kind === 'group' ? group(unit.owner.id)?.targets : undefined;
       if (!list) return true;
@@ -763,7 +757,7 @@ export function isStale(unit: ChangeUnit, config: Config): boolean {
     case 'setting':
       return !deepEqual(getPath(config.settings, unit.path), unit.base);
     default:
-      // The kinds of earlier versions: shared lists and their links to rules.
+      // The kinds of earlier versions: shared lists, their links to rules and notes of sites.
       return true;
   }
 }
@@ -795,14 +789,12 @@ export function applyUnits(config: Config, units: ChangeUnit[], now: number): Co
         break;
       }
       case 'target.add':
-      case 'target.remove':
-      case 'target.note': {
+      case 'target.remove': {
         const g = c.groups.find((x) => x.id === unit.owner.id);
         if (!g) break;
         const i = g.targets.findIndex((t) => t.id === unit.target.id);
         if (unit.kind === 'target.add' && i === -1) g.targets.push(clone(unit.target));
         if (unit.kind === 'target.remove' && i !== -1) g.targets.splice(i, 1);
-        if (unit.kind === 'target.note' && i !== -1) g.targets[i] = clone(unit.target);
         touchGroup(g);
         break;
       }

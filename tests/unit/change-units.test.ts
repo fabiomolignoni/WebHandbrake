@@ -288,7 +288,6 @@ describe('every kind of change, from the diff to the configuration', () => {
     const b = structuredClone(a);
     b.groups.reverse(); // order
     const ga = b.groups.find((g) => g.id === 'A')!;
-    ga.targets[0].note = 'work'; // target.note
     ga.targets.push(t('a2.test')); // target.add
     ga.targets = ga.targets.filter((x) => !x.allow); // target.remove of an exception
     b.groups.find((g) => g.id === 'B')!.targets = []; // target.remove
@@ -296,7 +295,7 @@ describe('every kind of change, from the diff to the configuration', () => {
 
     const units = diffConfig(a, b);
     expect(units.map((u) => u.kind).sort()).toEqual(
-      ['order', 'setting', 'target.add', 'target.note', 'target.remove', 'target.remove'].sort(),
+      ['order', 'setting', 'target.add', 'target.remove', 'target.remove'].sort(),
     );
     const direction = Object.fromEntries(
       units.map((u) => [`${u.kind}:${JSON.stringify(u).length}`, classify(u, a)]),
@@ -305,15 +304,13 @@ describe('every kind of change, from the diff to the configuration', () => {
     // Removing a site loosens; removing an exception tightens.
     const removed = units.filter((u) => u.kind === 'target.remove');
     expect(removed.map((u) => classify(u, a)).sort()).toEqual(['strengthen', 'weaken']);
-    for (const u of units.filter((x) => ['target.note', 'order'].includes(x.kind)))
-      expect(classify(u, a)).toBe('neutral');
+    expect(classify(units.find((u) => u.kind === 'order')!, a)).toBe('neutral');
 
     const applied = applyUnits(a, units, NOW);
     expect(diffConfig(applied, b)).toEqual([]);
     expect(applied.groups.find((g) => g.id === 'A')!.rev).toBeGreaterThan(1);
-    // A note and the order can be applied again (they are neutral); every other change is done.
-    for (const u of units.filter((x) => !['order', 'target.note'].includes(x.kind)))
-      expect(isStale(u, applied), u.kind).toBe(true);
+    // The order can be applied again (it is neutral); every other change is done.
+    for (const u of units.filter((x) => x.kind !== 'order')) expect(isStale(u, applied), u.kind).toBe(true);
     // The input is never changed.
     expect(a.groups.map((g) => g.id)).toEqual(['A', 'B']);
   });

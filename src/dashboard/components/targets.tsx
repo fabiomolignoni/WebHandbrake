@@ -159,8 +159,8 @@ function AddBox({
   );
 }
 
-/** The address of an entry as typed in the input, without the exception mark and the note. */
-const addressOf = (tg: Target) => targetToLine({ ...tg, allow: false, note: undefined });
+/** The address of an entry as typed in the input, without the exception mark. */
+const addressOf = (tg: Target) => targetToLine({ ...tg, allow: false });
 
 function RowEditor({
   tg,
@@ -173,7 +173,6 @@ function RowEditor({
   onCancel: () => void;
 }) {
   const [address, setAddress] = useState(addressOf(tg));
-  const [note, setNote] = useState(tg.note ?? '');
   const [error, setError] = useState<string | null>(null);
   const save = () => {
     const { targets: parsed, errors } = parseTargetList(address.replace(/^\s*(\+|@@)\s*/, ''));
@@ -182,9 +181,6 @@ function RowEditor({
       return setError(t(parsed.length ? 'targets.error.oneAddress' : 'targets.error.empty'));
     const next: Omit<Target, 'id'> = { ...parsed[0], allow: tg.allow };
     if (!next.allow) delete next.allow;
-    const typed = note.trim() || parsed[0].note;
-    if (typed) next.note = typed;
-    else delete next.note;
     setError(onSave(next));
   };
   const keys = (e: KeyboardEvent) => {
@@ -212,18 +208,6 @@ function RowEditor({
               spellcheck={false}
               autoFocus
               onInput={(e) => setAddress((e.target as HTMLInputElement).value)}
-              onKeyDown={keys}
-            />
-          )}
-        </Field>
-        <Field label={t('targets.noteOptional')}>
-          {(id) => (
-            <input
-              id={id}
-              class="input"
-              value={note}
-              maxLength={500}
-              onInput={(e) => setNote((e.target as HTMLInputElement).value)}
               onKeyDown={keys}
             />
           )}
@@ -272,10 +256,7 @@ function Row({
   }
   return (
     <li class={`target-row${tg.allow ? ' exception' : ''}`}>
-      <div class="stack" style={{ gap: '2px', minWidth: 0 }}>
-        <span class="value">{display}</span>
-        {tg.note && <span class="tiny muted">{tg.note}</span>}
-      </div>
+      <span class="value">{display}</span>
       {advanced && options.length > 1 ? (
         <span style={{ minWidth: '150px' }}>
           <Select
@@ -415,7 +396,7 @@ export function TargetsEditor({
               onChange(
                 parsed.map((p) => {
                   const old = byKey.get(key({ ...p, allow: Boolean(p.allow) }));
-                  return old ? { ...old, note: p.note } : { ...p, id: newId() };
+                  return old ?? { ...p, id: newId() };
                 }),
               );
               setTextMode(false);

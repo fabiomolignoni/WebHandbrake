@@ -25,11 +25,10 @@ describe('normalising what is read from storage or a file', () => {
       type: 'domain',
       value: 'a.test',
     });
-    expect(normalizeTarget({ type: 'nonsense', value: 'b.test', allow: 1, note: 'n' })).toMatchObject({
-      type: 'domain',
-      allow: true,
-      note: 'n',
-    });
+    // Sites had notes in earlier versions: they are dropped.
+    const old = normalizeTarget({ type: 'nonsense', value: 'b.test', allow: 1, note: 'n' });
+    expect(old).toMatchObject({ type: 'domain', allow: true });
+    expect(old).not.toHaveProperty('note');
     expect(normalizeTarget({ type: 'regex', value: '(a+)+$' })).toBeNull();
     expect(normalizeTarget({ type: 'domain', value: '' })).toBeNull();
     expect(normalizeTarget('a.test')).toBeNull();

@@ -68,6 +68,9 @@ All notable changes to WebHandbrake are documented here. The format follows
   may open. Files exported by earlier versions are read the same way.
 - The four bars next to the current site's status in the popup: the status already says in words
   how much the site is restricted.
+- Notes on the sites and exceptions of a rule: the pencil edits only the address, and in **Edit as
+  text** “entry  # …” is a comment. Notes saved by earlier versions are dropped. The reason a rule
+  matters to you, shown on its block page, stays.
 
 ### Fixed
 
@@ -89,8 +92,8 @@ All notable changes to WebHandbrake are documented here. The format follows
   longer, at the same cost, up to the longest a break can last, and no other break is counted.
 - The pencil next to a site or an exception of a rule opened an empty box without a label, for a
   note only: correcting a mistyped address meant removing it and adding it again. It now edits the
-  entry, with the address and an optional note, each labelled. A corrected address follows the
-  rule's protection like removing the old one and adding the new one.
+  address, with a label. A corrected address follows the rule's protection like removing the old
+  one and adding the new one.
 - A number typed quickly in a field could lose a digit (“120” became “10”).
 - A new rule left without a name no longer takes the name of its first site, which made texts such
   as “Remove tiktok.com from tiktok.com” and the popup’s “Add to: tiktok.com”. As in the rule

@@ -703,7 +703,7 @@ test('the editor normalises a pasted address and saves a renamed rule', async ({
   await expectBlocked(h, 'http://stream.test/watch?v=1');
 });
 
-test('the pencil corrects an address and its note in place', async ({ h }) => {
+test('the pencil corrects an address in place', async ({ h }) => {
   await setup(h, REMINDER);
   const cfg = (await h.rpc('config.get')).config;
   const p = await h.page(`dashboard.html#/groups/${cfg.groups[1].id}?step=sites`);
@@ -713,17 +713,15 @@ test('the pencil corrects an address and its note in place', async ({ h }) => {
   await p.button('Save', { exact: true }).click();
   await p.text('Enter one address. To add more, use the box above.').expectVisible();
   await p.label('Address').fill('vide0.test');
-  await p.label('Note (optional)').fill('typo fixed');
   await p.button('Save', { exact: true }).click();
   await p.text('vide0.test', { within: '.target-row' }).expectVisible();
-  await p.text('typo fixed').expectVisible();
   await p.text('video.test', { within: '.target-row' }).expectCount(0);
   await p.button('Save changes').click();
-  // The old address is removed (a loosening) and the new one added, not a note change.
+  // The old address is removed (a loosening) and the new one added.
   await p.button('Yes, continue').click();
   await p.text('Done: your change is applied.').expectVisible();
   const after = (await h.rpc('config.get')).config.groups[1].targets;
-  expect(after.map((t: any) => [t.value, t.note])).toEqual([['vide0.test', 'typo fixed']]);
+  expect(after.map((t: any) => t.value)).toEqual(['vide0.test']);
   await expectBlocked(h, 'http://vide0.test/');
   await expectAllowed(h, 'http://video.test/');
 });

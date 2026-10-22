@@ -205,8 +205,6 @@ export function describeUnit(u: ChangeUnit): string {
         value: u.target.value,
         owner: u.ownerName,
       });
-    case 'target.note':
-      return t('unit.targetNote', { value: u.target.value });
     case 'order':
       return t('unit.order');
     case 'setting':

@@ -15,7 +15,7 @@
  *   *                           every website (also *.*, *://*\/* and <all_urls>)
  *   /^https?:\/\/.*\.example\// regular expression (advanced)
  *   +reddit.com/r/rust          exception ("allow")
- *   # comment                   comment line;  "entry  # note" adds a note
+ *   # comment                   comment line;  "entry  # comment" ignores the comment
  *
  * Imported forms are also accepted: ||example.com^ (uBlock Origin / AdGuard),
  * *://*.example.com/* (uBlacklist / match patterns), hosts file lines, full URLs.
@@ -46,16 +46,8 @@ export function parseTargetLine(line: string): ParsedLine | null {
   if (raw.startsWith('#') || raw.startsWith('!') || (raw.startsWith('[') && !/^\[[0-9a-f:.]+\]/i.test(raw)))
     return { comment: true };
 
-  let note: string | undefined;
-  const noteAt = raw.search(/\s#/);
-  if (noteAt !== -1) {
-    note = raw
-      .slice(noteAt)
-      .replace(/^\s*#\s*/, '')
-      .trim();
-    raw = raw.slice(0, noteAt).trim();
-    if (!note) note = undefined;
-  }
+  const commentAt = raw.search(/\s#/);
+  if (commentAt !== -1) raw = raw.slice(0, commentAt).trim();
 
   let allow = false;
   if (raw.startsWith('@@')) {
@@ -67,11 +59,10 @@ export function parseTargetLine(line: string): ParsedLine | null {
   }
   if (!raw) return { error: 'targets.error.empty' };
 
-  const done = (t: Omit<Target, 'id' | 'allow' | 'note'> | { error: string }): ParsedLine => {
+  const done = (t: Omit<Target, 'id' | 'allow'> | { error: string }): ParsedLine => {
     if ('error' in t) return { error: t.error };
     const target: Omit<Target, 'id'> = { ...t };
     if (allow) target.allow = true;
-    if (note) target.note = note;
     return { target };
   };
 
@@ -145,10 +136,7 @@ export function parseTargetLine(line: string): ParsedLine | null {
   return done(parseHostPath(raw, exact));
 }
 
-function parseHostPath(
-  input: string,
-  exact: boolean,
-): Omit<Target, 'id' | 'allow' | 'note'> | { error: string } {
+function parseHostPath(input: string, exact: boolean): Omit<Target, 'id' | 'allow'> | { error: string } {
   let raw = input.replace(/^\/\//, '');
   let hostOnly = false;
   if (raw.startsWith('=')) {
@@ -203,7 +191,7 @@ function parseHostPath(
  * An address wildcard (#23): lower case, without a fragment, a leading www. or trailing slashes,
  * and with runs of * merged. "*", "*\/*" and the like cover every website (#20).
  */
-function addressWildcard(input: string): Omit<Target, 'id' | 'allow' | 'note'> | { error: string } {
+function addressWildcard(input: string): Omit<Target, 'id' | 'allow'> | { error: string } {
   const value = input
     .toLowerCase()
     .replace(/#.*$/, '')
@@ -244,7 +232,7 @@ function normaliseQuery(q: string): string {
 }
 
 /** Serialises a target back to the text syntax. */
-export function targetToLine(t: Pick<Target, 'type' | 'value' | 'allow' | 'note'>): string {
+export function targetToLine(t: Pick<Target, 'type' | 'value' | 'allow'>): string {
   let s: string;
   switch (t.type) {
     case 'host':
@@ -263,7 +251,6 @@ export function targetToLine(t: Pick<Target, 'type' | 'value' | 'allow' | 'note'
       s = t.value;
   }
   if (t.allow) s = `+${s}`;
-  if (t.note) s += `  # ${t.note}`;
   return s;
 }
 
@@ -425,7 +412,7 @@ export interface QueryConstraint {
 
 export interface CompiledPattern {
   target: Target;
-  /** Canonical identity, independent of id, allow and note. */
+  /** Canonical identity, independent of id and allow. */
   key: string;
   allow: boolean;
   type: TargetType;

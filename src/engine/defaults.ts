@@ -368,7 +368,7 @@ export function targetsFromLines(lines: string[]): Target[] {
   });
 }
 
-/** What makes two targets the same entry, whatever their id and note: their line. */
+/** What makes two targets the same entry, whatever their id: their line. */
 export function targetKey(t: Pick<Target, 'type' | 'value' | 'allow'>): string {
   return targetToLine({ type: t.type, value: t.value, allow: t.allow });
 }

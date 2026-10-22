@@ -46,7 +46,6 @@ describe('target syntax and normalisation', () => {
       type: 'path',
       value: 'reddit.com/r/rust',
       allow: true,
-      note: 'useful',
     });
     expect(target('/^https?:\\/\\/foo/')).toEqual({ type: 'regex', value: '^https?:\\/\\/foo' });
     expect(target('about:config')).toEqual({ type: 'path', value: 'about:config' });

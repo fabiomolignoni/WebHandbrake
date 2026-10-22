@@ -68,8 +68,8 @@ export function normalizeTarget(raw: unknown): Target | null {
   const t: Target = { ...raw, id: str(raw.id) || newId(), type, value };
   if (raw.allow) t.allow = true;
   else delete t.allow;
-  if (typeof raw.note === 'string' && raw.note) t.note = raw.note.slice(0, 500);
-  else delete t.note;
+  // Sites no longer have notes: those of earlier versions are dropped.
+  delete (t as { note?: unknown }).note;
   if (!compilePattern(t)) return null;
   return t;
 }

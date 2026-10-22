@@ -37,7 +37,6 @@ export interface Target {
   value: string;
   /** Exception ("allow") instead of a blocking entry. */
   allow?: boolean;
-  note?: string;
 }
 
 // ---------------------------------------------------------------------------
