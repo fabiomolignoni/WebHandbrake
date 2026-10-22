@@ -383,7 +383,8 @@ function FocusPanel({ m, reload }: { m: PopupModel; reload: () => void }) {
             allow: [],
             minutes,
             locked: false,
-            noPauses: false,
+            // A quick session allows no breaks of its rules.
+            noPauses: true,
           });
           toast(t('focus.started', { minutes }));
           reload();

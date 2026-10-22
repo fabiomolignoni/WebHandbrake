@@ -12,7 +12,7 @@ import {
   TICKET_MAX_FAILURES,
   TICKET_TTL_MS,
 } from '../engine/limits';
-import type { Charset, Cost, Group } from '../engine/types';
+import type { Cost, Group } from '../engine/types';
 import { sessionStore } from '../platform/api';
 import type { StepView, TicketPurposeKind, TicketView } from '../shared/models';
 import { now } from './clock';
@@ -23,15 +23,18 @@ import { matchStep } from './totp';
 export type Step =
   | { type: 'confirm' }
   | { type: 'wait'; seconds: number }
-  | { type: 'text'; length: number; charset?: Charset }
+  | { type: 'text'; length: number }
   | { type: 'phrase'; phrase: string }
   | { type: 'math' }
   /** The password that these rules share. */
   | { type: 'rulePassword'; groups: string[]; names: string[] }
   /** The code that the app of the partner these rules share shows. */
   | { type: 'partner'; groups: string[]; names: string[] }
-  /** A reason is always required; the minutes are one of the choices or any other up to the maximum. */
-  | { type: 'intention'; choices: number[]; maxMinutes: number; seconds: number };
+  /**
+   * A reason of at least `minLength` characters is always required; the minutes are one of the
+   * choices or any other up to the maximum.
+   */
+  | { type: 'intention'; choices: number[]; maxMinutes: number; seconds: number; minLength: number };
 
 export type Purpose =
   /** `base`: the checksum of the configuration when the cost was shown. */
@@ -54,7 +57,6 @@ export type Purpose =
       mode: 'visit' | 'minutes';
       minutes?: number;
       site: string;
-      cooldownMinutes?: number;
       incognito: boolean;
     }
   | { kind: 'session.end'; id: string }
@@ -112,7 +114,7 @@ function activate(t: Ticket) {
       t.active.readyAt = n + step.seconds * 1000;
       break;
     case 'text':
-      t.active.text = randomText(step.length, step.charset ?? 'alnum');
+      t.active.text = randomText(step.length);
       break;
     case 'math': {
       const op = MATH_OPS[randomInt(0, 2)];
@@ -140,6 +142,8 @@ function stepView(t: Ticket): StepView {
         choices: step.choices,
         maxMinutes: step.maxMinutes,
         seconds: step.seconds,
+        // A ticket of an earlier version has no shortest reason.
+        minLength: step.minLength ?? 1,
         readyAt: t.active.readyAt ?? now(),
       };
     case 'rulePassword':
@@ -297,6 +301,8 @@ export async function answerTicket(
         return { status: 'error', error: 'ticket.error.notYet', ticket: ticketView(t) };
       if (!a.trim())
         return { status: 'error', error: 'ticket.error.intentionRequired', ticket: ticketView(t) };
+      if ([...a.trim()].length < (step.minLength ?? 1))
+        return { status: 'error', error: 'ticket.error.intentionShort', ticket: ticketView(t) };
       const m = Number(minutes);
       if (!Number.isFinite(m) || m <= 0 || m > step.maxMinutes)
         return { status: 'error', error: 'ticket.error.minutes', ticket: ticketView(t) };

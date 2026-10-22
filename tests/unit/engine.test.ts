@@ -243,6 +243,11 @@ describe('decisions', () => {
     });
     const c = ctx(config([g]), at(0, 9, 30), state);
     expect(decide(c, 'https://news.example/').source).toBe('session');
+    // The session decides whether the rule's breaks are allowed during it.
+    g.pause = { ...g.pause, allowed: true };
+    expect(decide(c, 'https://news.example/').groups[0].pausable).toBe(false);
+    state.sessions[0].noPauses = false;
+    expect(decide(c, 'https://news.example/').groups[0].pausable).toBe(true);
     state.sessions = [
       {
         id: 's2',
@@ -435,7 +440,7 @@ describe('rules over every website and address wildcards', () => {
   it('the filters of every rule on the page add up, the stronger of each kind', () => {
     const all = group('Gray', ['*'], [{ intervention: { ...FILTER, intensity: 60 } }]);
     const video = group('Video', ['video.test'], [{ intervention: delayIntervention(10) }]);
-    const darker = group('Darker', ['video.test'], [{ intervention: { ...FILTER, mute: true } }]);
+    const darker = group('Darker', ['video.test'], [{ intervention: { ...FILTER, intensity: 90 } }]);
     const blur = group('Blur', ['video.test'], [{ intervention: { type: 'filter', filter: 'blur' } }]);
     const state = defaultState();
     const c = ctx(config([all, video, darker, blur]), at(0, 9), state);
@@ -453,7 +458,7 @@ describe('rules over every website and address wildcards', () => {
       severity: SEVERITY.delay,
     });
     expect(pageFilters(decide(c, 'https://video.test/'))).toEqual([
-      { ...FILTER, mute: true },
+      { ...FILTER, intensity: 90 },
       { type: 'filter', filter: 'blur' },
     ]);
     expect(pageFilters(decide(c, 'https://news.test/'))).toEqual([{ ...FILTER, intensity: 60 }]);

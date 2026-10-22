@@ -196,11 +196,11 @@ describe('policy comparison', () => {
     ).toBe('weaken');
   });
 
-  it('a shorter wait before the intention question is a weakening', () => {
-    const ask = (seconds: number) =>
-      p({ intervention: { type: 'ask', seconds, choices: [5], maxMinutes: 15 } });
-    expect(comparePolicies([ask(30)], [ask(0)])).toBe('weaken');
-    expect(comparePolicies([ask(0)], [ask(30)])).toBe('strengthen');
+  it('a shorter reason at the intention question is a weakening', () => {
+    const ask = (minReasonLength: number) =>
+      p({ intervention: { type: 'ask', maxMinutes: 15, minReasonLength } });
+    expect(comparePolicies([ask(30)], [ask(1)])).toBe('weaken');
+    expect(comparePolicies([ask(1)], [ask(30)])).toBe('strengthen');
   });
 
   it('appending is strengthening, removing or reordering is weakening', () => {
@@ -302,8 +302,9 @@ describe('redirect destinations', () => {
 });
 
 describe('interventions compared with the access they give', () => {
-  const ask = (seconds = 0, maxMinutes = 5) =>
-    ({ type: 'ask', seconds, choices: [5], maxMinutes }) as const satisfies Policy['intervention'];
+  // Ask first lets one answer after ASK_WAIT_SECONDS (10).
+  const ask = (maxMinutes = 5) =>
+    ({ type: 'ask', maxMinutes, minReasonLength: 1 }) as const satisfies Policy['intervention'];
   const delay = (
     seconds: number,
     grant: { scope: 'page' | 'site' | 'group'; mode: 'visit' | 'minutes'; minutes?: number },
@@ -312,7 +313,7 @@ describe('interventions compared with the access they give', () => {
     ({ type: 'challenge', kind: 'math', grant }) as const satisfies Policy['intervention'];
 
   it('a stronger kind that opens more, or waits less, is a loosening (regression)', () => {
-    expect(compareInterventions(ask(60), delay(1, { scope: 'group', mode: 'minutes', minutes: 1440 }))).toBe(
+    expect(compareInterventions(ask(), delay(1, { scope: 'group', mode: 'minutes', minutes: 1440 }))).toBe(
       'weaken',
     );
     expect(
@@ -321,7 +322,7 @@ describe('interventions compared with the access they give', () => {
         math({ scope: 'group', mode: 'minutes', minutes: 1440 }),
       ),
     ).toBe('weaken');
-    expect(compareInterventions(ask(60), delay(1, { scope: 'site', mode: 'visit' }))).toBe('weaken');
+    expect(compareInterventions(ask(), delay(1, { scope: 'site', mode: 'visit' }))).toBe('weaken');
   });
 
   it('up the ladder with the same access stays stricter', () => {

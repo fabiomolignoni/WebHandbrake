@@ -8,6 +8,7 @@
  */
 
 import { compileTargets, isGroupActive, redirectDestination, redirectKey } from './compile';
+import { ASK_WAIT_SECONDS } from './defaults';
 import { clone } from './json';
 import { SEVERITY, severityOf } from './severity';
 import { isFullDay } from './time';
@@ -256,7 +257,7 @@ function passAccess(i: Intervention): Access | null {
 
 /** Seconds to wait before passing, for the interventions that make one wait. */
 function passWait(i: Intervention): number | null {
-  if (i.type === 'ask') return i.seconds ?? 0;
+  if (i.type === 'ask') return ASK_WAIT_SECONDS;
   if (i.type === 'delay') return i.seconds;
   return null;
 }
@@ -298,7 +299,7 @@ export function compareInterventions(a: Intervention, b: Intervention): Directio
     }
     case 'challenge': {
       const n = b as typeof a;
-      if (a.kind !== n.kind || a.charset !== n.charset || (a.kind === 'phrase' && a.phrase !== n.phrase)) {
+      if (a.kind !== n.kind || (a.kind === 'phrase' && a.phrase !== n.phrase)) {
         return 'weaken';
       }
       return combine([cmpNum(a.length, n.length, true), compareGrant(a.grant, n.grant)]);
@@ -306,16 +307,14 @@ export function compareInterventions(a: Intervention, b: Intervention): Directio
     case 'ask': {
       const n = b as typeof a;
       return combine([
-        cmpNum(a.seconds, n.seconds, true),
         cmpNum(a.maxMinutes, n.maxMinutes, false),
-        cmpNum(Math.max(0, ...a.choices), Math.max(0, ...n.choices), false),
-        cmpNum(a.cooldownMinutes, n.cooldownMinutes, true),
+        cmpNum(a.minReasonLength, n.minReasonLength, true),
       ]);
     }
     case 'filter': {
       const n = b as typeof a;
-      if (a.filter !== n.filter || a.css !== n.css) return 'weaken';
-      return combine([cmpNum(a.intensity ?? 100, n.intensity ?? 100, true), cmpBool(a.mute, n.mute, true)]);
+      if (a.filter !== n.filter) return 'weaken';
+      return cmpNum(a.intensity ?? 100, n.intensity ?? 100, true);
     }
     default:
       return 'neutral';
@@ -412,8 +411,7 @@ export function comparePause(a: PausePolicy, b: PausePolicy): Direction {
   if (deepEqual(a, b)) return 'neutral';
   if (!a.allowed && !b.allowed) return 'neutral';
   if (a.allowed !== b.allowed) return b.allowed ? 'weaken' : 'strengthen';
-  const dirs: Direction[] = [cmpBool(a.duringSessions, b.duringSessions, false)];
-  dirs.push(cmpNum(a.maxMinutes, b.maxMinutes, false));
+  const dirs: Direction[] = [cmpNum(a.maxMinutes, b.maxMinutes, false)];
   if (
     !samePeriod(a.limit.period, b.limit.period) &&
     (a.limit.count !== undefined || a.limit.minutes !== undefined)

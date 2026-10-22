@@ -144,7 +144,11 @@ describe('the state of the current site', () => {
     expect(groupTone({ ...g, pause: { until: later } })).toBe('calm');
     expect(groupTone({ ...g, enabled: false })).toBe('neutral');
     expect(
-      groupTone({ ...g, intervention: { type: 'ask', choices: [5], maxMinutes: 5 }, source: 'session' }),
+      groupTone({
+        ...g,
+        intervention: { type: 'ask', maxMinutes: 5, minReasonLength: 1 },
+        source: 'session',
+      }),
     ).toBe('protected');
   });
 });

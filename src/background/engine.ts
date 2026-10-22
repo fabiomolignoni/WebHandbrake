@@ -95,7 +95,6 @@ export function groupResultView(r: GroupResult): GroupDecisionView {
         }
       : null,
     pausable: r.pausable,
-    cooldownUntil: r.cooldown?.until ?? null,
   };
 }
 

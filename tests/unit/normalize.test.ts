@@ -54,27 +54,15 @@ describe('normalising what is read from storage or a file', () => {
   });
 
   it('interventions keep their settings within range; anything unknown blocks', () => {
-    expect(
-      normalizeIntervention({ type: 'filter', filter: 'neon', intensity: 300, css: 'x'.repeat(300) }),
-    ).toEqual({
+    expect(normalizeIntervention({ type: 'filter', filter: 'neon', intensity: 300 })).toEqual({
       type: 'filter',
       filter: 'grayscale',
       intensity: 100,
-      css: 'x'.repeat(200),
-      mute: false,
     });
-    expect(
-      normalizeIntervention({ type: 'ask', choices: [5, 30, -1, 'x'], maxMinutes: 20, cooldownMinutes: 5 }),
-    ).toEqual({
+    expect(normalizeIntervention({ type: 'ask', maxMinutes: 2000, minReasonLength: 999 })).toEqual({
       type: 'ask',
-      seconds: 0,
-      choices: [5],
-      maxMinutes: 20,
-      cooldownMinutes: 5,
-    });
-    // No choice under the maximum: the maximum is the choice.
-    expect(normalizeIntervention({ type: 'ask', choices: [30], maxMinutes: 10 })).toMatchObject({
-      choices: [10],
+      maxMinutes: 1440,
+      minReasonLength: 300,
     });
     expect(
       normalizeIntervention({
@@ -94,6 +82,9 @@ describe('normalising what is read from storage or a file', () => {
       hideCountdown: false,
       grant: { scope: 'site', mode: 'visit' },
     });
+    expect(normalizeIntervention({ type: 'delay', seconds: 5, increase: 1000 })).toMatchObject({
+      increase: 600,
+    });
     expect(
       normalizeIntervention({
         type: 'challenge',
@@ -106,7 +97,6 @@ describe('normalising what is read from storage or a file', () => {
       type: 'challenge',
       kind: 'phrase',
       length: 4,
-      charset: 'alnum',
       phrase: 'I choose',
       grant: { scope: 'site', mode: 'minutes', minutes: 1440 },
     });
@@ -114,6 +104,32 @@ describe('normalising what is read from storage or a file', () => {
     expect(normalizeIntervention({ type: 'close', extra: 1 })).toEqual({ type: 'close' });
     expect(normalizeIntervention({ type: 'explode' })).toEqual({ type: 'block' });
     expect(normalizeIntervention(null)).toEqual({ type: 'block' });
+  });
+
+  it('interventions of earlier versions lose the settings that are gone', () => {
+    // A custom filter or none at all is greyscale; a filter no longer mutes.
+    for (const filter of ['custom', 'none'])
+      expect(
+        normalizeIntervention({ type: 'filter', filter, intensity: 40, css: 'blur(2px)', mute: true }),
+      ).toEqual({ type: 'filter', filter: 'grayscale', intensity: 40 });
+    // Ask first: the durations offered, the wait and the block afterwards; any reason will do.
+    expect(
+      normalizeIntervention({
+        type: 'ask',
+        seconds: 30,
+        choices: [5, 30],
+        maxMinutes: 20,
+        cooldownMinutes: 5,
+      }),
+    ).toEqual({ type: 'ask', maxMinutes: 20, minReasonLength: 1 });
+    // A wait both random and longer each time stays random.
+    expect(
+      normalizeIntervention({ type: 'delay', seconds: 10, randomTo: 50, increase: 5, grant: {} }),
+    ).not.toHaveProperty('increase');
+    // A challenge of random characters uses letters and digits.
+    expect(
+      normalizeIntervention({ type: 'challenge', kind: 'random', charset: 'digits' }),
+    ).not.toHaveProperty('charset');
   });
 
   it('conditions: a schedule, a known limit, what happens', () => {
@@ -152,7 +168,6 @@ describe('normalising what is read from storage or a file', () => {
     });
     expect(p).toEqual({
       allowed: true,
-      duringSessions: false,
       maxMinutes: 1440,
       limit: { count: 2, period: { kind: 'day' } },
       cost: { type: 'challenge', kind: 'phrase', length: 4, phrase: 'ok' },
@@ -168,7 +183,7 @@ describe('normalising what is read from storage or a file', () => {
     expect(normalizePause({ cost: 'free' }).cost).toEqual({ type: 'confirm' });
   });
 
-  it('breaks of earlier versions last up to their longest length, cover the rule, never ask why and count the clock', () => {
+  it('breaks of earlier versions last up to their longest length, cover the rule, never ask why, count the clock and leave focus sessions to decide', () => {
     const old = {
       allowed: true,
       duringSessions: true,
@@ -181,7 +196,6 @@ describe('normalising what is read from storage or a file', () => {
     const choices = normalizePause({ ...old, duration: { mode: 'choices', minutes: 10, choices: [5, 20] } });
     expect(choices).toEqual({
       allowed: true,
-      duringSessions: true,
       maxMinutes: 20,
       limit: { count: 3, period: { kind: 'day' } },
       cost: { type: 'confirm' },

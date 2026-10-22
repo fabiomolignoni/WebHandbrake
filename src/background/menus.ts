@@ -77,7 +77,8 @@ export async function onMenuClicked(info: chrome.contextMenus.OnClickData, tab?:
       allow: [],
       minutes: Number(arg) || DEFAULT_SESSION_MINUTES,
       locked: false,
-      noPauses: false,
+      // A quick session allows no breaks of its rules.
+      noPauses: true,
     });
     return;
   }
@@ -109,7 +110,8 @@ export async function onCommand(command: string, tab?: chrome.tabs.Tab) {
       allow: [],
       minutes: DEFAULT_SESSION_MINUTES,
       locked: false,
-      noPauses: false,
+      // A quick session allows no breaks of its rules.
+      noPauses: true,
     });
   } else if (command === 'open-dashboard') {
     await quiet(api.tabs.create({ url: extensionUrl('dashboard.html') }));

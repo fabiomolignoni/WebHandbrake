@@ -18,17 +18,11 @@
     "message": "Blocked sites",
     "description": "Default name of a group created from the popup or the context menu"
   },
-  "ask.choices": {
-    "message": "Choices offered (minutes)"
+  "ask.minReason": {
+    "message": "Reason of at least"
   },
-  "ask.cooldown": {
-    "message": "Then block for"
-  },
-  "ask.help": {
-    "message": "You always have to give a reason. On the page you can also type a different length, up to the maximum."
-  },
-  "ask.wait": {
-    "message": "Wait before you can answer"
+  "ask.minReasonUnit": {
+    "message": "{n, plural, one {character} other {characters}}"
   },
   "backup.reason.add-page": {
     "message": "Site added"
@@ -163,21 +157,6 @@
   },
   "challenge.chars": {
     "message": "characters"
-  },
-  "challenge.charset": {
-    "message": "Characters"
-  },
-  "challenge.charset.alnum": {
-    "message": "Letters and digits"
-  },
-  "challenge.charset.digits": {
-    "message": "Digits only"
-  },
-  "challenge.charset.letters": {
-    "message": "Letters only"
-  },
-  "challenge.charset.symbols": {
-    "message": "Letters, digits and symbols"
   },
   "challenge.kind": {
     "message": "Challenge"
@@ -420,32 +399,68 @@
   "days.weekends": {
     "message": "Weekends"
   },
-  "delay.auto": {
-    "message": "Open the page automatically after the wait"
+  "delay.and": {
+    "message": "and"
   },
-  "delay.hide": {
-    "message": "Hide the countdown"
+  "delay.auto": {
+    "message": "Open the page as soon as the wait is over"
+  },
+  "delay.autoHelp": {
+    "message": "When off, you choose: continue or close the tab."
+  },
+  "delay.between": {
+    "message": "Between"
+  },
+  "delay.countdown": {
+    "message": "Show the countdown"
+  },
+  "delay.countdownHelp": {
+    "message": "When off, you don’t see how many seconds are left."
+  },
+  "delay.eachTime": {
+    "message": "each time you go in"
+  },
+  "delay.growingHelp": {
+    "message": "{first}, then {second}, then {third}… Back to {first} each day."
   },
   "delay.increase": {
-    "message": "Extra wait per earlier visit today"
+    "message": "Extra wait each time you go in"
+  },
+  "delay.length": {
+    "message": "How long?"
+  },
+  "delay.length.fixed": {
+    "message": "Fixed"
+  },
+  "delay.length.growing": {
+    "message": "Longer each time"
+  },
+  "delay.length.random": {
+    "message": "Random"
+  },
+  "delay.longest": {
+    "message": "Longest wait"
   },
   "delay.onBlur": {
-    "message": "If you leave the page"
+    "message": "If you switch to another tab during the wait"
   },
   "delay.onBlur.ignore": {
-    "message": "Keep counting"
+    "message": "The countdown keeps going"
   },
   "delay.onBlur.pause": {
-    "message": "Pause the countdown"
+    "message": "The countdown pauses"
   },
   "delay.onBlur.restart": {
-    "message": "Start again"
+    "message": "The wait starts again"
   },
-  "delay.randomTo": {
-    "message": "Random, up to"
+  "delay.plus": {
+    "message": "plus"
   },
   "delay.seconds": {
     "message": "Wait"
+  },
+  "delay.shortest": {
+    "message": "Shortest wait"
   },
   "diag.clearLog": {
     "message": "Clear the log"
@@ -847,12 +862,6 @@
   "filter.blur": {
     "message": "Blur"
   },
-  "filter.custom": {
-    "message": "Custom filter"
-  },
-  "filter.customHelp": {
-    "message": "CSS filter functions only, e.g. “grayscale(60%) contrast(80%)”."
-  },
   "filter.fade": {
     "message": "Fade"
   },
@@ -867,12 +876,6 @@
   },
   "filter.label": {
     "message": "Filter"
-  },
-  "filter.mute": {
-    "message": "Mute the tab"
-  },
-  "filter.none": {
-    "message": "No visual filter"
   },
   "filter.sepia": {
     "message": "Sepia"
@@ -1006,6 +1009,9 @@
   },
   "focus.whichGroups": {
     "message": "Rules to include"
+  },
+  "grant.for": {
+    "message": "for"
   },
   "grant.label": {
     "message": "Once you’re through, open"
@@ -1862,17 +1868,14 @@
   "intervention.delay": {
     "message": "Wait"
   },
+  "intervention.delay.growingSummary": {
+    "message": "Wait {seconds} s, {increase} s more each time{hidden, select, yes { (countdown hidden)} other {}}"
+  },
   "intervention.delay.summary": {
     "message": "Wait {seconds} s{hidden, select, yes { (countdown hidden)} other {}}"
   },
   "intervention.filter": {
     "message": "Filter"
-  },
-  "intervention.filter.muteOnly": {
-    "message": "Mute the tab"
-  },
-  "intervention.filter.muted": {
-    "message": "muted"
   },
   "intervention.help.allow": {
     "message": "The sites open and their time is not counted."
@@ -1893,7 +1896,7 @@
     "message": "You wait a few seconds before going in. Often enough to let the urge pass."
   },
   "intervention.help.filter": {
-    "message": "The page opens, but less appealing: grey, blurred or faded. Sound can be muted too."
+    "message": "The page opens, but less appealing: grey, blurred or faded."
   },
   "intervention.help.redirect": {
     "message": "Opens another page instead, such as your to-do list."
@@ -1952,6 +1955,9 @@
   "iv.ask.howLong": {
     "message": "For how long?"
   },
+  "iv.ask.minLength": {
+    "message": "At least {n} characters."
+  },
   "iv.ask.other": {
     "message": "Other",
     "description": "Last choice of \"For how long?\": type another number of minutes"
@@ -1991,12 +1997,6 @@
   },
   "iv.continue": {
     "message": "Continue"
-  },
-  "iv.cooldown": {
-    "message": "The time you chose is over. Take a breather."
-  },
-  "iv.cooldown.until": {
-    "message": "The time you chose is over. Back {when}."
   },
   "iv.delay": {
     "message": "Take a breath."
@@ -2497,31 +2497,28 @@
     "message": "A break opens all the rule’s sites for a while."
   },
   "pauseRules.costKind.confirm": {
-    "message": "Confirmation"
+    "message": "Confirm it"
   },
   "pauseRules.costKind.delay": {
     "message": "Wait"
   },
   "pauseRules.costKind.math": {
-    "message": "Small calculation"
+    "message": "Solve a small calculation"
   },
   "pauseRules.costKind.none": {
     "message": "Nothing"
   },
   "pauseRules.costKind.password": {
-    "message": "Password"
+    "message": "Enter the rule’s password"
   },
   "pauseRules.costKind.phrase": {
-    "message": "Phrase"
+    "message": "Type a phrase"
   },
   "pauseRules.costKind.random": {
-    "message": "Random characters"
+    "message": "Type random characters"
   },
   "pauseRules.durationHelp": {
     "message": "A break lasts this long unless you end it sooner."
-  },
-  "pauseRules.duringSessions": {
-    "message": "Also during focus sessions"
   },
   "pauseRules.limitCount": {
     "message": "At most this many breaks"
@@ -2536,7 +2533,7 @@
     "message": "This rule has no password, so a break asks you to type 32 random characters instead."
   },
   "pauseRules.q.cost": {
-    "message": "What should a break cost?"
+    "message": "What must you do to take a break?"
   },
   "pauseRules.q.duration": {
     "message": "How long can a break last?"
@@ -3013,9 +3010,6 @@
   },
   "protection.waitLabel": {
     "message": "How long to wait"
-  },
-  "redirect.help": {
-    "message": "In the address, '{url}' becomes the page you were opening, '{group}' the rule’s name and '{until}' when it ends."
   },
   "redirect.url": {
     "message": "Address"
@@ -3828,6 +3822,9 @@
   "ticket.error.intentionRequired": {
     "message": "Say in a few words what you want to do."
   },
+  "ticket.error.intentionShort": {
+    "message": "Your reason is too short: add a few words."
+  },
   "ticket.error.minutes": {
     "message": "Choose how long."
   },
@@ -4051,9 +4048,6 @@
   "validate.allSites": {
     "message": "This rule applies to every website. Add exceptions for the sites you need."
   },
-  "validate.askChoices": {
-    "message": "Condition {n}: at least one choice must be within the maximum."
-  },
   "validate.emptyWindow": {
     "message": "Condition {n}: a time window starts and ends at the same time."
   },
@@ -4075,9 +4069,6 @@
   "validate.noWindows": {
     "message": "Condition {n}: add at least one time window."
   },
-  "validate.onlyTracking": {
-    "message": "This rule only counts time: nothing is restricted."
-  },
   "validate.outsideNoWindows": {
     "message": "Condition {n}: “outside these times” without times means always."
   },
@@ -4086,6 +4077,9 @@
   },
   "validate.phrase": {
     "message": "Condition {n}: write the phrase to type."
+  },
+  "validate.randomWait": {
+    "message": "Condition {n}: the longest wait must be longer than the shortest."
   },
   "validate.redirectUrl": {
     "message": "Condition {n}: the redirect address must start with http:// or https://."
@@ -4267,9 +4261,6 @@
   "why.bySession": {
     "message": "Blocked by a focus session."
   },
-  "why.cooldown": {
-    "message": "Cool-down until {when}."
-  },
   "why.excepted": {
     "message": "Allowed by an exception."
   },
@@ -4376,12 +4367,6 @@
     "message": "Allowed for at most",
     "description": "Followed by a number and a unit: the longest time the person can choose after the question."
   },
-  "wizard.how.intro": {
-    "message": "From gentlest to strongest."
-  },
-  "wizard.how.redirectDesc": {
-    "message": "Opens another address instead, for example your to-do list."
-  },
   "wizard.how.redirectHelp": {
     "message": "It must start with http:// or https://."
   },
@@ -4470,9 +4455,6 @@
     "message": "Steps"
   },
   "wizard.then.ask": {
-    "message": "WebHandbrake first asks what you want to do (for {max} at most)."
-  },
-  "wizard.then.askWait": {
     "message": "WebHandbrake first asks what you want to do (for {max} at most), then lets you in after {seconds, plural, one {# second} other {# seconds}}."
   },
   "wizard.then.block": {
@@ -4492,6 +4474,12 @@
   },
   "wizard.then.delay": {
     "message": "WebHandbrake makes you wait {seconds} seconds."
+  },
+  "wizard.then.delayGrowing": {
+    "message": "WebHandbrake makes you wait {seconds} seconds, {increase} more each time you go in that day."
+  },
+  "wizard.then.delayRandom": {
+    "message": "WebHandbrake makes you wait between {from} and {to} seconds."
   },
   "wizard.then.filter": {
     "message": "WebHandbrake makes the page less appealing ({filter})."

@@ -79,26 +79,36 @@ describe('the intervention page', () => {
   });
 
   it('waits, questions and challenges come with their ticket', async () => {
-    const delay = { ...delayIntervention(10), randomTo: 20, increase: 5 } as ReturnType<
-      typeof delayIntervention
-    >;
+    const random = { ...delayIntervention(10), randomTo: 20 } as ReturnType<typeof delayIntervention>;
+    const growing = { ...delayIntervention(10), increase: 5 } as ReturnType<typeof delayIntervention>;
     const t = await setup([
-      group('D', ['d.test'], [{ intervention: delay }]),
-      group('Q', ['q.test'], [{ intervention: { type: 'ask', seconds: 3, choices: [5], maxMinutes: 9 } }]),
+      group('D', ['d.test'], [{ intervention: random }]),
+      group('G', ['g.test'], [{ intervention: growing }]),
+      group('Q', ['q.test'], [{ intervention: { type: 'ask', maxMinutes: 9, minReasonLength: 12 } }]),
       group(
         'C',
         ['c.test'],
         [{ intervention: { type: 'challenge', kind: 'math', grant: { scope: 'page', mode: 'visit' } } }],
       ),
     ]);
-    t.store.usage.count('proceeded:D', T0, t.store.cc.cal, 2);
+    t.store.usage.count('proceeded:G', T0, t.store.cc.cal, 2);
     const d = await t.model('https://d.test/');
     expect(d.kind).toBe('delay');
     const wait = (await t.tickets.getTicket(d.ticket!.id))!.steps[0];
-    expect(wait.type === 'wait' && wait.seconds).toBeGreaterThanOrEqual(10 + 2 * 5);
-    expect(wait.type === 'wait' && wait.seconds).toBeLessThanOrEqual(20 + 2 * 5);
+    expect(wait.type === 'wait' && wait.seconds).toBeGreaterThanOrEqual(10);
+    expect(wait.type === 'wait' && wait.seconds).toBeLessThanOrEqual(20);
+    // Longer by 5 s for each of the two times one went in today.
+    const g = await t.model('https://g.test/');
+    expect((await t.tickets.getTicket(g.ticket!.id))!.steps[0]).toEqual({ type: 'wait', seconds: 20 });
+    // The durations offered come from the longest time; the wait is always 10 s.
     const q = await t.model('https://q.test/');
-    expect(q.ticket?.step).toMatchObject({ type: 'intention', choices: [5], maxMinutes: 9, seconds: 3 });
+    expect(q.ticket?.step).toMatchObject({
+      type: 'intention',
+      choices: [5],
+      maxMinutes: 9,
+      seconds: 10,
+      minLength: 12,
+    });
     const c = await t.model('https://c.test/');
     expect(c.ticket?.step.type).toBe('math');
   });
@@ -120,7 +130,7 @@ describe('the intervention page', () => {
     expect((await t.model('https://x.test/')).kind).toBe('block');
   });
 
-  it('focus sessions, cool-downs and closing the tab', async () => {
+  it('focus sessions and closing the tab; the cool-downs after Ask first of earlier versions no longer block', async () => {
     const t = await setup([
       group('S', ['s.test'], [{ intervention: { type: 'track' } }]),
       group('K', ['k.test'], [{ intervention: { type: 'track' } }]),
@@ -129,7 +139,7 @@ describe('the intervention page', () => {
     t.store.state.sessions.push(session({ groups: ['S'], locked: true }));
     t.store.state.cooldowns['ask:K:k.test'] = { until: T0 + 60_000, group: 'K', site: 'k.test', kind: 'ask' };
     expect(await t.model('https://s.test/')).toMatchObject({ kind: 'session', locked: true });
-    expect(await t.model('https://k.test/')).toMatchObject({ kind: 'cooldown', until: T0 + 60_000 });
+    expect((await t.model('https://k.test/')).kind).toBe('allow');
     expect((await t.model('https://close.test/')).kind).toBe('close');
     t.store.state.sessions = [session({ kind: 'allowlist', allow: [] })];
     expect(await t.model('https://anywhere.test/')).toMatchObject({
@@ -204,13 +214,15 @@ describe('the intervention page', () => {
 
   it('passing gives the access of the rule, records the reason, and counts it', async () => {
     const t = await setup([
-      group(
-        'Q',
-        ['q.test'],
-        [{ intervention: { type: 'ask', choices: [5], maxMinutes: 10, cooldownMinutes: 15 } }],
-      ),
+      group('Q', ['q.test'], [{ intervention: { type: 'ask', maxMinutes: 10, minReasonLength: 10 } }]),
     ]);
     const m = await t.model('https://q.test/page');
+    vi.setSystemTime(T0 + 10_000);
+    // A reason shorter than the rule asks for is refused.
+    expect(await t.tickets.answerTicket(m.ticket!.id, 'too short', 7)).toMatchObject({
+      status: 'error',
+      error: 'ticket.error.intentionShort',
+    });
     expect(await t.tickets.answerTicket(m.ticket!.id, 'one answer', 7)).toMatchObject({
       status: 'done',
       result: { url: 'https://q.test/page' },
@@ -221,9 +233,8 @@ describe('the intervention page', () => {
         groups: ['Q'],
         scope: 'site',
         site: 'q.test',
-        until: T0 + 7 * 60_000,
+        until: T0 + 10_000 + 7 * 60_000,
         intention: 'one answer',
-        cooldownMinutes: 15,
       },
     ]);
     expect(t.store.intentions).toMatchObject([{ groupId: 'Q', text: 'one answer', minutes: 7 }]);

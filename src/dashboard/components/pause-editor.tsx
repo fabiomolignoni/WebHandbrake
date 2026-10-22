@@ -1,7 +1,7 @@
 /**
  * The breaks of a rule, under what happens: whether they are allowed, how long one can last, what
- * it costs and how many; whether they are allowed during focus sessions is an advanced option. A
- * break covers the whole rule and can be ended before its time is up.
+ * one has to do to take one and how many. A break covers the whole rule and can be ended before its
+ * time is up.
  */
 
 import { useId } from 'preact/hooks';
@@ -10,8 +10,6 @@ import { t } from '../../i18n/i18n';
 import { formatDuration } from '../../shared/format';
 import { DurationInput, NumberInput, Select, Toggle } from '../../ui/components';
 import { costLabel } from '../../ui/pause';
-import { pauseAdvanced } from '../rule-form';
-import { AdvancedOptions } from './advanced';
 import { PeriodSelect } from './policy';
 
 type CostKind = 'none' | 'confirm' | 'delay' | 'random' | 'phrase' | 'math' | 'password';
@@ -214,13 +212,6 @@ export function PauseEditor({
               />
             )}
           </div>
-          <AdvancedOptions open={pauseAdvanced(p)}>
-            <Toggle
-              checked={p.duringSessions}
-              onChange={(duringSessions) => set({ duringSessions })}
-              label={t('pauseRules.duringSessions')}
-            />
-          </AdvancedOptions>
         </>
       )}
     </div>

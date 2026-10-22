@@ -45,7 +45,7 @@ export interface UrlContext {
   incognito: boolean | null;
 }
 
-export type Source = 'policy' | 'session' | 'cooldown' | 'none';
+export type Source = 'policy' | 'session' | 'none';
 
 export interface BudgetStatus {
   policyId: string;
@@ -84,7 +84,6 @@ export interface GroupResult {
   intervention: Intervention;
   source: Source;
   session?: FocusSession;
-  cooldown?: Cooldown;
   pause?: Grant;
   pass?: Grant;
   /** Whether a pause would be allowed now. */
@@ -264,18 +263,6 @@ export function evaluateGroup(
   let base: Intervention = policyIndex >= 0 ? group.policies[policyIndex].intervention : TRACK;
   let source: Source = policyIndex >= 0 ? 'policy' : 'none';
 
-  // Cool-down after the time chosen at the entry question: the one that ends last.
-  let cooldown: Cooldown | undefined;
-  for (const cd of Object.values(state.cooldowns)) {
-    if (cd.kind !== 'ask' || cd.group !== group.id || cd.until <= now || (cd.site && cd.site !== site))
-      continue;
-    if (!cooldown || cd.until > cooldown.until) cooldown = cd;
-  }
-  if (cooldown && SEVERITY.block > SEVERITY[base.type]) {
-    base = BLOCK;
-    source = 'cooldown';
-  }
-
   const sessions = activeSessions(state, now).filter(
     (s) => s.kind === 'groups' && s.groups.includes(group.id),
   );
@@ -285,8 +272,8 @@ export function evaluateGroup(
     source = 'session';
   }
 
-  const sessionBlocksPauses =
-    sessions.length > 0 && (!group.pause.duringSessions || sessions.some((s) => s.noPauses));
+  // The focus session decides whether the rule's breaks are allowed during it.
+  const sessionBlocksPauses = sessions.some((s) => s.noPauses);
   // A break lifts a block only, whether the rule's, a cool-down's or a session's.
   const pausable = group.pause.allowed && breaksLift(base) && !sessionBlocksPauses;
 
@@ -321,7 +308,6 @@ export function evaluateGroup(
     intervention,
     source,
     session,
-    cooldown,
     pause,
     pass,
     pausable,
@@ -469,7 +455,7 @@ export type FilterIntervention = Extract<Intervention, { type: 'filter' }>;
 
 /**
  * The filters of every rule on the page apply together, whatever else applies: of two of
- * the same kind, the stronger one, muted when either mutes. A page that is replaced shows none.
+ * the same kind, the stronger one. A page that is replaced shows none.
  */
 export function pageFilters(d: Decision): FilterIntervention[] {
   if (isNav(d)) return [];
@@ -477,14 +463,8 @@ export function pageFilters(d: Decision): FilterIntervention[] {
   for (const r of d.groups) {
     const i = r.intervention;
     if (i.type !== 'filter') continue;
-    const key = i.filter === 'custom' ? `custom:${i.css ?? ''}` : i.filter;
-    const prev = byKind.get(key);
-    if (!prev) byKind.set(key, i);
-    else
-      byKind.set(key, {
-        ...((i.intensity ?? 100) > (prev.intensity ?? 100) ? i : prev),
-        mute: Boolean(prev.mute || i.mute),
-      });
+    const prev = byKind.get(i.filter);
+    if (!prev || (i.intensity ?? 100) > (prev.intensity ?? 100)) byKind.set(i.filter, i);
   }
   return [...byKind.values()];
 }

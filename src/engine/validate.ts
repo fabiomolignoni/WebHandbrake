@@ -48,8 +48,8 @@ function policyIssues(p: Policy, i: number): Issue[] {
   if (iv.type === 'challenge' && iv.kind === 'phrase' && !iv.phrase?.trim()) {
     out.push({ level: 'error', key: 'validate.phrase', params: { n }, policy: i });
   }
-  if (iv.type === 'ask' && !iv.choices.some((c) => c <= iv.maxMinutes)) {
-    out.push({ level: 'error', key: 'validate.askChoices', params: { n }, policy: i });
+  if (iv.type === 'delay' && iv.randomTo !== undefined && iv.randomTo <= iv.seconds) {
+    out.push({ level: 'error', key: 'validate.randomWait', params: { n }, policy: i });
   }
   return out;
 }
@@ -97,12 +97,6 @@ export function validateGroup(g: Group): Issue[] {
       });
     } else if (p.schedule.mode === 'always' && !p.budget) unconditional = i;
   });
-  if (
-    g.policies.length &&
-    g.policies.every((p) => p.intervention.type === 'track' || p.intervention.type === 'allow')
-  ) {
-    out.push({ level: 'info', key: 'validate.onlyTracking' });
-  }
   for (const e of unusedExceptions(g.targets)) {
     out.push({ level: 'info', key: 'validate.unusedException', params: { value: e.value } });
   }

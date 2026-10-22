@@ -145,7 +145,6 @@ export const canHaveBreaks = (g: Pick<Group, 'policies'>): boolean =>
 export function defaultPause(): PausePolicy {
   return {
     allowed: false,
-    duringSessions: false,
     maxMinutes: 15,
     limit: { count: 3, minutes: 30, period: { kind: 'day' } },
     cost: { type: 'delay', seconds: 30 },
@@ -193,9 +192,18 @@ export const SCHEDULE_PRESETS: Record<string, TimeWindow[]> = {
   nights: [{ days: ALL_DAYS, start: 23 * 60, end: 6 * 60 }],
 };
 
-/** Quick conditions: friction (wait + reason) for temptations, block for explicit windows and sessions. */
+/** Ask first: a reason of any length, for at most 15 minutes. */
 export function frictionIntervention(): Intervention {
-  return { type: 'ask', seconds: 10, choices: [5, 10, 15], maxMinutes: 15 };
+  return { type: 'ask', maxMinutes: 15, minReasonLength: 1 };
+}
+
+/** Ask first lets one answer after this wait. */
+export const ASK_WAIT_SECONDS = 10;
+
+/** The durations Ask first offers, in minutes: those of 5, 10 and 15 within its longest time, or that. */
+export function askChoices(maxMinutes: number): number[] {
+  const choices = [5, 10, 15].filter((c) => c <= maxMinutes);
+  return choices.length ? choices : [maxMinutes];
 }
 
 export function delayIntervention(seconds = 30): Intervention {
@@ -222,7 +230,7 @@ export function newPolicy(partial: Partial<Policy> = {}): Policy {
 export function defaultIntervention(type: InterventionType): Intervention {
   switch (type) {
     case 'filter':
-      return { type: 'filter', filter: 'grayscale', intensity: 100, mute: false };
+      return { type: 'filter', filter: 'grayscale', intensity: 100 };
     case 'ask':
       return frictionIntervention();
     case 'delay':
@@ -232,7 +240,6 @@ export function defaultIntervention(type: InterventionType): Intervention {
         type: 'challenge',
         kind: 'random',
         length: 24,
-        charset: 'alnum',
         grant: { scope: 'site', mode: 'visit' },
       };
     case 'redirect':

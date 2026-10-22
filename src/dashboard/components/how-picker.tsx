@@ -1,16 +1,16 @@
 /**
  * "What should happen?": every intervention, gentlest first, in the tones of the friction ladder,
- * with the description of the chosen one and its main settings: the filter, the length of the
- * wait, the kind of challenge, the longest time after the question and the redirect address. The
- * other settings are in its advanced options. In a new rule nothing is pre-selected: the right
- * answer depends on the person (active choice).
+ * with the description of the chosen one and all its settings, always in view (no advanced
+ * options): the filter, the length of the wait and how it behaves, the kind of challenge, what a
+ * wait or a challenge opens once through, the longest time and the shortest reason after the
+ * question, the redirect address. In a new rule nothing is pre-selected: the right answer depends
+ * on the person (active choice).
  */
 
 import { useId } from 'preact/hooks';
 import { defaultIntervention } from '../../engine/defaults';
 import type {
   ChallengeKind,
-  Charset,
   FilterKind,
   GrantSpec,
   Intervention,
@@ -18,13 +18,12 @@ import type {
 } from '../../engine/types';
 import { isRedirectUrl } from '../../engine/validate';
 import { t } from '../../i18n/i18n';
-import { DurationInput, Field, NumberInput, RadioCards, Select, Toggle } from '../../ui/components';
+import { formatDuration } from '../../shared/format';
+import { DurationInput, NumberInput, RadioCards, Segmented, Select, Toggle } from '../../ui/components';
 import { Icon } from '../../ui/icons';
 import { interventionIcon, LADDER, toneOf } from '../../ui/status';
-import { hasAdvancedOptions, interventionAdvanced } from '../rule-form';
-import { AdvancedOptions } from './advanced';
 
-const FILTERS: FilterKind[] = ['grayscale', 'blur', 'fade', 'invert', 'sepia', 'none'];
+const FILTERS: FilterKind[] = ['grayscale', 'blur', 'fade', 'invert', 'sepia'];
 
 /** What was set for each intervention, so that switching to another one and back keeps it. */
 export type KeptInterventions = Partial<Record<InterventionType, Intervention>>;
@@ -71,24 +70,31 @@ export function InterventionPicker({
       {value && type && (
         <div class={`option-panel tone-${toneOf(type)} stack stack-sm`} aria-live="polite">
           <p class="small">
-            <strong>{t(`intervention.${type}`)}</strong> —{' '}
-            {/* The full help of a redirect describes address placeholders: they are advanced. */}
-            {type === 'redirect' ? t('wizard.how.redirectDesc') : t(`intervention.help.${type}`)}
+            <strong>{t(`intervention.${type}`)}</strong> — {t(`intervention.help.${type}`)}
           </p>
-          <MainOptions value={value} onChange={set} />
-          {hasAdvancedOptions(type) && (
-            <AdvancedOptions key={type} open={interventionAdvanced(value)}>
-              <MoreOptions value={value} onChange={set} />
-            </AdvancedOptions>
-          )}
+          <Options value={value} onChange={set} />
         </div>
       )}
     </div>
   );
 }
 
-/** The settings asked with the choice. */
-function MainOptions({ value: v, onChange }: { value: Intervention; onChange: (i: Intervention) => void }) {
+type DelayIntervention = Extract<Intervention, { type: 'delay' }>;
+
+/** How long a wait lasts: always the same, random within a range, or longer each time one goes in. */
+type WaitLength = 'fixed' | 'random' | 'growing';
+
+const waitLength = (v: DelayIntervention): WaitLength =>
+  v.randomTo !== undefined ? 'random' : v.increase !== undefined ? 'growing' : 'fixed';
+
+/** A wait to the second: "1 min 5 s", where formatDuration says "1 min". */
+const waitText = (s: number) =>
+  s < 60 || s % 60 === 0
+    ? formatDuration(s)
+    : `${formatDuration(s - (s % 60))} ${t('duration.s', { s: s % 60 })}`;
+
+/** The settings of the choice. */
+function Options({ value: v, onChange }: { value: Intervention; onChange: (i: Intervention) => void }) {
   const id = useId();
   switch (v.type) {
     case 'filter':
@@ -97,70 +103,61 @@ function MainOptions({ value: v, onChange }: { value: Intervention; onChange: (i
           <Select<FilterKind>
             value={v.filter}
             label={t('filter.label')}
-            // A filter chosen here replaces a custom one.
-            onChange={(filter) => onChange({ ...v, filter, css: undefined })}
-            options={[...FILTERS, ...(v.filter === 'custom' ? (['custom'] as const) : [])].map((f) => ({
-              value: f,
-              label: t(`filter.${f}`),
-            }))}
+            onChange={(filter) => onChange({ ...v, filter })}
+            options={FILTERS.map((f) => ({ value: f, label: t(`filter.${f}`) }))}
           />
-          {v.filter !== 'none' && v.filter !== 'custom' && (
-            <label class="row nowrap small">
-              {t('filter.intensity')}
-              <input
-                type="range"
-                min={10}
-                max={100}
-                step={5}
-                value={v.intensity ?? 100}
-                onInput={(e) => onChange({ ...v, intensity: Number((e.target as HTMLInputElement).value) })}
-              />
-              <span class="num">{v.intensity ?? 100}%</span>
-            </label>
-          )}
+          <label class="row nowrap small">
+            {t('filter.intensity')}
+            <input
+              type="range"
+              min={10}
+              max={100}
+              step={5}
+              value={v.intensity ?? 100}
+              onInput={(e) => onChange({ ...v, intensity: Number((e.target as HTMLInputElement).value) })}
+            />
+            <span class="num">{v.intensity ?? 100}%</span>
+          </label>
         </div>
       );
     case 'ask':
       return (
-        <div class="row nowrap small">
-          <span aria-hidden="true">{t('wizard.how.askMax')}</span>
-          <DurationInput
-            units={['minutes', 'hours']}
-            value={v.maxMinutes}
-            min={1}
-            max={1440}
-            label={t('wizard.how.askMax')}
-            onChange={(maxMinutes) =>
-              // The durations offered never exceed the longest time.
-              onChange({
-                ...v,
-                maxMinutes,
-                choices: v.choices.some((c) => c <= maxMinutes)
-                  ? v.choices.filter((c) => c <= maxMinutes)
-                  : [maxMinutes],
-              })
-            }
-          />
+        <div class="stack stack-sm">
+          <div class="row nowrap small">
+            <span aria-hidden="true">{t('wizard.how.askMax')}</span>
+            <DurationInput
+              units={['minutes', 'hours']}
+              value={v.maxMinutes}
+              min={1}
+              max={1440}
+              label={t('wizard.how.askMax')}
+              onChange={(maxMinutes) => onChange({ ...v, maxMinutes })}
+            />
+          </div>
+          <div class="row nowrap small">
+            <span aria-hidden="true">{t('ask.minReason')}</span>
+            <NumberInput
+              value={v.minReasonLength}
+              min={1}
+              max={300}
+              label={t('ask.minReason')}
+              suffix={t('ask.minReasonUnit', { n: v.minReasonLength })}
+              onChange={(minReasonLength) => onChange({ ...v, minReasonLength: Math.round(minReasonLength) })}
+            />
+          </div>
         </div>
       );
     case 'delay':
       return (
-        <div class="row nowrap small">
-          <span aria-hidden="true">{t('delay.seconds')}</span>
-          <DurationInput
-            base="seconds"
-            units={['seconds', 'minutes']}
-            value={v.seconds}
-            min={1}
-            max={3600}
-            label={t('delay.seconds')}
-            onChange={(seconds) => onChange({ ...v, seconds })}
-          />
+        <div class="stack">
+          <WaitLengthOptions value={v} onChange={onChange} />
+          <GrantEditor grant={v.grant} onChange={(grant) => onChange({ ...v, grant })} />
+          <WaitBehaviour value={v} onChange={onChange} />
         </div>
       );
     case 'challenge':
       return (
-        <div class="stack stack-sm">
+        <div class="stack">
           <div class="row">
             <Select<ChallengeKind>
               value={v.kind}
@@ -201,6 +198,7 @@ function MainOptions({ value: v, onChange }: { value: Intervention; onChange: (i
               </span>
             </div>
           )}
+          <GrantEditor grant={v.grant} onChange={(grant) => onChange({ ...v, grant })} />
         </div>
       );
     case 'redirect':
@@ -231,133 +229,110 @@ function MainOptions({ value: v, onChange }: { value: Intervention; onChange: (i
   }
 }
 
-/** The advanced options of what happens. */
-function MoreOptions({ value: v, onChange }: { value: Intervention; onChange: (i: Intervention) => void }) {
-  switch (v.type) {
-    case 'filter':
-      return (
+/**
+ * The length of a wait, one way at a time: always the same, random between two lengths, or longer
+ * each time one goes in that day.
+ */
+function WaitLengthOptions({
+  value: v,
+  onChange,
+}: {
+  value: DelayIntervention;
+  onChange: (i: Intervention) => void;
+}) {
+  const id = useId();
+  const kind = waitLength(v);
+  // The same wait, neither random nor longer each time.
+  const fixed: DelayIntervention = { ...v };
+  delete fixed.randomTo;
+  delete fixed.increase;
+  const seconds = (label: string, value: number, set: (n: number) => void, min = 1) => (
+    <DurationInput
+      base="seconds"
+      units={['seconds', 'minutes']}
+      value={value}
+      min={min}
+      max={3600}
+      label={label}
+      onChange={set}
+    />
+  );
+  const step = v.increase ?? 0;
+  return (
+    <div class="stack stack-sm">
+      <span class="label small" id={`${id}-length`}>
+        {t('delay.length')}
+      </span>
+      <Segmented<WaitLength>
+        value={kind}
+        labelledBy={`${id}-length`}
+        onChange={(k) => {
+          if (k === kind) return;
+          if (k === 'random') onChange({ ...fixed, randomTo: Math.min(3600, v.seconds * 2) });
+          else if (k === 'growing') onChange({ ...fixed, increase: 10 });
+          else onChange(fixed);
+        }}
+        options={(['fixed', 'random', 'growing'] as WaitLength[]).map((k) => ({
+          value: k,
+          label: t(`delay.length.${k}`),
+        }))}
+      />
+      {kind === 'fixed' && (
+        <div class="row nowrap small">
+          <span aria-hidden="true">{t('delay.seconds')}</span>
+          {seconds(t('delay.seconds'), v.seconds, (s) => onChange({ ...v, seconds: s }))}
+        </div>
+      )}
+      {kind === 'random' && (
+        <div class="row small">
+          <span aria-hidden="true">{t('delay.between')}</span>
+          {seconds(t('delay.shortest'), v.seconds, (s) => onChange({ ...v, seconds: s }))}
+          <span aria-hidden="true">{t('delay.and')}</span>
+          {seconds(t('delay.longest'), v.randomTo ?? v.seconds, (s) => onChange({ ...v, randomTo: s }), 2)}
+        </div>
+      )}
+      {kind === 'growing' && (
         <>
-          <Toggle
-            checked={Boolean(v.mute)}
-            onChange={(mute) => onChange({ ...v, mute })}
-            label={t('filter.mute')}
-          />
-          <Field label={t('filter.custom')} help={t('filter.customHelp')}>
-            {(id, d) => (
-              <input
-                id={id}
-                aria-describedby={d}
-                class="input mono"
-                value={v.filter === 'custom' ? (v.css ?? '') : ''}
-                maxLength={200}
-                onInput={(e) => {
-                  const css = (e.target as HTMLInputElement).value;
-                  // An empty custom filter is the usual one again.
-                  onChange(
-                    css.trim()
-                      ? { ...v, filter: 'custom', css }
-                      : { ...v, filter: 'grayscale', css: undefined },
-                  );
-                }}
-              />
-            )}
-          </Field>
+          <div class="row small">
+            <span aria-hidden="true">{t('delay.seconds')}</span>
+            {seconds(t('delay.seconds'), v.seconds, (s) => onChange({ ...v, seconds: s }))}
+            <span aria-hidden="true">{t('delay.plus')}</span>
+            {seconds(t('delay.increase'), step, (s) => onChange({ ...v, increase: s }))}
+            <span aria-hidden="true">{t('delay.eachTime')}</span>
+          </div>
+          <span class="help">
+            {t('delay.growingHelp', {
+              first: waitText(v.seconds),
+              second: waitText(v.seconds + step),
+              third: waitText(v.seconds + 2 * step),
+            })}
+          </span>
         </>
-      );
-    case 'ask':
-      return (
-        <>
-          <div class="stack stack-sm">
-            <div class="row">
-              <span>{t('ask.choices')}</span>
-              <input
-                class="input inline mono"
-                style={{ width: '10em' }}
-                value={v.choices.join(', ')}
-                aria-label={t('ask.choices')}
-                onChange={(e) => {
-                  const choices = (e.target as HTMLInputElement).value
-                    .split(/[,\s]+/)
-                    .map(Number)
-                    .filter((n) => n > 0 && n <= 1440)
-                    .slice(0, 6);
-                  if (choices.length) onChange({ ...v, choices });
-                }}
-              />
-            </div>
-            <p class="help">{t('ask.help')}</p>
-          </div>
-          <div class="row">
-            <span>{t('ask.wait')}</span>
-            <DurationInput
-              base="seconds"
-              units={['seconds', 'minutes']}
-              value={v.seconds ?? 0}
-              min={0}
-              max={600}
-              label={t('ask.wait')}
-              onChange={(seconds) => onChange({ ...v, seconds })}
-            />
-          </div>
-          <div class="row">
-            <label class="check small">
-              <input
-                type="checkbox"
-                checked={Boolean(v.cooldownMinutes)}
-                onChange={(e) =>
-                  onChange({
-                    ...v,
-                    cooldownMinutes: (e.target as HTMLInputElement).checked ? 30 : undefined,
-                  })
-                }
-              />
-              {t('ask.cooldown')}
-            </label>
-            {v.cooldownMinutes !== undefined && (
-              <DurationInput
-                units={['minutes', 'hours']}
-                value={v.cooldownMinutes}
-                min={1}
-                max={1440}
-                label={t('ask.cooldown')}
-                onChange={(cooldownMinutes) => onChange({ ...v, cooldownMinutes })}
-              />
-            )}
-          </div>
-        </>
-      );
-    case 'delay':
-      return (
-        <>
-          <div class="row">
-            <span>{t('delay.randomTo')}</span>
-            <DurationInput
-              base="seconds"
-              units={['seconds', 'minutes']}
-              value={v.randomTo ?? 0}
-              min={0}
-              max={3600}
-              label={t('delay.randomTo')}
-              onChange={(randomTo) => onChange({ ...v, randomTo: randomTo || undefined })}
-            />
-          </div>
-          <div class="row">
-            <span>{t('delay.increase')}</span>
-            <DurationInput
-              base="seconds"
-              units={['seconds', 'minutes']}
-              value={v.increase ?? 0}
-              min={0}
-              max={600}
-              label={t('delay.increase')}
-              onChange={(increase) => onChange({ ...v, increase: increase || undefined })}
-            />
-          </div>
-          <div class="row">
-            <span>{t('delay.onBlur')}</span>
+      )}
+    </div>
+  );
+}
+
+/** How a wait behaves: when one leaves the page, the countdown, the end of the wait. */
+function WaitBehaviour({
+  value: v,
+  onChange,
+}: {
+  value: DelayIntervention;
+  onChange: (i: Intervention) => void;
+}) {
+  const id = useId();
+  return (
+    <>
+      <div class="stack stack-sm">
+        <label class="label small" for={`${id}-blur`}>
+          {t('delay.onBlur')}
+        </label>
+        <div class="row">
+          <span>
             <Select<'pause' | 'restart' | 'ignore'>
+              id={`${id}-blur`}
               value={v.onBlur ?? 'pause'}
-              label={t('delay.onBlur')}
               onChange={(onBlur) => onChange({ ...v, onBlur })}
               options={[
                 { value: 'pause', label: t('delay.onBlur.pause') },
@@ -365,74 +340,62 @@ function MoreOptions({ value: v, onChange }: { value: Intervention; onChange: (i
                 { value: 'ignore', label: t('delay.onBlur.ignore') },
               ]}
             />
-          </div>
-          <Toggle
-            checked={Boolean(v.autoContinue)}
-            onChange={(autoContinue) => onChange({ ...v, autoContinue })}
-            label={t('delay.auto')}
-          />
-          <Toggle
-            checked={Boolean(v.hideCountdown)}
-            onChange={(hideCountdown) => onChange({ ...v, hideCountdown })}
-            label={t('delay.hide')}
-          />
-          <GrantEditor grant={v.grant} onChange={(grant) => onChange({ ...v, grant })} />
-        </>
-      );
-    case 'challenge':
-      return (
-        <>
-          {v.kind === 'random' && (
-            <div class="row">
-              <span>{t('challenge.charset')}</span>
-              <Select<Charset>
-                value={v.charset ?? 'alnum'}
-                label={t('challenge.charset')}
-                onChange={(charset) => onChange({ ...v, charset })}
-                options={(['alnum', 'letters', 'digits', 'symbols'] as Charset[]).map((c) => ({
-                  value: c,
-                  label: t(`challenge.charset.${c}`),
-                }))}
-              />
-            </div>
-          )}
-          <GrantEditor grant={v.grant} onChange={(grant) => onChange({ ...v, grant })} />
-        </>
-      );
-    case 'redirect':
-      return <p class="help">{t('redirect.help')}</p>;
-    default:
-      return null;
-  }
+          </span>
+        </div>
+      </div>
+      <Toggle
+        checked={!v.hideCountdown}
+        onChange={(shown) => onChange({ ...v, hideCountdown: !shown })}
+        label={t('delay.countdown')}
+        help={t('delay.countdownHelp')}
+      />
+      <Toggle
+        checked={Boolean(v.autoContinue)}
+        onChange={(autoContinue) => onChange({ ...v, autoContinue })}
+        label={t('delay.auto')}
+        help={t('delay.autoHelp')}
+      />
+    </>
+  );
 }
 
 /** Once through a wait or a challenge: what opens, and for how long. */
 function GrantEditor({ grant, onChange }: { grant: GrantSpec; onChange: (g: GrantSpec) => void }) {
   return (
     <div class="stack stack-sm">
-      <span class="label small">{t('grant.label')}</span>
+      <span class="label small" aria-hidden="true">
+        {t('grant.label')}
+      </span>
+      {/* A sentence: "[this site] for [the rest of the visit]"; the spans keep each list its own width. */}
       <div class="row">
-        <Select<GrantSpec['scope']>
-          value={grant.scope}
-          label={t('grant.scope')}
-          onChange={(scope) => onChange({ ...grant, scope })}
-          options={[
-            { value: 'page', label: t('grant.scope.page') },
-            { value: 'site', label: t('grant.scope.site') },
-            { value: 'group', label: t('grant.scope.group') },
-          ]}
-        />
-        <Select<GrantSpec['mode']>
-          value={grant.mode}
-          label={t('grant.mode')}
-          onChange={(mode) =>
-            onChange({ ...grant, mode, ...(mode === 'minutes' ? { minutes: grant.minutes ?? 10 } : {}) })
-          }
-          options={[
-            { value: 'visit', label: t('grant.mode.visit') },
-            { value: 'minutes', label: t('grant.mode.minutes') },
-          ]}
-        />
+        <span>
+          <Select<GrantSpec['scope']>
+            value={grant.scope}
+            label={t('grant.scope')}
+            onChange={(scope) => onChange({ ...grant, scope })}
+            options={[
+              { value: 'page', label: t('grant.scope.page') },
+              { value: 'site', label: t('grant.scope.site') },
+              { value: 'group', label: t('grant.scope.group') },
+            ]}
+          />
+        </span>
+        <span class="small" aria-hidden="true">
+          {t('grant.for')}
+        </span>
+        <span>
+          <Select<GrantSpec['mode']>
+            value={grant.mode}
+            label={t('grant.mode')}
+            onChange={(mode) =>
+              onChange({ ...grant, mode, ...(mode === 'minutes' ? { minutes: grant.minutes ?? 10 } : {}) })
+            }
+            options={[
+              { value: 'visit', label: t('grant.mode.visit') },
+              { value: 'minutes', label: t('grant.mode.minutes') },
+            ]}
+          />
+        </span>
         {grant.mode === 'minutes' && (
           <DurationInput
             units={['minutes', 'hours']}

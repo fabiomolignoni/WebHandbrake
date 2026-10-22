@@ -79,9 +79,10 @@ describe('rule validation', () => {
         ]),
       ),
     ).toContain('validate.phrase');
-    expect(keys(valid([{ intervention: { type: 'ask', choices: [30], maxMinutes: 10 } }]))).toContain(
-      'validate.askChoices',
-    );
+    // A random wait needs a longest wait over the shortest.
+    const random = (randomTo: number) => ({ ...delayIntervention(30), randomTo }) as Policy['intervention'];
+    expect(keys(valid([{ intervention: random(30) }]))).toContain('validate.randomWait');
+    expect(keys(valid([{ intervention: random(31) }]))).not.toContain('validate.randomWait');
   });
 
   it('conditions after one that always applies are never reached', () => {
@@ -94,9 +95,9 @@ describe('rule validation', () => {
     ]);
   });
 
-  it('notes a rule without conditions, or one that only counts time', () => {
+  it('notes a rule without conditions; one that only counts time is fine', () => {
     expect(keys(valid([]))).toEqual(['validate.noPolicies']);
-    expect(keys(valid([{ intervention: { type: 'track' } }]))).toEqual(['validate.onlyTracking']);
+    expect(keys(valid([{ intervention: { type: 'track' } }]))).toEqual([]);
   });
 
   it('a break of no minutes is an error', () => {

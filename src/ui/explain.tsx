@@ -56,9 +56,6 @@ function GroupBlock({ g, groups }: { g: GroupDecisionView; groups?: Group[] }) {
         {t('why.matchedBy', { type: targetTypeLabel(g.entry.type), value: describeTarget(g.entry) })}
       </p>
       {g.source === 'session' && <p class="small">{t('why.bySession')}</p>}
-      {g.source === 'cooldown' && g.cooldownUntil && (
-        <p class="small">{t('why.cooldown', { when: formatWhen(g.cooldownUntil) })}</p>
-      )}
       {g.pause && (
         <p class="small">
           {t('why.pause', { when: g.pause.until ? formatWhen(g.pause.until) : t('why.whileOnSite') })}

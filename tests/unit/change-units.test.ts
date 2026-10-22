@@ -161,33 +161,25 @@ describe('interventions of the same severity', () => {
     expect(cmp(minutes, { ...minutes, grant: { ...minutes.grant, minutes: 5 } })).toBe('strengthen');
   });
 
-  it('a challenge: longer is stricter; another kind, charset or phrase is not comparable', () => {
-    const c = {
-      type: 'challenge' as const,
-      kind: 'random' as const,
-      length: 24,
-      charset: 'alnum' as const,
-      grant: delay.grant,
-    };
+  it('a challenge: longer is stricter; another kind or phrase is not comparable', () => {
+    const c = { type: 'challenge' as const, kind: 'random' as const, length: 24, grant: delay.grant };
     expect(cmp(c, { ...c, length: 40 })).toBe('strengthen');
-    expect(cmp(c, { ...c, charset: 'digits' })).toBe('weaken');
     expect(cmp(c, { ...c, kind: 'math' })).toBe('weaken');
     const p = { ...c, kind: 'phrase' as const, phrase: 'I choose' };
     expect(cmp(p, { ...p, phrase: 'Other' })).toBe('weaken');
   });
 
-  it('a question: a longer wait, less time, a cool-down', () => {
-    const a = { type: 'ask' as const, seconds: 10, choices: [5, 10], maxMinutes: 15 };
-    expect(cmp(a, { ...a, seconds: 20 })).toBe('strengthen');
-    expect(cmp(a, { ...a, maxMinutes: 10, choices: [5] })).toBe('strengthen');
-    expect(cmp(a, { ...a, cooldownMinutes: 30 })).toBe('strengthen');
-    expect(cmp(a, { ...a, choices: [5, 15] })).toBe('weaken');
+  it('a question: less time, a longer reason', () => {
+    const a = { type: 'ask' as const, maxMinutes: 15, minReasonLength: 10 };
+    expect(cmp(a, { ...a, maxMinutes: 10 })).toBe('strengthen');
+    expect(cmp(a, { ...a, maxMinutes: 30 })).toBe('weaken');
+    expect(cmp(a, { ...a, minReasonLength: 20 })).toBe('strengthen');
+    expect(cmp(a, { ...a, minReasonLength: 1 })).toBe('weaken');
   });
 
-  it('a filter: stronger, muted; another filter is not comparable', () => {
+  it('a filter: stronger; another filter is not comparable', () => {
     const f = { type: 'filter' as const, filter: 'grayscale' as const, intensity: 50 };
     expect(cmp(f, { ...f, intensity: 80 })).toBe('strengthen');
-    expect(cmp(f, { ...f, mute: true })).toBe('strengthen');
     expect(cmp(f, { ...f, filter: 'blur' })).toBe('weaken');
   });
 
@@ -221,7 +213,6 @@ describe('breaks and options', () => {
     expect(comparePause(p, { ...p, allowed: false })).toBe('strengthen');
     expect(comparePause({ ...p, allowed: false }, p)).toBe('weaken');
     expect(comparePause({ ...p, allowed: false }, { ...p, allowed: false, maxMinutes: 60 })).toBe('neutral');
-    expect(comparePause(p, { ...p, duringSessions: true })).toBe('weaken');
     expect(comparePause(p, { ...p, maxMinutes: 5 })).toBe('strengthen');
     expect(comparePause(p, { ...p, maxMinutes: 30 })).toBe('weaken');
     expect(comparePause(p, { ...p, limit: { ...p.limit, count: 1 } })).toBe('strengthen');

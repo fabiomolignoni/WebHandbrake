@@ -111,7 +111,7 @@ export type InterventionType =
   | 'redirect'
   | 'close';
 
-export type FilterKind = 'grayscale' | 'blur' | 'fade' | 'invert' | 'sepia' | 'custom' | 'none';
+export type FilterKind = 'grayscale' | 'blur' | 'fade' | 'invert' | 'sepia';
 
 /** What access is granted after passing a delay, an intention question or a challenge. */
 export interface GrantSpec {
@@ -122,28 +122,24 @@ export interface GrantSpec {
 }
 
 export type ChallengeKind = 'random' | 'phrase' | 'math';
-export type Charset = 'alnum' | 'letters' | 'digits' | 'symbols';
 
 export type Intervention =
   | { type: 'allow' }
   | { type: 'track' }
-  | { type: 'filter'; filter: FilterKind; intensity?: number; css?: string; mute?: boolean }
+  | { type: 'filter'; filter: FilterKind; intensity?: number }
   | {
       type: 'ask';
-      /** Seconds to wait before "Continue" becomes available. */
-      seconds?: number;
-      /** Duration choices offered, in minutes; any other whole number up to maxMinutes can be typed. */
-      choices: number[];
+      /** The longest time that can be asked for; a few shorter ones are offered (`askChoices`). */
       maxMinutes: number;
-      /** Block for this many minutes once the chosen time is over. */
-      cooldownMinutes?: number;
+      /** The shortest reason accepted, in characters (a reason is always required). */
+      minReasonLength: number;
     }
   | {
       type: 'delay';
       seconds: number;
-      /** Random duration between seconds and randomTo. */
+      /** Random duration between seconds and randomTo; never with `increase`. */
       randomTo?: number;
-      /** Extra seconds for every visit already made in the current day. */
+      /** Extra seconds for every pass already made in the current day; never with `randomTo`. */
       increase?: number;
       autoContinue?: boolean;
       /** What happens to the countdown when the page loses focus. */
@@ -155,7 +151,6 @@ export type Intervention =
       type: 'challenge';
       kind: ChallengeKind;
       length?: number;
-      charset?: Charset;
       phrase?: string;
       grant: GrantSpec;
     }
@@ -185,11 +180,12 @@ export type Cost =
 /** What a break covers. Breaks now cover their whole rules; the others are of earlier versions. */
 export type PauseScope = 'page' | 'site' | 'group' | 'all';
 
-/** The breaks of a rule. A break covers the whole rule and can be ended before its time is up. */
+/**
+ * The breaks of a rule. A break covers the whole rule and can be ended before its time is up; a
+ * focus session that involves the rule allows none.
+ */
 export interface PausePolicy {
   allowed: boolean;
-  /** Pauses allowed while a focus session involving the group is active. */
-  duringSessions: boolean;
   /** The longest a break can last. */
   maxMinutes: number;
   /** Per group budget. */
@@ -359,8 +355,6 @@ export interface Grant {
   /** Highest intervention severity this grant lets through. */
   severity: number;
   intention?: string;
-  /** Block for this many minutes once the chosen time is over. */
-  cooldownMinutes?: number;
   minutes?: number;
 }
 
@@ -386,7 +380,10 @@ export interface Cooldown {
   until: number;
   group: string;
   site?: string;
-  /** 'session' = after continuous use (the policy applies), 'ask' = after the chosen time (block). */
+  /**
+   * After continuous use (the policy applies). The 'ask' ones of earlier versions, after the time
+   * chosen at Ask first, apply no more and are dropped once over.
+   */
   kind: 'session' | 'ask';
   policy?: string;
 }

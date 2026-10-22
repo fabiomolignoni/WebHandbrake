@@ -80,7 +80,9 @@ describe('conditions in words', () => {
     expect(describeIntervention(delayIntervention(20))).toBe('Wait 20 s');
     const random = { ...(delayIntervention(20) as DelayIntervention), randomTo: 40, hideCountdown: true };
     expect(describeIntervention(random)).toBe('Wait 20–40 s (countdown hidden)');
-    expect(describeIntervention({ type: 'ask', choices: [5], maxMinutes: 15 })).toBe(
+    const growing = { ...(delayIntervention(20) as DelayIntervention), increase: 10 };
+    expect(describeIntervention(growing)).toBe('Wait 20 s, 10 s more each time');
+    expect(describeIntervention({ type: 'ask', maxMinutes: 15, minReasonLength: 1 })).toBe(
       'Ask first (up to 15 min)',
     );
     expect(
@@ -91,8 +93,7 @@ describe('conditions in words', () => {
         grant: { scope: 'site', mode: 'visit' },
       }),
     ).toBe('Type 30 random characters');
-    expect(describeIntervention({ type: 'filter', filter: 'blur', mute: true })).toBe('Blur, muted');
-    expect(describeIntervention({ type: 'filter', filter: 'none', mute: true })).toBe('Mute the tab');
+    expect(describeIntervention({ type: 'filter', filter: 'blur' })).toBe('Blur');
     expect(describeIntervention({ type: 'redirect', url: 'https://x.test' })).toBe('Go to https://x.test');
     expect(describeIntervention({ type: 'allow' })).toBe('Allowed, time not counted');
     expect(describeIntervention(BLOCK)).toBe('Block');
@@ -167,10 +168,18 @@ describe('the plan of a rule', () => {
     expect(planSentence('schedule', { type: 'track' }, 'a.test', [office], 0)).toBe(
       'When you open a.test (Mon–Fri 09:00–17:00), WebHandbrake only counts the time; outside these times it counts nothing.',
     );
-    expect(planSentence('daily', { type: 'ask', choices: [5], maxMinutes: 10 }, 'a.test', [], 30)).toBe(
-      'After 30 min a day on a.test, WebHandbrake first asks what you want to do (for 10 min at most).',
+    // A random wait or one longer each time says so.
+    const wait = delayIntervention(20) as Extract<Intervention, { type: 'delay' }>;
+    expect(planSentence('always', { ...wait, randomTo: 40 }, 'a.test', [], 0)).toBe(
+      'Every time you open a.test, WebHandbrake makes you wait between 20 and 40 seconds.',
+    );
+    expect(planSentence('always', { ...wait, increase: 5 }, 'a.test', [], 0)).toBe(
+      'Every time you open a.test, WebHandbrake makes you wait 20 seconds, 5 more each time you go in that day.',
     );
     // The wait on the page is said too.
+    expect(planSentence('daily', { type: 'ask', maxMinutes: 10, minReasonLength: 1 }, 'a.test', [], 30)).toBe(
+      'After 30 min a day on a.test, WebHandbrake first asks what you want to do (for 10 min at most), then lets you in after 10 seconds.',
+    );
     expect(planSentence('always', defaultIntervention('ask'), 'a.test', [], 0)).toBe(
       'Every time you open a.test, WebHandbrake first asks what you want to do (for 15 min at most), then lets you in after 10 seconds.',
     );

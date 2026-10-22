@@ -118,29 +118,25 @@ describe('maintenance', () => {
   });
   afterEach(() => vi.useRealTimers());
 
-  it('the time chosen at the question ends with its cool-down', async () => {
+  it('the time chosen at the question ends, with no cool-down after it (not even of earlier versions)', async () => {
     const t = await setup([
-      group('Q', ['q.test'], [{ intervention: { type: 'ask', choices: [5], maxMinutes: 5 } }]),
+      group('Q', ['q.test'], [{ intervention: { type: 'ask', maxMinutes: 5, minReasonLength: 1 } }]),
     ]);
-    t.store.state.grants.push({
+    const old = {
       id: 'g',
-      kind: 'pass',
+      kind: 'pass' as const,
       groups: ['Q'],
-      scope: 'site',
+      scope: 'site' as const,
       site: 'q.test',
       createdAt: T0 - 600_000,
       until: T0 - 1000,
       severity: 4,
       cooldownMinutes: 10,
-    });
+    };
+    t.store.state.grants.push(old);
     await t.reconcile.maintenance();
     expect(t.store.state.grants).toEqual([]);
-    expect(t.store.state.cooldowns['ask:Q:q.test']).toEqual({
-      until: T0 - 1000 + 600_000,
-      group: 'Q',
-      site: 'q.test',
-      kind: 'ask',
-    });
+    expect(t.store.state.cooldowns).toEqual({});
   });
 
   it('timed state expires; ended sessions and ready changes are notified once', async () => {

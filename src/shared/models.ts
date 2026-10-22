@@ -55,12 +55,11 @@ export interface GroupDecisionView {
   policyIndex: number;
   base: Intervention;
   intervention: Intervention;
-  source: 'policy' | 'session' | 'cooldown' | 'none';
+  source: 'policy' | 'session' | 'none';
   policies: PolicyView[];
   pause: Pick<Grant, 'id' | 'until' | 'scope'> | null;
   pass: Pick<Grant, 'id' | 'until' | 'visit' | 'intention' | 'scope'> | null;
   pausable: boolean;
-  cooldownUntil: number | null;
 }
 
 export interface RestrictionView {
@@ -76,7 +75,7 @@ export interface DecisionView {
   exempt: boolean;
   severity: number;
   intervention: Intervention;
-  source: 'policy' | 'session' | 'cooldown' | 'none';
+  source: 'policy' | 'session' | 'none';
   primary: GroupDecisionView | null;
   session: Pick<FocusSession, 'id' | 'kind' | 'endAt' | 'locked'> | null;
   groups: GroupDecisionView[];
@@ -112,7 +111,7 @@ export interface GroupStatus {
   archived: boolean;
   siteCount: number;
   intervention: Intervention | null;
-  source: 'policy' | 'session' | 'cooldown' | 'none';
+  source: 'policy' | 'session' | 'none';
   until: number | null;
   next: Intervention | null;
   budgets: BudgetView[];
@@ -207,6 +206,8 @@ export type StepView =
       choices: number[];
       maxMinutes: number;
       seconds: number;
+      /** The shortest reason accepted, in characters. */
+      minLength: number;
       readyAt: number;
     };
 
@@ -261,7 +262,6 @@ export interface InterventionModel {
     | 'close'
     | 'redirect'
     | 'session'
-    | 'cooldown'
     | 'internal'
     | 'allow'
     | 'selftest';
@@ -421,7 +421,7 @@ export interface TickResponse {
     color: string;
     kind: 'budget' | 'pause' | 'pass' | 'schedule' | 'session';
   } | null;
-  filter: { css: string; mute: boolean } | null;
+  filter: { css: string } | null;
   intention: { text: string; until: number | null } | null;
   warning: { id: string; seconds: number; text: string } | null;
   settings: {

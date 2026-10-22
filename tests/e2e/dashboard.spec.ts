@@ -74,7 +74,7 @@ async function setup(h: Harness, protection: unknown = wait(30)) {
           policy(delay(30), { budget: timeBudget(30) }),
         ],
       ),
-      group('Video', ['video.test'], [policy(ask({ seconds: 5, choices: [5, 10], maxMinutes: 15 }))]),
+      group('Video', ['video.test'], [policy(ask({ maxMinutes: 15 }))]),
     ];
     for (const g of c.groups) g.protection = protection;
   });
@@ -386,17 +386,41 @@ test('the main settings of what happens are chosen with it (#14)', async ({ h })
   await p.button('Add', { exact: true }).click();
   await p.button('Next: when').click();
   await p.button('Next: what happens').click();
-  // A filter: which one.
+  await p.text('From gentlest to strongest.').expectCount(0);
+  // A filter: which one, and nothing more.
   await p.role('radio', 'Filter').click();
   await p.get('select[aria-label="Filter"]').select('blur');
+  await p.get('select[aria-label="Filter"] option[value="none"]').expectCount(0);
+  await p.text('Advanced options', { exact: true }).expectCount(0);
   await toSummary(p, { name: 'Feeds' });
   await p.get('.plan-text').expectText('makes the page less appealing (Blur)');
   await p.button(/^What happens/).click();
-  // A wait: how long.
+  // Ask first: the longest time and the shortest reason, and nothing more.
+  await p.role('radio', 'Ask first').click();
+  await p.label('Reason of at least').fill('20');
+  await p.text('Advanced options', { exact: true }).expectCount(0);
+  // A wait: how long, always the same, random or longer each time.
   await p.role('radio', 'Wait').click();
   await p.label('Wait', { exact: true }).fill('45');
+  await p.role('radio', 'Random').click();
+  await p.label('Longest wait').expectValue('90');
+  await p.label('Longest wait').fill('30');
+  await p.text('Condition 1: the longest wait must be longer than the shortest.').expectVisible();
+  await p.button('Next: details').expectEnabled(false);
+  await p.role('radio', 'Longer each time').click();
+  await p.text('45 s, then 55 s, then 1 min 5 s… Back to 45 s each day.').expectVisible();
+  await p.role('radio', 'Fixed').click();
+  await p.button('Next: details').expectEnabled(true);
+  // Everything else about a wait is in view too: no advanced options.
+  await p.label('Where').expectVisible();
+  await p.label('If you switch to another tab during the wait').expectVisible();
+  await p.role('switch', 'Show the countdown').expectChecked(true);
+  await p.role('switch', 'Open the page as soon as the wait is over').expectChecked(false);
+  await p.text('Advanced options', { exact: true }).expectCount(0);
   // A challenge: which kind; a phrase must be written before going on.
   await p.role('radio', 'Challenge').click();
+  await p.label('Where').expectVisible();
+  await p.text('Advanced options', { exact: true }).expectCount(0);
   await p.get('select[aria-label="Challenge"]').select('phrase');
   await p.button('Next: details').expectEnabled(false);
   await p.label('Phrase to type').fill('I choose to spend this time on purpose');
@@ -433,11 +457,11 @@ test('a new rule that blocks sets up its breaks (#15)', async ({ h }) => {
   await breaks.expectChecked(false);
   await p.text('How long can a break last?').expectCount(0);
   await breaks.click();
-  // How long at most, what a break costs, how many; focus sessions are an advanced option.
+  // How long at most, what it takes to take one, how many; nothing more.
   await p.role('spinbutton', 'At most', { exact: true }).fill('20');
-  await p.label('What should a break cost?').select('confirm');
+  await p.label('What must you do to take a break?').select('confirm');
   await p.role('spinbutton', 'At most this many breaks').fill('2');
-  await p.role('switch', 'Also during focus sessions').expectHidden();
+  await p.text('Advanced options', { exact: true }).expectCount(0);
   await p.button('Next: details').click();
   await p.label('Name', { exact: true }).fill('Breaks');
   await p.button('Next: protection').click();
@@ -452,7 +476,6 @@ test('a new rule that blocks sets up its breaks (#15)', async ({ h }) => {
   const cfg = (await h.rpc('config.get')).config;
   expect(cfg.groups[cfg.groups.length - 1].pause).toEqual({
     allowed: true,
-    duringSessions: false,
     maxMinutes: 20,
     limit: { count: 2, minutes: 30, period: { kind: 'day' } },
     cost: { type: 'confirm' },
@@ -478,7 +501,7 @@ test('a new rule has no breaks once they are turned off (#15)', async ({ h }) =>
   // Back in what happens, the breaks are as they were left, until they are turned off.
   await p.button(/^What happens/).click();
   await breaks.expectChecked(true);
-  await p.label('What should a break cost?').expectValue('delay');
+  await p.label('What must you do to take a break?').expectValue('delay');
   await breaks.click();
   await breaks.expectChecked(false);
   await toSummary(p);
@@ -517,8 +540,8 @@ test('the rule editor shows breaks in What happens only while one of the conditi
   await openPart(p, 'What happens');
   await breaks.click();
   await p.text('How long can a break last?').expectVisible();
-  // Breaks during focus sessions are an advanced option, open since the rule allows them.
-  await p.role('switch', 'Also during focus sessions').expectChecked(true);
+  // Whether breaks are allowed during a focus session is up to the session.
+  await p.role('switch', 'Also during focus sessions').expectCount(0);
   await p.text('What can a break cover?').expectCount(0);
   await p.text('Ask for a reason?').expectCount(0);
   await p.text('Count only time on the site').expectCount(0);
@@ -732,7 +755,9 @@ test('Back from the first step returns to the welcome and keeps the draft; the r
   expect((await h.rpc('config.get')).config.groups.map((g: any) => g.protection)).toEqual([wait(86_400)]);
 });
 
-test('each part folds its advanced options away, and opens them when the rule uses them', async ({ h }) => {
+test('When and Details fold their advanced options away, and open them when the rule uses them; What happens shows everything', async ({
+  h,
+}) => {
   await h.configure((c) => {
     c.groups = [
       group('Video', ['video.test', '+video.test/learn'], [policy(BLOCK)], { protection: REMINDER }),
@@ -745,12 +770,11 @@ test('each part folds its advanced options away, and opens them when the rule us
   await p.role('radio', 'Outside these times').expectHidden();
   await p.text('Advanced options', { exact: true }).click();
   await p.role('radio', 'Outside these times').click();
-  // What happens: the details of a wait.
+  // What happens: the details of a wait, in view.
   await openPart(p, 'What happens');
   await p.role('radio', 'Wait').click();
-  await p.label('If you leave the page').expectHidden();
-  await p.text('Advanced options', { exact: true }).click();
-  await p.label('If you leave the page').select('restart');
+  await p.text('Advanced options', { exact: true }).expectCount(0);
+  await p.label('If you switch to another tab during the wait').select('restart');
   // Details: the windows the rule applies to.
   await openPart(p, 'Details');
   await p.label('Windows').expectHidden();
@@ -767,7 +791,7 @@ test('each part folds its advanced options away, and opens them when the rule us
   const again = await h.page(`dashboard.html#/groups/${id}?step=when`);
   await again.role('radio', 'Outside these times').expectChecked();
   await openPart(again, 'What happens');
-  await again.label('If you leave the page').expectValue('restart');
+  await again.label('If you switch to another tab during the wait').expectValue('restart');
   await openPart(again, 'Details');
   await again.label('Windows').expectValue('normal');
 });

@@ -90,10 +90,10 @@ const STEP_TITLE: Record<Exclude<StepId, 'summary'>, string> = {
   protection: 'wizard.protection.title',
   details: 'editor.details.title',
 };
-const STEP_INTRO: Record<Exclude<StepId, 'summary'>, string> = {
+/** What happens says nothing under its title: the choices speak for themselves. */
+const STEP_INTRO: Partial<Record<Exclude<StepId, 'summary'>, string>> = {
   sites: 'wizard.sites.intro',
   when: 'wizard.when.intro',
-  how: 'wizard.how.intro',
   protection: 'wizard.protection.intro',
   details: 'editor.details.intro',
 };
@@ -125,8 +125,7 @@ const STEP_PART: Record<StepId, (g: Group) => unknown> = {
 const HOW_ISSUES = new Set([
   'validate.redirectUrl',
   'validate.phrase',
-  'validate.askChoices',
-  'validate.onlyTracking',
+  'validate.randomWait',
   'validate.pauseDuration',
 ]);
 /**
@@ -818,7 +817,7 @@ export function RuleEditor(props: Props) {
         ? t('editor.when.intro')
         : !single && step === 'how'
           ? t('editor.how.intro')
-          : t(STEP_INTRO[step]);
+          : STEP_INTRO[step] && t(STEP_INTRO[step]);
 
   return (
     <div
@@ -974,7 +973,7 @@ export function RuleEditor(props: Props) {
           <h2 id="rule-step-title" ref={titleRef} tabIndex={-1}>
             {title}
           </h2>
-          <p class="card-sub">{intro}</p>
+          {intro && <p class="card-sub">{intro}</p>}
         </div>
         {step !== 'summary' && stepIssues.length > 0 && <IssueList issues={stepIssues} />}
         {parts[step]()}

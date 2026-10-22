@@ -166,21 +166,15 @@ describe('what the page shows', () => {
     vi.doUnmock('../../src/background/reconcile');
   });
 
-  it('the filters of the rules, and the tab muted while one asks for it', async () => {
+  it('the filters of the rules, together', async () => {
     const t = await setup([
-      group(
-        'A',
-        ['a.test'],
-        [{ intervention: { type: 'filter', filter: 'grayscale', intensity: 50, mute: true } }],
-      ),
+      group('A', ['a.test'], [{ intervention: { type: 'filter', filter: 'grayscale', intensity: 50 } }]),
       group('B', ['a.test'], [{ intervention: { type: 'filter', filter: 'blur', intensity: 30 } }]),
     ]);
     const res = await t.tick(T0);
-    expect(res.filter).toEqual({ css: 'grayscale(50%) blur(3px)', mute: true });
-    expect(fake.tabs[0].mutedInfo === undefined && (fake.tabs[0] as { muted?: boolean }).muted).toBe(true);
-    // Leaving for a page without filter gives the sound back.
-    await t.accounting.releaseMute(1, 'https://other.test/');
-    expect((fake.tabs[0] as { muted?: boolean }).muted).toBe(false);
+    expect(res.filter).toEqual({ css: 'grayscale(50%) blur(3px)' });
+    // A filter leaves the sound alone.
+    expect((fake.tabs[0] as { muted?: boolean }).muted).toBeUndefined();
   });
 
   it('a timer near the limit, a warning once (with a notification when allowed), labels when asked', async () => {
@@ -202,7 +196,7 @@ describe('what the page shows', () => {
 
   it('the reason given to go in is recalled once per access', async () => {
     const t = await setup([
-      group('A', ['a.test'], [{ intervention: { type: 'ask', choices: [5], maxMinutes: 5 } }]),
+      group('A', ['a.test'], [{ intervention: { type: 'ask', maxMinutes: 5, minReasonLength: 1 } }]),
     ]);
     t.store.state.grants.push({
       id: 'pass',
@@ -233,7 +227,7 @@ describe('filters', () => {
     installFakeBrowser();
   });
 
-  it('each kind as CSS; a custom filter keeps only filter functions', async () => {
+  it('each kind as CSS', async () => {
     const { filterCss } = await import('../../src/background/accounting');
     expect(filterCss('grayscale', 80)).toBe('grayscale(80%)');
     expect(filterCss('blur', 100)).toBe('blur(10px)');
@@ -241,10 +235,7 @@ describe('filters', () => {
     expect(filterCss('fade', 100)).toBe('opacity(10%)');
     expect(filterCss('invert', 100)).toBe('invert(100%)');
     expect(filterCss('sepia', 40)).toBe('sepia(40%)');
-    expect(filterCss('unknown', 40)).toBe('none');
-    expect(filterCss('custom', 0, 'hue-rotate(90deg) contrast(1.2)')).toBe('hue-rotate(90deg) contrast(1.2)');
-    expect(filterCss('custom', 0, 'url(https://evil.test/x.svg#f)')).toBe('none');
-    expect(filterCss('custom', 0, 'blur(2px); background: red')).toBe('blur(2px) background red');
-    expect(filterCss('custom', 0, '')).toBe('none');
+    // The custom filters of earlier versions are greyscale.
+    expect(filterCss('custom', 40)).toBe('grayscale(40%)');
   });
 });

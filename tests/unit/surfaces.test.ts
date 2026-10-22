@@ -165,7 +165,7 @@ describe('what the popup and the dashboard show', () => {
     const asks = group(
       'Q',
       ['q.test', 'r.test'],
-      [{ intervention: { type: 'ask', choices: [5], maxMinutes: 5 } }],
+      [{ intervention: { type: 'ask', maxMinutes: 5, minReasonLength: 1 } }],
     );
     const t = await setup([blocked, asks]);
     const grant = { createdAt: T0, groups: [] as string[], scope: 'site' as const, until: T0 + 5 * 60_000 };

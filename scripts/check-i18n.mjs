@@ -311,7 +311,7 @@ const DYNAMIC = {
   'wizard.cond.{x}': ['always', 'schedule', 'daily', 'daily.each', 'daily.shared'],
   'focus.mode.{x}': ['groups', 'allowlist'],
   'focus.mode.{x}.desc': ['groups', 'allowlist'],
-  'filter.{x}': ['grayscale', 'blur', 'fade', 'invert', 'sepia', 'custom', 'none'],
+  'filter.{x}': ['grayscale', 'blur', 'fade', 'invert', 'sepia'],
   'targetType.{x}': ['domain', 'host', 'path', 'page', 'homepage', 'wildcard', 'regex'],
   'warning.{x}': [
     'host-permission',
@@ -353,7 +353,7 @@ const DYNAMIC = {
   'why.restriction.{x}': ['budget', 'schedule', 'pause', 'pass', 'session'],
   'schedule.preset.{x}': ['office', 'evenings', 'allDay', 'weekdays', 'nights'],
   'pauseRules.costKind.{x}': ['none', 'confirm', 'delay', 'random', 'phrase', 'math', 'password'],
-  'challenge.charset.{x}': ['alnum', 'letters', 'digits', 'symbols'],
+  'delay.length.{x}': ['fixed', 'random', 'growing'],
   'settings.tab.{x}': ['general', 'feedback', 'time', 'interventions', 'data', 'privacy', 'diagnostics'],
   'settings.corner.{x}': ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
   'settings.size.{x}': ['small', 'medium', 'large'],

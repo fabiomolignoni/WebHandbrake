@@ -149,7 +149,7 @@ test('the popup and the intervention pages pass WCAG checks', async ({ h }) => {
   all.push(...(await type.axe()).map((v) => `challenge: ${v}`));
   // The question with its error and the typed duration.
   const askPage = await expectBlocked(h, 'http://ask.test/');
-  await askPage.button('Continue for 5 min').click();
+  await askPage.button('Continue for 5 min').click(15_000);
   await askPage.role('radio', 'Other').click();
   await askPage.label('How long?', { exact: true }).expectVisible();
   all.push(...(await askPage.axe()).map((v) => `ask: ${v}`));

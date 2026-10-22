@@ -22,6 +22,8 @@ All notable changes to WebHandbrake are documented here. The format follows
   settings. A new rule’s **After some time** is no longer only “each day”: the time allowed can
   start again every so many minutes, hours or days. A limit as long as its period, which would
   never be reached, is pointed out.
+- **Ask first** can ask for a reason of at least a number of characters (**Reason of at least**),
+  so that “x” no longer lets you in; the block page says how long it must be.
 
 ### Changed
 
@@ -70,28 +72,44 @@ All notable changes to WebHandbrake are documented here. The format follows
 - One rule editor creates a rule and changes it: the wizard and the full editor are now the same
   pages. A rule has six parts, **Sites**, **When**, **What happens**, **Details**, **Protection**
   and **Summary**; a new rule goes through them in order with **Back** and **Next** (the name is
-  asked in Details, before the protection), a rule that exists opens on its summary and any part
-  can be opened. Each part asks the wizard's questions and keeps everything else under **Advanced
-  options**, folded away unless the rule already uses it: outside certain times, limits on visits
-  or continuous use, weekly, monthly and rolling periods, a limit only at certain times and more
-  conditions in When; the finer settings of each kind of intervention and breaks during focus
-  sessions in What happens; windows, tabs, frames and quick focus sessions in Details. Sites has
-  no advanced options: exceptions, typed with + like any other address, sit in the list among the
-  sites and stand out, and **Edit as text** is next to **Sort** (**Edit as list**, in the same
-  place, goes back to the list). The type of an address changes with how it is written
-  (`=m.youtube.com`, `example.com/page$`), as everywhere else. A time limit as long as its period,
-  which would never be reached, can no longer be saved.
+  asked in Details, before the protection), a rule that exists opens on its summary and any part can
+  be opened. When and Details ask the wizard's questions and keep everything else under **Advanced
+  options**, folded away unless the rule already uses it: outside certain times, limits on visits or
+  continuous use, weekly, monthly and rolling periods, a limit only at certain times and more
+  conditions in When; windows, tabs, frames and quick focus sessions in Details. What happens shows
+  every setting of the chosen intervention. Sites has no advanced options: exceptions, typed with +
+  like any other address, sit in the list among the sites and stand out, and **Edit as text** is
+  next to **Sort** (**Edit as list**, in the same place, goes back to the list). The type of an
+  address changes with how it is written (`=m.youtube.com`, `example.com/page$`), as everywhere
+  else. A time limit as long as its period, which would never be reached, can no longer be saved.
 - The two kinds of site address are called **Whole site** (`youtube.com`, subdomains included) and
   **Site without subdomains** (`=m.youtube.com`), instead of Site and Exact site, in a rule's
   sites, in **Why?** and in the popup's **Block this site**.
 - An address already in a rule is never added twice, whether typed, pasted, changed in place or
   edited as text; repeated entries saved by earlier versions are dropped.
+- **What happens** is simpler. A **Wait** is **Fixed**, **Random** (between two lengths) or
+  **Longer each time** you go in that day, one at a time, chosen right where its length is set,
+  with an example of the waits to come; its other settings say what they do (“If you switch to
+  another tab during the wait”, **Show the countdown**, “Open the page as soon as the wait is
+  over”). There are no advanced options: every setting is in view, including what a wait or a
+  challenge opens once you are through. “What should a break
+  cost?” is now “What must you do to take a break?”, with answers such as **Confirm it** or
+  **Type a phrase**.
+- Whether a rule's breaks can be taken during a focus session is up to the session: **No breaks
+  during the session** on Focus now does what it says for every rule, and quick sessions started
+  from the popup, the right-click menu or the keyboard shortcut allow no breaks.
 
 ### Removed
 
 - **Advanced mode** (Settings › General) and **Use the full editor**: every option of a rule is
   in its part, under Advanced options.
 - **Remove duplicates** in a rule's sites: the list never holds the same address twice.
+- In What happens: **No visual filter**, the custom filter and **Mute the tab** of a Filter (a
+  filter saved with them is greyscale and leaves the sound alone); the durations offered, the wait
+  before answering and the block once the chosen time is over of Ask first (the block page offers
+  5, 10 and 15 minutes within the longest time and lets you answer after 10 seconds); the
+  characters of a Challenge (always letters and digits); breaks during focus sessions as a setting
+  of the rule; the line “From gentlest to strongest” and the note that a rule only counts time.
 
 - What a break covered (this page, this site, the rule or every rule), its fixed length or list of
   lengths, the length asked when taking it, the reason asked before taking it and breaks that

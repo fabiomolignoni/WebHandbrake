@@ -91,8 +91,6 @@ function headline(m: InterventionModel): string {
   switch (m.kind) {
     case 'session':
       return until ? t('iv.session.until', { when: until }) : t('iv.session');
-    case 'cooldown':
-      return until ? t('iv.cooldown.until', { when: until }) : t('iv.cooldown');
     case 'internal':
       return until ? t('iv.internal.until', { when: until }) : t('iv.internal');
     case 'delay':
@@ -117,8 +115,6 @@ function emblem(m: InterventionModel): string {
   switch (m.kind) {
     case 'session':
       return 'target';
-    case 'cooldown':
-      return 'hourglass';
     case 'internal':
       return 'shield';
     case 'ask':
@@ -471,7 +467,7 @@ function PassStep({
   const [minutes, setMinutes] = useState<number>(() => firstChoice(initial.step));
   // Another number of minutes, typed, up to the maximum.
   const [custom, setCustom] = useState(false);
-  // Going in always takes a reason.
+  // Going in always takes a reason, of at least the length the rule asks for.
   const [missing, setMissing] = useState(false);
   const reasonRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -513,8 +509,9 @@ function PassStep({
   const offered = step.type === 'intention' ? step.choices.filter((c) => c <= step.maxMinutes) : [];
   const waiting = (step.type === 'wait' || step.type === 'intention') && left > 0;
 
+  const minLength = step.type === 'intention' ? step.minLength : 1;
   const submit = async () => {
-    if (step.type === 'intention' && !value.trim()) {
+    if (step.type === 'intention' && [...value.trim()].length < minLength) {
       setMissing(true);
       reasonRef.current?.focus();
       return;
@@ -601,7 +598,14 @@ function PassStep({
           <Field
             label={t('iv.ask.reason')}
             id="intention"
-            error={missing ? t('ticket.error.intentionRequired') : null}
+            help={minLength > 1 ? t('iv.ask.minLength', { n: minLength }) : undefined}
+            error={
+              missing
+                ? value.trim()
+                  ? t('ticket.error.intentionShort')
+                  : t('ticket.error.intentionRequired')
+                : null
+            }
           >
             {(id, describedBy) => (
               <input

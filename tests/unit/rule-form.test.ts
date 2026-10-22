@@ -1,20 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  conditionAdvanced,
-  interventionAdvanced,
-  optionsAdvanced,
-  pauseAdvanced,
-  whenKind,
-} from '../../src/dashboard/rule-form';
-import {
-  defaultIntervention,
-  defaultOptions,
-  defaultPause,
-  delayIntervention,
-  newPolicy,
-} from '../../src/engine/defaults';
-import type { Intervention } from '../../src/engine/types';
-import { BLOCK } from './helpers';
+import { conditionAdvanced, optionsAdvanced, whenKind } from '../../src/dashboard/rule-form';
+import { defaultOptions, newPolicy } from '../../src/engine/defaults';
 
 const office = [{ days: [1, 2, 3, 4, 5], start: 540, end: 1020 }];
 const day = { kind: 'day' as const };
@@ -48,34 +34,7 @@ describe('the rule editor: first questions and advanced options', () => {
       expect(conditionAdvanced(p)).toBe(true);
   });
 
-  it('what happens uses its advanced options beyond its main settings', () => {
-    for (const type of ['track', 'filter', 'ask', 'delay', 'challenge', 'block', 'close'] as const)
-      expect(interventionAdvanced(defaultIntervention(type))).toBe(false);
-    // A shorter longest time leaves out the longer choices: still the main settings only.
-    expect(interventionAdvanced({ type: 'ask', seconds: 10, choices: [5], maxMinutes: 5 })).toBe(false);
-    const more: Intervention[] = [
-      { type: 'filter', filter: 'custom', css: 'blur(2px)' },
-      { type: 'filter', filter: 'grayscale', mute: true },
-      { type: 'ask', seconds: 0, choices: [5, 10, 15], maxMinutes: 15 },
-      { type: 'ask', seconds: 10, choices: [5, 10, 15], maxMinutes: 15, cooldownMinutes: 30 },
-      { ...delayIntervention(30), onBlur: 'restart' } as Intervention,
-      { ...delayIntervention(30), grant: { scope: 'group', mode: 'visit' } } as Intervention,
-      {
-        type: 'challenge',
-        kind: 'random',
-        length: 24,
-        charset: 'digits',
-        grant: { scope: 'site', mode: 'visit' },
-      },
-      { type: 'redirect', url: 'https://todo.test/?from={url}' },
-    ];
-    for (const i of more) expect(interventionAdvanced(i), JSON.stringify(i)).toBe(true);
-    expect(interventionAdvanced(BLOCK)).toBe(false);
-  });
-
-  it('breaks during focus sessions, other windows and tabs', () => {
-    expect(pauseAdvanced(defaultPause())).toBe(false);
-    expect(pauseAdvanced({ ...defaultPause(), allowed: true, duringSessions: true })).toBe(true);
+  it('other windows and tabs', () => {
     expect(optionsAdvanced(defaultOptions())).toBe(false);
     expect(optionsAdvanced({ ...defaultOptions(), timer: false })).toBe(false);
     expect(optionsAdvanced({ ...defaultOptions(), privacy: 'normal' })).toBe(true);

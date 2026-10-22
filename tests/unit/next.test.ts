@@ -73,13 +73,12 @@ describe('when a restriction ends', () => {
     expect(untilFor(c, 'https://b.test/', U).until).toBeNull();
   });
 
-  it('a cool-down ends at its end; of two, the one that ends last', () => {
+  it('a cool-down after Ask first of earlier versions changes nothing', () => {
     const state = defaultState();
     state.cooldowns['ask:A:a.test'] = { until: at(0, 10, 30), group: 'A', site: 'a.test', kind: 'ask' };
-    state.cooldowns['ask:A:'] = { until: at(0, 10, 20), group: 'A', kind: 'ask' };
     const c = ctx(config([group('A', ['a.test'], [{ intervention: { type: 'track' } }])]), at(0, 10), state);
-    expect(decide(c, 'https://a.test/').primary?.cooldown?.until).toBe(at(0, 10, 30));
-    expect(untilFor(c, 'https://a.test/', U).until).toBe(at(0, 10, 30));
+    expect(decide(c, 'https://a.test/').intervention.type).toBe('track');
+    expect(untilFor(c, 'https://a.test/', U).until).toBeNull();
   });
 });
 

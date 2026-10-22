@@ -75,11 +75,11 @@ export const delay = (seconds: number, more: Record<string, unknown> = {}) => ({
   grant: { scope: 'site', mode: 'visit' },
   ...more,
 });
+/** Ask first lets one answer after 10 s (ASK_WAIT_SECONDS). */
 export const ask = (more: Record<string, unknown> = {}) => ({
   type: 'ask',
-  seconds: 0,
-  choices: [5, 10],
   maxMinutes: 10,
+  minReasonLength: 1,
   ...more,
 });
 export const challenge = (more: Record<string, unknown> = {}) => ({
@@ -92,7 +92,6 @@ export const challenge = (more: Record<string, unknown> = {}) => ({
 
 export const pauseFree = {
   allowed: true,
-  duringSessions: true,
   maxMinutes: 30,
   limit: { period: { kind: 'day' } },
   cost: { type: 'none' },

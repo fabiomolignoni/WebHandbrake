@@ -144,45 +144,30 @@ export function normalizeIntervention(raw: unknown): Intervention {
     // keeps both, where the fallback below would block.
     case 'remind':
       return { type: 'track' };
+    // A custom filter or no filter of earlier versions is greyscale; a filter no longer mutes the tab.
     case 'filter':
       return {
         type: 'filter',
-        filter: oneOf(
-          raw.filter,
-          ['grayscale', 'blur', 'fade', 'invert', 'sepia', 'custom', 'none'] as const,
-          'grayscale',
-        ),
+        filter: oneOf(raw.filter, ['grayscale', 'blur', 'fade', 'invert', 'sepia'] as const, 'grayscale'),
         intensity: num(raw.intensity, 100, 0, 100),
-        ...(raw.css ? { css: str(raw.css, '', 200) } : {}),
-        mute: bool(raw.mute, false),
       };
-    case 'ask': {
-      const maxMinutes = num(raw.maxMinutes, 15, 1, 1440);
-      const given: number[] = Array.isArray(raw.choices)
-        ? raw.choices.filter((c: unknown) => typeof c === 'number' && c > 0 && c <= 1440).slice(0, 6)
-        : [];
-      // Only durations that can be granted: a choice above the maximum could never be picked.
-      const choices = (given.length ? given : [5, 10, 15]).filter((c) => c <= maxMinutes);
+    // The durations offered, the wait and the block afterwards of earlier versions are no longer set.
+    case 'ask':
       return {
         type: 'ask',
-        seconds: num(raw.seconds, 0, 0, 600),
-        choices: choices.length ? choices : [maxMinutes],
-        maxMinutes,
-        ...(typeof raw.cooldownMinutes === 'number' && raw.cooldownMinutes > 0
-          ? { cooldownMinutes: num(raw.cooldownMinutes, 0, 1, 1440) }
-          : {}),
+        maxMinutes: num(raw.maxMinutes, 15, 1, 1440),
+        minReasonLength: Math.round(num(raw.minReasonLength, 1, 1, 300)),
       };
-    }
+    // A wait is either random or longer at each pass: a random one of earlier versions stays so.
     case 'delay':
       return {
         type: 'delay',
         seconds: num(raw.seconds, 30, 1, 3600),
         ...(typeof raw.randomTo === 'number' && raw.randomTo > 0
           ? { randomTo: num(raw.randomTo, 0, 1, 3600) }
-          : {}),
-        ...(typeof raw.increase === 'number' && raw.increase > 0
-          ? { increase: num(raw.increase, 0, 1, 600) }
-          : {}),
+          : typeof raw.increase === 'number' && raw.increase > 0
+            ? { increase: num(raw.increase, 0, 1, 600) }
+            : {}),
         autoContinue: bool(raw.autoContinue, false),
         onBlur: oneOf(raw.onBlur, ['pause', 'restart', 'ignore'] as const, 'pause'),
         hideCountdown: bool(raw.hideCountdown, false),
@@ -193,7 +178,6 @@ export function normalizeIntervention(raw: unknown): Intervention {
         type: 'challenge',
         kind: oneOf(raw.kind, ['random', 'phrase', 'math'] as const, 'random'),
         length: num(raw.length, 24, 4, 500),
-        charset: oneOf(raw.charset, ['alnum', 'letters', 'digits', 'symbols'] as const, 'alnum'),
         ...(raw.phrase ? { phrase: str(raw.phrase, '', 500) } : {}),
         grant: normalizeGrantSpec(raw.grant),
       };
@@ -278,8 +262,9 @@ function normalizeCost(raw: unknown): Cost {
 /**
  * Pause policy. Optional limits stay absent when absent: merging with the defaults would turn
  * "no limit" into the default limit. A break of earlier versions could last a fixed time or one
- * of a few lengths, cover less than the rule, ask for a reason or count only the time on the site:
- * it now lasts up to the longest of its lengths and covers the rule.
+ * of a few lengths, cover less than the rule, ask for a reason, count only the time on the site or
+ * be allowed during focus sessions: it now lasts up to the longest of its lengths and covers the
+ * rule, and the focus session decides.
  */
 export function normalizePause(raw: unknown): PausePolicy {
   const def = defaultPause();
@@ -293,7 +278,6 @@ export function normalizePause(raw: unknown): PausePolicy {
   const pause = {
     ...raw,
     allowed: bool(raw.allowed, def.allowed),
-    duringSessions: bool(raw.duringSessions, def.duringSessions),
     maxMinutes: lengths.length ? num(Math.max(...lengths), def.maxMinutes, 1, 1440) : def.maxMinutes,
     limit: {
       ...(typeof l.count === 'number' ? { count: Math.round(num(l.count, 0, 0, 1000)) } : {}),
@@ -302,7 +286,7 @@ export function normalizePause(raw: unknown): PausePolicy {
     },
     cost: normalizeCost(raw.cost),
   } as PausePolicy & Record<string, unknown>;
-  for (const old of ['duration', 'scopes', 'reason', 'metered']) delete pause[old];
+  for (const old of ['duration', 'scopes', 'reason', 'metered', 'duringSessions']) delete pause[old];
   return pause;
 }
 

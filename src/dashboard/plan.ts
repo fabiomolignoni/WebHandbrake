@@ -3,7 +3,7 @@
  * of the rule editor's summary (implementation intentions).
  */
 
-import { DAY_MINUTES, everyPeriod, periodMinutes } from '../engine/defaults';
+import { ASK_WAIT_SECONDS, DAY_MINUTES, everyPeriod, periodMinutes } from '../engine/defaults';
 import { ALL_SITES } from '../engine/patterns';
 import type { Group, Intervention, Policy, Target, TimeWindow } from '../engine/types';
 import { t } from '../i18n/i18n';
@@ -35,10 +35,10 @@ function outcomeOf(when: PlanWhen, i: Intervention): string {
       return t('wizard.then.filter', { filter: t(`filter.${i.filter}`) });
     case 'ask':
       // The wait on the page is part of the deal: the plan says so.
-      return i.seconds
-        ? t('wizard.then.askWait', { max: formatDuration(i.maxMinutes * 60), seconds: i.seconds })
-        : t('wizard.then.ask', { max: formatDuration(i.maxMinutes * 60) });
+      return t('wizard.then.ask', { max: formatDuration(i.maxMinutes * 60), seconds: ASK_WAIT_SECONDS });
     case 'delay':
+      if (i.randomTo) return t('wizard.then.delayRandom', { from: i.seconds, to: i.randomTo });
+      if (i.increase) return t('wizard.then.delayGrowing', { seconds: i.seconds, increase: i.increase });
       return t('wizard.then.delay', { seconds: i.seconds });
     case 'challenge':
       if (i.kind === 'phrase') return t('wizard.then.challengePhrase');
