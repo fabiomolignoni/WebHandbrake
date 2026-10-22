@@ -6,7 +6,7 @@
 
 import type { Ref } from 'preact';
 import { useEffect, useId, useRef, useState } from 'preact/hooks';
-import { newId } from '../../engine/defaults';
+import { newId, sortTargets } from '../../engine/defaults';
 import { parseTargetList, targetToLine } from '../../engine/patterns';
 import type { Target, TargetType } from '../../engine/types';
 import { t } from '../../i18n/i18n';
@@ -385,7 +385,7 @@ export function TargetsEditor({
     return null;
   };
   const remove = (id: string) => onChange(targets.filter((x) => x.id !== id));
-  const sort = () => onChange([...targets].sort((a, b) => a.value.localeCompare(b.value)));
+  const sort = () => onChange(sortTargets(targets));
   const dedupe = () => {
     const seen = new Set<string>();
     onChange(

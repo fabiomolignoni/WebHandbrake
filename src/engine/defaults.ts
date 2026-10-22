@@ -372,3 +372,20 @@ export function targetsFromLines(lines: string[]): Target[] {
 export function targetKey(t: Pick<Target, 'type' | 'value' | 'allow'>): string {
   return targetToLine({ type: t.type, value: t.value, allow: t.allow });
 }
+
+/** The order of Sort in a rule's sites: by address. */
+export function sortTargets(targets: Target[]): Target[] {
+  return [...targets].sort((a, b) => a.value.localeCompare(b.value));
+}
+
+/**
+ * A rule's sites with the entries of a ready-made list that it does not have yet, sorted. Sites
+ * already sorted (none is) stay so with them; otherwise the list goes after them, so that an order
+ * chosen by hand is kept.
+ */
+export function addTemplate(targets: Target[], entries: string[]): Target[] {
+  const have = new Set(targets.map(targetKey));
+  const added = sortTargets(targetsFromLines(entries).filter((x) => !have.has(targetKey(x))));
+  const sorted = sortTargets(targets).every((x, i) => x === targets[i]);
+  return sorted ? sortTargets([...targets, ...added]) : [...targets, ...added];
+}

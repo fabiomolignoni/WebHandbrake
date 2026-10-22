@@ -13,6 +13,7 @@ import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { TEMPLATES } from '../../data/templates';
 import {
+  addTemplate,
   breaksLift,
   DAY_MINUTES,
   DEFAULT_PROTECTION,
@@ -674,8 +675,7 @@ function toggleTemplate(s: State, id: string): State {
   const templates = on ? [...s.templates, id] : s.templates.filter((x) => x !== id);
   let targets: Target[];
   if (on) {
-    const have = new Set(s.targets.map(targetKey));
-    targets = [...s.targets, ...targetsFromLines(tpl.entries).filter((x) => !have.has(targetKey(x)))];
+    targets = addTemplate(s.targets, tpl.entries);
   } else {
     const own = new Set(targetsFromLines(tpl.entries).map(targetKey));
     const kept = new Set(

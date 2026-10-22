@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { TEMPLATES } from '../../data/templates';
 import {
+  addTemplate,
   canHaveBreaks,
   DEFAULT_PROTECTION,
   frictionIntervention,
@@ -150,7 +151,7 @@ export function groupFromTemplate(templateId: string | null, protection: Protect
     name: t(tpl.nameKey),
     color: tpl.color,
     icon: tpl.icon,
-    targets: targetsFromLines(tpl.entries),
+    targets: addTemplate([], tpl.entries),
     policies: [newPolicy({ intervention: frictionIntervention() })],
     pause: pausePolicyFor(protection),
     protection,
@@ -919,12 +920,8 @@ function hasTemplate(targets: Target[], entries: string[]): boolean {
 function toggleTemplate(targets: Target[], id: string): Target[] {
   const tpl = TEMPLATES.find((x) => x.id === id);
   if (!tpl) return targets;
-  const own = targetsFromLines(tpl.entries);
-  if (!hasTemplate(targets, tpl.entries)) {
-    const have = new Set(targets.map(targetKey));
-    return [...targets, ...own.filter((x) => !have.has(targetKey(x)))];
-  }
-  const ownKeys = new Set(own.map(targetKey));
+  if (!hasTemplate(targets, tpl.entries)) return addTemplate(targets, tpl.entries);
+  const ownKeys = new Set(targetsFromLines(tpl.entries).map(targetKey));
   const kept = new Set(
     targetsFromLines(
       TEMPLATES.filter((x) => x.id !== id && hasTemplate(targets, x.entries)).flatMap((x) => x.entries),
