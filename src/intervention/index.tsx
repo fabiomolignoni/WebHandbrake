@@ -674,19 +674,6 @@ function PassStep({
           <p>{t('iv.challenge.body', { length: step.length })}</p>
           <CanvasText text={step.text} />
           <TypingInput value={value} onInput={setValue} label={t('ticket.text.input')} />
-          <button
-            type="button"
-            class="link-btn small"
-            onClick={async () => {
-              const v = await call('ticket.accessible', { id: ticket.id });
-              if (v) {
-                setTicket(v);
-                setValue('');
-              }
-            }}
-          >
-            {t('ticket.text.accessible')}
-          </button>
         </>
       )}
       {step.type === 'phrase' && (

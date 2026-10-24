@@ -2,7 +2,6 @@
 
 import { clone } from '../engine/json';
 import { normalizeConfig } from '../engine/schema';
-import { t } from '../i18n/i18n';
 import { api, extensionUrl, quiet } from '../platform/api';
 import type { Api, Envelope, Method } from '../shared/rpc';
 import { onTick } from './accounting';
@@ -41,7 +40,7 @@ import { endSession, extendSession, saveFocusLists, startSession } from './sessi
 import { deleteStats, exportStats, getStats } from './stats';
 import { store } from './store';
 import { TEST_CONTENT_METHODS, testHandlers } from './testing';
-import { accessibleAlternative, answerTicket, cancelTicket } from './tickets';
+import { answerTicket, cancelTicket } from './tickets';
 import { configModel, dismissWarning, overviewModel, popupModel } from './views';
 
 type Handler<M extends Method> = (
@@ -66,7 +65,6 @@ const handlers: { [M in Method]: Handler<M> } = {
 
   'ticket.answer': (a) => answerTicket(a.id, a.answer, a.minutes),
   'ticket.cancel': (a) => cancelTicket(a.id),
-  'ticket.accessible': (a) => accessibleAlternative(a.id, t('challenge.accessiblePhrase')),
 
   'pause.options': (a, s) => pauseOptions(a.url, a.groupId, a.incognito ?? s.tab?.incognito ?? null),
   'pause.start': (a, s) => startPause({ ...a, incognito: a.incognito ?? s.tab?.incognito ?? null }, s),

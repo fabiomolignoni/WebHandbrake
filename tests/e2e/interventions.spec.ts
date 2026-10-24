@@ -3,32 +3,14 @@
  * and filters, operated with real clicks and keystrokes.
  */
 
-import { expect, type Harness, test } from './harness';
+import { expect, test } from './harness';
 import { ask, BLOCK, challenge, delay, filter, group, policy, REMINDER } from './harness/config';
-import { expectAllowed, expectBlocked, sleep } from './helpers';
+import { challengeCode, expectAllowed, expectBlocked, sleep } from './helpers';
 
 const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
-
-/** The code of the challenge shown for a URL, read from the background tickets (never in the page). */
-async function challengeCode(h: Harness, url: string): Promise<string> {
-  return expect
-    .poll(async () => {
-      const tickets: any[] = await h.control.eval(() =>
-        chrome.storage.session.get('tickets').then((r) => (r.tickets as unknown[]) ?? []),
-      );
-      return tickets.filter((t) => t.purpose.url === url).pop()?.active?.text ?? '';
-    })
-    .not.toBe('')
-    .then(async () => {
-      const tickets: any[] = await h.control.eval(() =>
-        chrome.storage.session.get('tickets').then((r) => (r.tickets as unknown[]) ?? []),
-      );
-      return tickets.filter((t) => t.purpose.url === url).pop().active.text as string;
-    });
-}
 
 test.describe('block page', () => {
   test('shows the rule, the note, the message and why; the healthy choice comes first', async ({ h }) => {
@@ -389,6 +371,8 @@ test.describe('challenges', () => {
     expect(code).toHaveLength(10);
     const html = await p.eval(() => document.documentElement.outerHTML);
     expect(html).not.toContain(code);
+    // No sentence to type instead: a phrase of one's own is a kind of challenge of the rule.
+    await p.button(/screen reader/).expectCount(0);
     await p.label('Characters').type(code);
     await p.button('Continue', { exact: true }).click();
     await p.expectReal('type.test/');
@@ -417,19 +401,6 @@ test.describe('challenges', () => {
     await p.button('Continue', { exact: true }).click();
     await p.text('The text does not match. Take your time.').expectVisible();
     expect(await p.isIntervention()).toBe(true);
-  });
-
-  test('a screen reader user can type a sentence instead', async ({ h }) => {
-    await h.configure((c) => {
-      c.groups = [group('Type', ['type.test'], [policy(challenge({ length: 12 }))])];
-    });
-    const p = await expectBlocked(h, 'http://type.test/');
-    await p.button(/screen reader/).click();
-    const phrase = await p.get('form blockquote').text();
-    expect(phrase).toBe('I choose to continue, and I remember why I set this limit.');
-    await p.label('Sentence').type(phrase);
-    await p.button('Continue', { exact: true }).click();
-    await p.expectReal('type.test/');
   });
 
   test('a commitment phrase of the user', async ({ h }) => {
