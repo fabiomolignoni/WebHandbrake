@@ -118,8 +118,8 @@ describe('statistics', () => {
     const { stats } = await setup();
     const s = await stats.getStats('2026-10-06', '2026-10-07');
     expect(s.days).toEqual([
-      { day: '2026-10-06', seconds: 300, visits: 0, sites: [0, 300], otherSites: 0 },
-      { day: '2026-10-07', seconds: 600, visits: 0, sites: [600, 0], otherSites: 0 },
+      { day: '2026-10-06', seconds: 300, visits: 0, sites: [0, 300], otherSites: 0, private: 0 },
+      { day: '2026-10-07', seconds: 600, visits: 0, sites: [600, 0], otherSites: 0, private: 0 },
     ]);
     expect(s.stack).toEqual(['video.test', 'news.test']);
     expect(s.total).toEqual({ seconds: 900, visits: 2 });
@@ -148,6 +148,22 @@ describe('statistics', () => {
     expect(s.stack).toEqual(['video.test', 's0.test', 's1.test', 's2.test', 's3.test', 's4.test']);
     expect(s.days[0].sites).toEqual([600, 100, 99, 98, 97, 96]);
     expect(s.days[0].otherSites).toBe(95 + 94 + 93);
+  });
+
+  it('beyond the sites listed, all of them add up; private windows have their own total', async () => {
+    const { store, stats } = await setup();
+    for (let i = 0; i < 120; i++) store.usage.add(`h:s${i}.test`, T0, 10, 1, store.cc.cal, false);
+    store.usage.add('a:', T0, 1200 + 200, 0, store.cc.cal);
+    store.usage.add('p:', T0, 200, 0, store.cc.cal, false);
+    const s = await stats.getStats('2026-10-07', '2026-10-07');
+    expect(s.sites).toHaveLength(100);
+    expect(s.siteTotal).toEqual({ count: 121, seconds: 600 + 1200, visits: 2 + 120 });
+    expect(s.private).toBe(200);
+    expect(s.days[0].private).toBe(200);
+    // The sites and the private windows make the total.
+    expect(s.siteTotal.seconds + s.private).toBe(s.total.seconds);
+    const csv = (await stats.exportStats('csv')).text.split('\n');
+    expect(csv).toContain('2026-10-07,private,,,200,0');
   });
 
   it('the hours of a day hold its time on limited sites by clock hour', async () => {

@@ -331,6 +331,8 @@ export interface StatsDay {
   sites: number[];
   /** Seconds on the other sites. */
   otherSites: number;
+  /** Seconds in private windows, which keep no site detail. */
+  private: number;
 }
 
 export interface StatsModel {
@@ -340,7 +342,12 @@ export interface StatsModel {
   total: { seconds: number; visits: number };
   previous: { seconds: number; visits: number };
   groups: { id: string; name: string; color: string; seconds: number; visits: number }[];
+  /** The sites with the most time, at most 100. */
   sites: { host: string; seconds: number; visits: number }[];
+  /** All the sites of the period, beyond those listed. */
+  siteTotal: { count: number; seconds: number; visits: number };
+  /** Seconds on limited sites in private windows, which keep no site detail. */
+  private: number;
   /** The sites with the most time in the period, which the days split their time by. */
   stack: string[];
   counters: {

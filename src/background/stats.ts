@@ -85,7 +85,11 @@ export async function getStats(from: string, to: string): Promise<StatsModel> {
     const own = stack.map((host) => t[usageKeys.host(host)]?.[0] ?? 0);
     let all = 0;
     for (const [key, [sec]] of Object.entries(t)) if (key.startsWith('h:')) all += sec;
-    return { sites: own, otherSites: Math.max(0, all - own.reduce((a, b) => a + b, 0)) };
+    return {
+      sites: own,
+      otherSites: Math.max(0, all - own.reduce((a, b) => a + b, 0)),
+      private: t[usageKeys.private]?.[0] ?? 0,
+    };
   };
 
   let hours: number[] | null = Array(24).fill(0);
@@ -126,6 +130,12 @@ export async function getStats(from: string, to: string): Promise<StatsModel> {
       }))
       .sort((a, b) => b.seconds - a.seconds),
     sites: siteList.slice(0, 100),
+    siteTotal: {
+      count: siteList.length,
+      seconds: siteList.reduce((a, x) => a + x.seconds, 0),
+      visits: siteList.reduce((a, x) => a + x.visits, 0),
+    },
+    private: sumKey(records, days, usageKeys.private, 0),
     stack,
     counters,
     pauses: store.state.pauses
@@ -181,7 +191,15 @@ export async function exportStats(format: 'csv' | 'json') {
       const [kind, ...rest] = key.split(':');
       const id = rest.join(':');
       const label =
-        kind === 'g' ? 'group' : kind === 's' ? 'group-site' : kind === 'h' ? 'site' : 'all-limited';
+        kind === 'g'
+          ? 'group'
+          : kind === 's'
+            ? 'group-site'
+            : kind === 'h'
+              ? 'site'
+              : kind === 'p'
+                ? 'private'
+                : 'all-limited';
       rows.push([
         day,
         label,
