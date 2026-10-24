@@ -37,7 +37,7 @@ import {
   startEmergency,
   verifyPartnerSetup,
 } from './protection';
-import { endSession, extendSession, startSession } from './sessions';
+import { endSession, extendSession, saveFocusLists, startSession } from './sessions';
 import { deleteStats, exportStats, getStats } from './stats';
 import { store } from './store';
 import { TEST_CONTENT_METHODS, testHandlers } from './testing';
@@ -75,6 +75,8 @@ const handlers: { [M in Method]: Handler<M> } = {
   'session.start': (a) => startSession(a),
   'session.extend': (a) => extendSession(a.id, a.minutes),
   'session.end': (a) => endSession(a.id),
+  'focus.get': () => store.focus,
+  'focus.save': (a) => saveFocusLists(a),
   'budget.forfeit': (a) => forfeitBudget(a.groupId),
 
   'pending.confirm': (a) => confirmPending(a.id),

@@ -13,7 +13,7 @@
  */
 
 import { type CompiledConfig, compileConfig } from '../engine/compile';
-import { defaultConfig, defaultState } from '../engine/defaults';
+import { defaultConfig, defaultFocusLists, defaultState } from '../engine/defaults';
 import { isObj } from '../engine/json';
 import {
   DAILY_SNAPSHOTS,
@@ -28,12 +28,14 @@ import {
   looksLikeConfig,
   migrate,
   normalizeConfig,
+  normalizeFocusLists,
   storedConfigIntact,
 } from '../engine/schema';
 import { addDays, dayKey, logicalDayOf } from '../engine/time';
 import type {
   Config,
   DayRecord,
+  FocusLists,
   Grant,
   LaterItem,
   MinuteBuckets,
@@ -95,6 +97,7 @@ export class Store {
   state: RuntimeState = defaultState();
   usage: Usage = new Usage();
   later: LaterItem[] = [];
+  focus: FocusLists = defaultFocusLists();
   intentions: IntentionRecord[] = [];
   meta: Meta = { installedAt: 0, version: '', lastDaily: '', restored: null, selftest: null, lastFlush: 0 };
   firstRun = false;
@@ -122,6 +125,7 @@ export class Store {
       'state',
       'activity',
       'later',
+      'focus',
       'meta',
       'u:min',
       'intentions',
@@ -155,6 +159,7 @@ export class Store {
     }
 
     this.later = Array.isArray(raw.later) ? raw.later : [];
+    this.focus = normalizeFocusLists(raw.focus);
     this.intentions = Array.isArray(raw.intentions) ? raw.intentions : [];
 
     const today = logicalDayOf(Date.now(), this.cc.cal);
@@ -358,6 +363,10 @@ export class Store {
 
   async saveLater() {
     await api.storage.local.set({ later: this.later });
+  }
+
+  async saveFocus() {
+    await api.storage.local.set({ focus: this.focus });
   }
 
   async saveIntentions() {

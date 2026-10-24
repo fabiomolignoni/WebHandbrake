@@ -4,6 +4,7 @@ import { WAIT_IN_DIALOG_SECONDS } from './limits';
 import { parseTargetLine, targetToLine } from './patterns';
 import {
   type Config,
+  type FocusLists,
   type Group,
   type GroupOptions,
   type Intervention,
@@ -113,6 +114,10 @@ export function defaultState(): RuntimeState {
     partnerSteps: {},
     secretFailures: { count: 0, lockedUntil: 0 },
   };
+}
+
+export function defaultFocusLists(): FocusLists {
+  return { kind: 'groups', block: [], allow: [] };
 }
 
 /** The protection of a rule made outside the wizard and first run, which ask for one (#12). */

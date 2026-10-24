@@ -1,6 +1,7 @@
 /**
  * Focus sessions in a real browser: from the popup, the dashboard,
- * the keyboard shortcut and the context menu; allowlist mode, delayed start, extension, early end.
+ * the keyboard shortcut and the context menu; blocklist and allowlist modes, delayed start, extension,
+ * early end.
  */
 
 import { expect, test } from './harness';
@@ -55,6 +56,40 @@ test('an allowlist session from the dashboard blocks everything else, with a pre
   await expectAllowed(h, 'http://docs.test/manual');
   await expectBlocked(h, 'http://anything.test/');
   await expectBlocked(h, 'http://news.test/');
+});
+
+test('a blocklist session blocks the sites listed; the list stays for the next session and can be cleared', async ({
+  h,
+}) => {
+  const p = await h.page('dashboard.html#/focus');
+  await p.role('radio', /A few sites/).click();
+  // A list session has no breaks to turn off, and an empty list would block nothing.
+  await p.role('switch', /No breaks/).expectCount(0);
+  await p.button('Start focus session').expectEnabled(false);
+  await p.placeholder('Add a site, or paste a list…').fill('news.test +news.test/weather');
+  await p.button('Add', { exact: true }).click();
+  await p.button('Start focus session').click();
+  await p.text(/Focus session until/).expectVisible();
+  await p.text('Blocks 1 site').expectVisible();
+  await expectBlocked(h, 'http://news.test/');
+  await expectAllowed(h, 'http://news.test/weather/today');
+  await expectAllowed(h, 'http://docs.test/');
+  // Another day, another session: the choice and the list are still there.
+  const again = await h.page('dashboard.html#/focus');
+  await again.role('radio', /A few sites/).expectChecked();
+  await again.button('Start focus session').expectEnabled();
+  await again.button('Clear the list').click();
+  await again.text('List cleared.').expectVisible();
+  await again.button('Start focus session').expectEnabled(false);
+  await expect.poll(async () => (await h.rpc('focus.get')).block).toEqual([]);
+  await again.button('Undo').click();
+  await expect
+    .poll(async () => (await h.rpc('focus.get')).block.map((x: any) => x.value))
+    .toEqual(['news.test', 'news.test/weather']);
+  // The other list is its own.
+  await again.role('radio', /Everything except a few sites/).click();
+  await again.button('Clear the list').expectEnabled(false);
+  expect((await h.rpc('focus.get')).kind).toBe('allowlist');
 });
 
 test('a delayed session starts by itself and restricts the open tabs', async ({ h }) => {

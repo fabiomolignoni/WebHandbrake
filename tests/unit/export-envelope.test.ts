@@ -29,7 +29,7 @@ describe('export files', () => {
     return { store, data };
   }
 
-  it('the full export has exactly format, version, exportedAt, config and later', async () => {
+  it('the full export has exactly format, version, exportedAt, config, later and focus', async () => {
     const { data } = await setup();
     const file = JSON.parse((await data.exportData(false, false)).text);
     expect(Object.keys(file), 'export envelope changed: update this test').toEqual([
@@ -38,6 +38,7 @@ describe('export files', () => {
       'exportedAt',
       'config',
       'later',
+      'focus',
     ]);
     expect(file.format).toBe(EXPORT_FORMAT);
     expect(file.version).toBe(EXPORT_VERSION);
@@ -49,7 +50,15 @@ describe('export files', () => {
   it('statistics and the password hashes are included only when asked', async () => {
     const { data } = await setup();
     const file = JSON.parse((await data.exportData(true, true)).text);
-    expect(Object.keys(file)).toEqual(['format', 'version', 'exportedAt', 'config', 'later', 'statistics']);
+    expect(Object.keys(file)).toEqual([
+      'format',
+      'version',
+      'exportedAt',
+      'config',
+      'later',
+      'focus',
+      'statistics',
+    ]);
     expect(file.config.groups[0].protection).toEqual({ kind: 'password', hash: 'pbkdf2$hash' });
   });
 

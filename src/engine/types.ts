@@ -357,11 +357,16 @@ export interface Grant {
   minutes?: number;
 }
 
+/** What a focus session blocks: the sites of some rules, the sites of a list, or every site but those of a list. */
+export type FocusKind = 'groups' | 'blocklist' | 'allowlist';
+
 export interface FocusSession {
   id: string;
-  kind: 'groups' | 'allowlist';
+  kind: FocusKind;
   groups: string[];
   allow: Target[];
+  /** The sites a blocklist session blocks, exceptions included (sessions of earlier versions have none). */
+  block?: Target[];
   startAt: number;
   endAt: number;
   createdAt: number;
@@ -469,6 +474,14 @@ export interface DayRecord {
 
 /** Minute buckets for the last 48 hours: key → minute index → [seconds, visits]. */
 export type MinuteBuckets = Record<string, Record<string, [number, number]>>;
+
+/** The lists of the Focus page, kept from one session to the next. */
+export interface FocusLists {
+  /** What to block, as last chosen on Focus. */
+  kind: FocusKind;
+  block: Target[];
+  allow: Target[];
+}
 
 export interface LaterItem {
   id: string;

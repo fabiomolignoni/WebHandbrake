@@ -5,7 +5,8 @@
 
 import { isGroupActive } from '../engine/compile';
 import { DEFAULT_SESSION_MINUTES, MAX_SESSION_MS } from '../engine/limits';
-import type { FocusSession } from '../engine/types';
+import { normalizeFocusLists } from '../engine/schema';
+import type { FocusLists, FocusSession } from '../engine/types';
 import type { SessionRequest, TicketView } from '../shared/models';
 import { now } from './clock';
 import { reconcile } from './reconcile';
@@ -30,6 +31,7 @@ export async function startSession(req: SessionRequest): Promise<{ id: string }>
     kind: req.kind,
     groups,
     allow: req.kind === 'allowlist' ? req.allow : [],
+    block: req.kind === 'blocklist' ? (req.block ?? []) : [],
     startAt,
     endAt,
     createdAt: t0,
@@ -42,6 +44,13 @@ export async function startSession(req: SessionRequest): Promise<{ id: string }>
   await store.saveState();
   await reconcile('session-start');
   return { id: session.id };
+}
+
+/** The lists of the Focus page are kept as they are edited, for the next sessions. */
+export async function saveFocusLists(lists: Partial<FocusLists>) {
+  await store.ready();
+  store.focus = normalizeFocusLists({ ...store.focus, ...lists });
+  await store.saveFocus();
 }
 
 /** Extending is always possible and immediate. */

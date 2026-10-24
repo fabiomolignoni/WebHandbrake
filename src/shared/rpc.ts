@@ -1,7 +1,7 @@
 /** Typed messaging between UI surfaces / content scripts and the background. */
 
 import type { Granularity } from '../engine/page-target';
-import type { Config, Group, LaterItem, PartnerCode } from '../engine/types';
+import type { Config, FocusLists, Group, LaterItem, PartnerCode } from '../engine/types';
 import { api } from '../platform/api';
 import type {
   ConfigModel,
@@ -67,6 +67,9 @@ export interface Api {
     req: { id: string };
     res: { ticket: TicketView | null; refused?: string };
   };
+  /** The lists of the Focus page, kept for the next sessions. */
+  'focus.get': { req: Record<string, never>; res: FocusLists };
+  'focus.save': { req: Partial<FocusLists>; res: void };
   'budget.forfeit': { req: { groupId: string }; res: void };
 
   'pending.confirm': { req: { id: string }; res: { ticket: TicketView | null; error?: string } };

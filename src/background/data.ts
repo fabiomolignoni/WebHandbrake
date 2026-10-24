@@ -12,6 +12,7 @@ import {
 } from '../engine/importers';
 import { clone, isObj } from '../engine/json';
 import { MAX_IMPORT_BYTES, MAX_LATER_ITEMS } from '../engine/limits';
+import { normalizeFocusLists } from '../engine/schema';
 import type { Config, LaterItem } from '../engine/types';
 import { t } from '../i18n/i18n';
 import { api } from '../platform/api';
@@ -34,6 +35,7 @@ export async function exportData(includeStats: boolean, includeSecrets: boolean)
     exportedAt: new Date().toISOString(),
     config,
     later: store.later,
+    focus: store.focus,
   };
   if (includeStats) {
     const keys = await store.allDayKeys();
@@ -121,6 +123,10 @@ export async function applyImport(text: string, mode: 'merge' | 'replace'): Prom
     if (Array.isArray(raw.later)) {
       store.later = importedLater(raw.later);
       await store.saveLater();
+    }
+    if (isObj(raw.focus)) {
+      store.focus = normalizeFocusLists(raw.focus);
+      await store.saveFocus();
     }
   }
   return proposeConfig(next, `import-${imp.format}`, {

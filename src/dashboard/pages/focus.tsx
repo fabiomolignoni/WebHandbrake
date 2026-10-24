@@ -1,9 +1,9 @@
 /** Focus sessions and lockdown. */
 
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { isGroupActive } from '../../engine/compile';
 import { DEFAULT_SESSION_MINUTES, MAX_SESSION_MS, QUICK_SESSION_MINUTES } from '../../engine/limits';
-import type { FocusSession, Group, Target } from '../../engine/types';
+import type { FocusKind, FocusLists, FocusSession, Group } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { formatDuration, formatWhen } from '../../shared/format';
 import type { TicketView } from '../../shared/models';
@@ -45,10 +45,12 @@ function SessionCard({
   const names =
     s.kind === 'allowlist'
       ? t('focus.allowlistMode')
-      : groups
-          .filter((g) => s.groups.includes(g.id))
-          .map((g) => g.name)
-          .join(', ');
+      : s.kind === 'blocklist'
+        ? t('focus.blocklistMode', { count: (s.block ?? []).filter((x) => !x.allow).length })
+        : groups
+            .filter((g) => s.groups.includes(g.id))
+            .map((g) => g.name)
+            .join(', ');
   return (
     <div class={`stack ${compact ? 'card flat tight' : 'card'} tone-protected`}>
       <div class={compact ? 'session-compact' : 'session-hero'}>
@@ -116,6 +118,9 @@ function SessionCard({
 
 const DELAYS = [0, 5, 15, 30, 60];
 
+/** What a session can block, from the fewest sites to the most, with their icons. */
+const MODES: Record<FocusKind, string> = { groups: 'layers', blocklist: 'ban', allowlist: 'globe' };
+
 export function QuickSession({
   compact,
   sessions,
@@ -134,9 +139,26 @@ export function QuickSession({
   const active = groups.filter(isGroupActive);
   /** The rules of a quick session, as the popup and the keyboard shortcut start it. */
   const quick = active.filter((g) => g.options.quickSession).map((g) => g.id);
-  const [mode, setMode] = useState<'groups' | 'allowlist'>('groups');
   const [selected, setSelected] = useState<string[]>(() => quick);
-  const [allow, setAllow] = useState<Target[]>([]);
+  /** What to block and the lists, as they were left: null until they are read. */
+  const [lists, setLists] = useState<FocusLists | null>(null);
+  useEffect(() => {
+    if (!compact) void call('focus.get', {}).then(setLists);
+  }, [compact]);
+  /** Every change is kept at once, for the next sessions. */
+  const keep = (part: Partial<FocusLists>) => {
+    setLists((l) => (l ? { ...l, ...part } : l));
+    void call('focus.save', part);
+  };
+  const mode = lists?.kind ?? 'groups';
+  const block = lists?.block ?? [];
+  const allow = lists?.allow ?? [];
+  const blocked = block.filter((x) => !x.allow).length;
+  const clear = (list: 'block' | 'allow') => {
+    const before = list === 'block' ? block : allow;
+    keep({ [list]: [] });
+    toast(t('focus.listCleared'), { label: t('common.undo'), run: () => keep({ [list]: before }) });
+  };
   const [delay, setDelay] = useState(0);
   const [locked, setLocked] = useState(false);
   const [noPauses, setNoPauses] = useState(true);
@@ -160,6 +182,7 @@ export function QuickSession({
       // The compact form has no choice of rules: those of quick sessions, as they are now.
       groups: mode === 'groups' ? (compact ? quick : selected) : [],
       allow: mode === 'allowlist' ? allow : [],
+      block: mode === 'blocklist' ? block : [],
       minutes: length,
       until: until(),
       startInMinutes: delay || undefined,
@@ -226,7 +249,7 @@ export function QuickSession({
             {t('focus.start')}
           </Button>
         </div>
-      ) : (
+      ) : lists ? (
         <section class="card stack stack-lg" aria-labelledby="new-session">
           <h2 id="new-session">{t('focus.newSession')}</h2>
           <div class="field">
@@ -241,14 +264,14 @@ export function QuickSession({
             <span class="label">{t('focus.mode')}</span>
             <RadioCards
               value={mode}
-              onChange={setMode}
+              onChange={(kind) => keep({ kind })}
               label={t('focus.mode')}
               class="grid"
               itemClass="choice compact"
-              options={[{ value: 'groups' }, { value: 'allowlist' }]}
+              options={(Object.keys(MODES) as FocusKind[]).map((value) => ({ value }))}
               render={(o) => (
                 <>
-                  <Icon name={o.value === 'groups' ? 'layers' : 'globe'} />
+                  <Icon name={MODES[o.value]} />
                   <span>
                     <strong>{t(`focus.mode.${o.value}`)}</strong>
                     <span class="small muted">{t(`focus.mode.${o.value}.desc`)}</span>
@@ -285,8 +308,14 @@ export function QuickSession({
             </div>
           ) : (
             <div class="stack stack-sm">
-              <p class="help">{t('focus.allowlistHelp')}</p>
-              <TargetsEditor targets={allow} onChange={setAllow} />
+              <p class="help">{t(mode === 'blocklist' ? 'focus.blocklistHelp' : 'focus.allowlistHelp')}</p>
+              {/* One editor per list: an address half typed in one does not move to the other. */}
+              <TargetsEditor
+                key={mode}
+                targets={mode === 'blocklist' ? block : allow}
+                onChange={(next) => keep(mode === 'blocklist' ? { block: next } : { allow: next })}
+                onClear={() => clear(mode === 'blocklist' ? 'block' : 'allow')}
+              />
             </div>
           )}
           <div class="field">
@@ -305,7 +334,10 @@ export function QuickSession({
             />
           </div>
           <div class="settings-list">
-            <Toggle checked={noPauses} onChange={setNoPauses} label={t('focus.noPauses')} />
+            {/* The breaks are those of the rules: a list session has none. */}
+            {mode === 'groups' && (
+              <Toggle checked={noPauses} onChange={setNoPauses} label={t('focus.noPauses')} />
+            )}
             <Toggle
               checked={locked}
               onChange={setLocked}
@@ -317,13 +349,13 @@ export function QuickSession({
             variant="primary"
             size="large"
             icon="play"
-            disabled={mode === 'groups' && !selected.length}
+            disabled={(mode === 'groups' && !selected.length) || (mode === 'blocklist' && !blocked)}
             onClick={() => (locked || mode === 'allowlist' ? setPreview(true) : void start())}
           >
             {t('focus.start')}
           </Button>
         </section>
-      )}
+      ) : null}
       {preview && (
         <Dialog
           open

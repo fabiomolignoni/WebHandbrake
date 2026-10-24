@@ -1060,14 +1060,16 @@ let toastSeq = 0;
 const toastListeners = new Set<(items: ToastItem[]) => void>();
 let toastItems: ToastItem[] = [];
 
+function dismissToast(id: number) {
+  toastItems = toastItems.filter((x) => x.id !== id);
+  for (const l of toastListeners) l(toastItems);
+}
+
 export function toast(text: string, action?: ToastItem['action']) {
   const item = { id: ++toastSeq, text, action };
   toastItems = [...toastItems, item];
   for (const l of toastListeners) l(toastItems);
-  setTimeout(() => {
-    toastItems = toastItems.filter((x) => x.id !== item.id);
-    for (const l of toastListeners) l(toastItems);
-  }, 6000);
+  setTimeout(() => dismissToast(item.id), 6000);
 }
 
 export function Toasts() {
@@ -1082,7 +1084,15 @@ export function Toasts() {
         <div class="toast" key={i.id} role="status">
           <span>{i.text}</span>
           {i.action && (
-            <button type="button" class="link-btn" onClick={i.action.run}>
+            <button
+              type="button"
+              class="link-btn"
+              onClick={() => {
+                // Its action done, the message has nothing more to offer.
+                i.action?.run();
+                dismissToast(i.id);
+              }}
+            >
               {i.action.label}
             </button>
           )}

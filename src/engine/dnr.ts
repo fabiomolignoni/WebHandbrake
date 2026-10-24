@@ -94,6 +94,7 @@ export function collectRegions(ctx: EngineContext): Region[] {
   for (const s of state.sessions) {
     if (s.endAt <= now) continue;
     for (const t of s.allow) add(compilePattern({ ...t, allow: true }));
+    for (const t of s.block ?? []) add(compilePattern(t));
   }
   for (const g of state.grants) {
     if (g.scope === 'page' && g.url) add(patternFromUrl(g.url));
@@ -143,6 +144,18 @@ export function compileDnr(ctx: EngineContext, opts: DnrOptions): DnrResult {
     if ([...navGroups].every((g) => g === r.owner))
       out.push({ cp: r.cp, nav: false, embed: false, spec: r.cp.spec });
     else overflow.push(r.cp.target.value);
+  }
+
+  // The regular expressions of a blocklist session block for the session; its exceptions that are
+  // regular expressions are left to the intervention page, which re-checks.
+  for (const s of activeSessions(ctx.state, ctx.now)) {
+    if (s.kind !== 'blocklist') continue;
+    for (const t of s.block ?? []) {
+      const cp = compilePattern(t);
+      if (!cp?.regex) continue;
+      if (cp.allow) overflow.push(cp.target.value);
+      else out.push({ cp, nav: true, embed: false, spec: cp.spec });
+    }
   }
 
   if (activeSessions(ctx.state, ctx.now).some((s) => s.kind === 'allowlist')) {

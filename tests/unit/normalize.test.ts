@@ -7,6 +7,7 @@ import {
   looksLikeConfig,
   migrate,
   normalizeConfig,
+  normalizeFocusLists,
   normalizeGroup,
   normalizeIntervention,
   normalizePause,
@@ -33,6 +34,27 @@ describe('normalising what is read from storage or a file', () => {
     expect(normalizeTarget({ type: 'regex', value: '(a+)+$' })).toBeNull();
     expect(normalizeTarget({ type: 'domain', value: '' })).toBeNull();
     expect(normalizeTarget('a.test')).toBeNull();
+  });
+
+  it('the lists of Focus: a known choice, entries that can be read, each once', () => {
+    expect(normalizeFocusLists(undefined)).toEqual({ kind: 'groups', block: [], allow: [] });
+    const lists = normalizeFocusLists({
+      kind: 'everything',
+      block: [
+        { id: 'a', type: 'domain', value: 'a.test' },
+        { id: 'b', type: 'domain', value: 'a.test' },
+        'junk',
+      ],
+      allow: 'junk',
+      future: 1,
+    });
+    expect(lists).toEqual({
+      kind: 'groups',
+      block: [{ id: 'a', type: 'domain', value: 'a.test' }],
+      allow: [],
+      future: 1,
+    });
+    expect(normalizeFocusLists({ kind: 'blocklist' }).kind).toBe('blocklist');
   });
 
   it('time windows: weekdays 0–6 once each, minutes within the day', () => {

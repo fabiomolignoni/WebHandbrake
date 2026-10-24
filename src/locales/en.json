@@ -235,6 +235,9 @@
   "common.save": {
     "message": "Save"
   },
+  "common.undo": {
+    "message": "Undo"
+  },
   "common.yes": {
     "message": "yes"
   },
@@ -784,10 +787,17 @@
     "message": "Focus session until {when}"
   },
   "focus.allowlistHelp": {
-    "message": "During the session only these sites can be opened."
+    "message": "During the session only these sites can be opened. The list is kept for next time."
   },
   "focus.allowlistMode": {
     "message": "Only allowed sites"
+  },
+  "focus.blocklistHelp": {
+    "message": "During the session these sites are blocked. The list is kept for next time."
+  },
+  "focus.blocklistMode": {
+    "message": "{count, plural, one {Blocks # site} other {Blocks # sites}}",
+    "description": "What a running focus session of the “A few sites” kind blocks."
   },
   "focus.cancel": {
     "message": "Cancel"
@@ -817,6 +827,9 @@
   "focus.left": {
     "message": "{duration} left"
   },
+  "focus.listCleared": {
+    "message": "List cleared."
+  },
   "focus.locked": {
     "message": "Cannot be interrupted"
   },
@@ -838,6 +851,12 @@
   "focus.mode.allowlist.desc": {
     "message": "Only the sites you list stay open."
   },
+  "focus.mode.blocklist": {
+    "message": "A few sites"
+  },
+  "focus.mode.blocklist.desc": {
+    "message": "Block only the sites you list."
+  },
   "focus.mode.groups": {
     "message": "Some of my rules"
   },
@@ -851,7 +870,7 @@
     "message": "New session"
   },
   "focus.noGroups": {
-    "message": "No rules yet: create one first or choose “Everything except a few sites”."
+    "message": "No rules yet: create one first or choose “A few sites”."
   },
   "focus.noPauses": {
     "message": "No breaks during the session"
@@ -1161,7 +1180,7 @@
     "message": "Can WebHandbrake prevent its own uninstallation?"
   },
   "help.focus.p1": {
-    "message": "A focus session blocks the sites of the rules you pick, or every site except a few, for a set time. Start one from Focus, the popup, the right-click menu or the keyboard shortcut. Quick sessions use the rules with “Include in quick focus sessions” on.",
+    "message": "A focus session blocks the sites of the rules you pick, the sites you list, or every site except a few, for a set time. Your lists are kept for the next sessions. Start one from Focus, the popup, the right-click menu or the keyboard shortcut. Quick sessions use the rules with “Include in quick focus sessions” on.",
     "description": "Help, Focus sessions. \"Include in quick focus sessions\" is the label of a rule option."
   },
   "help.focus.p2": {
@@ -2716,6 +2735,9 @@
   "privacy.key.config": {
     "message": "Rules and settings"
   },
+  "privacy.key.focus": {
+    "message": "Sites for focus sessions"
+  },
   "privacy.key.intentions": {
     "message": "Reasons for going in"
   },
@@ -3512,6 +3534,9 @@
   },
   "targets.allSites": {
     "message": "Every website"
+  },
+  "targets.clear": {
+    "message": "Clear the list"
   },
   "targets.count": {
     "message": "{sites, plural, one {# site} other {# sites}}, {exceptions, plural, one {# exception} other {# exceptions}}"
