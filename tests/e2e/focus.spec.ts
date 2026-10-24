@@ -101,7 +101,7 @@ test('a focus session can last any length, not only the quick ones (#18)', async
     c.groups = [group('Games', ['games.test'], [policy(TRACK)])];
   });
   const p = await h.page('dashboard.html#/focus');
-  await p.role('radio', 'Other…').click();
+  await p.role('radio', 'Other', { exact: true }).click();
   // The length starts as 1 hour: the unit keeps the number, then 75 minutes are typed.
   await p.label('Length of the session: unit').expectValue('hours');
   await p.label('Length of the session: unit').select('minutes');

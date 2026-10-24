@@ -357,7 +357,7 @@ const DYNAMIC = {
   ],
   'save.refused.{x}': ['permanent', 'locked'],
   'pending.error.{x}': ['permanent', 'locked'],
-  'period.kind.{x}': ['hour', 'day', 'week', 'month', 'every', 'rolling'],
+  'period.kind.{x}': ['hour', 'day', 'week', 'month', 'other'],
   'why.restriction.{x}': ['budget', 'schedule', 'pause', 'pass', 'session'],
   'schedule.preset.{x}': ['office', 'evenings', 'allDay', 'weekdays', 'nights'],
   'pauseRules.costKind.{x}': ['none', 'confirm', 'delay', 'random', 'phrase', 'math', 'password'],

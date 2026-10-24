@@ -4,13 +4,14 @@
  * time is up.
  */
 
-import { useId } from 'preact/hooks';
-import type { Cost, PausePolicy } from '../../engine/types';
+import { useId, useState } from 'preact/hooks';
+import { DAY_MINUTES, everyPeriod, periodMinutes } from '../../engine/defaults';
+import type { Cost, PausePolicy, Period } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { formatDuration } from '../../shared/format';
-import { DurationInput, NumberInput, Select, Toggle } from '../../ui/components';
+import { describePeriod } from '../../shared/summary';
+import { DurationInput, NumberInput, Segmented, Select, Toggle } from '../../ui/components';
 import { costLabel } from '../../ui/pause';
-import { PeriodSelect } from './policy';
 
 type CostKind = 'none' | 'confirm' | 'delay' | 'random' | 'phrase' | 'math' | 'password';
 
@@ -157,63 +158,150 @@ export function PauseEditor({
           </div>
           <div class="question">
             <h3>{t('pauseRules.q.limit')}</h3>
-            <div class="row">
-              <label class="check small">
-                <input
-                  type="checkbox"
-                  checked={p.limit.count !== undefined}
-                  onChange={(e) =>
-                    set({
-                      limit: { ...p.limit, count: (e.target as HTMLInputElement).checked ? 3 : undefined },
-                    })
-                  }
-                />
-                {t('pauseRules.limitCount')}
-              </label>
-              {p.limit.count !== undefined && (
-                <NumberInput
-                  value={p.limit.count}
-                  min={0}
-                  max={100}
-                  label={t('pauseRules.limitCount')}
-                  onChange={(count) => set({ limit: { ...p.limit, count } })}
-                />
-              )}
-            </div>
-            <div class="row">
-              <label class="check small">
-                <input
-                  type="checkbox"
-                  checked={p.limit.minutes !== undefined}
-                  onChange={(e) =>
-                    set({
-                      limit: { ...p.limit, minutes: (e.target as HTMLInputElement).checked ? 30 : undefined },
-                    })
-                  }
-                />
-                {t('pauseRules.limitMinutes')}
-              </label>
-              {p.limit.minutes !== undefined && (
-                <DurationInput
-                  units={['minutes', 'hours']}
-                  value={p.limit.minutes}
-                  min={0}
-                  max={10000}
-                  label={t('pauseRules.limitMinutes')}
-                  onChange={(minutes) => set({ limit: { ...p.limit, minutes } })}
-                />
-              )}
-            </div>
-            {(p.limit.count !== undefined || p.limit.minutes !== undefined) && (
-              <PeriodSelect
-                period={p.limit.period}
-                onChange={(period) => set({ limit: { ...p.limit, period } })}
-                allowRolling={false}
-              />
-            )}
+            <BreakLimits
+              value={p.limit}
+              onChange={(limit) => set({ limit })}
+              defaults={{ count: 3, minutes: 30 }}
+            />
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+type BreakLimit = PausePolicy['limit'];
+
+/**
+ * How many breaks, and how much time in breaks, at most (each one optional), and how often these
+ * limits start again. For the breaks of a rule and for those of all the rules together.
+ */
+export function BreakLimits({
+  value: limit,
+  onChange,
+  defaults,
+  commitOnBlur,
+}: {
+  value: BreakLimit;
+  onChange: (l: BreakLimit) => void;
+  /** What a limit starts from when it is turned on. */
+  defaults: { count: number; minutes: number };
+  commitOnBlur?: boolean;
+}) {
+  return (
+    <div class="stack stack-sm">
+      <div class="row">
+        <label class="check small">
+          <input
+            type="checkbox"
+            checked={limit.count !== undefined}
+            onChange={(e) =>
+              onChange({
+                ...limit,
+                count: (e.target as HTMLInputElement).checked ? defaults.count : undefined,
+              })
+            }
+          />
+          {t('pauseRules.limitCount')}
+        </label>
+        {limit.count !== undefined && (
+          <NumberInput
+            commitOnBlur={commitOnBlur}
+            value={limit.count}
+            min={0}
+            max={100}
+            label={t('pauseRules.limitCount')}
+            onChange={(count) => onChange({ ...limit, count })}
+          />
+        )}
+      </div>
+      <div class="row">
+        <label class="check small">
+          <input
+            type="checkbox"
+            checked={limit.minutes !== undefined}
+            onChange={(e) =>
+              onChange({
+                ...limit,
+                minutes: (e.target as HTMLInputElement).checked ? defaults.minutes : undefined,
+              })
+            }
+          />
+          {t('pauseRules.limitMinutes')}
+        </label>
+        {limit.minutes !== undefined && (
+          <DurationInput
+            units={['minutes', 'hours']}
+            commitOnBlur={commitOnBlur}
+            value={limit.minutes}
+            min={0}
+            max={10000}
+            label={t('pauseRules.limitMinutes')}
+            onChange={(minutes) => onChange({ ...limit, minutes })}
+          />
+        )}
+      </div>
+      {(limit.count !== undefined || limit.minutes !== undefined) && (
+        <PeriodPicker period={limit.period} onChange={(period) => onChange({ ...limit, period })} />
+      )}
+    </div>
+  );
+}
+
+/** The periods that are choices of their own; any other is typed as a length ("Other"). */
+const PERIODS = ['hour', 'day', 'week', 'month'] as const;
+type PeriodChoice = (typeof PERIODS)[number] | 'other';
+const usualPeriod = (p: Period) => (PERIODS as readonly string[]).includes(p.kind);
+
+/**
+ * How often a limit of breaks starts again: every hour, day, week or month (a week from the day
+ * weeks start on, a month from its first day), or every so many minutes, hours or days.
+ */
+function PeriodPicker({ period, onChange }: { period: Period; onChange: (p: Period) => void }) {
+  const id = useId();
+  // "Other" is chosen, even when the length typed is a usual period (24 hours: a day).
+  const [custom, setCustom] = useState(false);
+  const choice: PeriodChoice = custom || !usualPeriod(period) ? 'other' : (period.kind as PeriodChoice);
+  return (
+    <div class="stack stack-xs">
+      <span class="label small" id={`${id}-every`}>
+        {t('period.every')}
+      </span>
+      <div class="row">
+        <Segmented<PeriodChoice>
+          value={choice}
+          labelledBy={`${id}-every`}
+          onChange={(c) => {
+            setCustom(c === 'other');
+            if (c !== 'other') onChange({ kind: c });
+            // A week or a month becomes as many days: the field shows the period that applies.
+            else if (period.kind === 'week' || period.kind === 'month')
+              onChange({ kind: 'days', n: period.kind === 'week' ? 7 : 30 });
+          }}
+          options={[...PERIODS, 'other' as const].map((c) => ({ value: c, label: t(`period.kind.${c}`) }))}
+        />
+        {choice === 'other' && (
+          <DurationInput
+            value={periodMinutes(period)}
+            min={5}
+            max={90 * DAY_MINUTES}
+            unitMax={{ minutes: DAY_MINUTES, hours: DAY_MINUTES }}
+            label={t('period.every')}
+            onChange={(minutes, unit) => {
+              // A period of days counts whole days.
+              const next = everyPeriod(
+                unit === 'days' ? Math.max(1, Math.round(minutes / DAY_MINUTES)) * DAY_MINUTES : minutes,
+              );
+              // An offset in minutes means nothing for a period of days, and the other way round.
+              onChange(
+                next.kind === period.kind && period.offset ? { ...next, offset: period.offset } : next,
+              );
+            }}
+          />
+        )}
+      </div>
+      {/* A window that moves with the time is not "starts again": it has its own words. */}
+      {period.kind === 'rolling' && <span class="help">{describePeriod(period)}</span>}
     </div>
   );
 }

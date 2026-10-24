@@ -20,7 +20,7 @@ import {
   DurationInput,
   Field,
   GroupTile,
-  Select,
+  RadioList,
   Spinner,
   ToneIcon,
   toast,
@@ -437,9 +437,10 @@ export function ProtectionPage() {
           label={t('protection.internalPages')}
           help={t('protection.internalPagesHelp', { minutes: WAIT_IN_DIALOG_SECONDS / 60 })}
         >
-          {(id) => (
-            <Select
-              id={id}
+          {(id, d) => (
+            <RadioList
+              labelledBy={`${id}-label`}
+              describedBy={d}
               value={p.internalPages}
               onChange={(v) => void save((c) => (c.settings.protection.internalPages = v))}
               options={[

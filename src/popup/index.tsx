@@ -321,7 +321,7 @@ function FocusPanel({ m, reload }: { m: PopupModel; reload: () => void }) {
               reload();
             }}
           >
-            {t('focus.extend', { minutes: 15 })}
+            {t('focus.extend', { duration: formatDuration(15 * 60) })}
           </Button>
           {!active.locked && (
             <Button
@@ -371,7 +371,7 @@ function FocusPanel({ m, reload }: { m: PopupModel; reload: () => void }) {
         value={minutes}
         onChange={setMinutes}
         label={t('popup.focusDuration')}
-        options={m.quickMinutes.map((n) => ({ value: n, label: t('common.minutes', { n }) }))}
+        options={m.quickMinutes.map((n) => ({ value: n, label: formatDuration(n * 60) }))}
       />
       <Button
         block

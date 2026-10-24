@@ -208,9 +208,6 @@
   "common.close": {
     "message": "Close"
   },
-  "common.daysUnit": {
-    "message": "days"
-  },
   "common.dismiss": {
     "message": "Dismiss"
   },
@@ -220,20 +217,11 @@
   "common.edit": {
     "message": "Edit"
   },
-  "common.hours": {
-    "message": "{n, plural, one {# hour} other {# hours}}"
-  },
-  "common.hoursUnit": {
-    "message": "h"
-  },
   "common.loading": {
     "message": "Loading…"
   },
   "common.minutes": {
     "message": "{n, plural, one {# min} other {# min}}"
-  },
-  "common.minutesUnit": {
-    "message": "min"
   },
   "common.newTab": {
     "message": "(opens in a new tab)"
@@ -246,9 +234,6 @@
   },
   "common.save": {
     "message": "Save"
-  },
-  "common.secondsUnit": {
-    "message": "s"
   },
   "common.yes": {
     "message": "yes"
@@ -808,7 +793,7 @@
     "message": "Cancel"
   },
   "focus.custom": {
-    "message": "Other…",
+    "message": "Other",
     "description": "Choice that lets the person type the length of a focus session."
   },
   "focus.customMinutes": {
@@ -824,10 +809,10 @@
     "message": "End the focus session early"
   },
   "focus.extend": {
-    "message": "+{minutes} min"
+    "message": "+{duration}"
   },
   "focus.extended": {
-    "message": "Session extended by {minutes} minutes."
+    "message": "Session extended by {duration}."
   },
   "focus.left": {
     "message": "{duration} left"
@@ -896,7 +881,7 @@
     "message": "Start"
   },
   "focus.startInN": {
-    "message": "In {n} min"
+    "message": "In {duration}"
   },
   "focus.startNow": {
     "message": "Now"
@@ -917,16 +902,13 @@
     "message": "Focus"
   },
   "focus.until": {
-    "message": "Until…"
+    "message": "Until a time"
   },
   "focus.untilTime": {
     "message": "Until"
   },
   "focus.whichGroups": {
     "message": "Rules to include"
-  },
-  "grant.for": {
-    "message": "for"
   },
   "grant.label": {
     "message": "Once you’re through, open"
@@ -935,28 +917,25 @@
     "message": "How long"
   },
   "grant.mode": {
-    "message": "For"
+    "message": "For how long"
   },
   "grant.mode.minutes": {
-    "message": "a fixed time"
+    "message": "A fixed time"
   },
   "grant.mode.visit": {
-    "message": "the rest of the visit"
+    "message": "The rest of the visit"
   },
   "grant.mode.visitHelp": {
     "message": "Until you leave these pages or stop using them for a while."
   },
-  "grant.scope": {
-    "message": "Where"
-  },
   "grant.scope.group": {
-    "message": "all the rule’s sites"
+    "message": "All the rule’s sites"
   },
   "grant.scope.page": {
-    "message": "this page only"
+    "message": "This page only"
   },
   "grant.scope.site": {
-    "message": "this site"
+    "message": "This site"
   },
   "groups.actions": {
     "message": "More actions for {name}"
@@ -2521,7 +2500,7 @@
     "message": "requested {when}"
   },
   "period.every": {
-    "message": "Every"
+    "message": "Starts again every"
   },
   "period.everyDays": {
     "message": "every {n, plural, one {day} other {# days}}"
@@ -2530,31 +2509,19 @@
     "message": "every {duration}"
   },
   "period.kind.day": {
-    "message": "per day"
-  },
-  "period.kind.every": {
-    "message": "every…",
-    "description": "Followed by a number and a unit: \"every 2 hours\", \"every 3 days\"."
+    "message": "Day"
   },
   "period.kind.hour": {
-    "message": "per hour"
+    "message": "Hour"
   },
   "period.kind.month": {
-    "message": "per month"
+    "message": "Month"
   },
-  "period.kind.rolling": {
-    "message": "in any…",
-    "description": "Followed by a number and a unit: \"in any 2 hours\" (a sliding window)."
+  "period.kind.other": {
+    "message": "Other"
   },
   "period.kind.week": {
-    "message": "per week"
-  },
-  "period.label": {
-    "message": "Period"
-  },
-  "period.offset": {
-    "message": "shifted by",
-    "description": "Offset of aligned periods, e.g. \"every 2 hours, shifted by 30 min\""
+    "message": "Week"
   },
   "period.perDay": {
     "message": "per day"
@@ -2570,9 +2537,6 @@
   },
   "period.rolling": {
     "message": "in any {duration}"
-  },
-  "period.rollingLength": {
-    "message": "In any"
   },
   "permanent.ack": {
     "message": "I understand that only the emergency exit can loosen this rule."
@@ -3138,6 +3102,9 @@
     "message": "Includes sites outside your rules in Insights. Stays on this device."
   },
   "settings.appearance": {
+    "message": "Appearance"
+  },
+  "settings.appearanceLanguage": {
     "message": "Appearance and language"
   },
   "settings.auto": {
@@ -3207,7 +3174,7 @@
     "message": "Days start at"
   },
   "settings.dayStartHelp": {
-    "message": "For night owls: with 04:00, the time until 04:00 still counts as the day before."
+    "message": "For night owls: with {time}, the time until {time} still counts as the day before."
   },
   "settings.formats": {
     "message": "Dates and times"
@@ -3235,6 +3202,12 @@
   },
   "settings.hour12": {
     "message": "Clock"
+  },
+  "settings.hour12.12": {
+    "message": "12-hour"
+  },
+  "settings.hour12.24": {
+    "message": "24-hour"
   },
   "settings.idle": {
     "message": "Stop counting when I’m inactive"

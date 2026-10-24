@@ -637,7 +637,7 @@ function PassStep({
               }}
               labelledBy="how-long"
               options={[
-                ...offered.map((c) => ({ value: c, label: t('common.minutes', { n: c }) })),
+                ...offered.map((c) => ({ value: c, label: formatDuration(c * 60) })),
                 // Hidden when every possible duration is already a choice.
                 ...(step.maxMinutes > offered.length
                   ? [{ value: 'custom' as const, label: t('iv.ask.other') }]
@@ -645,24 +645,22 @@ function PassStep({
               ]}
             />
           </div>
+          {/* Right under "For how long?": a label of its own would only repeat it. */}
           {custom && (
-            <Field
-              label={t('iv.ask.custom')}
-              help={t('iv.ask.upTo', { duration: formatDuration(step.maxMinutes * 60) })}
-            >
-              {(id, describedBy) => (
-                <DurationInput
-                  units={['minutes', 'hours']}
-                  id={id}
-                  value={minutes}
-                  min={1}
-                  max={step.maxMinutes}
-                  label={t('iv.ask.custom')}
-                  describedBy={describedBy}
-                  onChange={(n) => setMinutes(Math.max(1, Math.round(n)))}
-                />
-              )}
-            </Field>
+            <div class="row">
+              <DurationInput
+                units={['minutes', 'hours']}
+                value={minutes}
+                min={1}
+                max={step.maxMinutes}
+                label={t('iv.ask.custom')}
+                describedBy="ask-up-to"
+                onChange={(n) => setMinutes(Math.max(1, Math.round(n)))}
+              />
+              <span class="help" id="ask-up-to">
+                {t('iv.ask.upTo', { duration: formatDuration(step.maxMinutes * 60) })}
+              </span>
+            </div>
           )}
           {left > 0 && (
             <p class="muted small" role="status" aria-live="polite">

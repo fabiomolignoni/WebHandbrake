@@ -129,6 +129,7 @@ export function Segmented<T extends string | number>({
   disabled,
   block,
   labelledBy,
+  class: cls,
 }: {
   value: T;
   onChange: (v: T) => void;
@@ -137,6 +138,7 @@ export function Segmented<T extends string | number>({
   labelledBy?: string;
   disabled?: boolean;
   block?: boolean;
+  class?: string;
 }) {
   const { ref, onKey } = useRovingRadio(options, onChange);
   const selected = options.some((o) => o.value === value);
@@ -146,7 +148,7 @@ export function Segmented<T extends string | number>({
   );
   return (
     <div
-      class={`segmented${block ? ' block' : ''}`}
+      class={`segmented${block ? ' block' : ''}${cls ? ` ${cls}` : ''}`}
       role="radiogroup"
       aria-label={labelledBy ? undefined : label}
       aria-labelledby={labelledBy}
@@ -181,6 +183,8 @@ export function RadioCards<T extends string | number>({
   onChange,
   options,
   label,
+  labelledBy,
+  describedBy,
   class: cls = 'stack stack-sm',
   itemClass = 'choice',
   render,
@@ -188,7 +192,9 @@ export function RadioCards<T extends string | number>({
   value: T;
   onChange: (v: T) => void;
   options: { value: T; disabled?: boolean; tone?: string }[];
-  label: string;
+  label?: string;
+  labelledBy?: string;
+  describedBy?: string;
   class?: string;
   itemClass?: string;
   render: (o: { value: T }, checked: boolean) => ComponentChildren;
@@ -200,7 +206,14 @@ export function RadioCards<T extends string | number>({
     options.findIndex((o) => !o.disabled),
   );
   return (
-    <div class={cls} role="radiogroup" aria-label={label} ref={ref}>
+    <div
+      class={cls}
+      role="radiogroup"
+      aria-label={labelledBy ? undefined : label}
+      aria-labelledby={labelledBy}
+      aria-describedby={describedBy}
+      ref={ref}
+    >
       {options.map((o, i) => {
         const checked = o.value === value;
         return (
@@ -487,6 +500,7 @@ export function Field({
   label: ComponentChildren;
   help?: ComponentChildren;
   error?: string | null;
+  /** The id of the control, and the ids that describe it; a group of radios is labelled by `${id}-label`. */
   children: (id: string, describedBy: string | undefined) => ComponentChildren;
   id?: string;
 }) {
@@ -496,7 +510,9 @@ export function Field({
     [help ? `${fid}-help` : '', error ? `${fid}-err` : ''].filter(Boolean).join(' ') || undefined;
   return (
     <div class="field">
-      <label for={fid}>{label}</label>
+      <label for={fid} id={`${fid}-label`}>
+        {label}
+      </label>
       {children(fid, describedBy)}
       {help && (
         <span class="help" id={`${fid}-help`}>
@@ -512,12 +528,22 @@ export function Field({
   );
 }
 
+/** As many characters as the largest value has, for the width of a number field. */
+const digitsOf = (max: number | undefined, fraction: boolean) =>
+  Math.max(2, String(Math.trunc(Math.abs(max ?? 999))).length) + (fraction ? 2 : 0);
+
+/**
+ * A number, typed in a text field with a numeric keyboard (`type="number"` changes the value when
+ * the page scrolls and has spin arrows too small to hit), stepped with the arrow keys, as wide as
+ * its largest value. Its unit, a word or a list of units, is in the same box (`suffix`).
+ */
 export function NumberInput({
   value,
   onChange,
   min,
   max,
   step = 1,
+  fraction,
   id,
   label,
   describedBy,
@@ -529,57 +555,96 @@ export function NumberInput({
   min?: number;
   max?: number;
   step?: number;
+  /** Fractions can be typed (1.5 hours); otherwise the value is a whole number of steps. */
+  fraction?: boolean;
   id?: string;
   label?: string;
   describedBy?: string;
-  suffix?: string;
+  suffix?: ComponentChildren;
   /** Report the value only when the field loses focus or Enter is pressed (settings that are saved at once). */
   commitOnBlur?: boolean;
 }) {
+  const input = useRef<HTMLInputElement>(null);
   const [text, setText] = useState(String(value));
+  const limit = (n: number) => Math.min(max ?? Infinity, Math.max(min ?? -Infinity, n));
+  /** The number typed, in whole steps unless fractions are allowed; null for no number. */
+  const read = (v: string) => {
+    // A decimal comma is read as a point.
+    const s = v.trim().replace(',', '.');
+    const n = Number(s);
+    if (s === '' || !Number.isFinite(n)) return null;
+    return fraction ? n : Math.round(n / step) * step;
+  };
   const parse = (v: string) => {
-    const n = Number(v);
-    if (v === '' || !Number.isFinite(n)) return null;
-    return Math.min(max ?? Infinity, Math.max(min ?? -Infinity, n));
+    const n = read(v);
+    return n === null ? null : limit(n);
   };
   // A value set from outside, or limited to min and max, replaces the text; the value of the text
   // typed does not, or a late update would overwrite keys typed meanwhile ("120" read as "10").
   useEffect(() => {
-    if (text === '' || Number(text) !== value) setText(String(value));
+    if (text === '' || read(text) !== value) setText(String(value));
   }, [value]);
+  const typed = parse(text);
+  const enter = (v: string) => {
+    setText(v);
+    const n = parse(v);
+    if (!commitOnBlur && n !== null) onChange(n);
+  };
   return (
-    <span class="row nowrap" style={{ gap: '6px' }}>
+    <span class="quantity">
       <input
+        ref={input}
         id={id}
-        class="input num"
-        type="number"
-        inputMode="decimal"
-        value={text}
-        min={min}
-        max={max}
-        step={step}
+        class="quantity-num"
+        type="text"
+        inputMode={fraction ? 'decimal' : 'numeric'}
+        autoComplete="off"
+        role="spinbutton"
+        aria-valuenow={typed ?? value}
+        aria-valuemin={min}
+        aria-valuemax={max}
+        aria-invalid={typed === null}
         aria-label={label}
         aria-describedby={describedBy}
-        onInput={(e) => {
-          const v = (e.target as HTMLInputElement).value;
-          setText(v);
-          const n = parse(v);
-          if (!commitOnBlur && n !== null) onChange(n);
-        }}
+        style={{ ['--digits' as string]: digitsOf(max, Boolean(fraction)) }}
+        value={text}
+        onInput={(e) => enter((e.target as HTMLInputElement).value)}
         onKeyDown={(e) => {
-          if (commitOnBlur && e.key === 'Enter') (e.target as HTMLInputElement).blur();
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            const from = typed ?? value;
+            // A fraction steps to the next whole step: 1.5 → 2.
+            const next = limit(
+              e.key === 'ArrowUp'
+                ? Math.floor(from / step + 1e-9) * step + step
+                : Math.ceil(from / step - 1e-9) * step - step,
+            );
+            enter(String(Math.round(next * 100) / 100));
+          } else if (commitOnBlur && e.key === 'Enter') (e.target as HTMLInputElement).blur();
         }}
         onBlur={() => {
-          const n = parse(text);
-          if (commitOnBlur && n !== null && n !== value) onChange(n);
-          setText(String(n ?? value));
+          if (commitOnBlur && typed !== null && typed !== value) onChange(typed);
+          setText(String(typed ?? value));
         }}
       />
-      {suffix && <span class="muted small">{suffix}</span>}
+      {typeof suffix === 'string' ? (
+        // biome-ignore lint/a11y/noStaticElementInteractions: the input is focusable on its own; a click on its unit is a shortcut.
+        // biome-ignore lint/a11y/useKeyWithClickEvents: as above.
+        <span class="quantity-unit" onClick={() => input.current?.focus()}>
+          {suffix}
+        </span>
+      ) : (
+        suffix
+      )}
     </span>
   );
 }
 
+/**
+ * A list to pick one of many options (five or more, or a list of the person's rules or sites), as
+ * wide as its options. Fewer options are all in view: `Segmented` for short names, `RadioList`
+ * for long ones.
+ */
 export function Select<T extends string>({
   value,
   onChange,
@@ -588,6 +653,7 @@ export function Select<T extends string>({
   label,
   describedBy,
   disabled,
+  class: cls,
 }: {
   value: T;
   onChange: (v: T) => void;
@@ -596,11 +662,12 @@ export function Select<T extends string>({
   label?: string;
   describedBy?: string;
   disabled?: boolean;
+  class?: string;
 }) {
   return (
     <select
       id={id}
-      class="select"
+      class={cls ? `select ${cls}` : 'select'}
       value={value}
       aria-label={label}
       aria-describedby={describedBy}
@@ -613,6 +680,44 @@ export function Select<T extends string>({
         </option>
       ))}
     </select>
+  );
+}
+
+/** Two to four choices with long names, one under the other, each with its radio button. */
+export function RadioList<T extends string>({
+  value,
+  onChange,
+  options,
+  label,
+  labelledBy,
+  describedBy,
+}: {
+  value: T;
+  onChange: (v: T) => void;
+  options: { value: T; label: string }[];
+  label?: string;
+  labelledBy?: string;
+  describedBy?: string;
+}) {
+  return (
+    <RadioCards<T>
+      value={value}
+      onChange={onChange}
+      label={label}
+      labelledBy={labelledBy}
+      describedBy={describedBy}
+      class="radio-list"
+      itemClass="choice"
+      options={options}
+      render={(o, checked) => (
+        <>
+          <span class="radio-dot" aria-hidden="true" />
+          <span class={checked ? 'strong' : undefined}>
+            {options.find((x) => x.value === o.value)?.label}
+          </span>
+        </>
+      )}
+    />
   );
 }
 
@@ -636,8 +741,8 @@ export function durationUnit(
 }
 
 /**
- * A length of time as a number and a unit ("2 hours"), kept in one unit (`base`, minutes unless
- * said). Changing the unit keeps the number: 2 minutes become 2 hours.
+ * A length of time as a number and a unit in one box ("2 hours"), kept in one unit (`base`,
+ * minutes unless said). Changing the unit keeps the number: 2 minutes become 2 hours.
  */
 export function DurationInput({
   value,
@@ -691,23 +796,22 @@ export function DurationInput({
     onChange(clamped, u);
   };
   return (
-    <span class="row nowrap" style={{ gap: '6px' }}>
-      <NumberInput
-        id={id}
-        value={shown}
-        // In a larger unit the arrows count whole units; the minimum is applied in `base` units.
-        min={unit === base ? min : 0}
-        max={top(unit) / per}
-        step={unit === base ? step : 1}
-        label={label}
-        describedBy={describedBy}
-        commitOnBlur={commitOnBlur}
-        onChange={(n) => report(n * per, unit)}
-      />
-      {units.length === 1 ? (
-        <span class="muted small">{t(`duration.unit.${unit}`, { n: shown })}</span>
-      ) : (
-        <span>
+    <NumberInput
+      id={id}
+      value={shown}
+      // In a larger unit the arrows count whole units; the minimum is applied in `base` units.
+      min={unit === base ? min : 0}
+      max={top(unit) / per}
+      step={unit === base ? step : 1}
+      fraction={unit !== base}
+      label={label}
+      describedBy={describedBy}
+      commitOnBlur={commitOnBlur}
+      onChange={(n) => report(n * per, unit)}
+      suffix={
+        units.length === 1 ? (
+          t(`duration.unit.${unit}`, { n: shown })
+        ) : (
           <Select<DurationUnit>
             value={unit}
             label={label ? t('duration.unitOf', { label }) : t('duration.unit')}
@@ -717,9 +821,9 @@ export function DurationInput({
             }}
             options={units.map((u) => ({ value: u, label: t(`duration.unit.${u}`, { n: shown }) }))}
           />
-        </span>
-      )}
-    </span>
+        )
+      }
+    />
   );
 }
 

@@ -41,7 +41,7 @@ import {
   GroupTile,
   Menu,
   RadioCards,
-  Select,
+  RadioList,
   StatusPill,
   Toggle,
   toast,
@@ -673,8 +673,8 @@ export function RuleEditor(props: Props) {
         <AdvancedOptions open={optionsAdvanced(draft.options)}>
           <Field label={t('editor.privacy')} help={t('editor.privacyHelp')}>
             {(fid, d) => (
-              <Select<Group['options']['privacy']>
-                id={fid}
+              <RadioList<Group['options']['privacy']>
+                labelledBy={`${fid}-label`}
                 describedBy={d}
                 value={draft.options.privacy}
                 onChange={(privacy) => set({ options: { ...draft.options, privacy } })}
@@ -688,8 +688,8 @@ export function RuleEditor(props: Props) {
           </Field>
           <Field label={t('editor.tabs')} help={t('editor.tabsHelp')}>
             {(fid, d) => (
-              <Select<Group['options']['tabs']>
-                id={fid}
+              <RadioList<Group['options']['tabs']>
+                labelledBy={`${fid}-label`}
                 describedBy={d}
                 value={draft.options.tabs}
                 onChange={(tabs) => set({ options: { ...draft.options, tabs } })}
