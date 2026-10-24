@@ -11,6 +11,7 @@ import {
   delay,
   during,
   group,
+  pauseFree,
   policy,
   REMINDER,
   timeBudget,
@@ -414,8 +415,9 @@ test('the main settings of what happens are chosen with it (#14)', async ({ h })
   await p.text('From gentlest to strongest.').expectCount(0);
   // A filter: which one, and nothing more.
   await p.role('radio', 'Filter').click();
-  await p.get('select[aria-label="Filter"]').select('blur');
-  await p.get('select[aria-label="Filter"] option[value="none"]').expectCount(0);
+  await p.role('radio', 'Blur').click();
+  // Five filters, all in view, and no "none".
+  await p.get('[role="radiogroup"][aria-label="Filter"] [role="radio"]').expectCount(5);
   await p.text('Advanced options', { exact: true }).expectCount(0);
   await toSummary(p, { name: 'Feeds' });
   await p.get('.plan-text').expectText('makes the page less appealing (Blur)');
@@ -437,16 +439,16 @@ test('the main settings of what happens are chosen with it (#14)', async ({ h })
   await p.role('radio', 'Fixed').click();
   await p.button('Next: protection').expectEnabled(true);
   // Everything else about a wait is in view too: no advanced options.
-  await p.label('Where').expectVisible();
-  await p.label('If you switch to another tab during the wait').expectVisible();
+  await p.role('radiogroup', 'Once you’re through, open').expectVisible();
+  await p.role('radiogroup', 'If you switch to another tab during the wait').expectVisible();
   await p.role('switch', 'Show the countdown').expectChecked(true);
   await p.role('switch', 'Open the page as soon as the wait is over').expectChecked(false);
   await p.text('Advanced options', { exact: true }).expectCount(0);
   // A challenge: which kind; a phrase must be written before going on.
   await p.role('radio', 'Challenge').click();
-  await p.label('Where').expectVisible();
+  await p.role('radiogroup', 'Once you’re through, open').expectVisible();
   await p.text('Advanced options', { exact: true }).expectCount(0);
-  await p.get('select[aria-label="Challenge"]').select('phrase');
+  await p.role('radio', 'A phrase you choose').click();
   await p.button('Next: protection').expectEnabled(false);
   await p.label('Phrase to type').fill('I choose to spend this time on purpose');
   await p.button('Next: protection').expectEnabled(true);
@@ -690,6 +692,38 @@ test('in the editor a limit and its period are a number and a unit', async ({ h 
     .toMatchObject({ type: 'time', minutes: 30 * 60, period: { kind: 'days', n: 2 } });
 });
 
+test('a number is typed or stepped with the arrow keys, in one box with its unit', async ({ h }) => {
+  await h.configure((c) => {
+    c.groups = [group('Clips', ['clips.test'], [policy(BLOCK)], { protection: REMINDER, pause: pauseFree })];
+  });
+  const id = (await h.rpc('config.get')).config.groups[0].id;
+  const p = await h.page(`dashboard.html#/groups/${id}?step=how`);
+  const most = p.role('spinbutton', 'At most', { exact: true });
+  await most.expectValue('30');
+  await most.press('ArrowUp');
+  await most.expectValue('31');
+  // The unit keeps the number; in hours a fraction can be typed, with a decimal comma too.
+  await most.fill('2');
+  await p.label('At most: unit').select('hours');
+  await most.fill('1,5');
+  // Not a number: the field says so, and leaving it gives back the last value.
+  await most.fill('x');
+  await expect.poll(() => most.attr('aria-invalid')).toBe('true');
+  await most.press('Tab');
+  await most.expectValue('1.5');
+  // How often the limits of breaks start again: the usual periods, or any length.
+  await p.role('checkbox', 'At most this many breaks').click();
+  await p.role('radio', 'Week', { exact: true }).click();
+  await p.role('radio', 'Other', { exact: true }).click();
+  await p.label('Starts again every', { exact: true }).expectValue('7');
+  await p.label('Starts again every: unit').expectValue('days');
+  await p.button('Save changes').click();
+  await p.button('Yes, continue').click();
+  await expect
+    .poll(async () => (await h.rpc('config.get')).config.groups[0].pause)
+    .toMatchObject({ maxMinutes: 90, limit: { count: 3, period: { kind: 'days', n: 7 } } });
+});
+
 test("first run, welcome → the rule editor's parts → done", async ({ h }) => {
   const p = await h.page('dashboard.html#/welcome');
   await p.role('heading', 'Welcome to WebHandbrake').expectVisible();
@@ -803,12 +837,12 @@ test('When shows every setting of its answer, with no advanced options; Details 
   await openPart(p, 'What happens');
   await p.role('radio', 'Wait').click();
   await p.text('Advanced options', { exact: true }).expectCount(0);
-  await p.label('If you switch to another tab during the wait').select('restart');
+  await p.role('radio', 'The wait starts again').click();
   // Details: the windows the rule applies to.
   await openPart(p, 'Details');
-  await p.label('Windows').expectHidden();
+  await p.role('radio', 'Only normal windows').expectHidden();
   await p.text('Advanced options', { exact: true }).click();
-  await p.label('Windows').select('normal');
+  await p.role('radio', 'Only normal windows').click();
   await openPart(p, 'Summary');
   await p.get('.plan-text').expectText('After 4 visits every 2 h to video.test');
   await p.button('Save changes').click();
@@ -830,9 +864,9 @@ test('When shows every setting of its answer, with no advanced options; Details 
   await again.role('radio', /^After some visits/).expectChecked();
   await again.label('How many visits?').expectValue('4');
   await openPart(again, 'What happens');
-  await again.label('If you switch to another tab during the wait').expectValue('restart');
+  await again.role('radio', 'The wait starts again').expectChecked();
   await openPart(again, 'Details');
-  await again.label('Windows').expectValue('normal');
+  await again.role('radio', 'Only normal windows').expectChecked();
 });
 
 test('exceptions stand out among the sites, which are edited as text and never repeated', async ({ h }) => {

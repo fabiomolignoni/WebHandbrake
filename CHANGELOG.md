@@ -105,6 +105,19 @@ All notable changes to WebHandbrake are documented here. The format follows
 - The popup opens the dashboard from a wide **Dashboard** bar at its end, which stays in view when
   the popup scrolls and shows today's time on limited sites. The whole bar can be clicked or
   tapped; the small button at the top and the **Details** link to Insights are gone.
+- Numbers and choices are quicker to set. A number and its unit are one field (“45 minutes”), as
+  wide as the number, with a numeric keyboard on phones and the arrow keys to step it; scrolling
+  the page no longer changes it, and a decimal comma is understood (“1,5 hours”). A choice among a
+  few short options shows them all as buttons: the filter, the kind of challenge, what opens once
+  you are through a wait or a challenge and for how long, the clock, the date format, the first
+  day of the week, and the on-page timer's position and size. A few long options are a list with
+  radio buttons: what happens to a wait when you switch tabs, a rule's windows and tabs, and
+  blocking the browser's settings pages. Drop-down lists are left for many options, and are as
+  wide as their options. The limits of breaks start again every **Hour**, **Day**, **Week**,
+  **Month** or any other length (**Other**), with the same words as in When. The usual lengths
+  read as elsewhere (“1 h 30 min” instead of “90 min”), **Warn before a restriction starts** takes
+  seconds or minutes, **Days start at** follows the clock setting, and **Language** is hidden
+  while English is the only language.
 
 ### Removed
 

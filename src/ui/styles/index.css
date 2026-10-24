@@ -749,6 +749,81 @@ blockquote {
 .input.num {
   width: 6.5em;
 }
+/* A list is as wide as its options, not as the card (nor stretched in a column). */
+.select {
+  width: fit-content;
+  max-width: 100%;
+}
+/* In the narrow popup a list is as wide as the fields around it. */
+.popup .field > .select {
+  width: 100%;
+}
+/* A number and its unit (a word, or a list of units) in one box. */
+.quantity {
+  display: inline-flex;
+  align-items: stretch;
+  width: fit-content;
+  max-width: 100%;
+  min-height: var(--target);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  vertical-align: middle;
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
+}
+.quantity:hover {
+  border-color: var(--text-2);
+}
+.quantity:focus-within {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 28%, transparent);
+}
+.quantity:has(.quantity-num[aria-invalid="true"]) {
+  border-color: var(--danger);
+}
+.quantity-num {
+  /* Tabular digits are 1ch wide each. */
+  width: calc(var(--digits, 3) * 1ch + 2 * var(--s3));
+  min-width: 0;
+  padding: 0 var(--s3);
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+/* The box shows the focus. */
+.quantity-num:focus {
+  outline: none;
+}
+.quantity-unit {
+  display: inline-flex;
+  align-items: center;
+  padding-inline-end: var(--s3);
+  color: var(--text-2);
+  white-space: nowrap;
+  cursor: text;
+}
+.quantity > .select {
+  min-height: 0;
+  border: 0;
+  border-inline-start: 1px solid var(--border);
+  border-radius: 0;
+  border-start-end-radius: inherit;
+  border-end-end-radius: inherit;
+  background-color: var(--surface-2);
+}
+.quantity > .select:hover {
+  background-color: var(--surface-3);
+}
+.quantity > .select:focus-visible {
+  box-shadow: none;
+  background-color: var(--accent-soft);
+}
 .textarea {
   min-height: 88px;
   resize: vertical;
@@ -958,6 +1033,12 @@ blockquote {
 .segmented.block button {
   flex: 1 1 0;
   padding: 0 var(--s2);
+}
+/* The four corners of the screen, where they are. */
+.segmented.corners {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: min(100%, 320px);
 }
 @media (pointer: coarse) {
   .segmented button {
@@ -2965,6 +3046,22 @@ body.page-popup {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+/* A few choices with long names, one under the other. */
+.radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 520px;
+}
+.radio-list .choice {
+  padding: var(--s2) var(--s3);
+  align-items: center;
+  border-radius: var(--radius-sm);
+  min-height: var(--target);
+}
+.radio-list .choice .radio-dot {
+  margin-top: 0;
 }
 .granularity .choice {
   padding: var(--s2) var(--s3);

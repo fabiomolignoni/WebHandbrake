@@ -77,11 +77,11 @@ function SessionCard({
             icon="plus"
             onClick={async () => {
               await call('session.extend', { id: s.id, minutes: m });
-              toast(t('focus.extended', { minutes: m }));
+              toast(t('focus.extended', { duration: formatDuration(m * 60) }));
               onChange();
             }}
           >
-            {t('focus.extend', { minutes: m })}
+            {t('focus.extend', { duration: formatDuration(m * 60) })}
           </Button>
         ))}
         {!s.locked && (
@@ -177,8 +177,7 @@ export function QuickSession({
       labelledBy={compact ? undefined : 'focus-duration'}
       label={t('focus.duration')}
       options={[
-        ...QUICK_SESSION_MINUTES.map((n) => ({ value: n, label: t('common.minutes', { n }) })),
-        { value: 180, label: t('common.hours', { n: 3 }) },
+        ...[...QUICK_SESSION_MINUTES, 180].map((n) => ({ value: n, label: formatDuration(n * 60) })),
         { value: 'until', label: t('focus.until') },
         { value: 'custom', label: t('focus.custom') },
       ]}
@@ -300,7 +299,8 @@ export function QuickSession({
               labelledBy="focus-start"
               options={DELAYS.map((d) => ({
                 value: d,
-                label: d === 0 ? t('focus.startNow') : t('focus.startInN', { n: d }),
+                label:
+                  d === 0 ? t('focus.startNow') : t('focus.startInN', { duration: formatDuration(d * 60) }),
               }))}
             />
           </div>

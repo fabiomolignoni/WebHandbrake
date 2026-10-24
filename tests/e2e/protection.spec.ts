@@ -283,7 +283,7 @@ test('browser settings pages are protected as the mode says; loosening it follow
   await blocked.close();
   // The rule asks only for a reminder: this setting waits as long as the emergency exit instead.
   const p = await h.page('dashboard.html#/protection');
-  await p.label('Block the browser’s extension and settings pages').select('never');
+  await p.role('radio', 'Never', { exact: true }).click();
   await p.text(/so it waits 24 h, like the emergency exit/).expectVisible();
   await p.button('OK', { within: 'dialog' }).click();
   await p.text(/Follows the emergency exit: confirm it by typing a sentence/).expectVisible();

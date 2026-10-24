@@ -4,6 +4,7 @@
  */
 
 import { t } from '../../i18n/i18n';
+import { formatDuration } from '../../shared/format';
 import { DurationInput, Segmented } from '../../ui/components';
 
 export const DAILY_MINUTES = [15, 30, 45, 60, 90, 120];
@@ -35,7 +36,7 @@ export function DailyMinutes({
         label={label}
         labelledBy={labelledBy}
         options={[
-          ...DAILY_MINUTES.map((m) => ({ value: m, label: t('common.minutes', { n: m }) })),
+          ...DAILY_MINUTES.map((m) => ({ value: m, label: formatDuration(m * 60) })),
           { value: OTHER, label: t('dailyMinutes.other') },
         ]}
       />

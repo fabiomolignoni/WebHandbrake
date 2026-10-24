@@ -337,6 +337,8 @@ test.describe('intention question', () => {
     await p.label('Your reason').fill('Watch the lecture');
     await p.role('radio', 'Other').click();
     await p.label('How long?', { exact: true }).fill('90');
+    // Above the maximum, the field shows the maximum at once.
+    await p.label('How long?', { exact: true }).expectValue('45');
     await p.button('Continue for 45 min').expectVisible();
     await p.label('How long?', { exact: true }).fill('25');
     await p.button('Continue for 25 min').click(15_000);

@@ -11,7 +11,7 @@ import {
 import type { Config, Settings } from '../../engine/types';
 import { AVAILABLE_LOCALES, t } from '../../i18n/i18n';
 import { api } from '../../platform/api';
-import { formatDateTime, weekdayNames } from '../../shared/format';
+import { formatDateTime, formatMinutesOfDay, weekdayNames } from '../../shared/format';
 import { NEW_ISSUE_URL } from '../../shared/links';
 import type { ImportPreview } from '../../shared/models';
 import { call } from '../../shared/rpc';
@@ -22,7 +22,6 @@ import {
   Dialog,
   DurationInput,
   Field,
-  NumberInput,
   Segmented,
   Select,
   Spinner,
@@ -33,7 +32,7 @@ import { copyText, downloadText, pickTextFile } from '../../ui/download';
 import { useModel } from '../../ui/hooks';
 import { Icon } from '../../ui/icons';
 import { useSaveFlow } from '../../ui/saveflow';
-import { PeriodSelect } from '../components/policy';
+import { BreakLimits } from '../components/pause-editor';
 import { useDashboard } from '../context';
 import { navigate } from '../router';
 
@@ -57,7 +56,7 @@ function General() {
   return (
     <div class="stack stack-lg">
       <div class="card stack">
-        <h2>{t('settings.appearance')}</h2>
+        <h2>{t(AVAILABLE_LOCALES.length > 1 ? 'settings.appearanceLanguage' : 'settings.appearance')}</h2>
         <Field label={t('settings.theme')}>
           {() => (
             <Segmented
@@ -77,75 +76,82 @@ function General() {
           onChange={(v) => void save((x) => (x.highContrast = v))}
           label={t('settings.highContrast')}
         />
-        <Field label={t('settings.language')} help={t('settings.languageHelp')}>
-          {(id, d) => (
-            <Select
-              id={id}
-              describedBy={d}
-              value={s.language}
-              onChange={(language) => void save((x) => (x.language = language)).then(() => location.reload())}
+        {/* With one language there is nothing to choose. */}
+        {AVAILABLE_LOCALES.length > 1 && (
+          <Field label={t('settings.language')} help={t('settings.languageHelp')}>
+            {(id, d) => (
+              <Select
+                id={id}
+                describedBy={d}
+                value={s.language}
+                onChange={(language) =>
+                  void save((x) => (x.language = language)).then(() => location.reload())
+                }
+                options={[
+                  { value: 'auto', label: t('settings.language.auto') },
+                  ...AVAILABLE_LOCALES.map((l) => ({ value: l.code, label: l.name })),
+                ]}
+              />
+            )}
+          </Field>
+        )}
+      </div>
+      <div class="card stack">
+        <h2>{t('settings.formats')}</h2>
+        <Field label={t('settings.hour12')}>
+          {(id) => (
+            <Segmented
+              labelledBy={`${id}-label`}
+              value={s.hour12}
+              onChange={(hour12) => void save((x) => (x.hour12 = hour12))}
               options={[
-                { value: 'auto', label: t('settings.language.auto') },
-                ...AVAILABLE_LOCALES.map((l) => ({ value: l.code, label: l.name })),
+                { value: 'auto', label: t('settings.auto') },
+                { value: '24', label: t('settings.hour12.24') },
+                { value: '12', label: t('settings.hour12.12') },
               ]}
             />
           )}
         </Field>
-      </div>
-      <div class="card stack">
-        <h2>{t('settings.formats')}</h2>
-        <div class="grid" style={{ ['--min' as string]: '220px' }}>
-          <Field label={t('settings.hour12')}>
-            {(id) => (
-              <Select
-                id={id}
-                value={s.hour12}
-                onChange={(hour12) => void save((x) => (x.hour12 = hour12))}
-                options={[
-                  { value: 'auto', label: t('settings.auto') },
-                  { value: '24', label: '24h' },
-                  { value: '12', label: '12h' },
-                ]}
-              />
-            )}
-          </Field>
-          <Field label={t('settings.dateFormat')}>
-            {(id) => (
-              <Select
-                id={id}
-                value={s.dateFormat}
-                onChange={(dateFormat) => void save((x) => (x.dateFormat = dateFormat))}
-                options={[
-                  { value: 'auto', label: t('settings.auto') },
-                  { value: 'iso', label: 'YYYY-MM-DD' },
-                ]}
-              />
-            )}
-          </Field>
-          <Field label={t('settings.weekStart')}>
-            {(id) => (
-              <Select
-                id={id}
-                value={String(s.weekStart)}
-                onChange={(v) => void save((x) => (x.weekStart = Number(v)))}
-                options={[1, 6, 0].map((d) => ({ value: String(d), label: weekdays[d] }))}
-              />
-            )}
-          </Field>
-          <Field label={t('settings.dayStart')} help={t('settings.dayStartHelp')}>
-            {(id) => (
-              <Select
-                id={id}
-                value={String(s.dayStart)}
-                onChange={(v) => void save((x) => (x.dayStart = Number(v)))}
-                options={[0, 60, 120, 180, 240, 300, 360].map((m) => ({
-                  value: String(m),
-                  label: `${String(m / 60).padStart(2, '0')}:00`,
-                }))}
-              />
-            )}
-          </Field>
-        </div>
+        <Field label={t('settings.dateFormat')}>
+          {(id) => (
+            <Segmented
+              labelledBy={`${id}-label`}
+              value={s.dateFormat}
+              onChange={(dateFormat) => void save((x) => (x.dateFormat = dateFormat))}
+              options={[
+                { value: 'auto', label: t('settings.auto') },
+                { value: 'iso', label: 'YYYY-MM-DD' },
+              ]}
+            />
+          )}
+        </Field>
+        <Field label={t('settings.weekStart')}>
+          {(id) => (
+            <Segmented
+              labelledBy={`${id}-label`}
+              value={s.weekStart}
+              onChange={(weekStart) => void save((x) => (x.weekStart = weekStart))}
+              options={[1, 6, 0].map((d) => ({ value: d, label: weekdays[d] }))}
+            />
+          )}
+        </Field>
+        <Field
+          label={t('settings.dayStart')}
+          help={t('settings.dayStartHelp', { time: formatMinutesOfDay(4 * 60) })}
+        >
+          {(id, d) => (
+            <Select
+              id={id}
+              describedBy={d}
+              value={String(s.dayStart)}
+              onChange={(v) => void save((x) => (x.dayStart = Number(v)))}
+              options={[0, 60, 120, 180, 240, 300, 360].map((m) => ({
+                value: String(m),
+                label: formatMinutesOfDay(m),
+              }))}
+            />
+          )}
+        </Field>
       </div>
       <div class="card stack">
         <h2>{t('settings.mode')}</h2>
@@ -183,62 +189,63 @@ function Feedback() {
           label={t('settings.timer.enabled')}
           help={t('settings.timer.help')}
         />
-        <div class="grid" style={{ ['--min' as string]: '200px' }}>
-          <Field label={t('settings.timer.threshold')}>
-            {() => (
-              <DurationInput
-                units={['minutes', 'hours']}
-                commitOnBlur
-                value={s.timer.thresholdMinutes}
-                min={1}
-                max={1440}
-                label={t('settings.timer.threshold')}
-                onChange={(v) => void save((x) => (x.timer.thresholdMinutes = v))}
-              />
-            )}
-          </Field>
-          <Field label={t('settings.timer.corner')}>
-            {(id) => (
-              <Select
-                id={id}
-                value={s.timer.corner}
-                onChange={(corner) => void save((x) => (x.timer.corner = corner))}
-                options={(['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const).map((c) => ({
-                  value: c,
-                  label: t(`settings.corner.${c}`),
-                }))}
-              />
-            )}
-          </Field>
-          <Field label={t('settings.timer.size')}>
-            {(id) => (
-              <Select
-                id={id}
-                value={s.timer.size}
-                onChange={(size) => void save((x) => (x.timer.size = size))}
-                options={(['small', 'medium', 'large'] as const).map((c) => ({
-                  value: c,
-                  label: t(`settings.size.${c}`),
-                }))}
-              />
-            )}
-          </Field>
-          <Field label={t('settings.timer.opacity')}>
-            {(id) => (
-              <input
-                id={id}
-                type="range"
-                min={0.4}
-                max={1}
-                step={0.05}
-                value={s.timer.opacity}
-                onChange={(e) =>
-                  void save((x) => (x.timer.opacity = Number((e.target as HTMLInputElement).value)))
-                }
-              />
-            )}
-          </Field>
-        </div>
+        <Field label={t('settings.timer.threshold')}>
+          {(id) => (
+            <DurationInput
+              id={id}
+              units={['minutes', 'hours']}
+              commitOnBlur
+              value={s.timer.thresholdMinutes}
+              min={1}
+              max={1440}
+              label={t('settings.timer.threshold')}
+              onChange={(v) => void save((x) => (x.timer.thresholdMinutes = v))}
+            />
+          )}
+        </Field>
+        <Field label={t('settings.timer.corner')}>
+          {(id) => (
+            // Two by two, where the corners are on the screen.
+            <Segmented
+              class="corners"
+              labelledBy={`${id}-label`}
+              value={s.timer.corner}
+              onChange={(corner) => void save((x) => (x.timer.corner = corner))}
+              options={(['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const).map((c) => ({
+                value: c,
+                label: t(`settings.corner.${c}`),
+              }))}
+            />
+          )}
+        </Field>
+        <Field label={t('settings.timer.size')}>
+          {(id) => (
+            <Segmented
+              labelledBy={`${id}-label`}
+              value={s.timer.size}
+              onChange={(size) => void save((x) => (x.timer.size = size))}
+              options={(['small', 'medium', 'large'] as const).map((c) => ({
+                value: c,
+                label: t(`settings.size.${c}`),
+              }))}
+            />
+          )}
+        </Field>
+        <Field label={t('settings.timer.opacity')}>
+          {(id) => (
+            <input
+              id={id}
+              type="range"
+              min={0.4}
+              max={1}
+              step={0.05}
+              value={s.timer.opacity}
+              onChange={(e) =>
+                void save((x) => (x.timer.opacity = Number((e.target as HTMLInputElement).value)))
+              }
+            />
+          )}
+        </Field>
       </div>
       <div class="card stack">
         <h2>{t('settings.badge')}</h2>
@@ -248,8 +255,9 @@ function Feedback() {
           label={t('settings.badge.enabled')}
         />
         <Field label={t('settings.badge.threshold')}>
-          {() => (
+          {(id) => (
             <DurationInput
+              id={id}
               units={['minutes', 'hours']}
               commitOnBlur
               value={s.badge.thresholdMinutes}
@@ -264,13 +272,16 @@ function Feedback() {
       <div class="card stack">
         <h2>{t('settings.warnings')}</h2>
         <Field label={t('settings.warningSeconds')} help={t('settings.warningSecondsHelp')}>
-          {() => (
-            <NumberInput
+          {(id, d) => (
+            <DurationInput
+              id={id}
+              describedBy={d}
+              base="seconds"
+              units={['seconds', 'minutes']}
               commitOnBlur
               value={s.warningSeconds}
               min={0}
               max={3600}
-              suffix={t('common.secondsUnit')}
               label={t('settings.warningSeconds')}
               onChange={(v) => void save((x) => (x.warningSeconds = v))}
             />
@@ -344,8 +355,9 @@ function TimeSettings() {
         />
         {s.tracking.idleEnabled && (
           <Field label={t('settings.idleSeconds')}>
-            {() => (
+            {(id) => (
               <DurationInput
+                id={id}
                 base="seconds"
                 units={['seconds', 'minutes']}
                 commitOnBlur
@@ -371,8 +383,10 @@ function TimeSettings() {
           help={t('settings.countInactiveHelp')}
         />
         <Field label={t('settings.visitGap')} help={t('settings.visitGapHelp')}>
-          {() => (
+          {(id, d) => (
             <DurationInput
+              id={id}
+              describedBy={d}
               units={['minutes', 'hours']}
               commitOnBlur
               value={s.tracking.visitGapMinutes}
@@ -393,13 +407,16 @@ function TimeSettings() {
           help={t('settings.allSitesHelp')}
         />
         <Field label={t('settings.retention')} help={t('settings.retentionHelp')}>
-          {() => (
-            <NumberInput
+          {(id, d) => (
+            <DurationInput
+              id={id}
+              describedBy={d}
+              base="days"
+              units={['days']}
               commitOnBlur
               value={s.tracking.retentionDays}
               min={7}
               max={3650}
-              suffix={t('common.daysUnit')}
               label={t('settings.retention')}
               onChange={(v) => void save((x) => (x.tracking.retentionDays = v))}
             />
@@ -437,8 +454,10 @@ function InterventionSettings() {
           help={t('settings.autoReopenHelp')}
         />
         <Field label={t('settings.grace')} help={t('settings.graceHelp')}>
-          {() => (
+          {(id, d) => (
             <DurationInput
+              id={id}
+              describedBy={d}
               base="seconds"
               units={['seconds', 'minutes']}
               commitOnBlur
@@ -454,63 +473,11 @@ function InterventionSettings() {
       <div class="card stack">
         <h2>{t('settings.globalBreaks')}</h2>
         <p class="help">{t('settings.globalBreaksHelp')}</p>
-        <div class="row">
-          <label class="check small">
-            <input
-              type="checkbox"
-              checked={s.pauseLimit.count !== undefined}
-              onChange={(e) =>
-                void save((x) => {
-                  x.pauseLimit = {
-                    ...x.pauseLimit,
-                    count: (e.target as HTMLInputElement).checked ? 5 : undefined,
-                  };
-                })
-              }
-            />
-            {t('pauseRules.limitCount')}
-          </label>
-          {s.pauseLimit.count !== undefined && (
-            <NumberInput
-              commitOnBlur
-              value={s.pauseLimit.count}
-              min={0}
-              max={100}
-              label={t('pauseRules.limitCount')}
-              onChange={(v) => void save((x) => (x.pauseLimit = { ...x.pauseLimit, count: v }))}
-            />
-          )}
-          <label class="check small">
-            <input
-              type="checkbox"
-              checked={s.pauseLimit.minutes !== undefined}
-              onChange={(e) =>
-                void save((x) => {
-                  x.pauseLimit = {
-                    ...x.pauseLimit,
-                    minutes: (e.target as HTMLInputElement).checked ? 60 : undefined,
-                  };
-                })
-              }
-            />
-            {t('pauseRules.limitMinutes')}
-          </label>
-          {s.pauseLimit.minutes !== undefined && (
-            <DurationInput
-              units={['minutes', 'hours']}
-              commitOnBlur
-              value={s.pauseLimit.minutes}
-              min={0}
-              max={10000}
-              label={t('pauseRules.limitMinutes')}
-              onChange={(v) => void save((x) => (x.pauseLimit = { ...x.pauseLimit, minutes: v }))}
-            />
-          )}
-        </div>
-        <PeriodSelect
-          period={s.pauseLimit.period}
-          allowRolling={false}
-          onChange={(period) => void save((x) => (x.pauseLimit = { ...x.pauseLimit, period }))}
+        <BreakLimits
+          commitOnBlur
+          value={s.pauseLimit}
+          defaults={{ count: 5, minutes: 60 }}
+          onChange={(limit) => void save((x) => (x.pauseLimit = limit))}
         />
       </div>
       <div class="card stack">

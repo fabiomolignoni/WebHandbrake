@@ -1,120 +1,19 @@
 /**
  * When the condition of a rule applies (`ConditionEditor`): every time, at certain times, after
- * some time or after some visits, each with its settings in view. Also the period of the limits of
- * breaks (`PeriodSelect`).
+ * some time or after some visits, each with its settings in view.
  */
 
 import { useId } from 'preact/hooks';
 import { DAY_MINUTES, everyPeriod, periodMinutes, SCHEDULE_PRESETS } from '../../engine/defaults';
 import { clone } from '../../engine/json';
-import type {
-  Budget,
-  Period,
-  Policy,
-  Schedule,
-  TimeBudget,
-  TimeWindow,
-  VisitBudget,
-} from '../../engine/types';
+import type { Budget, Policy, Schedule, TimeBudget, TimeWindow, VisitBudget } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { formatDuration } from '../../shared/format';
-import { describePeriod } from '../../shared/summary';
-import { DurationInput, NumberInput, RadioCards, Select, Toggle } from '../../ui/components';
+import { DurationInput, NumberInput, RadioCards, Toggle } from '../../ui/components';
 import { Icon } from '../../ui/icons';
 import { type WhenKind, whenKind } from '../rule-form';
 import { DailyMinutes } from './daily-minutes';
 import { WindowsEditor } from './schedule';
-
-/** "every 2 hours" and "every 3 days" are one choice in the list, with a number and a unit. */
-type PeriodChoice = 'hour' | 'day' | 'week' | 'month' | 'every' | 'rolling';
-const choiceOf = (p: Period): PeriodChoice => (p.kind === 'minutes' || p.kind === 'days' ? 'every' : p.kind);
-
-export function PeriodSelect({
-  period,
-  onChange,
-  allowRolling = true,
-}: {
-  period: Period;
-  onChange: (p: Period) => void;
-  allowRolling?: boolean;
-}) {
-  const offsetAllowed = allowRolling;
-  const choices: PeriodChoice[] = [
-    'hour',
-    'day',
-    'week',
-    'month',
-    'every',
-    ...(allowRolling ? (['rolling'] as const) : []),
-  ];
-  const choice = choiceOf(period);
-  return (
-    <div class="row">
-      <span style={{ minWidth: '160px' }}>
-        <Select<PeriodChoice>
-          value={choice}
-          label={t('period.label')}
-          onChange={(c) => {
-            if (c === choice) return;
-            if (c === 'every') onChange({ kind: 'minutes', n: 120 });
-            else if (c === 'rolling')
-              onChange({ kind: 'rolling', n: period.kind === 'minutes' ? (period.n ?? 120) : 120 });
-            else onChange({ kind: c });
-          }}
-          options={choices.map((c) => ({ value: c, label: t(`period.kind.${c}`) }))}
-        />
-      </span>
-      {choice === 'every' && (
-        <DurationInput
-          value={period.kind === 'days' ? (period.n ?? 1) * DAY_MINUTES : (period.n ?? 120)}
-          min={5}
-          max={90 * DAY_MINUTES}
-          unitMax={{ minutes: DAY_MINUTES, hours: DAY_MINUTES }}
-          label={t('period.every')}
-          onChange={(minutes, unit) => {
-            const kind = unit === 'days' ? 'days' : 'minutes';
-            const n = kind === 'days' ? Math.max(1, Math.round(minutes / DAY_MINUTES)) : minutes;
-            // An offset in minutes means nothing for a period of days, and the other way round.
-            onChange({
-              kind,
-              n,
-              ...(kind === period.kind && period.offset ? { offset: period.offset } : {}),
-            });
-          }}
-        />
-      )}
-      {period.kind === 'rolling' && (
-        <DurationInput
-          value={period.n ?? 120}
-          units={['minutes', 'hours']}
-          min={5}
-          max={DAY_MINUTES}
-          label={t('period.rollingLength')}
-          onChange={(n) => onChange({ ...period, n })}
-        />
-      )}
-      {(period.kind === 'minutes' || period.kind === 'days') && offsetAllowed && (
-        <>
-          <span class="small">{t('period.offset')}</span>
-          <NumberInput
-            value={period.offset ?? 0}
-            min={0}
-            max={
-              period.kind === 'minutes' ? Math.max(0, (period.n ?? 60) - 1) : Math.max(0, (period.n ?? 1) - 1)
-            }
-            label={t('period.offset')}
-            suffix={period.kind === 'minutes' ? t('common.minutesUnit') : t('common.daysUnit')}
-            onChange={(offset) => onChange({ ...period, offset: offset || undefined })}
-          />
-        </>
-      )}
-      {/* "per day" would only repeat the choice: the sentence helps only with a length. */}
-      {(period.kind === 'minutes' || period.kind === 'days' || period.kind === 'rolling') && (
-        <span class="help">{describePeriod(period)}</span>
-      )}
-    </div>
-  );
-}
 
 const WHEN_KINDS: WhenKind[] = ['always', 'schedule', 'limit', 'visits'];
 const WHEN_CARD: Record<WhenKind, { icon: string; label: string; desc: string }> = {

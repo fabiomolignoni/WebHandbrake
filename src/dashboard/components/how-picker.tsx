@@ -19,7 +19,7 @@ import type {
 import { isRedirectUrl } from '../../engine/validate';
 import { t } from '../../i18n/i18n';
 import { formatDuration } from '../../shared/format';
-import { DurationInput, NumberInput, RadioCards, Segmented, Select, Toggle } from '../../ui/components';
+import { DurationInput, NumberInput, RadioCards, RadioList, Segmented, Toggle } from '../../ui/components';
 import { Icon } from '../../ui/icons';
 import { interventionIcon, LADDER, toneOf } from '../../ui/status';
 
@@ -95,8 +95,8 @@ function Options({ value: v, onChange }: { value: Intervention; onChange: (i: In
   switch (v.type) {
     case 'filter':
       return (
-        <div class="row">
-          <Select<FilterKind>
+        <div class="stack stack-sm">
+          <Segmented<FilterKind>
             value={v.filter}
             label={t('filter.label')}
             onChange={(filter) => onChange({ ...v, filter })}
@@ -154,8 +154,8 @@ function Options({ value: v, onChange }: { value: Intervention; onChange: (i: In
     case 'challenge':
       return (
         <div class="stack">
-          <div class="row">
-            <Select<ChallengeKind>
+          <div class="stack stack-sm">
+            <Segmented<ChallengeKind>
               value={v.kind}
               label={t('challenge.kind')}
               onChange={(kind) => onChange({ ...v, kind })}
@@ -166,14 +166,16 @@ function Options({ value: v, onChange }: { value: Intervention; onChange: (i: In
               ]}
             />
             {v.kind === 'random' && (
-              <NumberInput
-                value={v.length ?? 24}
-                min={4}
-                max={500}
-                label={t('challenge.length')}
-                suffix={t('challenge.chars')}
-                onChange={(length) => onChange({ ...v, length })}
-              />
+              <span>
+                <NumberInput
+                  value={v.length ?? 24}
+                  min={4}
+                  max={500}
+                  label={t('challenge.length')}
+                  suffix={t('challenge.chars')}
+                  onChange={(length) => onChange({ ...v, length })}
+                />
+              </span>
             )}
           </div>
           {v.kind === 'phrase' && (
@@ -321,23 +323,19 @@ function WaitBehaviour({
   return (
     <>
       <div class="stack stack-sm">
-        <label class="label small" for={`${id}-blur`}>
+        <span class="label small" id={`${id}-blur`}>
           {t('delay.onBlur')}
-        </label>
-        <div class="row">
-          <span>
-            <Select<'pause' | 'restart' | 'ignore'>
-              id={`${id}-blur`}
-              value={v.onBlur ?? 'pause'}
-              onChange={(onBlur) => onChange({ ...v, onBlur })}
-              options={[
-                { value: 'pause', label: t('delay.onBlur.pause') },
-                { value: 'restart', label: t('delay.onBlur.restart') },
-                { value: 'ignore', label: t('delay.onBlur.ignore') },
-              ]}
-            />
-          </span>
-        </div>
+        </span>
+        <RadioList<'pause' | 'restart' | 'ignore'>
+          labelledBy={`${id}-blur`}
+          value={v.onBlur ?? 'pause'}
+          onChange={(onBlur) => onChange({ ...v, onBlur })}
+          options={[
+            { value: 'pause', label: t('delay.onBlur.pause') },
+            { value: 'restart', label: t('delay.onBlur.restart') },
+            { value: 'ignore', label: t('delay.onBlur.ignore') },
+          ]}
+        />
       </div>
       <Toggle
         checked={!v.hideCountdown}
@@ -357,41 +355,37 @@ function WaitBehaviour({
 
 /** Once through a wait or a challenge: what opens, and for how long. */
 function GrantEditor({ grant, onChange }: { grant: GrantSpec; onChange: (g: GrantSpec) => void }) {
+  const id = useId();
   return (
     <div class="stack stack-sm">
-      <span class="label small" aria-hidden="true">
+      <span class="label small" id={`${id}-scope`}>
         {t('grant.label')}
       </span>
-      {/* A sentence: "[this site] for [the rest of the visit]"; the spans keep each list its own width. */}
+      <Segmented<GrantSpec['scope']>
+        value={grant.scope}
+        labelledBy={`${id}-scope`}
+        onChange={(scope) => onChange({ ...grant, scope })}
+        options={[
+          { value: 'page', label: t('grant.scope.page') },
+          { value: 'site', label: t('grant.scope.site') },
+          { value: 'group', label: t('grant.scope.group') },
+        ]}
+      />
+      <span class="label small" id={`${id}-mode`}>
+        {t('grant.mode')}
+      </span>
       <div class="row">
-        <span>
-          <Select<GrantSpec['scope']>
-            value={grant.scope}
-            label={t('grant.scope')}
-            onChange={(scope) => onChange({ ...grant, scope })}
-            options={[
-              { value: 'page', label: t('grant.scope.page') },
-              { value: 'site', label: t('grant.scope.site') },
-              { value: 'group', label: t('grant.scope.group') },
-            ]}
-          />
-        </span>
-        <span class="small" aria-hidden="true">
-          {t('grant.for')}
-        </span>
-        <span>
-          <Select<GrantSpec['mode']>
-            value={grant.mode}
-            label={t('grant.mode')}
-            onChange={(mode) =>
-              onChange({ ...grant, mode, ...(mode === 'minutes' ? { minutes: grant.minutes ?? 10 } : {}) })
-            }
-            options={[
-              { value: 'visit', label: t('grant.mode.visit') },
-              { value: 'minutes', label: t('grant.mode.minutes') },
-            ]}
-          />
-        </span>
+        <Segmented<GrantSpec['mode']>
+          value={grant.mode}
+          labelledBy={`${id}-mode`}
+          onChange={(mode) =>
+            onChange({ ...grant, mode, ...(mode === 'minutes' ? { minutes: grant.minutes ?? 10 } : {}) })
+          }
+          options={[
+            { value: 'visit', label: t('grant.mode.visit') },
+            { value: 'minutes', label: t('grant.mode.minutes') },
+          ]}
+        />
         {grant.mode === 'minutes' && (
           <DurationInput
             units={['minutes', 'hours']}
