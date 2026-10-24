@@ -172,6 +172,9 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ### Fixed
 
+- Setting the computer's clock back a day could start the day's time limits again: when
+  WebHandbrake started up again, it left out today's time, which was then lost. It now finds the
+  day by its own clock, which a clock set back does not move.
 - Insights › **By site** adds up to the total on limited sites. It lists the 15 sites with the most
   time, as before, and now the others in one row (“10 other sites”) and the time in private
   windows, which keep no sites, in another; the day-by-day chart by site shows that time too. A

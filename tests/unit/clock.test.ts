@@ -82,6 +82,17 @@ describe('the trusted clock', () => {
     expect(store.state.clockOffset).toBe(0);
   });
 
+  it('a clock set back a day before a restart still finds the time of today', async () => {
+    const first = await load();
+    first.store.usage.add('g:x', first.clock.now(), 1800, 1, first.store.cc.cal);
+    await first.store.flushAll();
+    vi.resetModules();
+    vi.setSystemTime(T0 - 24 * HOUR);
+    const { store, clock } = await load();
+    expect(clock.now()).toBe(T0);
+    expect(store.usage.days.get('2026-10-05')?.t['g:x']).toEqual([1800, 1]);
+  });
+
   it('the test clock exists only in the test build', async () => {
     const { clock } = await load();
     await clock.setTestClock(HOUR);
