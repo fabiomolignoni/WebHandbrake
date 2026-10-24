@@ -146,7 +146,6 @@ describe('"Why?"', () => {
       ({ type, used, limit }) as BudgetView;
     expect(budgetText(b('visits', 2, 3))).toMatch(/2.*3/);
     expect(budgetText(b('time', 600, 1800))).toMatch(/10 min.*30 min/);
-    expect(budgetText(b('session', 60, 600))).toMatch(/1 min.*10 min/);
   });
 });
 

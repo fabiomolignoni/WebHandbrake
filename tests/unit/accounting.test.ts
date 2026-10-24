@@ -134,23 +134,6 @@ describe('counting time', () => {
     await t.tick(T0 + 1000);
     expect(reconciled).toContain('budget');
   });
-
-  it('continuous use starts the mandatory stop', async () => {
-    const t = await setup([
-      group(
-        'A',
-        ['a.test'],
-        [{ budget: { type: 'session', maxMinutes: 2 / 60, cooldownMinutes: 10 }, intervention: BLOCK }],
-      ),
-    ]);
-    await t.tick(T0);
-    await t.tick(T0 + 1000);
-    expect(t.store.state.cooldowns['session:A-p0']).toMatchObject({
-      until: T0 + 1000 + 10 * 60_000,
-      kind: 'session',
-    });
-    expect(t.store.state.activity['g:A'].run).toBe(0);
-  });
 });
 
 describe('what the page shows', () => {

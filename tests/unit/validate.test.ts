@@ -31,9 +31,6 @@ describe('rule validation', () => {
     expect(keys(valid([{ schedule: { mode: 'during', windows: [] }, intervention: BLOCK }]))).toEqual([
       'validate.noWindows',
     ]);
-    expect(keys(valid([{ schedule: { mode: 'outside', windows: [] }, intervention: BLOCK }]))).toEqual([
-      'validate.outsideNoWindows',
-    ]);
     const odd = { mode: 'during' as const, windows: [{ days: [], start: 600, end: 600 }] };
     const issues = validateGroup(valid([{ schedule: odd, intervention: BLOCK }]));
     expect(issues.map((i) => [i.level, i.key, i.policy])).toEqual([
@@ -49,7 +46,7 @@ describe('rule validation', () => {
     const limit = (minutes: number, period: Period) =>
       valid([{ budget: { type: 'time', minutes, period }, intervention: BLOCK }]);
     const never = validateGroup(limit(60, { kind: 'hour' })).find((i) => i.key === 'validate.neverReached');
-    expect(never).toEqual({ level: 'error', key: 'validate.neverReached', params: { n: 1 }, policy: 0 });
+    expect(never).toEqual({ level: 'error', key: 'validate.neverReached', policy: 0 });
     expect(keys(limit(30 * 60, { kind: 'minutes', n: 120 }))).toContain('validate.neverReached');
     expect(keys(limit(59, { kind: 'hour' }))).toEqual([]);
     expect(keys(limit(30 * 60, { kind: 'days', n: 2 }))).toEqual([]);
@@ -85,18 +82,7 @@ describe('rule validation', () => {
     expect(keys(valid([{ intervention: random(31) }]))).not.toContain('validate.randomWait');
   });
 
-  it('conditions after one that always applies are never reached', () => {
-    const issues = validateGroup(
-      valid([{ intervention: delayIntervention(10) }, { intervention: BLOCK }, { intervention: BLOCK }]),
-    );
-    expect(issues.filter((i) => i.key === 'validate.unreachable').map((i) => i.params)).toEqual([
-      { n: 2, m: 1 },
-      { n: 3, m: 1 },
-    ]);
-  });
-
-  it('notes a rule without conditions; one that only counts time is fine', () => {
-    expect(keys(valid([]))).toEqual(['validate.noPolicies']);
+  it('a rule that only counts time is fine', () => {
     expect(keys(valid([{ intervention: { type: 'track' } }]))).toEqual([]);
   });
 

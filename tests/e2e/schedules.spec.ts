@@ -1,8 +1,8 @@
 /**
  * Schedules in a real browser, driven by the extension's test clock:
  * a test chooses the day and the hour, and the open tabs follow the transitions.
- * The calendar itself (overnight windows, the day start, "outside these times", the first
- * condition that holds) is unit tested in tests/unit/time.test.ts and engine.test.ts.
+ * The calendar itself (overnight windows, the day start) is unit tested in tests/unit/time.test.ts
+ * and engine.test.ts.
  */
 
 import { expect, type Harness, test } from './harness';

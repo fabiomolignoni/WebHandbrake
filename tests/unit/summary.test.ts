@@ -1,8 +1,8 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { planSentence, rulePlan, sitesPhrase } from '../../src/dashboard/plan';
 import type { ChangeUnit } from '../../src/engine/changes';
-import { defaultIntervention, delayIntervention, withCountingGap } from '../../src/engine/defaults';
-import type { Intervention, Period, Policy, TimeWindow } from '../../src/engine/types';
+import { defaultIntervention, delayIntervention } from '../../src/engine/defaults';
+import type { Intervention, Policy, TimeWindow } from '../../src/engine/types';
 
 import { setFormatPrefs } from '../../src/shared/format';
 import {
@@ -55,7 +55,6 @@ describe('days and times in words', () => {
     expect(describeWindows([])).toBe('no time set');
     expect(describeSchedule({ mode: 'always', windows: [] })).toBe('Always');
     expect(describeSchedule({ mode: 'during', windows: [office] })).toBe('Mon–Fri 09:00–17:00');
-    expect(describeSchedule({ mode: 'outside', windows: [office] })).toBe('Outside Mon–Fri 09:00–17:00');
   });
 });
 
@@ -68,11 +67,8 @@ describe('conditions in words', () => {
     expect(describeBudget({ type: 'time', minutes: 30, period: { kind: 'day' }, perSite: true })).toBe(
       'after 30 min per day (per site)',
     );
-    expect(describeBudget({ type: 'visits', count: 3, period: { kind: 'week' }, maxVisitMinutes: 5 })).toBe(
-      'after 3 visits per week (at most 5 min each)',
-    );
-    expect(describeBudget({ type: 'session', maxMinutes: 20, cooldownMinutes: 60 })).toBe(
-      'after 20 min in a row (then a 1 h stop)',
+    expect(describeBudget({ type: 'visits', count: 3, period: { kind: 'days', n: 7 } })).toBe(
+      'after 3 visits every 7 days',
     );
   });
 
@@ -99,20 +95,15 @@ describe('conditions in words', () => {
     expect(describeIntervention(BLOCK)).toBe('Block');
   });
 
-  it('a rule as sentences, with what happens otherwise', () => {
+  it('a rule as a sentence: its condition, then what happens', () => {
     const limit: Partial<Policy> = {
-      schedule: { mode: 'during', windows: [office] },
       budget: { type: 'time', minutes: 10, period: { kind: 'day' } },
       intervention: BLOCK,
     };
-    expect(summarizeGroup(group('A', ['a.test'], [limit]))).toEqual([
-      'Mon–Fri 09:00–17:00, after 10 min per day → Block',
-      'At other times the sites open normally, and only their time is counted.',
-    ]);
-    expect(summarizeGroup(group('A', ['a.test'], [{ intervention: BLOCK }]))).toEqual(['Always → Block']);
-    expect(summarizeGroup(group('A', ['a.test']))).toEqual([
-      'No conditions yet: the sites open normally and only their time is counted.',
-    ]);
+    expect(summarizeGroup(group('A', ['a.test'], [limit]))).toBe('Always, after 10 min per day → Block');
+    expect(
+      summarizeGroup(group('A', ['a.test'], [{ schedule: { mode: 'during', windows: [office] } }])),
+    ).toBe('Mon–Fri 09:00–17:00 → Block');
   });
 
   it('entries', () => {
@@ -130,7 +121,7 @@ describe('changes in words', () => {
       [{ kind: 'group.add', group: g }, 'Create the rule Social'],
       [
         { kind: 'group.field', groupId: 'Social', name: 'Social', field: 'policies', value: [], base: [] },
-        'Change the conditions of Social',
+        'Change when Social applies',
       ],
       [
         {
@@ -199,13 +190,20 @@ describe('the plan of a rule', () => {
     expect(planSentence('daily', BLOCK, 'a.test, b.test', [], 30, 1440, 'each')).toBe(
       'After 30 min a day on each of a.test, b.test, WebHandbrake blocks the page.',
     );
+    // Visits, in the same ways.
+    expect(planSentence('visits', BLOCK, 'a.test', [], 1, 120)).toBe(
+      'After 1 visit every 2 h to a.test, WebHandbrake blocks the page.',
+    );
+    expect(planSentence('visits', BLOCK, 'a.test, b.test', [], 3, 1440, 'shared')).toBe(
+      'After 3 visits a day in total to a.test, b.test, WebHandbrake blocks the page.',
+    );
+    expect(planSentence('visits', BLOCK, 'a.test, b.test', [], 3, 1440, 'each')).toBe(
+      'After 3 visits a day to each of a.test, b.test, WebHandbrake blocks the page.',
+    );
   });
 
-  it('is said of a rule whose condition the first questions describe', () => {
+  it('is said of every rule, from its condition', () => {
     const during = { schedule: { mode: 'during' as const, windows: [office] } };
-    const limit = (period: Period) => ({
-      budget: { type: 'time' as const, minutes: 30, period },
-    });
     expect(rulePlan(group('A', ['a.test'], [{ intervention: BLOCK }]))).toBe(
       'Every time you open a.test, WebHandbrake blocks the page.',
     );
@@ -213,28 +211,31 @@ describe('the plan of a rule', () => {
       'When you open a.test (Mon–Fri 09:00–17:00), WebHandbrake blocks the page.',
     );
     expect(
-      rulePlan(group('A', ['a.test', 'b.test'], [{ ...limit({ kind: 'days', n: 2 }), intervention: BLOCK }])),
+      rulePlan(
+        group(
+          'A',
+          ['a.test', 'b.test'],
+          [{ budget: { type: 'time', minutes: 30, period: { kind: 'days', n: 2 } }, intervention: BLOCK }],
+        ),
+      ),
     ).toBe('After 30 min every 2 days in total on a.test, b.test, WebHandbrake blocks the page.');
-    // Counting at certain times leaves the other times alone: with that last condition only.
-    const counting = group('A', ['a.test'], [{ ...during, intervention: { type: 'track' } }]);
-    expect(rulePlan(counting)).toBeNull();
-    expect(rulePlan({ ...counting, policies: withCountingGap(counting.policies) })).toMatch(
+    expect(
+      rulePlan(
+        group(
+          'A',
+          ['a.test', 'b.test'],
+          [
+            {
+              budget: { type: 'visits', count: 3, period: { kind: 'day' }, perSite: true },
+              intervention: BLOCK,
+            },
+          ],
+        ),
+      ),
+    ).toBe('After 3 visits a day to each of a.test, b.test, WebHandbrake blocks the page.');
+    // Counting at certain times leaves the other times alone.
+    expect(rulePlan(group('A', ['a.test'], [{ ...during, intervention: { type: 'track' } }]))).toMatch(
       /outside these times it counts nothing/,
     );
-    // Anything else is listed condition by condition.
-    for (const policies of [
-      [{ schedule: { mode: 'outside' as const, windows: [office] }, intervention: BLOCK }],
-      [{ ...limit({ kind: 'week' }), intervention: BLOCK }],
-      [
-        {
-          budget: { type: 'visits' as const, count: 3, period: { kind: 'day' as const } },
-          intervention: BLOCK,
-        },
-      ],
-      [{ ...during, ...limit({ kind: 'day' }), intervention: BLOCK }],
-      [{ ...during, intervention: BLOCK }, { intervention: delayIntervention(10) }],
-      [],
-    ])
-      expect(rulePlan(group('A', ['a.test'], policies))).toBeNull();
   });
 });

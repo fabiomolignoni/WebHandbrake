@@ -85,7 +85,7 @@ test('WCAG 2.2 AA in every part of the rule editor, for a new rule and in the fi
 }) => {
   const { p, id } = await dashboard(h, 'today');
   const all: string[] = [];
-  // Every part of a rule, with its advanced options open; its only condition is asked in place.
+  // Every part of a rule, with its advanced options open.
   await go(p, `groups/${id}`);
   for (const part of ['Sites', 'When', 'What happens', 'Details', 'Protection']) {
     await openPart(p, part);
@@ -112,6 +112,14 @@ test('WCAG 2.2 AA in every part of the rule editor, for a new rule and in the fi
     await p.button(`Next: ${step}`).click();
     await openAdvanced(p);
     all.push(...(await check(p, `new rule ${step}`)));
+    // When, with the settings of each answer.
+    if (step === 'when') {
+      for (const answer of [/^At certain times/, /^After some time/, /^After some visits/]) {
+        await p.role('radio', answer).click();
+        all.push(...(await check(p, `new rule when, ${answer.source}`)));
+      }
+      await p.role('radio', /^Every time/).click();
+    }
   }
   // Every screen of the first run.
   await p.eval(() => {

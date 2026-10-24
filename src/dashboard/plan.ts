@@ -5,14 +5,14 @@
 
 import { ASK_WAIT_SECONDS, DAY_MINUTES, everyPeriod, periodMinutes } from '../engine/defaults';
 import { ALL_SITES } from '../engine/patterns';
-import type { Group, Intervention, Policy, Target, TimeWindow } from '../engine/types';
+import type { Group, Intervention, Target, TimeWindow } from '../engine/types';
 import { t } from '../i18n/i18n';
 import { formatDuration } from '../shared/format';
 import { describePeriod, describeWindows } from '../shared/summary';
-import { everyKind, whenKind } from './rule-form';
+import { whenKind } from './rule-form';
 
-/** When the condition of a rule applies, as the first question of the rule editor asks. */
-type PlanWhen = 'always' | 'schedule' | 'daily';
+/** When the condition of a rule applies, as When asks. */
+type PlanWhen = 'always' | 'schedule' | 'daily' | 'visits';
 
 /** "a.com, b.com and 3 more sites". */
 export function sitesPhrase(targets: Target[]): string {
@@ -58,59 +58,42 @@ export function planSentence(
   intervention: Intervention,
   sites: string,
   windows: TimeWindow[],
-  minutes: number,
+  /** The minutes allowed (after some time) or the visits (after some visits). */
+  amount: number,
   every = DAY_MINUTES,
-  /** Whether a time limit is for one site, shared by several or for each of them. */
+  /** Whether a limit is for one site, shared by several or for each of them. */
   limitSites: 'one' | 'shared' | 'each' = 'one',
 ): string {
   const outcome = outcomeOf(when, intervention);
-  const cond = when === 'daily' && limitSites !== 'one' ? `daily.${limitSites}` : when;
+  const limit = when === 'daily' || when === 'visits';
+  const cond = limit && limitSites !== 'one' ? `${when}.${limitSites}` : when;
   return t('wizard.review.plan', {
     cond: t(`wizard.cond.${cond}`, {
       sites,
       windows: describeWindows(windows),
-      duration: formatDuration(minutes * 60),
+      duration: formatDuration(amount * 60),
+      count: amount,
       period: periodPhrase(every),
     }),
     outcome,
   });
 }
 
-/** The last condition of a rule that counts at certain times: at other times, nothing. */
-const leavesAlone = (p: Policy) =>
-  p.intervention.type === 'allow' && p.schedule.mode === 'always' && !p.budget;
-
-/**
- * The plan of a rule as a sentence, when its condition is one that the first questions describe:
- * every time, during certain times, or after some time that starts again every so often. Null for
- * any other rule, whose conditions are listed instead.
- */
-export function rulePlan(g: Group): string | null {
-  let policies = g.policies;
-  const counting = policies[0]?.intervention.type === 'track' && policies[0].schedule.mode === 'during';
-  // Counting at certain times, and nothing at the others (#21).
-  if (policies.length === 2 && counting && !policies[0].budget && leavesAlone(policies[1]))
-    policies = [policies[0]];
-  else if (counting) return null;
-  if (policies.length !== 1) return null;
-  const [p] = policies;
+/** The plan of a rule as a sentence: its condition, then what happens. */
+export function rulePlan(g: Group): string {
+  const [p] = g.policies;
   const i = p.intervention;
-  if (i.type === 'allow') return null;
   const sites = sitesPhrase(g.targets);
-  const kind = whenKind(p);
-  if (kind === 'always') return planSentence('always', i, sites, [], 0);
-  if (kind === 'schedule')
-    return p.schedule.mode === 'during' ? planSentence('schedule', i, sites, p.schedule.windows, 0) : null;
   const b = p.budget;
-  if (b?.type !== 'time' || p.schedule.mode !== 'always' || !everyKind(b.period) || b.period.offset)
-    return null;
+  if (!b)
+    return planSentence(whenKind(p) === 'schedule' ? 'schedule' : 'always', i, sites, p.schedule.windows, 0);
   const several = g.targets.filter((x) => !x.allow).length > 1;
   return planSentence(
-    'daily',
+    b.type === 'visits' ? 'visits' : 'daily',
     i,
     sites,
     [],
-    b.minutes,
+    b.type === 'visits' ? b.count : b.minutes,
     periodMinutes(b.period),
     several ? (b.perSite ? 'each' : 'shared') : 'one',
   );

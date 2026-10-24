@@ -96,7 +96,7 @@ function nowLine(g: GroupStatus, types: InterventionType[], inEffect: Interventi
  */
 function GroupRow({ g, policies, now }: { g: GroupStatus; policies: Policy[]; now: number }) {
   const tone = groupTone(g);
-  const budget = g.budgets.find((b) => !b.exhausted && b.type !== 'session');
+  const budget = g.budgets.find((b) => !b.exhausted);
   const restricted = tone === 'protected' || tone === 'friction';
   const types = ruleTypes(policies);
   const current = g.intervention?.type;

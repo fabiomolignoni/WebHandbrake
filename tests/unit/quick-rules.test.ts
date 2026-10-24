@@ -6,7 +6,6 @@ import {
   newPolicy,
   periodMinutes,
   QUICK_DELAY_SECONDS,
-  withCountingGap,
 } from '../../src/engine/defaults';
 import type { TimeWindow } from '../../src/engine/types';
 import { at, BLOCK, config, ctx, group } from './helpers';
@@ -36,24 +35,23 @@ describe('a new rule: the conditions built by the rule editor and first run', ()
   });
 
   it('counting at certain times leaves the sites allowed and not counted outside them (#21)', () => {
-    const policies = withCountingGap([during({ type: 'track' })]);
-    expect(policies.map((p) => [p.schedule.mode, p.intervention.type])).toEqual([
-      ['during', 'track'],
-      ['always', 'allow'],
-    ]);
-    const c = config([group('Work', ['work.test'], policies)]);
+    const c = config([group('Work', ['work.test'], [during({ type: 'track' })])]);
     expect(decide(ctx(c, at(0, 10)), 'https://work.test/').intervention.type).toBe('track');
     const outside = decide(ctx(c, at(0, 18)), 'https://work.test/');
     expect(outside.intervention.type).toBe('allow');
     expect(outside.groups.map((g) => g.intervention.type)).toEqual(['allow']);
-    // Any other condition stays as it is: the rule counts at all times.
-    expect(withCountingGap([during()])).toHaveLength(1);
+    // Any other rule counts at all times: one at certain times that blocks, a limit that only counts.
+    expect(
+      decide(ctx(config([group('S', ['s.test'], [during()])]), at(0, 18)), 'https://s.test/').intervention
+        .type,
+    ).toBe('track');
     const limit = newPolicy({
       budget: { type: 'time', minutes: 30, period: { kind: 'day' } },
       intervention: { type: 'track' },
     });
-    expect(withCountingGap([limit])).toHaveLength(1);
-    expect(withCountingGap([during({ type: 'track' }), during()])).toHaveLength(2);
+    expect(
+      decide(ctx(config([group('L', ['l.test'], [limit])]), at(0, 18)), 'https://l.test/').intervention.type,
+    ).toBe('track');
   });
 
   it('a scheduled block applies inside the window only', () => {

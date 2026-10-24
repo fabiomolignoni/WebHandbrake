@@ -51,15 +51,13 @@ export function statusName(i: Intervention): string {
 }
 
 /**
- * What a rule does, whatever the time (the type pills of Rules and Today): the interventions of its
- * conditions in ladder order. A rule that never restricts counts time ("Count only"), unless all
- * its conditions say not to count ("Don't count").
+ * What a rule does, whatever the time (the type pills of Rules and Today): what happens when its
+ * condition applies. A rule that never restricts counts time ("Count only").
  */
 export function ruleTypes(policies: Policy[]): InterventionType[] {
   const used = new Set(policies.map((p) => p.intervention.type));
   const strict = LADDER.filter((x) => used.has(x) && toneOf(x) !== 'free');
-  if (strict.length) return strict;
-  return [used.size === 1 && used.has('allow') ? 'allow' : 'track'];
+  return strict.length ? strict : ['track'];
 }
 
 /** A type by the name the "What should happen?" picker gives it ("Block", "Ask first", "Wait"). */

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   addDays,
+  bitmapSchedule,
   clamp,
   DAY,
   dayKey,
@@ -16,6 +17,7 @@ import {
   parseDayKey,
   periodRange,
   scheduleActive,
+  scheduleBitmap,
   scheduleBoundaries,
   weekdayOf,
   windowInterval,
@@ -102,10 +104,32 @@ describe('time windows', () => {
     ]);
   });
 
-  it('no windows means never inside, so "outside no windows" always applies', () => {
+  it('no windows means never inside', () => {
     expect(inWindows([], at(0, 12), cal)).toBe(false);
     expect(scheduleActive({ mode: 'during', windows: [] }, at(0, 12), cal)).toBe(false);
-    expect(scheduleActive({ mode: 'outside', windows: [] }, at(0, 12), cal)).toBe(true);
+  });
+
+  it('a week bitmap gives back its schedule: windows within logical days, the days with the same times together', () => {
+    const office = { mode: 'during' as const, windows: [{ days: [1, 2, 3, 4, 5], start: 540, end: 1020 }] };
+    expect(bitmapSchedule(scheduleBitmap(office))).toEqual(office);
+    expect(bitmapSchedule(scheduleBitmap({ mode: 'always', windows: [] }))).toEqual({
+      mode: 'always',
+      windows: [],
+    });
+    expect(bitmapSchedule(new Uint8Array(7 * 1440))).toEqual({ mode: 'during', windows: [] });
+    // An overnight window is split at the start of the day.
+    const night = { mode: 'during' as const, windows: [{ days: [5], start: 1320, end: 120 }] };
+    expect(bitmapSchedule(scheduleBitmap(night))).toEqual({
+      mode: 'during',
+      windows: [
+        { days: [6], start: 0, end: 120 },
+        { days: [5], start: 1320, end: 1440 },
+      ],
+    });
+    // With days starting at 05:00, a whole logical day and the same night in one window.
+    expect(bitmapSchedule(scheduleBitmap(night, 300), 300)).toEqual(night);
+    const sunday = { mode: 'during' as const, windows: [{ days: [0], start: 0, end: 1440 }] };
+    expect(bitmapSchedule(scheduleBitmap(sunday, 300), 300)).toEqual(sunday);
   });
 
   it('boundaries are the starts and ends after now, an overnight window from yesterday included', () => {

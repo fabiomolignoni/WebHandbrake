@@ -143,8 +143,9 @@ export class Store {
     } as RuntimeState;
     for (const k of ['grants', 'sessions', 'pending', 'pauses', 'tamper'] as const)
       if (!Array.isArray(this.state[k])) this.state[k] = [];
-    for (const k of ['cooldowns', 'forfeits', 'partnerSteps'] as const)
-      if (!isObj(this.state[k])) this.state[k] = {};
+    for (const k of ['forfeits', 'partnerSteps'] as const) if (!isObj(this.state[k])) this.state[k] = {};
+    // The cool-downs of continuous use, which earlier versions had, are gone.
+    delete (this.state as RuntimeState & { cooldowns?: unknown }).cooldowns;
     if (!isObj(this.state.secretFailures)) this.state.secretFailures = { count: 0, lockedUntil: 0 };
     // A break of an earlier version could count only the time on the site: it now ends by the clock.
     for (const g of this.state.grants as (Grant & { remaining?: number })[]) {

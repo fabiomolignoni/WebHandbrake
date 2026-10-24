@@ -1,17 +1,10 @@
 /**
  * When does the situation change? Computed over all policies of all applicable groups,
- * plus grants, sessions and cool-downs. Also used to schedule the background alarm.
+ * plus grants, sessions and forfeits. Also used to schedule the background alarm.
  */
 
 import type { CompiledGroup } from './compile';
-import {
-  budgetStatus,
-  type Decision,
-  decide,
-  type EngineContext,
-  grantActive,
-  type UrlContext,
-} from './decide';
+import { type Decision, decide, type EngineContext, grantActive, type UrlContext } from './decide';
 import { HORIZON_DAYS } from './limits';
 import { isNav, SEVERITY, severityOf } from './severity';
 import { DAY, periodRange, scheduleBoundaries } from './time';
@@ -37,20 +30,17 @@ export function candidateTimes(ctx: EngineContext, groups: CompiledGroup[]): num
     const id = cg.group.id;
     for (const p of cg.group.policies) {
       for (const t of scheduleBoundaries(p.schedule, now, cc.cal, HORIZON_DAYS)) add(t);
-      if (p.budget && p.budget.type !== 'session') {
+      if (p.budget) {
         add(periodRange(p.budget.period, now, cc.cal).end);
-        // A limit per site ends a visit and refills site by site.
+        // A limit per site ends a visit site by site.
         const sites = p.budget.perSite ? countedSites(ctx, id) : [''];
         for (const site of sites) {
           const act = state.activity[p.budget.perSite ? usageKeys.site(id, site) : usageKeys.group(id)];
           if (act) add(act.last + gap + 1);
-          if (p.budget.period.kind === 'rolling')
-            add(budgetStatus(ctx, cg.group, p, p.budget, site).refillAt);
         }
       }
     }
   }
-  for (const cd of Object.values(state.cooldowns)) add(cd.until);
   for (const f of Object.values(state.forfeits)) add(f);
   for (const s of state.sessions) {
     add(s.startAt);
@@ -154,20 +144,8 @@ export function nextRestriction(
       if (!pe.budget || pe.budget.exhausted || !pe.scheduleActive) continue;
       if (r.policyIndex !== -1 && r.policyIndex < pe.index) break;
       if (severityOf(pe.policy.intervention) <= currentSeverity) continue;
-      if (pe.budget.budget.type === 'visits') {
-        const b = pe.budget.budget;
-        if (b.maxVisitMinutes && pe.budget.inVisit) {
-          const act = ctx.state.activity[pe.budget.key];
-          const left = b.maxVisitMinutes * 60 - (act?.visitSeconds ?? 0);
-          consider({
-            at: ctx.now + left * 1000,
-            kind: 'budget',
-            intervention: pe.policy.intervention,
-            groupId: r.group.id,
-          });
-        }
-        continue;
-      }
+      // Visits are used up when a visit ends, which the schedule of candidate times covers.
+      if (pe.budget.budget.type === 'visits') continue;
       consider({
         at: ctx.now + pe.budget.remaining * 1000,
         kind: 'budget',

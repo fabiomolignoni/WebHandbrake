@@ -130,8 +130,6 @@ export function scheduleActive(s: Schedule, t: number, cal: CalendarSettings): b
       return true;
     case 'during':
       return inWindows(s.windows, t, cal);
-    case 'outside':
-      return !inWindows(s.windows, t, cal);
   }
 }
 
@@ -145,6 +143,57 @@ export function scheduleBoundaries(s: Schedule, t: number, cal: CalendarSettings
     if (b > t) out.push(b);
   }
   return out;
+}
+
+const WEEK_MINUTES = 7 * 1440;
+
+/**
+ * Week bitmap (minute resolution) of when a schedule is active, minute 0 being Sunday at midnight.
+ * The days of the windows are logical days, as the engine reads them (`windowInterval`): a whole
+ * day starts at the day start, and a window that starts before it belongs to the night after its
+ * day.
+ */
+export function scheduleBitmap(s: Schedule, dayStart = 0): Uint8Array {
+  const bits = new Uint8Array(WEEK_MINUTES);
+  if (s.mode === 'always') return bits.fill(1);
+  const mark = (w: TimeWindow) => {
+    const whole = isFullDay(w);
+    const offset = whole ? dayStart : w.start + (w.start < dayStart ? 1440 : 0);
+    let len = whole || w.start === w.end ? 1440 : (w.end % 1440) - w.start;
+    if (len <= 0) len += 1440;
+    for (const day of w.days) {
+      const start = day * 1440 + offset;
+      for (let i = 0; i < len; i++) bits[(start + i) % WEEK_MINUTES] = 1;
+    }
+  };
+  s.windows.forEach(mark);
+  return bits;
+}
+
+/**
+ * The schedule of a week bitmap (`scheduleBitmap`): always, or windows within logical days, the
+ * days with the same times in one window.
+ */
+export function bitmapSchedule(bits: Uint8Array, dayStart = 0): Schedule {
+  if (bits.every(Boolean)) return { mode: 'always', windows: [] };
+  const byTimes = new Map<string, TimeWindow>();
+  for (let day = 0; day < 7; day++) {
+    const at = (i: number) => bits[(day * 1440 + dayStart + i) % WEEK_MINUTES];
+    for (let i = 0; i < 1440; i++) {
+      if (!at(i) || (i > 0 && at(i - 1))) continue;
+      let end = i;
+      while (end < 1440 && at(end)) end++;
+      const w =
+        end - i === 1440
+          ? { start: 0, end: 1440 }
+          : { start: (dayStart + i) % 1440, end: (dayStart + end) % 1440 || 1440 };
+      const key = `${w.start}-${w.end}`;
+      const same = byTimes.get(key);
+      if (same) same.days.push(day);
+      else byTimes.set(key, { days: [day], ...w });
+    }
+  }
+  return { mode: 'during', windows: [...byTimes.values()].sort((a, b) => a.start - b.start) };
 }
 
 // ---------------------------------------------------------------------------

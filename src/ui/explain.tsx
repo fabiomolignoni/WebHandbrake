@@ -18,8 +18,6 @@ import { statusName } from './status';
 
 export function budgetText(b: BudgetView): string {
   if (b.type === 'visits') return t('budget.visitsUsed', { used: b.used, limit: b.limit });
-  if (b.type === 'session')
-    return t('budget.sessionUsed', { used: formatDuration(b.used), limit: formatDuration(b.limit) });
   return t('budget.timeUsed', { used: formatDuration(b.used), limit: formatDuration(b.limit) });
 }
 
@@ -74,14 +72,8 @@ function GroupBlock({ g, groups }: { g: GroupDecisionView; groups?: Group[] }) {
             return (
               <li key={p.id} class="row nowrap top">
                 <Icon
-                  name={p.index === g.policyIndex || p.active ? 'check' : 'x'}
-                  label={
-                    p.index === g.policyIndex
-                      ? t('why.applies')
-                      : p.active
-                        ? t('why.wouldApply')
-                        : t('why.notNow')
-                  }
+                  name={p.index === g.policyIndex ? 'check' : 'x'}
+                  label={p.index === g.policyIndex ? t('why.applies') : t('why.notNow')}
                 />
                 <span class="grow">
                   {policy ? describeCondition(policy) : `#${p.index + 1}`} →{' '}

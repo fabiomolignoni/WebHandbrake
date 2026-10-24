@@ -44,7 +44,7 @@ describe('data', () => {
     const p = await t.data.previewImport('b.test\nnot a site', 'merge');
     expect(p).toMatchObject({
       format: 'list',
-      groups: [{ name: 'Imported list', sites: 1, policies: 1 }],
+      groups: [{ name: 'Imported list', sites: 1 }],
       directions: ['strengthen'],
     });
     expect(p.warnings).toHaveLength(1);
@@ -260,11 +260,12 @@ describe('focus sessions and limits given up', () => {
       group(
         'A',
         ['a.test'],
-        [
-          { budget: { type: 'time', minutes: 30, period: { kind: 'day' } }, intervention: BLOCK },
-          { budget: { type: 'time', minutes: 30, period: { kind: 'rolling', n: 90 } }, intervention: BLOCK },
-          { budget: { type: 'session', maxMinutes: 20, cooldownMinutes: 15 }, intervention: BLOCK },
-        ],
+        [{ budget: { type: 'time', minutes: 30, period: { kind: 'day' } }, intervention: BLOCK }],
+      ),
+      group(
+        'B',
+        ['b.test'],
+        [{ budget: { type: 'visits', count: 3, period: { kind: 'minutes', n: 90 } }, intervention: BLOCK }],
       ),
     ]);
     t.store.state.grants.push({
@@ -278,11 +279,11 @@ describe('focus sessions and limits given up', () => {
       severity: 5,
     });
     await t.budget.forfeitBudget('A');
+    await t.budget.forfeitBudget('B');
     expect(t.store.state.forfeits).toEqual({
       'A-p0': new Date(2026, 9, 6).getTime(),
-      'A-p1': T0 + 90 * 60_000,
+      'B-p0': new Date(2026, 9, 5, 10, 30).getTime(),
     });
-    expect(t.store.state.cooldowns['session:A-p2']).toMatchObject({ until: T0 + 15 * 60_000 });
     expect(t.store.state.grants).toEqual([]);
     await t.budget.forfeitBudget('missing');
   });

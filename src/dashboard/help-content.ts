@@ -45,7 +45,7 @@ export interface HelpFacts {
   dayStart: string;
   /** Days of totals kept for limits when statistics are deleted. */
   budgetKeepDays: number;
-  /** Hours of minute counters kept for hourly and rolling limits. */
+  /** Hours of minute counters kept for limits that start again every so many minutes or hours. */
   minuteHours: number;
   /** Automatic backups kept from the most recent changes. */
   backupsRecent: number;

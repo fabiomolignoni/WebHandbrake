@@ -23,7 +23,7 @@ import type {
 
 export interface BudgetView {
   policyId: string;
-  type: 'time' | 'visits' | 'session';
+  type: 'time' | 'visits';
   used: number;
   limit: number;
   remaining: number;
@@ -405,7 +405,7 @@ export interface LaterModel {
 
 export interface ImportPreview {
   format: 'webhandbrake' | 'list' | 'unknown';
-  groups: { name: string; sites: number; policies: number }[];
+  groups: { name: string; sites: number }[];
   warnings: string[];
   errors: string[];
   units: ChangeUnit[];

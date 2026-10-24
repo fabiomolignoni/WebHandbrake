@@ -136,7 +136,6 @@ describe('maintenance', () => {
     t.store.state.grants.push(old);
     await t.reconcile.maintenance();
     expect(t.store.state.grants).toEqual([]);
-    expect(t.store.state.cooldowns).toEqual({});
   });
 
   it('timed state expires; ended sessions and ready changes are notified once', async () => {
@@ -144,8 +143,6 @@ describe('maintenance', () => {
       c.settings.notifications.enabled = true;
     });
     const st = t.store.state;
-    st.cooldowns.old = { until: T0 - 1, group: 'A', kind: 'session' };
-    st.cooldowns.live = { until: T0 + 1, group: 'A', kind: 'session' };
     st.forfeits.old = T0 - 1;
     st.sessions.push(
       session({ id: 'done', endAt: T0 - 1000, stopped: 3 }),
@@ -157,7 +154,6 @@ describe('maintenance', () => {
     );
     await t.reconcile.maintenance();
     await t.reconcile.maintenance();
-    expect(Object.keys(st.cooldowns)).toEqual(['live']);
     expect(st.forfeits).toEqual({});
     expect(st.sessions.map((s) => s.id)).toEqual(['done']);
     expect(st.pending.map((p) => p.id)).toEqual(['ready']);

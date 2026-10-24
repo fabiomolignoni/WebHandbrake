@@ -171,7 +171,8 @@ function DayToggles({ days, onChange }: { days: number[]; onChange: (d: number[]
           type="button"
           class="chip no-check"
           aria-pressed={days.includes(d)}
-          aria-label={long[d]}
+          // The name read out is the one shown (WCAG 2.5.3); the whole name is a tooltip.
+          title={long[d]}
           onClick={() => onChange(days.includes(d) ? days.filter((x) => x !== d) : [...days, d].sort())}
         >
           {names[d]}

@@ -11,7 +11,7 @@ import { compileTargets, isGroupActive, redirectDestination, redirectKey } from 
 import { ASK_WAIT_SECONDS } from './defaults';
 import { clone } from './json';
 import { SEVERITY, severityOf } from './severity';
-import { isFullDay } from './time';
+import { scheduleBitmap } from './time';
 import type {
   Budget,
   Config,
@@ -25,7 +25,6 @@ import type {
   Protection,
   Schedule,
   Target,
-  TimeWindow,
 } from './types';
 import { parseUrl } from './url';
 
@@ -135,32 +134,6 @@ function cmpLimit(oldV: number | undefined, newV: number | undefined): Direction
 // Schedules and conditions
 // ---------------------------------------------------------------------------
 
-const WEEK_MINUTES = 7 * 1440;
-
-/**
- * Week bitmap (minute resolution) of when a schedule is active, minute 0 being Sunday at midnight.
- * The days of the windows are logical days, as the engine reads them (`windowInterval`): a whole
- * day starts at the day start, and a window that starts before it belongs to the night after its
- * day.
- */
-export function scheduleBitmap(s: Schedule, dayStart = 0): Uint8Array {
-  const bits = new Uint8Array(WEEK_MINUTES);
-  if (s.mode === 'always') return bits.fill(1);
-  const mark = (w: TimeWindow) => {
-    const whole = isFullDay(w);
-    const offset = whole ? dayStart : w.start + (w.start < dayStart ? 1440 : 0);
-    let len = whole || w.start === w.end ? 1440 : (w.end % 1440) - w.start;
-    if (len <= 0) len += 1440;
-    for (const day of w.days) {
-      const start = day * 1440 + offset;
-      for (let i = 0; i < len; i++) bits[(start + i) % WEEK_MINUTES] = 1;
-    }
-  };
-  s.windows.forEach(mark);
-  if (s.mode === 'outside') for (let i = 0; i < bits.length; i++) bits[i] = bits[i] ? 0 : 1;
-  return bits;
-}
-
 export type Coverage = 'equal' | 'superset' | 'subset' | 'other';
 
 function compareSets(a: Uint8Array, b: Uint8Array): Coverage {
@@ -204,17 +177,7 @@ function compareBudgets(oldB: Budget | undefined, newB: Budget | undefined): Cov
     case 'visits': {
       const n = newB as typeof oldB;
       if (!samePeriod(oldB.period, n.period)) return 'other';
-      return fromDirs([
-        cmpNum(oldB.count, n.count, false),
-        cmpLimit(oldB.maxVisitMinutes, n.maxVisitMinutes),
-      ]);
-    }
-    case 'session': {
-      const n = newB as typeof oldB;
-      return fromDirs([
-        cmpNum(oldB.maxMinutes, n.maxMinutes, false),
-        cmpNum(oldB.cooldownMinutes, n.cooldownMinutes, true),
-      ]);
+      return fromDirs([cmpNum(oldB.count, n.count, false)]);
     }
   }
 }

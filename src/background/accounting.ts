@@ -8,11 +8,11 @@
  * screen, clock jumps) are never counted.
  */
 
-import { type Decision, decide, pageFilters, policyKey } from '../engine/decide';
+import { type Decision, decide, pageFilters } from '../engine/decide';
 import { BRAND_COLOR } from '../engine/defaults';
 import { nextRestriction } from '../engine/next';
 import { isNav, SEVERITY } from '../engine/severity';
-import type { Activity, Group } from '../engine/types';
+import type { Activity } from '../engine/types';
 import { stripWww } from '../engine/url';
 import { usageKeys } from '../engine/usage';
 import { locale, template, t as tr } from '../i18n/i18n';
@@ -55,40 +55,11 @@ function creditSeconds(key: string, t: number): number {
   return dt > MAX_STEP_MS ? 1 : dt / 1000;
 }
 
-function updateActivity(key: string, t: number, seconds: number, gapMs: number): boolean {
-  const acts = store.state.activity;
-  let act: Activity | undefined = acts[key];
-  let newVisit = false;
-  if (!act || t - act.last > gapMs) {
-    act = { last: t, visitStart: t, visitSeconds: 0, run: 0 };
-    newVisit = true;
-  }
-  act.last = t;
-  act.visitSeconds += seconds;
-  act.run += seconds;
-  acts[key] = act;
-  return newVisit;
-}
-
-/** Starts the cool-down when continuous use reaches the maximum. */
-function checkSessionBudgets(group: Group, site: string, t: number) {
-  for (const p of group.policies) {
-    const b = p.budget;
-    if (b?.type !== 'session') continue;
-    const key = b.perSite ? usageKeys.site(group.id, site) : usageKeys.group(group.id);
-    const act = store.state.activity[key];
-    if (!act || act.run < b.maxMinutes * 60) continue;
-    const pk = policyKey(p.id, b.perSite ? site : null);
-    store.state.cooldowns[`session:${pk}`] = {
-      until: t + b.cooldownMinutes * 60_000,
-      group: group.id,
-      site: b.perSite ? site : undefined,
-      kind: 'session',
-      policy: p.id,
-    };
-    act.run = 0;
-    void store.saveState();
-  }
+/** Records activity on a key; true when it starts a visit. */
+function updateActivity(key: string, t: number, gapMs: number): boolean {
+  const act: Activity | undefined = store.state.activity[key];
+  store.state.activity[key] = { last: t };
+  return !act || t - act.last > gapMs;
 }
 
 function credit(d: Decision, incognito: boolean, t: number) {
@@ -109,10 +80,9 @@ function credit(d: Decision, incognito: boolean, t: number) {
     for (const key of [gk, sk]) {
       const sec = creditSeconds(key, t);
       if (sec <= 0) continue;
-      const visit = updateActivity(key, t, sec, gap);
+      const visit = updateActivity(key, t, gap);
       store.usage.add(key, t, sec, visit ? 1 : 0, cal);
     }
-    checkSessionBudgets(r.group, r.site, t);
   }
   // No per-site detail for private windows; budgets above are still consumed.
   if (parsed?.web && !incognito && (counted.length || s.tracking.allSites)) {

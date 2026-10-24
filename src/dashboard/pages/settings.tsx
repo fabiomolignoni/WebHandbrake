@@ -623,9 +623,7 @@ function ImportDialog({ onClose }: { onClose: () => void }) {
             {preview.groups.length > 0 && (
               <ul class="list compact small">
                 {preview.groups.map((g, i) => (
-                  <li key={i}>
-                    {t('import.groupLine', { name: g.name, sites: g.sites, policies: g.policies })}
-                  </li>
+                  <li key={i}>{t('import.groupLine', { name: g.name, sites: g.sites })}</li>
                 ))}
               </ul>
             )}

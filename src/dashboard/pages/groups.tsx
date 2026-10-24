@@ -168,9 +168,7 @@ export function GroupsPage() {
                     {sitesPreview(g) && ` · ${sitesPreview(g)}`}
                   </p>
                   <div class="rules">
-                    {summarizeGroup(g).map((line, i) => (
-                      <span key={i}>{line}</span>
-                    ))}
+                    <span>{summarizeGroup(g)}</span>
                   </div>
                 </div>
                 <div class="trail above">
