@@ -1,6 +1,6 @@
 /**
  * Today: status first — what is happening now, what comes next,
- * a focus session in one tap and today's numbers. Real problems are banners; setup steps are a
+ * and today's numbers. Real problems are banners; setup steps are a
  * quiet card.
  */
 
@@ -20,7 +20,6 @@ import { breakSubject } from '../../ui/pause';
 import { groupTone, interventionIcon, ruleTypes, toneOf, typeName } from '../../ui/status';
 import { useDashboard } from '../context';
 import { navigate } from '../router';
-import { QuickSession } from './focus';
 
 /** Setup steps rather than problems: shown as a quiet card, not as an alert. */
 const SETUP_WARNINGS: Warning['kind'][] = ['incognito'];
@@ -332,15 +331,6 @@ export function TodayPage() {
               </div>
             </section>
           )}
-          <section class="card" aria-labelledby="focus-title">
-            <div class="card-head">
-              <h2 id="focus-title">{t('today.focus')}</h2>
-              <a href="#/focus" class="quiet small">
-                {t('focus.moreOptions')}
-              </a>
-            </div>
-            <QuickSession compact sessions={o.sessions} groups={model.config.groups} onChange={reload} />
-          </section>
           <section class="card" aria-labelledby="numbers-title">
             <div class="card-head">
               <h2 id="numbers-title">{t('today.numbers')}</h2>

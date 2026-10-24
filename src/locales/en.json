@@ -673,7 +673,7 @@
     "message": "Include in quick focus sessions"
   },
   "editor.quickSessionHelp": {
-    "message": "Quick focus sessions, started from Today, the right-click menu or a shortcut, block this rule’s sites."
+    "message": "Quick focus sessions, started from the right-click menu or the keyboard shortcut, block this rule’s sites."
   },
   "editor.save": {
     "message": "Save changes"
@@ -860,9 +860,6 @@
   "focus.mode.groups.desc": {
     "message": "Block the sites of the rules you pick."
   },
-  "focus.moreOptions": {
-    "message": "More options…"
-  },
   "focus.newSession": {
     "message": "New session"
   },
@@ -871,9 +868,6 @@
   },
   "focus.noPauses": {
     "message": "No breaks during the session"
-  },
-  "focus.noQuickRules": {
-    "message": "No rule is set for quick sessions. Turn on “Include in quick focus sessions” in a rule, or pick rules under More options."
   },
   "focus.previewAllowlist": {
     "message": "{count, plural, =0 {Every website will be blocked.} one {Every website except # site will be blocked.} other {Every website except # sites will be blocked.}}"
@@ -1174,7 +1168,7 @@
     "message": "Can WebHandbrake prevent its own uninstallation?"
   },
   "help.focus.p1": {
-    "message": "A focus session blocks the sites of the rules you pick, the sites you list, or every site except a few, for a set time. Your lists are kept for the next sessions. Start one from Focus, Today, the right-click menu or the keyboard shortcut. Quick sessions use the rules with “Include in quick focus sessions” on.",
+    "message": "A focus session blocks the sites of the rules you pick, the sites you list, or every site except a few, for a set time. Your lists are kept for the next sessions. Start one from Focus, the right-click menu or the keyboard shortcut. Quick sessions use the rules with “Include in quick focus sessions” on.",
     "description": "Help, Focus sessions. \"Include in quick focus sessions\" is the label of a rule option."
   },
   "help.focus.p2": {
@@ -3775,9 +3769,6 @@
   },
   "today.changeStarts": {
     "message": "{group}: {what} starts"
-  },
-  "today.focus": {
-    "message": "Focus session"
   },
   "today.impulses": {
     "message": "{count, plural, one {time you chose not to go in} other {times you chose not to go in}}"

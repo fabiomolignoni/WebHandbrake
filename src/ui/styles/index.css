@@ -3400,19 +3400,6 @@ body.page-popup {
 .session-hero .ring .label {
   font-size: 1.05rem;
 }
-.session-compact {
-  display: flex;
-  align-items: center;
-  gap: var(--s3);
-}
-.session-compact .ring {
-  --size: 44px;
-  --stroke: 4px;
-  --tone: var(--protected);
-}
-.session-compact .ring .label {
-  font-size: 0.72rem;
-}
 
 /* Buttons keep their natural width inside vertical stacks and cards. */
 .stack > .btn,

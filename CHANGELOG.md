@@ -106,7 +106,7 @@ All notable changes to WebHandbrake are documented here. The format follows
   After some time, has its own answer: how many visits, and how often they start again.
 - Whether a rule's breaks can be taken during a focus session is up to the session: **No breaks
   during the session** on Focus now does what it says for every rule, and quick sessions started
-  from Today, the right-click menu or the keyboard shortcut allow no breaks.
+  from the right-click menu or the keyboard shortcut allow no breaks.
 - The popup opens the dashboard from a wide **Dashboard** bar at its end, which stays in view when
   the popup scrolls. The whole bar can be clicked or tapped; the small button at the top and the
   **Details** link to Insights are gone.
@@ -126,9 +126,10 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ### Removed
 
-- Focus sessions in the popup: it no longer starts one or shows the one running. Start, extend and
-  end them on Today or Focus; the right-click menu and the keyboard shortcut still start one. The
-  popup's **Dashboard** bar no longer shows today's time on limited sites, which Today shows.
+- Focus sessions in the popup and on Today: neither starts one or shows the one running any more.
+  Start, extend and end them on Focus; the right-click menu and the keyboard shortcut still start
+  one. The popup's **Dashboard** bar no longer shows today's time on limited sites, which Today
+  shows.
 - Several conditions in a rule, with **Add a condition** and **Don’t count**, which left the sites
   alone between conditions: a rule has one condition, and the rules of a site all apply, the
   strictest first. When you update, a rule with several conditions becomes one rule for each
@@ -206,9 +207,8 @@ All notable changes to WebHandbrake are documented here. The format follows
 - A new rule whose wizard was left after choosing a password or a partner code, and resumed later,
   was created with a 30-second wait: the wizard now asks for the protection again.
 - Focus sessions: the preview of a session of another length said that it would end at once; and
-  a quick session (Today, the keyboard shortcut, the context menu) no longer starts when no rule is
-  in quick sessions, since it would block nothing: Today says how to add rules to them, and the
-  shortcut opens the Focus page.
+  a quick session no longer starts when no rule is in quick sessions, since it would block
+  nothing: the right-click menu leaves it out and the keyboard shortcut opens the Focus page.
 - Durations of more than two days that are not whole days, such as 50 hours, were shown as
   2 days.
 - Insights, when days start after midnight: today's bar, and the breaks and the reasons of a
