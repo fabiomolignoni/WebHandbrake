@@ -162,8 +162,11 @@ test('the whole Dashboard bar at the end of the popup is one button, named by it
   h,
 }) => {
   await h.configure(() => undefined);
+  await h.rpc('later.add', { url: 'http://later.test/' });
   const popup = await h.popup(await h.open('http://site.test/'));
-  await popup.get('.foot').expectText(/on limited sites today/);
+  // Its figures leave out the time on limited sites.
+  await popup.get('.foot').expectText('1 page saved for later');
+  expect(await popup.get('.foot').text()).not.toMatch(/limited sites/);
   // Its icon, its figures and its arrow are all the button: the label alone names it.
   const hits = await popup.eval(() => {
     const button = document.querySelector('.foot button')!;

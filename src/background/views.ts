@@ -3,10 +3,8 @@
 import { isGroupActive } from '../engine/compile';
 import { decide, grantActive } from '../engine/decide';
 import { breaksLift } from '../engine/defaults';
-import { QUICK_SESSION_MINUTES } from '../engine/limits';
 import { isNav, SEVERITY } from '../engine/severity';
 import { dayKeyOf } from '../engine/time';
-import type { FocusSession } from '../engine/types';
 import { displayHost, parseUrl } from '../engine/url';
 import { impulsesOf } from '../engine/usage';
 import { api, blockedUrlFrom, features, isAndroid, isFirefox, quiet } from '../platform/api';
@@ -164,7 +162,6 @@ export async function popupModel(tabId?: number): Promise<PopupModel> {
   const incognito = Boolean(tab?.incognito);
   const evaluable = Boolean(parsed && !/^(chrome|moz)-extension:/.test(url));
   const d = evaluable ? decide(c, url, { incognito }) : null;
-  const sessions: FocusSession[] = store.state.sessions.filter((s) => s.endAt > c.now);
   // A break lifts a block only: where no rule blocks the page (it asks, waits, filters, counts, or
   // is within its limit), no break is offered.
   const blocked = d?.groups.some((r) => breaksLift(r.base));
@@ -189,7 +186,6 @@ export async function popupModel(tabId?: number): Promise<PopupModel> {
       };
     }),
     addTo: parsed?.web ? defaultAddGroup(url, 'domain', c) : null,
-    sessions,
     today: todayStats(),
     pause,
     activePauses: store.state.grants.filter((g) => g.kind === 'pause' && grantActive(c, g)),
@@ -198,8 +194,6 @@ export async function popupModel(tabId?: number): Promise<PopupModel> {
     warnings: (await warnings()).filter((w) => w.kind === 'host-permission' || w.kind === 'dnr-error'),
     laterCount: store.later.length,
     canAdd: Boolean(parsed?.web),
-    canFocus: store.config.groups.some((g) => isGroupActive(g) && g.options.quickSession),
-    quickMinutes: [...QUICK_SESSION_MINUTES],
     onboarded: store.config.settings.onboarded,
   };
 }

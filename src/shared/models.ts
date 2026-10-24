@@ -298,7 +298,6 @@ export interface PopupModel {
   groups: { id: string; name: string; color: string; blocksNow: boolean; change: number | null }[];
   /** The rule "Block this site" adds to by default; null for a new rule. */
   addTo: string | null;
-  sessions: FocusSession[];
   today: TodayStats;
   pause: PauseOptions | null;
   activePauses: Grant[];
@@ -307,9 +306,6 @@ export interface PopupModel {
   warnings: Warning[];
   laterCount: number;
   canAdd: boolean;
-  /** A quick focus session has rules to apply: otherwise it would block nothing. */
-  canFocus: boolean;
-  quickMinutes: number[];
   onboarded: boolean;
 }
 

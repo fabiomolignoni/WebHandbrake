@@ -58,7 +58,9 @@ describe('what the popup and the dashboard show', () => {
     expect(m.decision?.until).toBe(new Date(2026, 9, 5, 17).getTime());
     expect(m.pause?.available).toBe(true);
     expect(m.groups.map((g) => g.id)).toEqual(['A']);
-    expect(m).toMatchObject({ canAdd: true, canFocus: true, restorable: 0, quickMinutes: [25, 50, 90] });
+    expect(m).toMatchObject({ canAdd: true, restorable: 0 });
+    // Focus sessions are started and followed from the dashboard, not the popup.
+    expect(m).not.toHaveProperty('sessions');
     // The tab of an intervention page shows the page it replaced.
     expect((await popupModel(2)).tab?.url).toBe('https://a.test/x');
     // During a break the popup offers to end it, not another break.

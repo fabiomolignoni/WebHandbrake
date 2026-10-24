@@ -673,7 +673,7 @@
     "message": "Include in quick focus sessions"
   },
   "editor.quickSessionHelp": {
-    "message": "Quick focus sessions, started from the popup, Today or a shortcut, block this rule’s sites."
+    "message": "Quick focus sessions, started from Today, the right-click menu or a shortcut, block this rule’s sites."
   },
   "editor.save": {
     "message": "Save changes"
@@ -824,9 +824,6 @@
   "focus.extended": {
     "message": "Session extended by {duration}."
   },
-  "focus.left": {
-    "message": "{duration} left"
-  },
   "focus.listCleared": {
     "message": "List cleared."
   },
@@ -904,9 +901,6 @@
   },
   "focus.startNow": {
     "message": "Now"
-  },
-  "focus.started": {
-    "message": "Focus session started for {minutes} minutes."
   },
   "focus.startedToast": {
     "message": "Focus session started."
@@ -1180,7 +1174,7 @@
     "message": "Can WebHandbrake prevent its own uninstallation?"
   },
   "help.focus.p1": {
-    "message": "A focus session blocks the sites of the rules you pick, the sites you list, or every site except a few, for a set time. Your lists are kept for the next sessions. Start one from Focus, the popup, the right-click menu or the keyboard shortcut. Quick sessions use the rules with “Include in quick focus sessions” on.",
+    "message": "A focus session blocks the sites of the rules you pick, the sites you list, or every site except a few, for a set time. Your lists are kept for the next sessions. Start one from Focus, Today, the right-click menu or the keyboard shortcut. Quick sessions use the rules with “Include in quick focus sessions” on.",
     "description": "Help, Focus sessions. \"Include in quick focus sessions\" is the label of a rule option."
   },
   "help.focus.p2": {
@@ -1391,7 +1385,7 @@
     "message": "You put sites in rules, such as Social or Video. Each rule says when it acts and what happens: a filter, a question, a wait, a short challenge or a block."
   },
   "help.start.p3": {
-    "message": "The popup shows what applies to the current site. From there you can take a break, save the page for later, block the site or start a focus session. The dashboard, this page, is where you manage everything."
+    "message": "The popup shows what applies to the current site. From there you can take a break, save the page for later or block the site. The dashboard, this page, is where you manage everything."
   },
   "help.start.p4": {
     "message": "To begin, open Rules › New rule. Choose the sites, when the rule applies, what happens, its name and its protection, then choose Create rule. Less common settings are under Advanced options.",
@@ -2644,18 +2638,6 @@
   "popup.endPause": {
     "message": "End the break"
   },
-  "popup.focus": {
-    "message": "Focus session"
-  },
-  "popup.focusDuration": {
-    "message": "Duration"
-  },
-  "popup.focusStarts": {
-    "message": "Focus session planned: {when}."
-  },
-  "popup.focusUntil": {
-    "message": "Focus until {when}"
-  },
   "popup.forfeit": {
     "message": "Stop now",
     "description": "Popup link under a limit: gives up the time left in the current period of the limit (the limit counts as used up)."
@@ -2702,14 +2684,8 @@
   "popup.setup": {
     "message": "Set up"
   },
-  "popup.startFocus": {
-    "message": "Start focus"
-  },
   "popup.status": {
     "message": "In progress"
-  },
-  "popup.todayLimited": {
-    "message": "on limited sites today"
   },
   "popup.why": {
     "message": "Why?"
