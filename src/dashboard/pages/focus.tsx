@@ -26,17 +26,7 @@ import { TicketDialog } from '../../ui/ticket';
 import { TargetsEditor } from '../components/targets';
 import { useDashboard } from '../context';
 
-function SessionCard({
-  s,
-  groups,
-  onChange,
-  compact,
-}: {
-  s: FocusSession;
-  groups: Group[];
-  onChange: () => void;
-  compact?: boolean;
-}) {
+function SessionCard({ s, groups, onChange }: { s: FocusSession; groups: Group[]; onChange: () => void }) {
   const now = useNow(1000);
   const [ticket, setTicket] = useState<TicketView | null>(null);
   const started = s.startAt <= now;
@@ -52,8 +42,8 @@ function SessionCard({
             .map((g) => g.name)
             .join(', ');
   return (
-    <div class={`stack ${compact ? 'card flat tight' : 'card'} tone-protected`}>
-      <div class={compact ? 'session-compact' : 'session-hero'}>
+    <div class="stack card tone-protected">
+      <div class="session-hero">
         <Ring value={total > 0 ? left / total : 0}>
           {started ? formatDuration(left / 1000) : <Icon name="clock" />}
         </Ring>
@@ -72,7 +62,7 @@ function SessionCard({
         </div>
       </div>
       <div class="row">
-        {(compact ? [15] : [15, 30, 60]).map((m) => (
+        {[15, 30, 60].map((m) => (
           <Button
             key={m}
             size="small"
@@ -100,7 +90,7 @@ function SessionCard({
           </Button>
         )}
       </div>
-      {s.locked && !compact && <p class="tiny muted">{t('focus.lockedHelp')}</p>}
+      {s.locked && <p class="tiny muted">{t('focus.lockedHelp')}</p>}
       {ticket && (
         <TicketDialog
           ticket={ticket}
@@ -121,13 +111,11 @@ const DELAYS = [0, 5, 15, 30, 60];
 /** What a session can block, from the fewest sites to the most, with their icons. */
 const MODES: Record<FocusKind, string> = { groups: 'layers', blocklist: 'ban', allowlist: 'globe' };
 
-export function QuickSession({
-  compact,
+function FocusSessions({
   sessions,
   groups,
   onChange,
 }: {
-  compact?: boolean;
   sessions: FocusSession[];
   groups: Group[];
   onChange: () => void;
@@ -137,14 +125,15 @@ export function QuickSession({
   const [customMinutes, setCustomMinutes] = useState(120);
   const [untilTime, setUntilTime] = useState('17:00');
   const active = groups.filter(isGroupActive);
-  /** The rules of a quick session, as the popup and the keyboard shortcut start it. */
-  const quick = active.filter((g) => g.options.quickSession).map((g) => g.id);
-  const [selected, setSelected] = useState<string[]>(() => quick);
+  /** At first, the rules of a quick session, as the keyboard shortcut starts it. */
+  const [selected, setSelected] = useState<string[]>(() =>
+    active.filter((g) => g.options.quickSession).map((g) => g.id),
+  );
   /** What to block and the lists, as they were left: null until they are read. */
   const [lists, setLists] = useState<FocusLists | null>(null);
   useEffect(() => {
-    if (!compact) void call('focus.get', {}).then(setLists);
-  }, [compact]);
+    void call('focus.get', {}).then(setLists);
+  }, []);
   /** Every change is kept at once, for the next sessions. */
   const keep = (part: Partial<FocusLists>) => {
     setLists((l) => (l ? { ...l, ...part } : l));
@@ -179,8 +168,7 @@ export function QuickSession({
     setPreview(false);
     await call('session.start', {
       kind: mode,
-      // The compact form has no choice of rules: those of quick sessions, as they are now.
-      groups: mode === 'groups' ? (compact ? quick : selected) : [],
+      groups: mode === 'groups' ? selected : [],
       allow: mode === 'allowlist' ? allow : [],
       block: mode === 'blocklist' ? block : [],
       minutes: length,
@@ -197,7 +185,7 @@ export function QuickSession({
     <Segmented<number | 'until' | 'custom'>
       value={minutes}
       onChange={setMinutes}
-      labelledBy={compact ? undefined : 'focus-duration'}
+      labelledBy="focus-duration"
       label={t('focus.duration')}
       options={[
         ...[...QUICK_SESSION_MINUTES, 180].map((n) => ({ value: n, label: formatDuration(n * 60) })),
@@ -236,20 +224,9 @@ export function QuickSession({
   return (
     <div class="stack stack-lg">
       {current.map((s) => (
-        <SessionCard key={s.id} s={s} groups={groups} onChange={onChange} compact={compact} />
+        <SessionCard key={s.id} s={s} groups={groups} onChange={onChange} />
       ))}
-      {compact ? (
-        <div class="stack">
-          {durations}
-          {untilField}
-          {customField}
-          {/* Without a rule, a session would look active and block nothing. */}
-          {!quick.length && <p class="small muted">{t('focus.noQuickRules')}</p>}
-          <Button variant="primary" icon="play" disabled={!quick.length} onClick={() => void start()}>
-            {t('focus.start')}
-          </Button>
-        </div>
-      ) : lists ? (
+      {lists && (
         <section class="card stack stack-lg" aria-labelledby="new-session">
           <h2 id="new-session">{t('focus.newSession')}</h2>
           <div class="field">
@@ -355,7 +332,7 @@ export function QuickSession({
             {t('focus.start')}
           </Button>
         </section>
-      ) : null}
+      )}
       {preview && (
         <Dialog
           open
@@ -402,7 +379,7 @@ export function FocusPage() {
           <p>{t('focus.subtitle')}</p>
         </div>
       </div>
-      <QuickSession sessions={o?.sessions ?? []} groups={model.config.groups} onChange={reload} />
+      <FocusSessions sessions={o?.sessions ?? []} groups={model.config.groups} onChange={reload} />
       <p class="small muted row nowrap" style={{ gap: '8px', alignItems: 'flex-start' }}>
         <Icon name="keyboard" />
         <span>{t('focus.shortcutHelp', { minutes: DEFAULT_SESSION_MINUTES })}</span>
