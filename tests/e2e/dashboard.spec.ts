@@ -41,15 +41,15 @@ const ROUTES = [
 const shots = process.env.WHB_SCREENSHOTS;
 
 /**
- * From What happens to the summary of a new rule, through its details (a name, unless it has one)
- * and its protection (#12).
+ * From What happens to the summary of a new rule, through its protection (#12) and its details (a
+ * name, unless it has one).
  */
 async function toSummary(p: Tab, { name, protection = 'Wait' }: { name?: string; protection?: string } = {}) {
-  await p.button('Next: details').click();
-  if (name !== undefined) await p.label('Name', { exact: true }).fill(name);
   await p.button('Next: protection').click();
   const radio = p.role('radio', new RegExp(`^${protection}`));
   if (!(await radio.checked())) await radio.click();
+  await p.button('Next: details').click();
+  if (name !== undefined) await p.label('Name', { exact: true }).fill(name);
   await p.button('Next: summary').click();
 }
 
@@ -59,8 +59,8 @@ const PARTS = {
   Sites: 'Which sites?',
   When: 'When should it apply?',
   'What happens': 'What should happen?',
-  Details: 'Name, reason and block page',
   Protection: 'What should loosening this rule take?',
+  Details: 'Name, reason and block page',
 };
 
 async function setup(h: Harness, protection: unknown = wait(30)) {
@@ -123,7 +123,7 @@ for (const width of [1280, 390]) {
   });
 }
 
-test('a rule is created step by step: sites → when → what happens → details → protection → summary', async ({
+test('a rule is created step by step: sites → when → what happens → protection → details → summary', async ({
   h,
 }) => {
   await setup(h);
@@ -140,27 +140,27 @@ test('a rule is created step by step: sites → when → what happens → detail
   await p.button('Next: what happens').click();
   // Nothing is pre-selected (active choice): every intervention is offered, "count only" too
   // (#21), and a redirect needs an address.
-  await p.button('Next: details').expectEnabled(false);
+  await p.button('Next: protection').expectEnabled(false);
   await p.get('.friction-option').expectCount(8);
   await p.get('.friction-option[aria-checked="true"]').expectCount(0);
   await p.role('radio', 'Count only').expectEnabled(true);
   await p.role('radio', 'Redirect').click();
-  await p.button('Next: details').expectEnabled(false);
+  await p.button('Next: protection').expectEnabled(false);
   await p.label('Address', { exact: true }).fill('https://todo.test/');
-  await p.button('Next: details').expectEnabled(true);
+  await p.button('Next: protection').expectEnabled(true);
   await p.role('radio', 'Block').click();
-  // The ready-made list named the rule.
-  await p.button('Next: details').click();
-  await p.label('Name', { exact: true }).expectValue('News');
   // Protection (#12): one of six, nothing pre-selected; a wait as long as chosen.
   await p.button('Next: protection').click();
   await p.role('heading', 'What should loosening this rule take?').expectVisible();
   await p.get('.choice').expectCount(6);
   await p.get('.choice[aria-checked="true"]').expectCount(0);
-  await p.button('Next: summary').expectEnabled(false);
+  await p.button('Next: details').expectEnabled(false);
   await p.role('radio', /^Wait/).click();
   await p.role('radio', '1 h').click();
   await p.text(/waits 1 h, then you confirm it in Protection/).expectVisible();
+  // The ready-made list named the rule.
+  await p.button('Next: details').click();
+  await p.label('Name', { exact: true }).expectValue('News');
   await p.button('Next: summary').click();
   // The summary states the plan: when (the schedule) and what happens.
   await p.get('.plan-text').expectText('Mon–Fri');
@@ -184,7 +184,7 @@ test('a rule is created step by step: sites → when → what happens → detail
 });
 
 /** A new rule up to its protection. */
-async function toProtection(h: Harness, name: string, site: string): Promise<Tab> {
+async function toProtection(h: Harness, site: string): Promise<Tab> {
   const p = await h.page('dashboard.html#/groups/new');
   await p.role('heading', 'Which sites?').expectVisible();
   await p.placeholder('Add a site, or paste a list…').fill(site);
@@ -192,10 +192,15 @@ async function toProtection(h: Harness, name: string, site: string): Promise<Tab
   await p.button('Next: when').click();
   await p.button('Next: what happens').click();
   await p.role('radio', 'Block').click();
-  await p.button('Next: details').click();
-  await p.label('Name', { exact: true }).fill(name);
   await p.button('Next: protection').click();
   return p;
+}
+
+/** From the protection of a new rule to its summary, naming it. */
+async function named(p: Tab, name: string) {
+  await p.button('Next: details').click();
+  await p.label('Name', { exact: true }).fill(name);
+  await p.button('Next: summary').click();
 }
 
 /** The new rule's state for the session, as stored. */
@@ -204,28 +209,32 @@ const draftState = async (p: Tab) => (await p.eval(() => sessionStorage.getItem(
 test("a new rule's Password protection is hashed in the background and never kept for the session", async ({
   h,
 }) => {
-  const p = await toProtection(h, 'Gambling', 'bet.test');
+  const p = await toProtection(h, 'bet.test');
   await p.role('radio', /^Password/).click();
+  // The rule is not named yet: its name comes in Details, after the protection.
+  await p.role('heading', 'Password of Unnamed rule').expectVisible();
   await p.label('New password').type('only my sister knows');
   await p.label('Repeat the password').type('only my sister knows');
   await p.button('Save', { exact: true, within: 'dialog' }).click();
   await p.text(/Password set/).expectVisible();
   expect(await p.role('radio', /^Password/).checked()).toBe(true);
+  await named(p, 'Gambling');
+  await p.text('Password', { exact: true, within: '.summary-list' }).expectVisible();
   // The new rule is kept for the session, but never the password hash.
   expect(await draftState(p)).toContain('Gambling');
   expect(await draftState(p)).not.toContain('pbkdf2');
-  await p.button('Next: summary').click();
-  await p.text('Password', { exact: true, within: '.summary-list' }).expectVisible();
   // Resumed without the password (here after a reload), the rule asks for the protection again
-  // instead of being created with the default one.
+  // instead of being created with the default one; what comes after it is kept.
   await p.reload();
   await p.role('heading', 'What should loosening this rule take?').expectVisible();
   await p.get('.choice[aria-checked="true"]').expectCount(0);
-  await p.button('Next: summary').expectEnabled(false);
+  await p.button('Next: details').expectEnabled(false);
   await p.role('radio', /^Password/).click();
   await p.label('New password').type('only my sister knows');
   await p.label('Repeat the password').type('only my sister knows');
   await p.button('Save', { exact: true, within: 'dialog' }).click();
+  await p.button('Next: details').click();
+  await p.label('Name', { exact: true }).expectValue('Gambling');
   await p.button('Next: summary').click();
   await p.text('Password', { exact: true, within: '.summary-list' }).expectVisible();
   await p.button('Create rule').click();
@@ -243,9 +252,9 @@ test("a new rule's Password protection is hashed in the background and never kep
 });
 
 test("a new rule's Partner code protection is set up with a code from the partner's app", async ({ h }) => {
-  const p = await toProtection(h, 'Casino', 'casino.test');
+  const p = await toProtection(h, 'casino.test');
   await p.role('radio', /^Partner code/).click();
-  await p.role('heading', 'Set up a partner code for Casino').expectVisible();
+  await p.role('heading', 'Set up a partner code for Unnamed rule').expectVisible();
   const secret = (await p.get('.partner-key').text()).replace(/\s/g, '');
   await p.label('Code from your partner’s app').fill('000000');
   await p.button('Confirm', { exact: true, within: 'dialog' }).click();
@@ -254,7 +263,7 @@ test("a new rule's Partner code protection is set up with a code from the partne
   await p.button('Confirm', { exact: true, within: 'dialog' }).click();
   await p.text('Your partner’s app shows the codes for this rule.').expectVisible();
   expect(await draftState(p)).not.toContain(secret);
-  await p.button('Next: summary').click();
+  await named(p, 'Casino');
   await p.button('Create rule').click();
   await p.role('heading', 'Rules', { exact: true }).expectVisible();
   const created = (await h.rpc('config.get')).config.groups.find((g: any) => g.name === 'Casino');
@@ -265,6 +274,34 @@ test("a new rule's Partner code protection is set up with a code from the partne
   const r = await h.rpc('config.save', { config: cfg });
   expect(r.ticket.step).toEqual({ type: 'partner', names: ['Casino'] });
   await h.rpc('ticket.cancel', { id: r.ticket.id });
+});
+
+test('the Wait protection takes a wait of any length, typed as a number and a unit', async ({ h }) => {
+  const p = await toProtection(h, 'slow.test');
+  await p.role('radio', /^Wait/).click();
+  const length = p.label('Length of the wait', { exact: true });
+  const unit = p.label('Length of the wait: unit');
+  await length.expectCount(0);
+  // "Other" starts from the wait chosen so far.
+  await p.role('radio', 'Other', { exact: true }).click();
+  await length.expectValue('30');
+  await unit.expectValue('seconds');
+  await unit.select('minutes');
+  await length.fill('45');
+  await p.text('Loosening the rule waits 45 min, then you confirm it in Protection.').expectVisible();
+  await named(p, 'Slow');
+  await p.text('Wait · 45 min', { exact: true, within: '.summary-list' }).expectVisible();
+  await p.button('Create rule').click();
+  await p.role('heading', 'Rules', { exact: true }).expectVisible();
+  const created = (await h.rpc('config.get')).config.groups.find((g: any) => g.name === 'Slow');
+  expect(created.protection).toEqual(wait(2700));
+  // The rule opens with its own wait under "Other"; a usual one closes the field.
+  const editor = await h.page(`dashboard.html#/groups/${created.id}?step=protection`);
+  await editor.role('radio', 'Other', { exact: true }).expectChecked(true);
+  await editor.label('Length of the wait', { exact: true }).expectValue('45');
+  await editor.label('Length of the wait: unit').expectValue('minutes');
+  await editor.role('radio', '2 min', { exact: true }).click();
+  await editor.label('Length of the wait', { exact: true }).expectCount(0);
 });
 
 test('a new rule takes wildcards and every website, and the editor warns (#20, #23)', async ({ h }) => {
@@ -345,14 +382,14 @@ test('"count only" at certain times counts nothing outside them (#21)', async ({
   await p.role('radio', /At certain times/).click();
   await p.button('Next: what happens').click();
   await p.role('radio', 'Count only').click();
+  await p.button('Next: protection').click();
+  await p.role('radio', /^Wait/).click();
   // A site never names the rule: it is shown next to its sites. A name is needed to go on.
   await p.button('Next: details').click();
   await p.label('Name', { exact: true }).expectValue('');
   await p.text('Give the rule a name.').expectVisible();
-  await p.button('Next: protection').expectEnabled(false);
+  await p.button('Next: summary').expectEnabled(false);
   await p.label('Name', { exact: true }).fill('Work');
-  await p.button('Next: protection').click();
-  await p.role('radio', /^Wait/).click();
   await p.button('Next: summary').click();
   await p.get('.plan-text').expectText('outside these times it counts nothing');
   await p.button('Create rule').click();
@@ -394,11 +431,11 @@ test('the main settings of what happens are chosen with it (#14)', async ({ h })
   await p.label('Longest wait').expectValue('90');
   await p.label('Longest wait').fill('30');
   await p.text('The longest wait must be longer than the shortest.').expectVisible();
-  await p.button('Next: details').expectEnabled(false);
+  await p.button('Next: protection').expectEnabled(false);
   await p.role('radio', 'Longer each time').click();
   await p.text('45 s, then 55 s, then 1 min 5 s… Back to 45 s each day.').expectVisible();
   await p.role('radio', 'Fixed').click();
-  await p.button('Next: details').expectEnabled(true);
+  await p.button('Next: protection').expectEnabled(true);
   // Everything else about a wait is in view too: no advanced options.
   await p.label('Where').expectVisible();
   await p.label('If you switch to another tab during the wait').expectVisible();
@@ -410,9 +447,9 @@ test('the main settings of what happens are chosen with it (#14)', async ({ h })
   await p.label('Where').expectVisible();
   await p.text('Advanced options', { exact: true }).expectCount(0);
   await p.get('select[aria-label="Challenge"]').select('phrase');
-  await p.button('Next: details').expectEnabled(false);
+  await p.button('Next: protection').expectEnabled(false);
   await p.label('Phrase to type').fill('I choose to spend this time on purpose');
-  await p.button('Next: details').expectEnabled(true);
+  await p.button('Next: protection').expectEnabled(true);
   // Coming back to an intervention keeps what was set for it.
   await p.role('radio', 'Wait').click();
   await p.label('Wait', { exact: true }).expectValue('45');
@@ -450,13 +487,11 @@ test('a new rule that blocks sets up its breaks (#15)', async ({ h }) => {
   await p.label('What must you do to take a break?').select('confirm');
   await p.role('spinbutton', 'At most this many breaks').fill('2');
   await p.text('Advanced options', { exact: true }).expectCount(0);
-  await p.button('Next: details').click();
-  await p.label('Name', { exact: true }).fill('Breaks');
   await p.button('Next: protection').click();
   await p.role('radio', /^Reminder/).click();
   // The protection says nothing about breaks: they cost what was chosen.
   await p.text(/^Breaks cost/).expectCount(0);
-  await p.button('Next: summary').click();
+  await named(p, 'Breaks');
   await p.text('Breaks: up to 20 min each. Cost: a confirmation.').expectVisible();
   await p.text('Reminder', { exact: true, within: '.summary-list' }).expectVisible();
   await p.button('Create rule').click();
@@ -482,8 +517,6 @@ test('a new rule has no breaks once they are turned off (#15)', async ({ h }) =>
   await p.role('radio', 'Block').click();
   const breaks = p.role('switch', 'Allow breaks');
   await breaks.click();
-  await p.button('Next: details').click();
-  await p.label('Name', { exact: true }).fill('No breaks');
   await p.button('Next: protection').click();
   await p.role('radio', /^Wait/).click();
   // Back in what happens, the breaks are as they were left, until they are turned off.
@@ -492,7 +525,7 @@ test('a new rule has no breaks once they are turned off (#15)', async ({ h }) =>
   await p.label('What must you do to take a break?').expectValue('delay');
   await breaks.click();
   await breaks.expectChecked(false);
-  await toSummary(p);
+  await toSummary(p, { name: 'No breaks' });
   await p.text('No breaks.', { exact: true }).expectVisible();
   await p.button('Create rule').click();
   await p.role('heading', 'Rules', { exact: true }).expectVisible();
@@ -554,12 +587,10 @@ test('only a new rule that blocks gets breaks (#15)', async ({ h }) => {
   await p.role('radio', 'Block').click();
   await breaks.expectVisible();
   await p.role('radio', 'Wait').click();
-  await p.button('Next: details').click();
-  await p.label('Name', { exact: true }).fill('Counted');
   await p.button('Next: protection').click();
   await p.role('radio', /^Reminder/).click();
   await p.text('Loosening the rule asks for a confirmation.').expectVisible();
-  await p.button('Next: summary').click();
+  await named(p, 'Counted');
   // The summary does not mention breaks at all.
   await p.text('Reminder', { exact: true, within: '.summary-list' }).expectVisible();
   await p.text(/breaks? cost|no breaks/i).expectCount(0);
@@ -679,13 +710,13 @@ test("first run, welcome → the rule editor's parts → done", async ({ h }) =>
   await p.button('Next: what happens').click();
   // Nothing is pre-selected: we do not know why the extension was installed.
   await p.get('.friction-option[aria-checked="true"]').expectCount(0);
-  await p.button('Next: details').expectEnabled(false);
+  await p.button('Next: protection').expectEnabled(false);
   await p.role('radio', 'Block').click();
+  await p.button('Next: protection').click();
+  await p.role('radio', /^Reminder/).click();
   await p.button('Next: details').click();
   await p.label('Name', { exact: true }).expectValue('Video');
   await p.label('Why does this rule matter to you?').fill('More evenings outside');
-  await p.button('Next: protection').click();
-  await p.role('radio', /^Reminder/).click();
   await p.button('Next: summary').click();
   await p.get('.plan-text').expectText('After 45 min a day in total on');
   await p.button('Create rule').click();
@@ -725,11 +756,9 @@ test('Back from the first step returns to the welcome and keeps the draft; the r
   await p.button('Next: when').click();
   await p.button('Next: what happens').click();
   await p.role('radio', 'Block').click();
-  await p.button('Next: details').click();
-  await p.label('Name', { exact: true }).fill('Casino');
   await p.button('Next: protection').click();
   // Nothing is pre-selected: the rule's protection is an active choice.
-  await p.button('Next: summary').expectEnabled(false);
+  await p.button('Next: details').expectEnabled(false);
   await p.get('.choice').expectCount(6);
   await p.role('radio', /^Wait/).click();
   // A short wait is not a firm protection; a long one blocks the browser's own pages too, and says so.
@@ -737,6 +766,8 @@ test('Back from the first step returns to the welcome and keeps the draft; the r
   await pages.expectCount(0);
   await p.role('radio', '24 h').click();
   await pages.expectVisible();
+  await p.button('Next: details').click();
+  await p.label('Name', { exact: true }).fill('Casino');
   await p.button('Next: summary').click();
   await p.button('Create rule').click();
   await p.role('heading', 'You’re set').expectVisible();

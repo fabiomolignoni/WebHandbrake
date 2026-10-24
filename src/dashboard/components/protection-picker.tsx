@@ -7,13 +7,18 @@
 
 import { useState } from 'preact/hooks';
 import { DEFAULT_PROTECTION, firmProtection } from '../../engine/defaults';
-import { WAIT_CHOICES_SECONDS, WAIT_IN_DIALOG_SECONDS } from '../../engine/limits';
+import {
+  MAX_WAIT_SECONDS,
+  MIN_WAIT_SECONDS,
+  WAIT_CHOICES_SECONDS,
+  WAIT_IN_DIALOG_SECONDS,
+} from '../../engine/limits';
 import type { Protection, ProtectionKind } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { formatDateTime, formatDuration } from '../../shared/format';
 import type { PartnerSetup } from '../../shared/models';
 import { call } from '../../shared/rpc';
-import { Button, Dialog, Field, RadioCards, Segmented, toast } from '../../ui/components';
+import { Button, Dialog, DurationInput, Field, RadioCards, Segmented, toast } from '../../ui/components';
 import { Icon } from '../../ui/icons';
 import { protectionIcon } from '../../ui/protection';
 import { useDashboard } from '../context';
@@ -21,6 +26,9 @@ import { PartnerSetupDialog } from './partner-setup';
 import { PasswordDialog } from './password-dialog';
 
 export { protectionIcon, protectionLabel } from '../../ui/protection';
+
+/** The value of the "Other" choice among the waits. */
+const OTHER_WAIT = -1;
 
 export const PROTECTION_KINDS: ProtectionKind[] = [
   'reminder',
@@ -157,12 +165,14 @@ export function ProtectionPicker({
   const browserPages = !model.platform.android && model.config.settings.protection.internalPages === 'auto';
   const [dialog, setDialog] = useState<'password' | 'locked' | 'permanent' | null>(null);
   const [setup, setSetup] = useState<PartnerSetup | null>(null);
+  // "Other" is chosen, even when the wait typed equals one of the usual ones.
+  const [customWait, setCustomWait] = useState(false);
   const choose = (p: Protection) => {
     setKept((k) => ({ ...k, [p.kind]: p }));
     onChange(p);
   };
   const setUpPartner = async () => setSetup(await call('partner.begin', { groupId, name }));
-  // A rule not yet named (the wizard asks for a name on its last step) has a placeholder in titles.
+  // A new rule is named in Details, after its protection: until then titles have a placeholder.
   const title = name.trim() || t('editor.unnamed');
   const pick = (kind: ProtectionKind) => {
     const before = kept[kind];
@@ -172,10 +182,7 @@ export function ProtectionPicker({
     else if (kind === 'partner') void setUpPartner();
     else setDialog(kind);
   };
-  const waits =
-    value?.kind === 'wait' && !WAIT_CHOICES_SECONDS.includes(value.seconds)
-      ? [...WAIT_CHOICES_SECONDS, value.seconds].sort((a, b) => a - b)
-      : WAIT_CHOICES_SECONDS;
+  const otherWait = value?.kind === 'wait' && (customWait || !WAIT_CHOICES_SECONDS.includes(value.seconds));
 
   return (
     <div class="stack">
@@ -204,12 +211,29 @@ export function ProtectionPicker({
               <span class="label" id={`wait-${groupId}`}>
                 {t('protection.waitLabel')}
               </span>
-              <Segmented
-                value={value.seconds}
-                onChange={(seconds) => choose({ kind: 'wait', seconds })}
+              <Segmented<number>
+                value={otherWait ? OTHER_WAIT : value.seconds}
+                onChange={(seconds) => {
+                  setCustomWait(seconds === OTHER_WAIT);
+                  if (seconds !== OTHER_WAIT) choose({ kind: 'wait', seconds });
+                }}
                 labelledBy={`wait-${groupId}`}
-                options={waits.map((s) => ({ value: s, label: formatDuration(s) }))}
+                options={[
+                  ...WAIT_CHOICES_SECONDS.map((s) => ({ value: s, label: formatDuration(s) })),
+                  { value: OTHER_WAIT, label: t('protection.waitOther') },
+                ]}
               />
+              {otherWait && (
+                <DurationInput
+                  value={value.seconds}
+                  base="seconds"
+                  units={['seconds', 'minutes', 'hours', 'days']}
+                  min={MIN_WAIT_SECONDS}
+                  max={MAX_WAIT_SECONDS}
+                  label={t('protection.waitCustom')}
+                  onChange={(seconds) => choose({ kind: 'wait', seconds })}
+                />
+              )}
               <span class="help">
                 {t('protection.waitHelp', { duration: formatDuration(WAIT_IN_DIALOG_SECONDS) })}
               </span>

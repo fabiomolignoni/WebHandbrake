@@ -87,7 +87,7 @@ test('WCAG 2.2 AA in every part of the rule editor, for a new rule and in the fi
   const all: string[] = [];
   // Every part of a rule, with its advanced options open.
   await go(p, `groups/${id}`);
-  for (const part of ['Sites', 'When', 'What happens', 'Details', 'Protection']) {
+  for (const part of ['Sites', 'When', 'What happens', 'Protection', 'Details']) {
     await openPart(p, part);
     // What happens with its breaks allowed, so that their settings are shown.
     if (part === 'What happens') {
@@ -99,8 +99,8 @@ test('WCAG 2.2 AA in every part of the rule editor, for a new rule and in the fi
   }
   // Every part of a new rule, in order.
   await go(p, 'groups/new?template=social');
-  for (const step of ['when', 'what happens', 'details', 'protection', 'summary']) {
-    if (step === 'details') {
+  for (const step of ['when', 'what happens', 'protection', 'details', 'summary']) {
+    if (step === 'protection') {
       // What happens with breaks, whose settings show under Block.
       await p.role('radio', 'Block').click();
       await p.role('switch', 'Allow breaks').click();
@@ -108,7 +108,12 @@ test('WCAG 2.2 AA in every part of the rule editor, for a new rule and in the fi
       all.push(...(await check(p, 'new rule what happens, breaks')));
       await p.role('radio', 'Ask first').click();
     }
-    if (step === 'summary') await p.role('radio', /^Wait/).click();
+    if (step === 'details') {
+      await p.role('radio', /^Wait/).click();
+      // A wait of any other length.
+      await p.role('radio', 'Other').click();
+      all.push(...(await check(p, 'new rule protection, another wait')));
+    }
     await p.button(`Next: ${step}`).click();
     await openAdvanced(p);
     all.push(...(await check(p, `new rule ${step}`)));
@@ -129,9 +134,9 @@ test('WCAG 2.2 AA in every part of the rule editor, for a new rule and in the fi
   await p.button('Set up in about a minute').click();
   all.push(...(await check(p, 'first run sites')));
   await p.button(/^Social media/).click();
-  for (const step of ['when', 'what happens', 'details', 'protection', 'summary']) {
-    if (step === 'details') await p.role('radio', 'Ask first').click();
-    if (step === 'summary') await p.role('radio', /^Wait/).click();
+  for (const step of ['when', 'what happens', 'protection', 'details', 'summary']) {
+    if (step === 'protection') await p.role('radio', 'Ask first').click();
+    if (step === 'details') await p.role('radio', /^Wait/).click();
     await p.button(`Next: ${step}`).click();
     all.push(...(await check(p, `first run ${step}`)));
   }

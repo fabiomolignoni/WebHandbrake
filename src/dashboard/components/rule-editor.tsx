@@ -1,6 +1,6 @@
 /**
  * The rule editor: one interface to create a rule and to change it. A rule has six parts (Sites,
- * When, What happens, Details, Protection, Summary), each a card that asks the first questions;
+ * When, What happens, Protection, Details, Summary), each a card that asks the first questions;
  * whatever goes beyond them is in the part's "Advanced options", folded away unless the rule
  * already uses it. The parts build an if-then plan ("When I open these sites…, then…"), which the
  * summary states in a sentence.
@@ -62,8 +62,7 @@ import { ProtectionPicker, protectionIcon, protectionLabel } from './protection-
 import { TargetsEditor } from './targets';
 import { TestUrl } from './test-url';
 
-// The name comes before the protection: a password or a partner code is set up for a named rule.
-const STEPS = ['sites', 'when', 'how', 'details', 'protection', 'summary'] as const;
+const STEPS = ['sites', 'when', 'how', 'protection', 'details', 'summary'] as const;
 type StepId = (typeof STEPS)[number];
 
 const STEP_ICON: Record<StepId, string> = {
@@ -1055,18 +1054,18 @@ function Summary({
           </span>,
         )}
         {row(
-          'details',
-          <>
-            {rule.message.trim() ? t('editor.overview.message') : t('editor.overview.noMessage')}
-            {!rule.note.trim() && ` · ${t('editor.overview.noReason')}`}
-          </>,
-        )}
-        {row(
           'protection',
           <span class="row nowrap">
             <Icon name={protectionIcon(rule.protection.kind)} />
             {protectionLabel(rule.protection)}
           </span>,
+        )}
+        {row(
+          'details',
+          <>
+            {rule.message.trim() ? t('editor.overview.message') : t('editor.overview.noMessage')}
+            {!rule.note.trim() && ` · ${t('editor.overview.noReason')}`}
+          </>,
         )}
       </dl>
     </>
