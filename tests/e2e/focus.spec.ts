@@ -1,5 +1,5 @@
 /**
- * Focus sessions in a real browser: from the popup, the dashboard,
+ * Focus sessions in a real browser: from Today, the Focus page,
  * the keyboard shortcut and the context menu; blocklist and allowlist modes, delayed start, extension,
  * early end.
  */
@@ -18,7 +18,7 @@ const session = (more: Record<string, unknown> = {}) => ({
   ...more,
 });
 
-test('a focus session starts from the popup in two taps and blocks the rules', async ({ h }) => {
+test('a quick focus session starts from Today in two clicks and blocks the rules', async ({ h }) => {
   await h.configure((c) => {
     c.groups = [
       group('Games', ['games.test'], [policy(TRACK)]),
@@ -28,10 +28,14 @@ test('a focus session starts from the popup in two taps and blocks the rules', a
     ];
   });
   const open = await expectAllowed(h, 'http://games.test/');
+  // The popup offers no focus session.
   const popup = await h.popup(open);
-  await popup.role('radio', '50 min').click();
-  await popup.button('Start focus').click();
-  await popup.text(/Focus until/).expectVisible();
+  await popup.button('Dashboard', { exact: true }).expectVisible();
+  await popup.text(/Focus/).expectCount(0);
+  const today = await h.page('dashboard.html#/today');
+  await today.role('radio', '50 min').click();
+  await today.button('Start focus session').click();
+  await today.text(/Focus session until/).expectVisible();
   // The open tab of a rule in the session is blocked at once.
   await open.expectIntervention(true, 5000);
   await open.role('heading', /You are in a focus session until/).expectVisible();
@@ -159,11 +163,11 @@ test('a session that cannot be interrupted refuses to end and says so', async ({
   expect(await h.rpc('session.end', { id })).toMatchObject({ refused: 'session.error.locked' });
   const p = await expectBlocked(h, 'http://games.test/');
   await p.text('This session cannot be interrupted.').expectVisible();
-  const popup = await h.popup(p);
-  await popup.text('Cannot be interrupted').expectVisible();
-  await popup.button('End now').expectCount(0);
+  const today = await h.page('dashboard.html#/today');
+  await today.text('Cannot be interrupted').expectVisible();
+  await today.button('End now').expectCount(0);
   // Extending stays possible.
-  await popup.button('+15 min').click();
+  await today.button('+15 min').click();
   const s = (await h.rpc('overview.get')).sessions[0];
   expect(Math.round((s.endAt - s.startAt) / 60_000)).toBe(45);
 });

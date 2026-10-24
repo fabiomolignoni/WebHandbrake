@@ -106,10 +106,10 @@ All notable changes to WebHandbrake are documented here. The format follows
   After some time, has its own answer: how many visits, and how often they start again.
 - Whether a rule's breaks can be taken during a focus session is up to the session: **No breaks
   during the session** on Focus now does what it says for every rule, and quick sessions started
-  from the popup, the right-click menu or the keyboard shortcut allow no breaks.
+  from Today, the right-click menu or the keyboard shortcut allow no breaks.
 - The popup opens the dashboard from a wide **Dashboard** bar at its end, which stays in view when
-  the popup scrolls and shows today's time on limited sites. The whole bar can be clicked or
-  tapped; the small button at the top and the **Details** link to Insights are gone.
+  the popup scrolls. The whole bar can be clicked or tapped; the small button at the top and the
+  **Details** link to Insights are gone.
 - Numbers and choices are quicker to set. A number and its unit are one field (“45 minutes”), as
   wide as the number, with a numeric keyboard on phones and the arrow keys to step it; scrolling
   the page no longer changes it, and a decimal comma is understood (“1,5 hours”). A choice among a
@@ -126,6 +126,9 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ### Removed
 
+- Focus sessions in the popup: it no longer starts one or shows the one running. Start, extend and
+  end them on Today or Focus; the right-click menu and the keyboard shortcut still start one. The
+  popup's **Dashboard** bar no longer shows today's time on limited sites, which Today shows.
 - Several conditions in a rule, with **Add a condition** and **Don’t count**, which left the sites
   alone between conditions: a rule has one condition, and the rules of a site all apply, the
   strictest first. When you update, a rule with several conditions becomes one rule for each

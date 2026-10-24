@@ -1,6 +1,6 @@
 /**
  * Popup: status first — the state of the current site as a
- * tinted hero with the most useful fact — then quick actions and focus, two taps at most, and
+ * tinted hero with the most useful fact — then quick actions, two taps at most, and
  * the dashboard at the end.
  */
 
@@ -10,8 +10,8 @@ import { type Granularity, targetFor } from '../engine/page-target';
 import { isNav } from '../engine/severity';
 import { t } from '../i18n/i18n';
 import { extensionUrl, isAndroid } from '../platform/api';
-import { formatDuration, formatWhen } from '../shared/format';
-import type { DecisionView, PopupModel, TicketView } from '../shared/models';
+import { formatWhen } from '../shared/format';
+import type { DecisionView, PopupModel } from '../shared/models';
 import { call } from '../shared/rpc';
 import { describeIntervention, describeTarget, setWeekStart } from '../shared/summary';
 import {
@@ -21,8 +21,6 @@ import {
   IconButton,
   Progress,
   RadioCards,
-  Ring,
-  Segmented,
   Spinner,
   Toasts,
   ToneIcon,
@@ -34,7 +32,6 @@ import { BrakeLogo, Icon } from '../ui/icons';
 import { breakSubject, PauseDialog, pauseSummary } from '../ui/pause';
 import { useSaveFlow } from '../ui/saveflow';
 import { interventionIcon, siteStatus, toneOf } from '../ui/status';
-import { TicketDialog } from '../ui/ticket';
 
 /**
  * Opens a dashboard page, then closes the popup. Closing first could drop the request: when the
@@ -289,114 +286,6 @@ function AddSite({ m, onDone, onCancel }: { m: PopupModel; onDone: () => void; o
   );
 }
 
-function FocusPanel({ m, reload }: { m: PopupModel; reload: () => void }) {
-  const [minutes, setMinutes] = useState<number>(m.quickMinutes[0]);
-  const [ticket, setTicket] = useState<TicketView | null>(null);
-  const now = useNow(1000);
-  const active = m.sessions.find((s) => s.startAt <= now && now < s.endAt);
-  const upcoming = m.sessions.find((s) => s.startAt > now);
-  if (active) {
-    const total = active.endAt - active.startAt;
-    const left = Math.max(0, active.endAt - now);
-    return (
-      <section class="panel tone-protected" aria-label={t('popup.focus')}>
-        <div class="session-compact">
-          <Ring value={total > 0 ? left / total : 0}>{Math.ceil(left / 60_000)}</Ring>
-          <div class="stack stack-xs grow">
-            <strong>{t('popup.focusUntil', { when: formatWhen(active.endAt, now) })}</strong>
-            <span class="small text-2">{t('focus.left', { duration: formatDuration(left / 1000) })}</span>
-          </div>
-          {active.locked && (
-            <span class="tag" title={t('focus.lockedHelp')}>
-              <Icon name="lock" /> {t('focus.locked')}
-            </span>
-          )}
-        </div>
-        <div class="row">
-          <Button
-            size="small"
-            icon="plus"
-            onClick={async () => {
-              await call('session.extend', { id: active.id, minutes: 15 });
-              reload();
-            }}
-          >
-            {t('focus.extend', { duration: formatDuration(15 * 60) })}
-          </Button>
-          {!active.locked && (
-            <Button
-              size="small"
-              variant="ghost"
-              onClick={async () => {
-                const r = await call('session.end', { id: active.id });
-                if (r.refused) toast(t(r.refused));
-                else if (r.ticket) setTicket(r.ticket);
-              }}
-            >
-              {t('focus.end')}
-            </Button>
-          )}
-        </div>
-        {ticket && (
-          <TicketDialog
-            ticket={ticket}
-            title={t('focus.endTitle')}
-            onDone={() => {
-              setTicket(null);
-              reload();
-            }}
-            onCancel={() => setTicket(null)}
-          />
-        )}
-      </section>
-    );
-  }
-  // A quick session applies the rules marked for it: with none, it would look active and block nothing.
-  if (!m.canFocus) return null;
-  return (
-    <section class="panel" aria-labelledby="focus-title">
-      <div class="row between">
-        <strong id="focus-title" class="row nowrap" style={{ gap: '6px' }}>
-          <Icon name="target" />
-          {t('popup.focus')}
-        </strong>
-        {upcoming && (
-          <span class="tiny muted">
-            {t('popup.focusStarts', { when: formatWhen(upcoming.startAt, now) })}
-          </span>
-        )}
-      </div>
-      <Segmented
-        block
-        value={minutes}
-        onChange={setMinutes}
-        label={t('popup.focusDuration')}
-        options={m.quickMinutes.map((n) => ({ value: n, label: formatDuration(n * 60) }))}
-      />
-      <Button
-        block
-        variant="primary"
-        icon="play"
-        onClick={async () => {
-          await call('session.start', {
-            kind: 'groups',
-            groups: [],
-            allow: [],
-            minutes,
-            locked: false,
-            // A quick session allows no breaks of its rules.
-            noPauses: true,
-          });
-          toast(t('focus.started', { minutes }));
-          reload();
-        }}
-      >
-        {t('popup.startFocus')}
-      </Button>
-    </section>
-  );
-}
-
 /**
  * Test build only: a headless browser has no toolbar, so the end-to-end suite opens the popup in a
  * tab and names the tab it is for (popup.html?tab=<id>).
@@ -428,6 +317,7 @@ function App() {
   const otherPauses = m.activePauses.filter((p) => !m.decision?.groups.some((g) => g.pause?.id === p.id));
   const tiles = (pause ? 1 : 0) + (m.canAdd ? 2 : 0);
   const groupName = (id: string) => m.groups.find((g) => g.id === id)?.name;
+  const figures = m.today.impulses > 0 || m.laterCount > 0;
   return (
     <div class="popup">
       <header class="popup-head">
@@ -561,7 +451,6 @@ function App() {
             )}
           </section>
         )}
-        <FocusPanel m={m} reload={reload} />
       </div>
       {/*
        * The one way to the dashboard, always in view, with today's figures it opens on. The button
@@ -576,22 +465,21 @@ function App() {
             <button
               type="button"
               class="stretched open-dashboard-name"
-              aria-describedby="open-dashboard-today"
+              aria-describedby={figures ? 'open-dashboard-today' : undefined}
               onClick={() => openDashboard()}
             >
               {t('popup.dashboard')}
             </button>
-            <span id="open-dashboard-today" class="stack stack-xs">
-              <span>
-                <strong class="num">{formatDuration(m.today.seconds)}</strong> {t('popup.todayLimited')}
+            {figures && (
+              <span id="open-dashboard-today" class="stack stack-xs">
+                {m.today.impulses > 0 && (
+                  <span class="tiny muted">{t('popup.impulses', { count: m.today.impulses })}</span>
+                )}
+                {m.laterCount > 0 && (
+                  <span class="tiny muted">{t('popup.laterCount', { count: m.laterCount })}</span>
+                )}
               </span>
-              {m.today.impulses > 0 && (
-                <span class="tiny muted">{t('popup.impulses', { count: m.today.impulses })}</span>
-              )}
-              {m.laterCount > 0 && (
-                <span class="tiny muted">{t('popup.laterCount', { count: m.laterCount })}</span>
-              )}
-            </span>
+            )}
           </div>
           <Icon name="arrow-right" />
         </div>
