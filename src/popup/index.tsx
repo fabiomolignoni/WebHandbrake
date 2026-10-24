@@ -1,6 +1,7 @@
 /**
  * Popup: status first — the state of the current site as a
- * tinted hero with the most useful fact — then quick actions and focus, two taps at most.
+ * tinted hero with the most useful fact — then quick actions and focus, two taps at most, and
+ * the dashboard at the end.
  */
 
 import { render } from 'preact';
@@ -431,18 +432,7 @@ function App() {
     <div class="popup">
       <header class="popup-head">
         <BrakeLogo size={22} />
-        <span class="sr-only">WebHandbrake</span>
-        <span class="grow" />
-        <Button
-          variant="primary"
-          icon="dashboard"
-          size="small"
-          class="open-dashboard"
-          title={t('popup.openDashboard')}
-          onClick={() => openDashboard()}
-        >
-          {t('popup.dashboard')}
-        </Button>
+        <span class="brand-name">WebHandbrake</span>
       </header>
       <div class="popup-body">
         {!m.onboarded && (
@@ -573,25 +563,38 @@ function App() {
         )}
         <FocusPanel m={m} reload={reload} />
       </div>
+      {/*
+       * The one way to the dashboard, always in view, with today's figures it opens on. The button
+       * is named by its label alone and stretches over the whole bar (whole-card link).
+       */}
       <footer class="foot">
-        <span class="stack stack-xs" style={{ minWidth: 0 }}>
-          <span>
-            <strong class="num">{formatDuration(m.today.seconds)}</strong> {t('popup.todayLimited')}
+        <div class="open-dashboard card-link">
+          <span class="open-dashboard-icon">
+            <Icon name="dashboard" />
           </span>
-          {(m.today.impulses > 0 || m.laterCount > 0) && (
-            <span class="tiny muted">
-              {[
-                m.today.impulses > 0 ? t('popup.impulses', { count: m.today.impulses }) : '',
-                m.laterCount > 0 ? t('popup.laterCount', { count: m.laterCount }) : '',
-              ]
-                .filter(Boolean)
-                .join(' · ')}
+          <div class="stack stack-xs grow" style={{ minWidth: 0 }}>
+            <button
+              type="button"
+              class="stretched open-dashboard-name"
+              aria-describedby="open-dashboard-today"
+              onClick={() => openDashboard()}
+            >
+              {t('popup.dashboard')}
+            </button>
+            <span id="open-dashboard-today" class="stack stack-xs">
+              <span>
+                <strong class="num">{formatDuration(m.today.seconds)}</strong> {t('popup.todayLimited')}
+              </span>
+              {m.today.impulses > 0 && (
+                <span class="tiny muted">{t('popup.impulses', { count: m.today.impulses })}</span>
+              )}
+              {m.laterCount > 0 && (
+                <span class="tiny muted">{t('popup.laterCount', { count: m.laterCount })}</span>
+              )}
             </span>
-          )}
-        </span>
-        <button type="button" class="link-btn nowrap" onClick={() => openDashboard('/insights')}>
-          {t('popup.details')} →
-        </button>
+          </div>
+          <Icon name="arrow-right" />
+        </div>
       </footer>
       {pausing && pause && (
         <PauseDialog options={pause} url={m.tab?.url} onClose={() => setPausing(false)} onStarted={reload} />

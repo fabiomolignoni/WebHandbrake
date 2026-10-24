@@ -102,6 +102,9 @@ All notable changes to WebHandbrake are documented here. The format follows
 - Whether a rule's breaks can be taken during a focus session is up to the session: **No breaks
   during the session** on Focus now does what it says for every rule, and quick sessions started
   from the popup, the right-click menu or the keyboard shortcut allow no breaks.
+- The popup opens the dashboard from a wide **Dashboard** bar at its end, which stays in view when
+  the popup scrolls and shows today's time on limited sites. The whole bar can be clicked or
+  tapped; the small button at the top and the **Details** link to Insights are gone.
 
 ### Removed
 
