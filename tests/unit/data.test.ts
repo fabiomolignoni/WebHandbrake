@@ -3,7 +3,7 @@ import { compileConfig } from '../../src/engine/compile';
 import { MAX_IMPORT_BYTES, MAX_SESSION_MS } from '../../src/engine/limits';
 import type { Group } from '../../src/engine/types';
 import { type FakeBrowser, installFakeBrowser } from './fake-browser';
-import { BLOCK, group, PERMANENT, REMINDER } from './helpers';
+import { BLOCK, group, PERMANENT, REMINDER, t as tg } from './helpers';
 
 const T0 = new Date(2026, 9, 5, 10).getTime();
 
@@ -215,6 +215,42 @@ describe('focus sessions and limits given up', () => {
     await t.sessions.extendSession(id, 10);
     expect(s.endAt).toBe(T0 + 60 * 60_000);
     expect(t.store.usage.counterSum('sessions', ['2026-10-05'])).toBe(2);
+  });
+
+  it('a blocklist session keeps the sites it was given; the lists of Focus stay for the next sessions', async () => {
+    const t = await setup([]);
+    expect(t.store.focus).toEqual({ kind: 'groups', block: [], allow: [] });
+    const block = [tg('news.test'), tg('+news.test/weather')];
+    const { id } = await t.sessions.startSession({
+      kind: 'blocklist',
+      groups: ['ignored'],
+      allow: [tg('docs.test')],
+      block,
+      minutes: 30,
+      locked: false,
+      noPauses: false,
+    });
+    expect(t.store.state.sessions.find((x) => x.id === id)).toMatchObject({ groups: [], allow: [], block });
+    // Each change is kept as it is made, one list at a time; an entry that cannot be read is left out.
+    await t.sessions.saveFocusLists({ kind: 'blocklist', block });
+    await t.sessions.saveFocusLists({ allow: [tg('docs.test'), { id: 'bad', type: 'regex', value: '(' }] });
+    expect(fake.local.get('focus')).toMatchObject({
+      kind: 'blocklist',
+      block: [{ value: 'news.test' }, { value: 'news.test/weather', allow: true }],
+      allow: [{ value: 'docs.test' }],
+    });
+    // After a restart.
+    vi.resetModules();
+    const again = await setup([]);
+    expect(again.store.focus.kind).toBe('blocklist');
+    expect(again.store.focus.block.map((x) => x.value)).toEqual(['news.test', 'news.test/weather']);
+    // In exports, and back with a file that replaces everything.
+    const file = JSON.parse((await again.data.exportData(false, false)).text);
+    expect(file.focus).toEqual(again.store.focus);
+    await again.sessions.saveFocusLists({ kind: 'groups', block: [], allow: [] });
+    await again.data.applyImport(JSON.stringify(file), 'replace');
+    expect(again.store.focus).toEqual(file.focus);
+    expect((await again.data.storageUsage()).keys.map((k) => k.name)).toContain('focus');
   });
 
   it('ending early costs a confirmation; a session that cannot be interrupted refuses; a future one is cancelled', async () => {

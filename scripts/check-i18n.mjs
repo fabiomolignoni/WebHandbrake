@@ -318,8 +318,8 @@ const DYNAMIC = {
     'visits.each',
     'visits.shared',
   ],
-  'focus.mode.{x}': ['groups', 'allowlist'],
-  'focus.mode.{x}.desc': ['groups', 'allowlist'],
+  'focus.mode.{x}': ['groups', 'blocklist', 'allowlist'],
+  'focus.mode.{x}.desc': ['groups', 'blocklist', 'allowlist'],
   'filter.{x}': ['grayscale', 'blur', 'fade', 'invert', 'sepia'],
   'targetType.{x}': ['domain', 'host', 'path', 'page', 'homepage', 'wildcard', 'regex'],
   'warning.{x}': [
@@ -435,6 +435,7 @@ const DYNAMIC = {
     'usage',
     'backups',
     'later',
+    'focus',
     'meta',
     'intentions',
     'u:min',

@@ -8,7 +8,7 @@ import { inWindows, periodRange, scheduleActive, windowInterval } from '../../sr
 import type { Grant, TimeWindow } from '../../src/engine/types';
 import { pageKey } from '../../src/engine/url';
 import { Usage, usageKeys } from '../../src/engine/usage';
-import { at, BLOCK, config, ctx, group, PERMANENT } from './helpers';
+import { at, BLOCK, config, ctx, group, PERMANENT, t } from './helpers';
 
 const cal = { dayStart: 0, weekStart: 1 };
 const weekdays = [1, 2, 3, 4, 5];
@@ -258,6 +258,46 @@ describe('decisions', () => {
     const c2 = ctx(config([g]), at(0, 9, 30), state);
     expect(decide(c2, 'https://other.example/').intervention.type).toBe('block');
     expect(decide(c2, 'https://docs.example/a').intervention.type).toBe('allow');
+  });
+
+  it('blocklist sessions block their own sites, except their exceptions, and nothing else', () => {
+    const g = group('F', ['news.example'], [{ intervention: delayIntervention(30) }]);
+    const state = defaultState();
+    state.sessions.push({
+      id: 's',
+      kind: 'blocklist',
+      groups: [],
+      allow: [],
+      block: [t('video.example'), t('+video.example/lectures'), t('news.example')],
+      startAt: at(0, 9),
+      endAt: at(0, 10),
+      createdAt: at(0, 9),
+      locked: false,
+      noPauses: false,
+    });
+    const c = ctx(config([g]), at(0, 9, 30), state);
+    const video = decide(c, 'https://m.video.example/watch');
+    expect(video).toMatchObject({ source: 'session', primary: null, session: { id: 's' } });
+    expect(video.intervention.type).toBe('block');
+    expect(decide(c, 'https://video.example/lectures/1').intervention.type).toBe('allow');
+    expect(decide(c, 'https://other.example/').intervention.type).toBe('allow');
+    // A rule's gentler intervention gives way to the session, which offers no break.
+    const news = decide(c, 'https://news.example/');
+    expect(news.intervention.type).toBe('block');
+    expect(news.session?.id).toBe('s');
+    // Before it starts and once it is over, the session blocks nothing; nor does one of an
+    // earlier version without a list.
+    expect(decide(ctx(config([g]), at(0, 8), state), 'https://video.example/').intervention.type).toBe(
+      'allow',
+    );
+    expect(decide(ctx(config([g]), at(0, 10), state), 'https://video.example/').intervention.type).toBe(
+      'allow',
+    );
+    const { block: _, ...earlier } = state.sessions[0];
+    state.sessions = [earlier];
+    expect(decide(ctx(config([g]), at(0, 9, 30), state), 'https://video.example/').intervention.type).toBe(
+      'allow',
+    );
   });
 
   it('private-only groups', () => {

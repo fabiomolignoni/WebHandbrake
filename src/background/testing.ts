@@ -46,6 +46,7 @@ export function testHandlers(): Record<string, Handler> {
         state: store.state,
         meta: store.meta,
         later: store.later,
+        focus: store.focus,
         intentions: store.intentions,
         counters,
         dnr: dnrStatus,

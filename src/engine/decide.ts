@@ -87,9 +87,9 @@ export interface Decision {
   severity: number;
   intervention: Intervention;
   source: Source;
-  /** Group whose intervention applies (null for allowlist sessions or when nothing applies). */
+  /** Group whose intervention applies (null for list sessions or when nothing applies). */
   primary: GroupResult | null;
-  /** Allowlist focus session that blocks the URL. */
+  /** Blocklist or allowlist focus session that blocks the URL. */
   session: FocusSession | null;
   /** Groups for which the URL is a target. */
   groups: GroupResult[];
@@ -290,13 +290,19 @@ function better(a: GroupResult, b: GroupResult, cc: CompiledConfig): boolean {
 
 const sessionIndexCache = new WeakMap<FocusSession, ReturnType<typeof compileTargets>>();
 
-function sessionAllows(s: FocusSession, url: ParsedUrl): boolean {
+/** Whether a list session blocks a URL: one of its sites (not an exception), or any but those allowed. */
+function sessionBlocks(s: FocusSession, url: ParsedUrl): boolean {
+  if (s.kind === 'groups') return false;
   let index = sessionIndexCache.get(s);
   if (!index) {
-    index = compileTargets(s.allow.map((t) => ({ ...t, allow: true })));
+    index = compileTargets(
+      s.kind === 'allowlist' ? s.allow.map((t) => ({ ...t, allow: true })) : (s.block ?? []),
+    );
     sessionIndexCache.set(s, index);
   }
-  return index.match(url).length > 0;
+  if (s.kind === 'allowlist') return index.match(url).length === 0;
+  const { winner } = index.winner(url);
+  return Boolean(winner && !winner.allow);
 }
 
 function exemptDecision(url: string, parsed: ParsedUrl | null): Decision {
@@ -378,11 +384,10 @@ function decideOnce(ctx: EngineContext, url: string, uctx: UrlContext): Decision
     decision.source = decision.primary.source;
   }
 
-  // Allowlist sessions block every web page not explicitly allowed.
+  // Blocklist sessions block the web pages of their sites, allowlist sessions every web page not
+  // explicitly allowed.
   if (parsed.web && decision.severity < SEVERITY.block) {
-    const s = activeSessions(ctx.state, ctx.now).find(
-      (x) => x.kind === 'allowlist' && !sessionAllows(x, parsed),
-    );
+    const s = activeSessions(ctx.state, ctx.now).find((x) => sessionBlocks(x, parsed));
     if (s) {
       decision.session = s;
       decision.intervention = BLOCK;

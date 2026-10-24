@@ -372,8 +372,17 @@ function TextEditor({
   );
 }
 
-/** The sites of a rule (or of a focus session's allowlist), exceptions included. */
-export function TargetsEditor({ targets, onChange }: { targets: Target[]; onChange: (t: Target[]) => void }) {
+/** The sites of a rule (or of a focus session's list), exceptions included. */
+export function TargetsEditor({
+  targets,
+  onChange,
+  onClear,
+}: {
+  targets: Target[];
+  onChange: (t: Target[]) => void;
+  /** Offers to empty the list at once. */
+  onClear?: () => void;
+}) {
   const [draft, setDraft] = useState('');
   const [textMode, setTextModeState] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -463,6 +472,11 @@ export function TargetsEditor({ targets, onChange }: { targets: Target[]; onChan
           <Button size="small" variant="ghost" icon="code" data-text-mode onClick={() => setTextMode(true)}>
             {t('targets.textMode')}
           </Button>
+          {onClear && (
+            <Button size="small" variant="ghost" icon="trash" onClick={onClear} disabled={!targets.length}>
+              {t('targets.clear')}
+            </Button>
+          )}
         </div>
       </div>
       {targets.length > 0 && (

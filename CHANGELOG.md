@@ -29,6 +29,11 @@ All notable changes to WebHandbrake are documented here. The format follows
 - The charts of Insights show the time of a column when you point at it, tap it (a finger moving
   sideways goes from column to column) or choose it with the arrow keys; split by site, with the
   time of each site. Their tables name the days and months (“Thu 9 Jul”) instead of 2026-07-09.
+- A focus session can block a list of sites of your own: **A few sites**, under **What to block**
+  on Focus, next to your rules and **Everything except a few sites**. Both lists are kept, with
+  the choice you made, so the next session starts without typing them again; **Clear the list**
+  empties one, and **Undo** brings it back. They are in exports too. A list session has no
+  breaks, so **No breaks during the session** is offered only for a session of your rules.
 
 ### Changed
 

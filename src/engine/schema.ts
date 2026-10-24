@@ -8,6 +8,7 @@ import {
   canHaveBreaks,
   DAY_MINUTES,
   defaultConfig,
+  defaultFocusLists,
   defaultOptions,
   defaultPause,
   defaultSettings,
@@ -22,6 +23,7 @@ import { bitmapSchedule, scheduleBitmap } from './time';
 import {
   type Config,
   type Cost,
+  type FocusLists,
   type Group,
   type Intervention,
   type PartnerCode,
@@ -94,6 +96,18 @@ function normalizeTargets(raw: unknown, errors: string[], where: string): Target
       );
   }
   return out;
+}
+
+/** The lists of the Focus page, as stored or in a file: entries that cannot be read are left out. */
+export function normalizeFocusLists(raw: unknown): FocusLists {
+  const def = defaultFocusLists();
+  if (!isObj(raw)) return def;
+  return {
+    ...raw,
+    kind: oneOf(raw.kind, ['groups', 'blocklist', 'allowlist'] as const, def.kind),
+    block: normalizeTargets(raw.block, [], 'focus'),
+    allow: normalizeTargets(raw.allow, [], 'focus'),
+  };
 }
 
 export function normalizeWindows(raw: unknown): TimeWindow[] {

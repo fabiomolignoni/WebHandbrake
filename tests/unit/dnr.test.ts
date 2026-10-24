@@ -71,6 +71,31 @@ describe('browser filters', () => {
     expect(browser(rules, 'https://docs.test/page')).toBe('allow');
   });
 
+  it('a blocklist session redirects its sites, regular expressions included, but not its exceptions', () => {
+    const state = defaultState();
+    state.sessions.push({
+      id: 's',
+      kind: 'blocklist',
+      groups: [],
+      allow: [],
+      block: [t('video.test'), t('+video.test/lectures'), t('/^https?://re\\.test/x/')],
+      startAt: at(0, 9),
+      endAt: at(0, 11),
+      createdAt: at(0, 9),
+      locked: false,
+      noPauses: false,
+    });
+    const { rules, overflow } = compile([], state);
+    expect(overflow).toEqual([]);
+    expect(browser(rules, 'https://www.video.test/watch')).toBe('redirect');
+    expect(browser(rules, 'https://video.test/lectures/1')).toBe('allow');
+    expect(browser(rules, 'https://re.test/x/1')).toBe('redirect');
+    expect(browser(rules, 'https://re.test/y')).toBe('none');
+    expect(browser(rules, 'https://anything.test/')).toBe('none');
+    // Over, it leaves no rule behind.
+    expect(compileDnr(ctx(config([]), at(0, 11), state), OPTS).rules).toEqual([]);
+  });
+
   it('frames of the sites of a rule are blocked only when the rule says so', () => {
     const plain = compile([group('A', ['video.test'], [{ intervention: BLOCK }])]);
     expect(browser(plain.rules, 'https://video.test/embed', 'sub_frame')).toBe('none');

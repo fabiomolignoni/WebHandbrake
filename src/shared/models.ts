@@ -8,6 +8,7 @@ import type {
   Config,
   Cost,
   EmergencyState,
+  FocusKind,
   FocusSession,
   Grant,
   Intervention,
@@ -313,9 +314,10 @@ export interface PopupModel {
 }
 
 export interface SessionRequest {
-  kind: 'groups' | 'allowlist';
+  kind: FocusKind;
   groups: string[];
   allow: Target[];
+  block?: Target[];
   minutes?: number;
   until?: number;
   startInMinutes?: number;
