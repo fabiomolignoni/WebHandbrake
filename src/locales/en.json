@@ -2890,11 +2890,18 @@
   "protection.title": {
     "message": "Protection"
   },
+  "protection.waitCustom": {
+    "message": "Length of the wait"
+  },
   "protection.waitHelp": {
     "message": "Up to {duration}, you wait on the spot. A longer wait runs in the background, then you confirm the change in Protection."
   },
   "protection.waitLabel": {
     "message": "How long to wait"
+  },
+  "protection.waitOther": {
+    "message": "Other",
+    "description": "Choice that lets the person type how long loosening the rule waits."
   },
   "redirect.url": {
     "message": "Address"

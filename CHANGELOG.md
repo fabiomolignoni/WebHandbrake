@@ -24,6 +24,8 @@ All notable changes to WebHandbrake are documented here. The format follows
   never be reached, is pointed out.
 - **Ask first** can ask for a reason of at least a number of characters (**Reason of at least**),
   so that “x” no longer lets you in; the block page says how long it must be.
+- The **Wait** protection can wait any length: **Other**, next to the usual waits, takes a number
+  and a unit, from 5 seconds to 30 days.
 
 ### Changed
 
@@ -68,9 +70,9 @@ All notable changes to WebHandbrake are documented here. The format follows
   longest of their lengths.
 - In the rule wizard, **Back** sits next to **Next** instead of at the other end of the bar.
 - One rule editor creates a rule and changes it: the wizard and the full editor are now the same
-  pages. A rule has six parts, **Sites**, **When**, **What happens**, **Details**, **Protection**
+  pages. A rule has six parts, **Sites**, **When**, **What happens**, **Protection**, **Details**
   and **Summary**; a new rule goes through them in order with **Back** and **Next** (the name is
-  asked in Details, before the protection), a rule that exists opens on its summary and any part can
+  asked in Details, after the protection), a rule that exists opens on its summary and any part can
   be opened. Details keeps windows, tabs, frames and quick focus sessions under **Advanced
   options**, folded away unless the rule already uses them. When and What happens show every
   setting of the answer chosen. Sites has no advanced options: exceptions, typed with +
