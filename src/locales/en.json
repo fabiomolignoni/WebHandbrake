@@ -2658,9 +2658,6 @@
   "popup.dashboard": {
     "message": "Dashboard"
   },
-  "popup.details": {
-    "message": "Details"
-  },
   "popup.endPause": {
     "message": "End the break"
   },
@@ -2700,9 +2697,6 @@
   },
   "popup.notSetUp": {
     "message": "WebHandbrake is not set up yet."
-  },
-  "popup.openDashboard": {
-    "message": "Open the dashboard"
   },
   "popup.pause": {
     "message": "Take a break"

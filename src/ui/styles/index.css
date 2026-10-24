@@ -2753,8 +2753,13 @@ body.page-popup {
   display: flex;
   align-items: center;
   gap: var(--s2);
-  padding: var(--s2) var(--s2) var(--s2) var(--s4);
-  min-height: 48px;
+  padding: var(--s2) var(--s4);
+  min-height: 44px;
+}
+.popup .brand-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
 }
 .popup .popup-body {
   padding: 0 var(--s3) var(--s3);
@@ -2879,15 +2884,82 @@ body.page-popup {
   opacity: 0.55;
   cursor: not-allowed;
 }
+/*
+ * The way to the dashboard: a full-width bar at the end of the popup, where reading ends and the
+ * thumb rests on Android. It stays in view when the popup scrolls (Chrome caps it at 600 px).
+ */
 .popup .foot {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  padding: var(--s3);
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+:root.mobile .popup {
+  min-height: 100dvh;
+}
+.open-dashboard {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--s2);
-  padding: var(--s3) var(--s4);
-  border-top: 1px solid var(--border);
-  font-size: var(--fs-sm);
+  gap: var(--s3);
+  width: 100%;
+  min-height: 60px;
+  padding: var(--s2) var(--s4) var(--s2) var(--s2);
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  background: var(--accent-soft);
   color: var(--text-2);
+  font-size: var(--fs-sm);
+  transition:
+    border-color var(--transition),
+    background var(--transition);
+}
+:root[data-contrast="high"] .open-dashboard,
+.open-dashboard:hover {
+  border-color: var(--accent);
+}
+.open-dashboard:hover {
+  background: color-mix(in srgb, var(--accent) 12%, var(--accent-soft));
+}
+.open-dashboard:active {
+  background: color-mix(in srgb, var(--accent) 20%, var(--accent-soft));
+}
+.card-link .open-dashboard-name {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent-strong);
+  text-align: start;
+  cursor: pointer;
+}
+.open-dashboard-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.open-dashboard-icon .icon-svg {
+  width: 20px;
+  height: 20px;
+}
+.open-dashboard > .icon-svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--accent-strong);
+  transition: transform var(--transition);
+}
+.open-dashboard:hover > .icon-svg {
+  transform: translateX(2px);
 }
 .granularity {
   display: flex;
@@ -3699,19 +3771,6 @@ details.disclosure.guide > summary .icon-svg {
     grid-template-columns: minmax(0, 1fr);
     gap: 4px;
   }
-}
-/* The way to the dashboard, the most used way out of the popup: a filled, labelled button. */
-.popup .popup-head .open-dashboard {
-  min-height: 36px;
-  padding: 0 var(--s4) 0 var(--s3);
-  font-size: 0.95rem;
-  font-weight: 700;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow);
-}
-.popup .popup-head .open-dashboard .icon-svg {
-  width: 18px;
-  height: 18px;
 }
 .link-row > .grow {
   min-width: 0;

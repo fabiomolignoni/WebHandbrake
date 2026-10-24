@@ -158,6 +158,27 @@ test('the popup keeps its width when the browser sizes it from its content', asy
   expect(width).toBe(380);
 });
 
+test('the whole Dashboard bar at the end of the popup is one button, named by its label alone', async ({
+  h,
+}) => {
+  await h.configure(() => undefined);
+  const popup = await h.popup(await h.open('http://site.test/'));
+  await popup.get('.foot').expectText(/on limited sites today/);
+  // Its icon, its figures and its arrow are all the button: the label alone names it.
+  const hits = await popup.eval(() => {
+    const button = document.querySelector('.foot button')!;
+    return [...document.querySelectorAll('.open-dashboard-icon, #open-dashboard-today, .foot .icon-svg')].map(
+      (el) => {
+        const r = el.getBoundingClientRect();
+        return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === button;
+      },
+    );
+  });
+  expect(hits.length).toBeGreaterThanOrEqual(3);
+  expect(hits.every(Boolean)).toBe(true);
+  await popup.button('Dashboard', { exact: true }).expectCount(1);
+});
+
 test('the Dashboard button works after the browser has stopped the background (regression)', async ({
   h,
   browserName,
