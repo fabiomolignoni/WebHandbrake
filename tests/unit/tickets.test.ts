@@ -138,16 +138,6 @@ describe('tickets: costs checked in the background', () => {
     expect((await second.getTicket(view!.id))?.purpose).toEqual(first.purpose);
   });
 
-  it('a code drawn on a canvas can be replaced by a phrase to type', async () => {
-    const { tickets, purpose } = await load();
-    const { view } = await tickets.createTicket(purpose, [{ type: 'text', length: 24 }]);
-    const alt = await tickets.accessibleAlternative(view!.id, 'I am choosing this');
-    expect(alt?.step).toEqual({ type: 'phrase', phrase: 'I am choosing this' });
-    // Only a code is replaced.
-    expect((await tickets.accessibleAlternative(view!.id, 'other'))?.step).toEqual(alt?.step);
-    expect(await tickets.accessibleAlternative('missing', 'x')).toBeNull();
-  });
-
   it('an error of the purpose is the error of the answer', async () => {
     const { tickets } = await load();
     tickets.registerExecutor('emergency.complete', async () => {
@@ -183,12 +173,13 @@ describe('costs', () => {
     expect(costSteps({ type: 'password' })).toEqual([{ type: 'text', length: 32 }]);
   });
 
-  it('steps paid cover the steps needed: longer waits and codes, the phrase for a code', async () => {
+  it('steps paid cover the steps needed: longer waits and codes, a phrase only a phrase', async () => {
     const { covers } = await import('../../src/background/tickets');
     expect(covers([{ type: 'wait', seconds: 60 }], [{ type: 'wait', seconds: 30 }])).toBe(true);
     expect(covers([{ type: 'wait', seconds: 10 }], [{ type: 'wait', seconds: 30 }])).toBe(false);
     expect(covers([{ type: 'wait', seconds: 10 }], [{ type: 'confirm' }])).toBe(true);
-    expect(covers([{ type: 'phrase', phrase: 'x' }], [{ type: 'text', length: 24 }])).toBe(true);
+    expect(covers([{ type: 'phrase', phrase: 'x' }], [{ type: 'text', length: 24 }])).toBe(false);
+    expect(covers([{ type: 'phrase', phrase: 'x' }], [{ type: 'phrase', phrase: 'x' }])).toBe(true);
     expect(covers([{ type: 'text', length: 8 }], [{ type: 'text', length: 24 }])).toBe(false);
     expect(covers([{ type: 'math' }], [{ type: 'math' }])).toBe(true);
     // Each step paid covers one step needed, the longest codes first.

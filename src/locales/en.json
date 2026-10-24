@@ -103,11 +103,8 @@
   "budget.visitsUsed": {
     "message": "{used, plural, one {# visit} other {# visits}} of {limit}"
   },
-  "challenge.accessiblePhrase": {
-    "message": "I choose to continue, and I remember why I set this limit."
-  },
   "challenge.canvasLabel": {
-    "message": "{length} characters to type, shown as an image. With a screen reader, choose the option below to type a sentence instead."
+    "message": "{length} characters to type, shown as an image."
   },
   "challenge.chars": {
     "message": "characters"
@@ -1044,7 +1041,7 @@
     "message": "Settings › General has light and dark themes and High contrast. Animations follow your system’s reduced-motion setting. Every page works with a keyboard and a screen reader."
   },
   "help.accessibility.p2": {
-    "message": "A challenge shown as an image offers a sentence to type instead. If typing or waiting is hard for you, choose options that need neither, such as Filter, Block or a confirmation."
+    "message": "Random characters are shown as an image, which a screen reader cannot read: for a challenge or a break, choose a phrase of your own instead. If typing or waiting is hard for you, choose options that need neither, such as Filter, Block or a confirmation."
   },
   "help.accessibility.p3": {
     "message": "To report a barrier, use the accessibility form on GitHub (“Report a problem or suggest an idea” in Help › About)."
@@ -3720,9 +3717,6 @@
   },
   "ticket.step": {
     "message": "Step {n} of {total}"
-  },
-  "ticket.text.accessible": {
-    "message": "I use a screen reader: type a sentence instead"
   },
   "ticket.text.body": {
     "message": "Type the {length} characters shown below."

@@ -54,8 +54,6 @@ export interface Api {
 
   'ticket.answer': { req: { id: string; answer?: string; minutes?: number }; res: TicketAnswer };
   'ticket.cancel': { req: { id: string }; res: void };
-  /** Replaces a code drawn on canvas with an accessible commitment phrase. */
-  'ticket.accessible': { req: { id: string }; res: TicketView | null };
 
   'pause.options': { req: { url?: string; groupId?: string; incognito?: boolean | null }; res: PauseOptions };
   'pause.start': { req: PauseRequest; res: { ticket: TicketView | null; error?: string } };

@@ -333,21 +333,6 @@ export async function answerTicket(
   }
 }
 
-/**
- * The canvas code is replaced by a longer commitment phrase that screen readers can read.
- * The cost stays (typing is still required) but no longer depends on sight.
- */
-export async function accessibleAlternative(id: string, phrase: string): Promise<TicketView | null> {
-  const t = await getTicket(id);
-  if (!t) return null;
-  const step = t.steps[t.index];
-  if (step.type !== 'text') return ticketView(t);
-  t.steps[t.index] = { type: 'phrase', phrase };
-  activate(t);
-  await persist();
-  return ticketView(t);
-}
-
 /** The key under which the last accepted step of a partner secret is kept. */
 const partnerKey = (secret: string) => secret.slice(0, 16);
 
@@ -416,7 +401,7 @@ export function breakPasswordSteps(groups: Group[]): Step[] {
   return steps;
 }
 
-/** Whether a step answered covers a step needed now (the accessible phrase replaces a code). */
+/** Whether a step answered covers a step needed now. */
 function satisfies(paid: Step, needed: Step): boolean {
   switch (needed.type) {
     case 'confirm':
@@ -424,7 +409,7 @@ function satisfies(paid: Step, needed: Step): boolean {
     case 'wait':
       return paid.type === 'wait' && paid.seconds >= needed.seconds;
     case 'text':
-      return (paid.type === 'text' && paid.length >= needed.length) || paid.type === 'phrase';
+      return paid.type === 'text' && paid.length >= needed.length;
     case 'rulePassword':
     case 'partner':
       // The secret was asked for every rule that needs it now, as one of the rules sharing it.

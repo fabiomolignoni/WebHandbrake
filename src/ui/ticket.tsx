@@ -1,7 +1,7 @@
 /**
  * Cost dialog for tickets. Steps are verified by the background;
- * this component only presents them. Codes are drawn on a canvas (not in the DOM), paste and
- * synthetic input are refused, and an accessible alternative is offered.
+ * this component only presents them. Codes are drawn on a canvas (not in the DOM), and paste and
+ * synthetic input are refused.
  */
 
 import type { ComponentChildren } from 'preact';
@@ -128,14 +128,10 @@ function StepBody({
   step,
   value,
   setValue,
-  ticket,
-  onSwap,
 }: {
   step: StepView;
   value: string;
   setValue: (v: string) => void;
-  ticket: TicketView;
-  onSwap: (v: TicketView) => void;
 }) {
   switch (step.type) {
     case 'confirm':
@@ -153,16 +149,6 @@ function StepBody({
           <p>{t('ticket.text.body', { length: step.length })}</p>
           <CanvasText text={step.text} />
           <TypingInput value={value} onInput={setValue} label={t('ticket.text.input')} autoFocus />
-          <button
-            type="button"
-            class="link-btn small"
-            onClick={async () => {
-              const v = await call('ticket.accessible', { id: ticket.id });
-              if (v) onSwap(v);
-            }}
-          >
-            {t('ticket.text.accessible')}
-          </button>
         </>
       );
     case 'phrase':
@@ -305,16 +291,7 @@ export function TicketDialog({
         {ticket.stepCount > 1 && (
           <p class="tiny muted">{t('ticket.step', { n: ticket.stepIndex + 1, total: ticket.stepCount })}</p>
         )}
-        <StepBody
-          step={step}
-          value={value}
-          setValue={setValue}
-          ticket={ticket}
-          onSwap={(v) => {
-            setTicket(v);
-            setValue('');
-          }}
-        />
+        <StepBody step={step} value={value} setValue={setValue} />
         {error && <Banner kind="danger">{error}</Banner>}
         <button type="submit" hidden />
       </form>

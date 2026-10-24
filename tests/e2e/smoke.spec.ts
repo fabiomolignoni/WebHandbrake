@@ -1,5 +1,6 @@
 import { expect, test } from './harness';
 import { BLOCK, challenge, group, policy } from './harness/config';
+import { challengeCode } from './helpers';
 
 test('harness: block, real page, challenge through the UI, popup', async ({ h }) => {
   await h.configure((c) => {
@@ -17,9 +18,7 @@ test('harness: block, real page, challenge through the UI, popup', async ({ h })
   await free.expectReal('free.test/');
 
   const t = await h.open('http://type.test/a');
-  await t.button(/screen reader/).click();
-  const phrase = await t.get('form blockquote').text();
-  await t.label('Sentence').type(phrase);
+  await t.label('Characters').type(await challengeCode(h, 'http://type.test/a'));
   await t.button('Continue', { exact: true }).click();
   await t.expectReal('type.test/a');
 

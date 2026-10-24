@@ -126,6 +126,11 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ### Removed
 
+- **I use a screen reader: type a sentence instead**, under random characters to type on the block
+  page and in the dialog of a break that costs them. A rule can ask for a phrase of your own
+  instead (**A phrase you choose** for a challenge, **Type a phrase** for a break), which a screen
+  reader reads; Help › Accessibility says so. A phrase typed no longer stands for random
+  characters.
 - Focus sessions in the popup and on Today: neither starts one or shows the one running any more.
   Start, extend and end them on Focus; the right-click menu and the keyboard shortcut still start
   one. The popup's **Dashboard** bar no longer shows today's time on limited sites, which Today

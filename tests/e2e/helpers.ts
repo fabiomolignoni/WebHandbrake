@@ -45,3 +45,21 @@ export async function openPart(p: Tab, part: string): Promise<void> {
   await p.button(name, { within: '.editor-steps' }).click();
   await p.get('.editor-steps [aria-current="step"]').expectText(name);
 }
+
+/** The code of the challenge shown for a URL, read from the background tickets (never in the page). */
+export async function challengeCode(h: Harness, url: string): Promise<string> {
+  return expect
+    .poll(async () => {
+      const tickets: any[] = await h.control.eval(() =>
+        chrome.storage.session.get('tickets').then((r) => (r.tickets as unknown[]) ?? []),
+      );
+      return tickets.filter((t) => t.purpose.url === url).pop()?.active?.text ?? '';
+    })
+    .not.toBe('')
+    .then(async () => {
+      const tickets: any[] = await h.control.eval(() =>
+        chrome.storage.session.get('tickets').then((r) => (r.tickets as unknown[]) ?? []),
+      );
+      return tickets.filter((t) => t.purpose.url === url).pop().active.text as string;
+    });
+}
