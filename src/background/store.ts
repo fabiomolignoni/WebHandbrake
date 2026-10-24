@@ -162,7 +162,11 @@ export class Store {
     this.focus = normalizeFocusLists(raw.focus);
     this.intentions = Array.isArray(raw.intentions) ? raw.intentions : [];
 
-    const today = logicalDayOf(Date.now(), this.cc.cal);
+    // The days up to today by the trusted clock (clock.ts: the highest time seen, corrected by the
+    // Date headers), so that a system clock set back a day does not leave out today's time and the
+    // limits it used up.
+    const trusted = Math.max(Date.now() + (this.state.clockOffset || 0), this.state.lastWall || 0);
+    const today = logicalDayOf(trusted, this.cc.cal);
     const keys: string[] = [];
     for (let i = 0; i < USAGE_DAYS_IN_MEMORY; i++) keys.push(`u:${dayKey(addDays(today, -i))}`);
     const days = await api.storage.local.get(keys);
