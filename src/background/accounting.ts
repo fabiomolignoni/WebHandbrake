@@ -73,6 +73,9 @@ function credit(d: Decision, incognito: boolean, t: number) {
   if (counted.length) {
     const any = creditSeconds(usageKeys.all, t);
     if (any > 0) store.usage.add(usageKeys.all, t, any, 0, cal);
+    // Private windows have one total instead of their sites, so that the sites add up.
+    const priv = incognito ? creditSeconds(usageKeys.private, t) : 0;
+    if (priv > 0) store.usage.add(usageKeys.private, t, priv, 0, cal, false);
   }
   for (const r of counted) {
     const gk = usageKeys.group(r.group.id);

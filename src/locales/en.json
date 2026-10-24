@@ -1654,6 +1654,9 @@
   "insights.month": {
     "message": "Month"
   },
+  "insights.moreSites": {
+    "message": "{count, plural, one {# other site} other {# other sites}}"
+  },
   "insights.next": {
     "message": "Next period"
   },
@@ -1686,6 +1689,12 @@
   },
   "insights.privacy": {
     "message": "Totals per day and per hour, kept only on this device."
+  },
+  "insights.private": {
+    "message": "Private windows"
+  },
+  "insights.private.help": {
+    "message": "Their sites are not recorded."
   },
   "insights.sessions": {
     "message": "{count, plural, one {focus session} other {focus sessions}}"

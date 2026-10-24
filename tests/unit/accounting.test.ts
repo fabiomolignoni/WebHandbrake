@@ -89,8 +89,13 @@ describe('counting time', () => {
     await t.tick(T0, 'https://elsewhere.test/');
     expect(t.seconds('h:elsewhere.test')).toEqual([1, 1]);
     await t.tick(T0 + 1000, 'https://a.test/', t.tab(7, { incognito: true }));
-    expect(t.seconds('g:A')[0]).toBe(1);
+    await t.tick(T0 + 2000, 'https://a.test/x', t.tab(8, { incognito: true }));
+    expect(t.seconds('g:A')[0]).toBe(2);
     expect(t.seconds('h:a.test')).toEqual([0, 0]);
+    // One total of the time on limited sites in private windows instead, so that the sites add up.
+    await t.tick(T0 + 3000, 'https://elsewhere.test/', t.tab(7, { incognito: true }));
+    expect(t.seconds('p:')).toEqual([2, 0]);
+    expect(t.seconds('a:')).toEqual([2, 0]);
   });
 
   it('a rule over every website counts the time of each site on its own (#20)', async () => {

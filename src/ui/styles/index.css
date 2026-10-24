@@ -55,6 +55,8 @@
   --series-5: #e87ba4;
   --series-6: #008300;
   --series-other: #9a978d;
+  /* Time without its sites (private windows): the grey of the other sites, striped. */
+  --series-private: repeating-linear-gradient(135deg, var(--series-other) 0 2px, transparent 2px 4px);
 
   --shadow-sm: 0 1px 2px rgb(20 24 26 / 6%);
   --shadow: 0 1px 2px rgb(20 24 26 / 5%), 0 4px 14px rgb(20 24 26 / 5%);
@@ -1761,11 +1763,16 @@ a.kpi:hover .caption {
 .chart .axis span:last-child {
   transform: translateY(50%);
 }
+.plot {
+  position: relative;
+}
 .bars {
   display: flex;
   align-items: flex-end;
   gap: 3px;
   height: 160px;
+  /* A finger moving sideways goes from column to column. */
+  touch-action: pan-y;
   padding-top: var(--s2);
   border-bottom: 1px solid var(--border-strong);
   background-image: linear-gradient(var(--border) 1px, transparent 1px);
@@ -1778,6 +1785,13 @@ a.kpi:hover .caption {
   height: 100%;
   display: flex;
   align-items: flex-end;
+  border-radius: 4px 4px 0 0;
+}
+.bars .col.active {
+  background: var(--surface-2);
+}
+.bars .col.active > * {
+  opacity: 0.8;
 }
 .bars .bar {
   width: 100%;
@@ -1806,6 +1820,41 @@ a.kpi:hover .caption {
 }
 .bars .stacked > div:last-child {
   border-radius: 4px 4px 0 0;
+}
+/* The time of one column, beside it. */
+.chart-tip {
+  position: absolute;
+  top: var(--s2);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--s2) var(--s3);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.chart-tip ul {
+  display: grid;
+  gap: 2px;
+  margin: var(--s1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.chart-tip li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.chart-tip .key {
+  width: 12px;
+  height: 4px;
+  border-radius: 2px;
+  flex: none;
 }
 .bar-labels {
   display: flex;

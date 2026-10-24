@@ -26,6 +26,9 @@ All notable changes to WebHandbrake are documented here. The format follows
   so that “x” no longer lets you in; the block page says how long it must be.
 - The **Wait** protection can wait any length: **Other**, next to the usual waits, takes a number
   and a unit, from 5 seconds to 30 days.
+- The charts of Insights show the time of a column when you point at it, tap it (a finger moving
+  sideways goes from column to column) or choose it with the arrow keys; split by site, with the
+  time of each site. Their tables name the days and months (“Thu 9 Jul”) instead of 2026-07-09.
 
 ### Changed
 
@@ -139,6 +142,11 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ### Fixed
 
+- Insights › **By site** adds up to the total on limited sites. It lists the 15 sites with the most
+  time, as before, and now the others in one row (“10 other sites”) and the time in private
+  windows, which keep no sites, in another; the day-by-day chart by site shows that time too. A
+  rule over every website showed far less time by site than by rule. The time in private windows
+  is recorded from this version on.
 - The warnings on Today about something that happened (settings restored from a backup, unusual
   events such as a clock change) can be dismissed: they stayed for a week with no way to close
   them. A restore no longer also shows the unusual-events warning, and a restore to the defaults

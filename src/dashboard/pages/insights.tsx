@@ -5,7 +5,7 @@
  * Charts always have text labels and a table alternative.
  */
 
-import { useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { BUDGET_KEEP_DAYS } from '../../engine/limits';
 import { addDays, dayKey, HOUR, logicalDayOf, parseDayKey, weekdayOf } from '../../engine/time';
 import { t } from '../../i18n/i18n';
@@ -87,6 +87,19 @@ function dayLabel(key: string, count: number): string {
   return count <= 7 ? formatDate(ms, { weekday: 'short' }) : String(d.d);
 }
 
+/** A day or a month in full, for the table and the tooltip. */
+function dayName(key: string): string {
+  if (key.length === 7) {
+    const [y, m] = key.split('-').map(Number);
+    return formatDate(new Date(y, m - 1, 1).getTime(), { month: 'long', year: 'numeric' });
+  }
+  const d = parseDayKey(key);
+  return formatDate(new Date(d.y, d.m, d.d).getTime(), { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+/** Sites listed one by one in By site; the others share a row. */
+const LISTED_SITES = 15;
+
 interface Column {
   key: string;
   /** Axis label; empty for none. */
@@ -101,12 +114,16 @@ interface Column {
   current?: boolean;
 }
 
-/** Colour of series i, the last one being "other sites". */
-function seriesColor(i: number, count: number) {
-  return i === count - 1 ? 'var(--series-other)' : `var(--series-${i + 1})`;
+interface Series {
+  name: string;
+  /** Background of its marks. */
+  color: string;
 }
 
-/** Columns of time, stacked by series when given, with a table alternative. */
+/**
+ * Columns of time, stacked by series when given. The time of a column shows on hover, on a tap or
+ * from the arrow keys; a table is the alternative.
+ */
 function Columns({
   columns,
   label,
@@ -117,15 +134,73 @@ function Columns({
   columns: Column[];
   label: string;
   head: string;
-  series?: string[];
+  series?: Series[];
   /** Labels only every few columns, which may run over the empty ones. */
   spread?: boolean;
 }) {
   const [table, setTable] = useState(false);
+  // The column whose time is shown: under the mouse, tapped, or chosen with the arrow keys.
+  const [tip, setTip] = useState<number | null>(null);
+  const plot = useRef<HTMLDivElement>(null);
+  const tipEl = useRef<HTMLDivElement>(null);
   const total = (c: Column) => (c.parts ? c.parts.reduce((a, b) => a + b, 0) : c.seconds);
   const max = Math.max(1, ...columns.map(total));
   // A series that has no time in the period is not in the legend.
   const shown = series?.map((_, i) => columns.some((c) => (c.parts?.[i] ?? 0) > 0));
+  const active = tip !== null && tip < columns.length ? columns[tip] : null;
+  const last = columns.length - 1;
+
+  /** The column under a point, gaps included. */
+  const columnAt = (x: number) => {
+    const box = plot.current?.getBoundingClientRect();
+    if (!box?.width) return null;
+    return Math.min(last, Math.max(0, Math.floor(((x - box.left) / box.width) * columns.length)));
+  };
+
+  // A tap elsewhere or Escape hides it.
+  useEffect(() => {
+    if (tip === null) return;
+    const away = (e: PointerEvent) => {
+      if (!plot.current?.contains(e.target as Node)) setTip(null);
+    };
+    const esc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setTip(null);
+    };
+    document.addEventListener('pointerdown', away);
+    document.addEventListener('keydown', esc);
+    return () => {
+      document.removeEventListener('pointerdown', away);
+      document.removeEventListener('keydown', esc);
+    };
+  }, [tip === null]);
+
+  // Beside its column, or over it when there is no room on either side.
+  useLayoutEffect(() => {
+    const el = tipEl.current;
+    const col = tip === null ? null : (plot.current?.querySelector('.bars')?.children[tip] as HTMLElement);
+    if (!el || !col) return;
+    const room = plot.current?.clientWidth ?? 0;
+    const width = el.offsetWidth;
+    const left = col.offsetLeft;
+    const right = left + col.offsetWidth;
+    let x = right + 8;
+    if (x + width > room) x = left - 8 - width;
+    if (x < 0) x = Math.max(0, Math.min((left + right - width) / 2, room - width));
+    el.style.left = `${x}px`;
+  });
+
+  const keys = (e: KeyboardEvent) => {
+    const to: Record<string, number> = {
+      ArrowLeft: Math.max(0, (tip ?? 1) - 1),
+      ArrowRight: Math.min(last, (tip ?? -1) + 1),
+      Home: 0,
+      End: last,
+    };
+    if (!(e.key in to)) return;
+    e.preventDefault();
+    setTip(to[e.key]);
+  };
+
   return (
     <div class="stack stack-sm">
       {!table ? (
@@ -137,33 +212,70 @@ function Columns({
               <span>0</span>
             </div>
             <div>
-              <div class="bars" role="img" aria-label={label}>
-                {columns.map((c) => {
-                  const sum = total(c);
-                  return (
-                    <div class="col" key={c.key}>
-                      {c.parts && sum > 0 ? (
-                        <div class="stacked" style={{ height: `${(sum / max) * 100}%` }}>
-                          {c.parts.map((p, i) =>
-                            p > 0 ? (
-                              <div
-                                key={i}
-                                style={{ flexGrow: p, background: seriesColor(i, c.parts?.length ?? 0) }}
-                                title={`${c.name} · ${series?.[i]}: ${formatDuration(p)}`}
-                              />
-                            ) : null,
-                          )}
-                        </div>
-                      ) : (
-                        <div
-                          class={`bar${sum ? '' : ' empty-bar'}${c.current && !c.parts ? ' today' : ''}`}
-                          style={{ height: `${Math.max(2, (sum / max) * 100)}%` }}
-                          title={`${c.name}: ${formatDuration(sum)}`}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
+              <div class="plot" ref={plot}>
+                <div
+                  class="bars"
+                  role="img"
+                  aria-label={label}
+                  // biome-ignore lint/a11y/noNoninteractiveTabindex: the arrow keys show the time of each column (also in the table)
+                  tabIndex={0}
+                  onPointerDown={(e) => setTip(columnAt(e.clientX))}
+                  onPointerMove={(e) => {
+                    if (e.pointerType === 'mouse' || e.buttons) setTip(columnAt(e.clientX));
+                  }}
+                  onPointerLeave={(e) => {
+                    if (e.pointerType === 'mouse') setTip(null);
+                  }}
+                  onFocus={() => {
+                    // The current column, or else the last one with time.
+                    const at = columns.findIndex((c) => c.current);
+                    const lastWithTime = columns.map(total).findLastIndex((x) => x > 0);
+                    setTip((v) => v ?? (at >= 0 ? at : Math.max(0, lastWithTime)));
+                  }}
+                  onBlur={() => setTip(null)}
+                  onKeyDown={keys}
+                >
+                  {columns.map((c, i) => {
+                    const sum = total(c);
+                    return (
+                      <div class={`col${i === tip ? ' active' : ''}`} key={c.key}>
+                        {c.parts && sum > 0 ? (
+                          <div class="stacked" style={{ height: `${(sum / max) * 100}%` }}>
+                            {c.parts.map((p, j) =>
+                              p > 0 ? (
+                                <div key={j} style={{ flexGrow: p, background: series?.[j]?.color }} />
+                              ) : null,
+                            )}
+                          </div>
+                        ) : (
+                          <div
+                            class={`bar${sum ? '' : ' empty-bar'}${c.current && !c.parts ? ' today' : ''}`}
+                            style={{ height: `${Math.max(2, (sum / max) * 100)}%` }}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {active && (
+                  <div class="chart-tip" ref={tipEl} aria-hidden="true">
+                    <strong class="num">{formatDuration(total(active))}</strong>
+                    <span class="muted">{active.name}</span>
+                    {active.parts && series && (
+                      <ul>
+                        {active.parts.map((p, j) =>
+                          p > 0 ? (
+                            <li key={j}>
+                              <span class="key" style={{ background: series[j]?.color }} />
+                              <strong class="num">{formatDuration(p)}</strong>
+                              <span class="muted">{series[j]?.name}</span>
+                            </li>
+                          ) : null,
+                        )}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </div>
               <div class={`bar-labels${spread ? ' spread' : ''}`} aria-hidden="true">
                 {columns.map((c) => (
@@ -176,11 +288,11 @@ function Columns({
           </div>
           {series && (
             <ul class="legend small" aria-label={t('insights.legend')}>
-              {series.map((name, i) =>
+              {series.map((x, i) =>
                 shown?.[i] ? (
-                  <li key={name}>
-                    <span class="key" style={{ background: seriesColor(i, series.length) }} />
-                    {name}
+                  <li key={x.name}>
+                    <span class="key" style={{ background: x.color }} />
+                    {x.name}
                   </li>
                 ) : null,
               )}
@@ -193,10 +305,10 @@ function Columns({
             <thead>
               <tr>
                 <th>{head}</th>
-                {series?.map((name, i) =>
+                {series?.map((x, i) =>
                   shown?.[i] ? (
-                    <th key={name} class="num">
-                      {name}
+                    <th key={x.name} class="num">
+                      {x.name}
                     </th>
                   ) : null,
                 )}
@@ -225,7 +337,10 @@ function Columns({
         type="button"
         class="link-btn small"
         style={{ alignSelf: 'flex-start' }}
-        onClick={() => setTable(!table)}
+        onClick={() => {
+          setTip(null);
+          setTable(!table);
+        }}
       >
         {table ? t('insights.showChart') : t('insights.showTable')}
       </button>
@@ -259,9 +374,9 @@ function Trend({
   const columns: Column[] = days.map((d, i) => ({
     key: d.day,
     label: i % every === 0 ? dayLabel(d.day, days.length) : '',
-    name: d.day,
+    name: dayName(d.day),
     seconds: d.seconds,
-    parts: bySite ? [...d.sites, d.otherSites] : undefined,
+    parts: bySite ? [...d.sites, d.otherSites, d.private] : undefined,
     current: d.day === todayKey,
   }));
   return (
@@ -286,7 +401,15 @@ function Trend({
             ? t(bySite ? 'insights.trendSitesLabel.months' : 'insights.trendLabel.months')
             : t(bySite ? 'insights.trendSitesLabel' : 'insights.trendLabel')
         }
-        series={bySite ? [...s.stack, t('insights.otherSites')] : undefined}
+        series={
+          bySite
+            ? [
+                ...s.stack.map((name, i) => ({ name, color: `var(--series-${i + 1})` })),
+                { name: t('insights.otherSites'), color: 'var(--series-other)' },
+                { name: t('insights.private'), color: 'var(--series-private)' },
+              ]
+            : undefined
+        }
       />
     </div>
   );
@@ -334,6 +457,7 @@ function monthly(s: StatsModel): StatsDay[] {
       visits: 0,
       sites: d.sites.map(() => 0),
       otherSites: 0,
+      private: 0,
     };
     cur.seconds += d.seconds;
     cur.visits += d.visits;
@@ -341,6 +465,7 @@ function monthly(s: StatsModel): StatsDay[] {
       cur.sites[i] += sec;
     });
     cur.otherSites += d.otherSites;
+    cur.private += d.private;
     by.set(k, cur);
   }
   return [...by.values()];
@@ -427,6 +552,12 @@ export function InsightsPage() {
     s && s.previous.seconds > 0 ? (s.total.seconds - s.previous.seconds) / s.previous.seconds : null;
   const maxGroup = Math.max(1, ...(s?.groups.map((g) => g.seconds) ?? [1]));
   const maxSite = Math.max(1, ...(s?.sites.map((g) => g.seconds) ?? [1]));
+  const listed = s?.sites.slice(0, LISTED_SITES) ?? [];
+  const unlisted = s && {
+    count: s.siteTotal.count - listed.length,
+    seconds: s.siteTotal.seconds - listed.reduce((a, x) => a + x.seconds, 0),
+    visits: s.siteTotal.visits - listed.reduce((a, x) => a + x.visits, 0),
+  };
   return (
     <div class="stack stack-lg">
       <div class="page-head">
@@ -550,12 +681,12 @@ export function InsightsPage() {
                 </div>
                 <div class="card stack">
                   <h2>{t('insights.bySite')}</h2>
-                  {s.sites.length === 0 ? (
+                  {s.sites.length === 0 && !s.private ? (
                     <p class="muted small">{t('insights.none')}</p>
                   ) : (
                     <table class="table">
                       <tbody>
-                        {s.sites.slice(0, 15).map((x) => (
+                        {listed.map((x) => (
                           <tr key={x.host}>
                             <td>
                               {x.host}
@@ -568,6 +699,25 @@ export function InsightsPage() {
                             <td class="num small muted">{t('insights.visits', { count: x.visits })}</td>
                           </tr>
                         ))}
+                        {unlisted && unlisted.count > 0 && (
+                          <tr>
+                            <td class="muted">{t('insights.moreSites', { count: unlisted.count })}</td>
+                            <td class="num">{formatDuration(unlisted.seconds)}</td>
+                            <td class="num small muted">
+                              {t('insights.visits', { count: unlisted.visits })}
+                            </td>
+                          </tr>
+                        )}
+                        {s.private > 0 && (
+                          <tr>
+                            <td>
+                              <span class="muted">{t('insights.private')}</span>
+                              <div class="small muted">{t('insights.private.help')}</div>
+                            </td>
+                            <td class="num">{formatDuration(s.private)}</td>
+                            <td />
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   )}

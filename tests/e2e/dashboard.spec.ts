@@ -1036,6 +1036,15 @@ test('insights show the time per rule and site, and the impulses resisted', asyn
   await insights.role('radio', 'By site').click();
   await insights.get({ css: '.legend li', text: 'video.test' }).expectVisible();
   await insights.get('.bars .stacked').expectVisible();
+  // The time of a column: on a click or a tap, and from the keyboard, with each site.
+  const tip = () => insights.eval(() => document.querySelector('.chart-tip')?.textContent ?? null);
+  await insights.get('.bars').click();
+  await insights.get('.chart-tip').expectVisible();
+  await insights.press('Escape');
+  await insights.get('.chart-tip').expectHidden();
+  await insights.press('Home');
+  for (let i = 0; i < (new Date().getDay() + 6) % 7; i++) await insights.press('ArrowRight');
+  await expect.poll(tip).toMatch(/^\d.*video\.test/);
   // A day hour by hour.
   await insights.role('radio', 'Day').click();
   await insights.text('Hour by hour', { exact: true }).expectVisible();

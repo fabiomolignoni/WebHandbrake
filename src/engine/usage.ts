@@ -13,6 +13,8 @@ export const usageKeys = {
   group: (groupId: string) => `g:${groupId}`,
   site: (groupId: string, site: string) => `s:${groupId}:${site}`,
   host: (host: string) => `h:${host}`,
+  /** Time on limited sites in private windows, which keep no site detail. */
+  private: 'p:',
 };
 
 /**
