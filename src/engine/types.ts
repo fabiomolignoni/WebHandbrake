@@ -6,7 +6,7 @@
  * update timestamp, and deletions leave tombstones.
  */
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export interface Versioned {
   id: string;
@@ -52,7 +52,7 @@ export interface TimeWindow {
   end: number;
 }
 
-export type ScheduleMode = 'always' | 'during' | 'outside';
+export type ScheduleMode = 'always' | 'during';
 
 export interface Schedule {
   mode: ScheduleMode;
@@ -69,6 +69,11 @@ export interface Period {
   offset?: number;
 }
 
+/**
+ * The period of a limit starts again every so often: an hour, a day, or a number of minutes or
+ * days (`everyPeriod`), never shifted. Weeks, months, rolling windows and offsets are for the
+ * limits of breaks.
+ */
 export interface TimeBudget {
   type: 'time';
   minutes: number;
@@ -81,20 +86,9 @@ export interface VisitBudget {
   count: number;
   period: Period;
   perSite?: boolean;
-  /** Optional maximum duration of every visit, in minutes. */
-  maxVisitMinutes?: number;
 }
 
-export interface SessionBudget {
-  type: 'session';
-  /** Maximum continuous use, in minutes. */
-  maxMinutes: number;
-  /** Mandatory stop after the maximum is reached, in minutes. */
-  cooldownMinutes: number;
-  perSite?: boolean;
-}
-
-export type Budget = TimeBudget | VisitBudget | SessionBudget;
+export type Budget = TimeBudget | VisitBudget;
 
 // ---------------------------------------------------------------------------
 // Interventions
@@ -158,6 +152,10 @@ export type Intervention =
   | { type: 'close' }
   | { type: 'redirect'; url: string };
 
+/**
+ * The condition of a rule and what happens when it applies: every time, at certain times, or once
+ * a limit of time or visits is used up (then at all times: `schedule` is 'always').
+ */
 export interface Policy {
   id: string;
   schedule: Schedule;
@@ -244,6 +242,7 @@ export interface Group extends Versioned {
   enabled: boolean;
   archived: boolean;
   targets: Target[];
+  /** The rule's one condition: a list in the stored format, which had several before schema 3. */
   policies: Policy[];
   pause: PausePolicy;
   /** What loosening the rule takes (#12: there is no global level any more). */
@@ -376,27 +375,10 @@ export interface FocusSession {
   stopped?: number;
 }
 
-export interface Cooldown {
-  until: number;
-  group: string;
-  site?: string;
-  /**
-   * After continuous use (the policy applies). The 'ask' ones of earlier versions, after the time
-   * chosen at Ask first, apply no more and are dropped once over.
-   */
-  kind: 'session' | 'ask';
-  policy?: string;
-}
-
+/** A visit ends after the visit gap without activity. */
 export interface Activity {
   /** Last time active time was credited. */
   last: number;
-  /** Start of the current visit. */
-  visitStart: number;
-  /** Active seconds in the current visit. */
-  visitSeconds: number;
-  /** Continuous use in seconds for session budgets; reset by a cool-down. */
-  run: number;
 }
 
 export interface PendingChange {
@@ -451,7 +433,6 @@ export interface RuntimeState {
   grants: Grant[];
   sessions: FocusSession[];
   pending: PendingChange[];
-  cooldowns: Record<string, Cooldown>;
   /** Policy key → end of the forfeited period. */
   forfeits: Record<string, number>;
   activity: Record<string, Activity>;

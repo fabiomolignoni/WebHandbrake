@@ -16,7 +16,8 @@ import {
   normalizeTarget,
   normalizeWindows,
 } from '../../src/engine/schema';
-import { SCHEMA_VERSION } from '../../src/engine/types';
+import { scheduleActive } from '../../src/engine/time';
+import { type Group, SCHEMA_VERSION } from '../../src/engine/types';
 
 describe('normalising what is read from storage or a file', () => {
   it('entries: a known type and a value; unsafe expressions and junk are dropped', () => {
@@ -136,27 +137,65 @@ describe('normalising what is read from storage or a file', () => {
     const p = normalizePolicy({
       id: 'p',
       schedule: { mode: 'sometimes' },
-      budget: { type: 'visits', count: 2.6, period: { kind: 'day' }, maxVisitMinutes: 0.1 },
+      budget: { type: 'visits', count: 2.6, period: { kind: 'day' } },
       intervention: { type: 'block' },
     });
     expect(p).toEqual({
       id: 'p',
       schedule: { mode: 'always', windows: [] },
-      budget: { type: 'visits', count: 3, period: { kind: 'day' }, perSite: false, maxVisitMinutes: 0.5 },
+      budget: { type: 'visits', count: 3, period: { kind: 'day' }, perSite: false },
       intervention: { type: 'block' },
-    });
-    expect(
-      normalizePolicy({ budget: { type: 'session', maxMinutes: 0, cooldownMinutes: 0 } })?.budget,
-    ).toEqual({
-      type: 'session',
-      maxMinutes: 0.5,
-      cooldownMinutes: 1,
-      perSite: false,
     });
     expect(normalizePolicy({ budget: { type: 'time', minutes: 0 } })?.budget).toMatchObject({ minutes: 0.1 });
     expect(normalizePolicy({ budget: { type: 'mystery' } })?.budget).toBeUndefined();
     expect(normalizePolicy(null)).toBeNull();
     expect(normalizePolicy({})?.id).toEqual(expect.any(String));
+  });
+
+  it('conditions of earlier versions: a limit at all times, starting again every so often', () => {
+    const office = [{ days: [1, 2, 3, 4, 5], start: 540, end: 1020 }];
+    const limit = (budget: Record<string, unknown>) =>
+      normalizePolicy({
+        schedule: { mode: 'during', windows: office },
+        budget,
+        intervention: { type: 'block' },
+      });
+    // A limit only at certain times applies at all times.
+    expect(limit({ type: 'time', minutes: 30, period: { kind: 'day' } })?.schedule).toEqual({
+      mode: 'always',
+      windows: [],
+    });
+    const period = (p: Record<string, unknown>) =>
+      limit({ type: 'time', minutes: 30, period: p })?.budget?.period;
+    expect(period({ kind: 'week' })).toEqual({ kind: 'days', n: 7 });
+    expect(period({ kind: 'month' })).toEqual({ kind: 'days', n: 30 });
+    expect(period({ kind: 'rolling', n: 60 })).toEqual({ kind: 'hour' });
+    expect(period({ kind: 'rolling', n: 90 })).toEqual({ kind: 'minutes', n: 90 });
+    expect(period({ kind: 'minutes', n: 120, offset: 30 })).toEqual({ kind: 'minutes', n: 120 });
+    expect(period({ kind: 'days', n: 3, offset: 1 })).toEqual({ kind: 'days', n: 3 });
+    // The longest visit is dropped.
+    expect(limit({ type: 'visits', count: 3, period: { kind: 'day' }, maxVisitMinutes: 10 })?.budget).toEqual(
+      {
+        type: 'visits',
+        count: 3,
+        period: { kind: 'day' },
+        perSite: false,
+      },
+    );
+    // At most 15 minutes in a row, then a 60-minute stop: 15 minutes every 75 minutes.
+    expect(limit({ type: 'session', maxMinutes: 15, cooldownMinutes: 60, perSite: true })?.budget).toEqual({
+      type: 'time',
+      minutes: 15,
+      period: { kind: 'minutes', n: 75 },
+      perSite: true,
+    });
+    // A stop of more than a day: whole days.
+    expect(limit({ type: 'session', maxMinutes: 60, cooldownMinutes: 1500 })?.budget).toMatchObject({
+      minutes: 60,
+      period: { kind: 'days', n: 2 },
+    });
+    // "Outside these times" without the migration (a file of this version written by hand) is always.
+    expect(normalizePolicy({ schedule: { mode: 'outside', windows: office } })?.schedule.mode).toBe('always');
   });
 
   it('breaks: a length within range, costs within range, absent limits stay absent', () => {
@@ -214,15 +253,18 @@ describe('normalising what is read from storage or a file', () => {
     expect(rule('block')?.pause.allowed).toBe(true);
     for (const type of ['ask', 'delay', 'challenge', 'filter', 'track', 'redirect', 'close'])
       expect(rule(type)?.pause.allowed, type).toBe(false);
-    // One condition that blocks is enough, whatever the others do.
-    const mixed = normalizeGroup(
-      {
-        policies: [{ intervention: { type: 'delay', seconds: 30 } }, { intervention: { type: 'block' } }],
-        pause: { allowed: true },
-      },
-      [],
-    );
-    expect(mixed?.pause.allowed).toBe(true);
+  });
+
+  it('rules: one condition; without one, the rule counts the time; alone, Don’t count counts', () => {
+    const rule = (policies: unknown) => normalizeGroup({ id: 'g', policies }, [])?.policies;
+    expect(rule([{ id: 'a', intervention: { type: 'block' } }, { id: 'b' }])).toEqual([
+      { id: 'a', schedule: { mode: 'always', windows: [] }, intervention: { type: 'block' } },
+    ]);
+    for (const none of [undefined, [], ['junk']])
+      expect(rule(none)).toEqual([
+        { id: 'g-when', schedule: { mode: 'always', windows: [] }, intervention: { type: 'track' } },
+      ]);
+    expect(rule([{ id: 'a', intervention: { type: 'allow' } }])?.[0].intervention).toEqual({ type: 'track' });
   });
 
   it('rules: defaults for what is missing, valid colours only, unknown fields kept', () => {
@@ -340,6 +382,148 @@ describe('normalising what is read from storage or a file', () => {
     expect(config).not.toHaveProperty('lists');
     expect(config).not.toHaveProperty('allowlist');
     expect(config.tombstones).toEqual([{ id: 'G0', kind: 'group' }]);
+  });
+});
+
+describe('schema 2: one condition per rule', () => {
+  const office = [{ days: [1, 2, 3, 4, 5], start: 540, end: 1020 }];
+  const migrated = (groups: unknown[], dayStart = 0) =>
+    normalizeConfig({ schema: 2, groups, settings: { dayStart } }).config.groups;
+  const when = (g: Group) => [g.policies[0].schedule, g.policies[0].budget, g.policies[0].intervention.type];
+
+  it('“Outside these times” becomes the times outside them, on the days the engine applies them on', () => {
+    const outside = { mode: 'outside', windows: office };
+    const [g] = migrated([{ id: 'g', policies: [{ schedule: outside, intervention: { type: 'block' } }] }]);
+    expect(g.policies[0].schedule).toEqual({
+      mode: 'during',
+      windows: [
+        { days: [0, 6], start: 0, end: 1440 },
+        { days: [1, 2, 3, 4, 5], start: 0, end: 540 },
+        { days: [1, 2, 3, 4, 5], start: 1020, end: 1440 },
+      ],
+    });
+    // A week without a change of the clocks, from Sunday 4 October 2026 at midnight.
+    const sunday = new Date(2026, 9, 4).getTime();
+    for (const dayStart of [0, 300]) {
+      const cal = { dayStart, weekStart: 1 };
+      const night = { mode: 'outside', windows: [{ days: [5], start: 1320, end: 120 }, ...office] };
+      const [n] = migrated([{ id: 'n', policies: [{ schedule: night }] }], dayStart);
+      for (let m = 0; m < 7 * 1440; m += 15) {
+        const t = sunday + m * 60_000;
+        expect([dayStart, m, scheduleActive(n.policies[0].schedule, t, cal)]).toEqual([
+          dayStart,
+          m,
+          !scheduleActive({ mode: 'during', windows: night.windows }, t, cal),
+        ]);
+      }
+    }
+    // Outside no times: always.
+    expect(
+      migrated([{ id: 'a', policies: [{ schedule: { mode: 'outside', windows: [] } }] }])[0].policies[0]
+        .schedule,
+    ).toEqual({ mode: 'always', windows: [] });
+  });
+
+  it('a rule with several conditions becomes one rule for each condition that restricts', () => {
+    const groups = migrated([
+      {
+        id: 'w',
+        name: 'Work',
+        targets: [{ id: 't', type: 'domain', value: 'a.test' }],
+        policies: [
+          { id: 'p1', schedule: { mode: 'during', windows: office }, intervention: { type: 'block' } },
+          {
+            id: 'p2',
+            budget: { type: 'time', minutes: 30, period: { kind: 'day' } },
+            intervention: { type: 'block' },
+          },
+          { id: 'p3', intervention: { type: 'delay', seconds: 10, grant: {} } },
+        ],
+        pause: { allowed: true },
+        protection: { kind: 'wait', seconds: 60 },
+      },
+      { id: 'other', policies: [{ id: 'o', intervention: { type: 'block' } }] },
+    ]);
+    expect(groups.map((g) => [g.id, g.name, g.policies.map((p) => p.id)])).toEqual([
+      ['w', 'Work', ['p1']],
+      ['w-2', 'Work (2)', ['p2']],
+      ['w-3', 'Work (3)', ['p3']],
+      ['other', 'Group', ['o']],
+    ]);
+    // The last condition applies at the times of none before it that has no limit.
+    expect(groups[2].policies[0].schedule).toEqual({
+      mode: 'during',
+      windows: [
+        { days: [0, 6], start: 0, end: 1440 },
+        { days: [1, 2, 3, 4, 5], start: 0, end: 540 },
+        { days: [1, 2, 3, 4, 5], start: 1020, end: 1440 },
+      ],
+    });
+    // Each copy has the sites, with ids of their own, the protection, and breaks only if it blocks.
+    expect(groups.map((g) => g.targets.map((t) => `${t.id} ${t.value}`))).toEqual([
+      ['t a.test'],
+      ['t-2 a.test'],
+      ['t-3 a.test'],
+      [],
+    ]);
+    expect(groups.slice(0, 3).map((g) => [g.protection, g.pause.allowed])).toEqual([
+      [{ kind: 'wait', seconds: 60 }, true],
+      [{ kind: 'wait', seconds: 60 }, true],
+      [{ kind: 'wait', seconds: 60 }, false],
+    ]);
+  });
+
+  it('conditions that never apply, only count or do not count are left out', () => {
+    const lunch = [{ days: [1, 2, 3, 4, 5], start: 720, end: 780 }];
+    // Blocked except at lunch, when the sites are left alone.
+    const [a, ...more] = migrated([
+      {
+        id: 'a',
+        policies: [
+          { schedule: { mode: 'during', windows: lunch }, intervention: { type: 'allow' } },
+          { intervention: { type: 'block' } },
+          {
+            schedule: { mode: 'during', windows: office },
+            intervention: { type: 'delay', seconds: 5, grant: {} },
+          },
+        ],
+      },
+    ]);
+    expect(more).toEqual([]);
+    expect(when(a)).toEqual([
+      {
+        mode: 'during',
+        windows: [
+          { days: [0, 6], start: 0, end: 1440 },
+          { days: [1, 2, 3, 4, 5], start: 0, end: 720 },
+          { days: [1, 2, 3, 4, 5], start: 780, end: 1440 },
+        ],
+      },
+      undefined,
+      'block',
+    ]);
+    // Counting at certain times and nothing at the others: the first condition alone.
+    const [b] = migrated([
+      {
+        id: 'b',
+        policies: [
+          { schedule: { mode: 'during', windows: office }, intervention: { type: 'track' } },
+          { intervention: { type: 'allow' } },
+        ],
+      },
+    ]);
+    expect(when(b)).toEqual([{ mode: 'during', windows: office }, undefined, 'track']);
+    // A limit after a condition that always applies never applies.
+    const [c, ...none] = migrated([
+      {
+        id: 'c',
+        policies: [
+          { intervention: { type: 'filter', filter: 'blur' } },
+          { budget: { type: 'time', minutes: 5, period: { kind: 'day' } }, intervention: { type: 'block' } },
+        ],
+      },
+    ]);
+    expect([when(c), none]).toEqual([[{ mode: 'always', windows: [] }, undefined, 'filter'], []]);
   });
 });
 

@@ -23,7 +23,6 @@ export function window(days: number[], start: number, end: number) {
   return { days, start, end };
 }
 export const during = (...windows: ReturnType<typeof window>[]) => ({ mode: 'during', windows });
-export const outside = (...windows: ReturnType<typeof window>[]) => ({ mode: 'outside', windows });
 export const EVERY_DAY = [0, 1, 2, 3, 4, 5, 6];
 
 export function policy(intervention: Record<string, unknown>, extra: Record<string, unknown> = {}) {
@@ -46,17 +45,9 @@ export const visitBudget = (count: number, period: Record<string, unknown> = { k
   period,
   ...more,
 });
-export const sessionBudget = (maxMinutes: number, cooldownMinutes: number, more = {}) => ({
-  type: 'session',
-  maxMinutes,
-  cooldownMinutes,
-  ...more,
-});
 
 // Interventions.
 export const TRACK = { type: 'track' };
-/** The sites are allowed and their time is not counted. */
-export const ALLOW = { type: 'allow' };
 export const BLOCK = { type: 'block' };
 export const CLOSE = { type: 'close' };
 export const filter = (kind = 'grayscale', more: Record<string, unknown> = {}) => ({

@@ -696,12 +696,7 @@ describe('every rule on a page', () => {
     await pass(t, first.ticket?.id);
     // The sum's access opened the rule's other sites, and time was counted there.
     const used = Date.now() + t.store.state.clockOffset + 1000;
-    t.store.state.activity[usageKeys.group('Quick')] = {
-      last: used,
-      visitStart: used,
-      visitSeconds: 1,
-      run: 1,
-    };
+    t.store.state.activity[usageKeys.group('Quick')] = { last: used };
     const quick = t.store.state.grants.find((g) => g.kind === 'pass' && g.groups.includes('Quick'));
     const until = quick?.until;
     for (let i = 0; i < 2; i++) await pass(t, (await interventionModel(URL, TAB)).ticket?.id);

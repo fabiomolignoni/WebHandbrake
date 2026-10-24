@@ -26,7 +26,6 @@ import {
   newPolicy,
   targetKey,
   targetsFromLines,
-  withCountingGap,
 } from '../../engine/defaults';
 import { clone } from '../../engine/json';
 import type { Group, Intervention, Policy, Protection, Target } from '../../engine/types';
@@ -50,15 +49,15 @@ import {
 import { downloadText } from '../../ui/download';
 import { GROUP_ICONS, Icon } from '../../ui/icons';
 import { useSaveFlow } from '../../ui/saveflow';
-import { interventionIcon, LADDER, toneOf } from '../../ui/status';
+import { toneOf } from '../../ui/status';
 import { useDashboard } from '../context';
-import { rulePlan, sitesPhrase } from '../plan';
+import { rulePlan } from '../plan';
 import { navigate, setNavigationGuard } from '../router';
 import { optionsAdvanced } from '../rule-form';
 import { AdvancedOptions } from './advanced';
 import { InterventionPicker, type KeptInterventions } from './how-picker';
 import { PauseEditor, pauseRulesSummary } from './pause-editor';
-import { ConditionEditor, type ConditionMemo, PolicyCard } from './policy';
+import { ConditionEditor, type ConditionMemo } from './policy';
 import { ProtectionPicker, protectionIcon, protectionLabel } from './protection-picker';
 import { TargetsEditor } from './targets';
 import { TestUrl } from './test-url';
@@ -143,33 +142,23 @@ const SHOWN_IN_PLACE = new Set([
 /** The part where a problem found by validateGroup() is fixed. */
 function stepOf(issue: Issue): StepId {
   if (HOW_ISSUES.has(issue.key)) return 'how';
-  if (issue.policy !== undefined || issue.key === 'validate.noPolicies') return 'when';
+  if (issue.policy !== undefined) return 'when';
   if (issue.key === 'validate.noName') return 'details';
   return 'sites';
 }
 
-function endsWithCatchAll(policies: Policy[]): boolean {
-  const last = policies[policies.length - 1];
-  return Boolean(last && last.schedule.mode === 'always' && !last.budget);
-}
-
-/** The tone of the strictest thing the rule does, for its plan card. */
+/** The tone of what the rule does, for its plan card. */
 function ruleTone(g: Group): string {
-  if (!g.enabled) return 'neutral';
-  const strictest = g.policies.reduce<number>(
-    (max, p) => Math.max(max, LADDER.indexOf(p.intervention.type)),
-    -1,
-  );
-  return strictest === -1 ? 'neutral' : toneOf(LADDER[strictest]);
+  return g.enabled ? toneOf(g.policies[0].intervention.type) : 'neutral';
 }
 
 /** What the editor remembers besides the rule, and what a new rule has yet to choose. */
 interface Memory {
-  /** Per condition: what it had before another answer to When was chosen. */
+  /** By condition: what it had before another answer to When was chosen. */
   memo: Record<string, ConditionMemo>;
-  /** Per condition: what was set for each intervention tried. */
+  /** By condition: what was set for each intervention tried. */
   kept: Record<string, KeptInterventions>;
-  /** The conditions of a new rule whose "what happens" is not chosen yet (active choice). */
+  /** The condition of a new rule whose "what happens" is not chosen yet (active choice). */
   pending: string[];
   /** A new rule takes the name, colour and icon of its ready-made lists until these are changed. */
   nameTouched: boolean;
@@ -396,7 +385,6 @@ export function RuleEditor(props: Props) {
       ...draft,
       name: draft.name.trim(),
       note: draft.note.trim(),
-      policies: withCountingGap(draft.policies),
       protection: chosenProtection ?? DEFAULT_PROTECTION,
       updatedAt: Date.now(),
     };
@@ -416,23 +404,15 @@ export function RuleEditor(props: Props) {
 
   const set = (patch: Partial<Group>) => setDraft((d) => ({ ...d, ...patch }));
   const remember = (patch: Partial<Memory>) => setMemory((m) => ({ ...m, ...patch }));
-  const setPolicy = (i: number, p: Policy) =>
-    setDraft((d) => ({ ...d, policies: d.policies.map((x, j) => (j === i ? p : x)) }));
-  const movePolicy = (i: number, dir: -1 | 1) => {
-    const list = [...draft.policies];
-    const [p] = list.splice(i, 1);
-    list.splice(i + dir, 0, p);
-    set({ policies: list });
-  };
-  // A condition added opens, ready to be set.
-  const [added, setAdded] = useState<string | null>(null);
-  const addPolicy = (p: Policy) => {
-    setAdded(p.id);
-    set({ policies: [...draft.policies, p] });
-  };
-  const choose = (i: number, p: Policy, intervention: Intervention, kept: KeptInterventions) => {
-    setPolicy(i, { ...p, intervention });
-    remember({ kept: { ...memory.kept, [p.id]: kept }, pending: memory.pending.filter((x) => x !== p.id) });
+  // The rule's one condition.
+  const policy = draft.policies[0];
+  const setPolicy = (p: Policy) => setDraft((d) => ({ ...d, policies: [p] }));
+  const choose = (intervention: Intervention, kept: KeptInterventions) => {
+    setPolicy({ ...policy, intervention });
+    remember({
+      kept: { ...memory.kept, [policy.id]: kept },
+      pending: memory.pending.filter((x) => x !== policy.id),
+    });
   };
   const toggleList = (id: string) => {
     const targets = toggleTemplate(draft.targets, id);
@@ -441,10 +421,10 @@ export function RuleEditor(props: Props) {
 
   const sites = draft.targets.filter((x) => !x.allow);
   const severalSites = sites.length > 1;
-  const pendingNow = memory.pending.filter((id) => draft.policies.some((p) => p.id === id));
+  const pending = memory.pending.includes(policy.id);
   const blocked = (s: StepId) =>
     issuesOf(s).some((i) => i.level === 'error') ||
-    (s === 'how' && pendingNow.length > 0) ||
+    (s === 'how' && pending) ||
     (s === 'protection' && !protection);
   const ready = STEPS.every((s) => !blocked(s));
 
@@ -512,18 +492,6 @@ export function RuleEditor(props: Props) {
   };
 
   // ---------------------------------------------------------------- the parts
-  const single = draft.policies.length === 1;
-  const addConditions = <AddConditions onAdd={addPolicy} first={single} />;
-  const memoOf = (p: Policy) => memory.memo[p.id] ?? {};
-  const setMemo = (p: Policy, m: ConditionMemo) => remember({ memo: { ...memory.memo, [p.id]: m } });
-  const picker = (p: Policy, i: number) => (
-    <InterventionPicker
-      value={pendingNow.includes(p.id) ? null : p.intervention}
-      kept={memory.kept[p.id]}
-      dontCount={!single}
-      onChange={(iv, kept) => choose(i, p, iv, kept)}
-    />
-  );
 
   const parts: Record<StepId, () => ComponentChildren> = {
     sites: () => (
@@ -556,68 +524,23 @@ export function RuleEditor(props: Props) {
       </>
     ),
 
-    when: () =>
-      single ? (
-        <ConditionEditor
-          policy={draft.policies[0]}
-          onChange={(p) => setPolicy(0, p)}
-          severalSites={severalSites}
-          memo={memoOf(draft.policies[0])}
-          onMemo={(m) => setMemo(draft.policies[0], m)}
-          more={addConditions}
-        />
-      ) : (
-        <div class="stack stack-sm">
-          {draft.policies.map((p, i) => (
-            <PolicyCard
-              key={p.id}
-              policy={p}
-              index={i}
-              count={draft.policies.length}
-              open={p.id === added}
-              onMove={(dir) => movePolicy(i, dir)}
-              onRemove={() => set({ policies: draft.policies.filter((_, j) => j !== i) })}
-            >
-              <ConditionEditor
-                policy={p}
-                onChange={(np) => setPolicy(i, np)}
-                severalSites={severalSites}
-                memo={memoOf(p)}
-                onMemo={(m) => setMemo(p, m)}
-              />
-            </PolicyCard>
-          ))}
-          <Otherwise policies={draft.policies} />
-          {addConditions}
-        </div>
-      ),
+    when: () => (
+      <ConditionEditor
+        policy={policy}
+        onChange={setPolicy}
+        severalSites={severalSites}
+        memo={memory.memo[policy.id] ?? {}}
+        onMemo={(m) => remember({ memo: { ...memory.memo, [policy.id]: m } })}
+      />
+    ),
 
     how: () => (
       <div class="stack">
-        {single ? (
-          picker(draft.policies[0], 0)
-        ) : draft.policies.length ? (
-          <div class="stack stack-sm">
-            {draft.policies.map((p, i) => (
-              <PolicyCard key={p.id} policy={p} index={i} count={draft.policies.length} open={p.id === added}>
-                {picker(p, i)}
-              </PolicyCard>
-            ))}
-            <Otherwise policies={draft.policies} />
-          </div>
-        ) : (
-          <div class="option-panel row nowrap top" style={{ gap: '12px' }}>
-            <Icon name="info" />
-            <div class="stack stack-sm small">
-              <span>{t('editor.how.none')}</span>
-              <div>
-                <button type="button" class="link-btn small" onClick={() => go('when')}>
-                  {t('editor.how.toWhen')}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <InterventionPicker
+          value={pending ? null : policy.intervention}
+          kept={memory.kept[policy.id]}
+          onChange={choose}
+        />
         {/* A break lifts a block only: a rule that never blocks has no breaks. */}
         {canHaveBreaks(draft) && (
           <section class="stack editor-breaks" aria-labelledby="rule-breaks-title">
@@ -813,11 +736,7 @@ export function RuleEditor(props: Props) {
   const intro =
     step === 'summary'
       ? t(creating ? 'wizard.review.intro' : 'editor.overview.intro')
-      : !single && step === 'when'
-        ? t('editor.when.intro')
-        : !single && step === 'how'
-          ? t('editor.how.intro')
-          : STEP_INTRO[step] && t(STEP_INTRO[step]);
+      : STEP_INTRO[step] && t(STEP_INTRO[step]);
 
   return (
     <div
@@ -1058,76 +977,6 @@ export function RuleEditor(props: Props) {
   );
 }
 
-/**
- * More conditions for a rule. Adding the second one says how they work together: each says when
- * the rule acts, and the first that matches applies.
- */
-function AddConditions({ onAdd, first }: { onAdd: (p: Policy) => void; first: boolean }) {
-  return (
-    <div class="stack stack-sm">
-      {first && (
-        <>
-          <h4>{t('editor.moreConditions')}</h4>
-          <p class="help">{t('editor.when.intro')}</p>
-        </>
-      )}
-      <div class="add-rule">
-        <span class="small text-2 strong">{t('editor.addRule')}</span>
-        <Button
-          size="small"
-          icon="calendar"
-          onClick={() =>
-            onAdd(
-              newPolicy({
-                schedule: { mode: 'during', windows: [{ days: [1, 2, 3, 4, 5], start: 540, end: 1020 }] },
-                intervention: { type: 'block' },
-              }),
-            )
-          }
-        >
-          {t('editor.addSchedule')}
-        </Button>
-        <Button
-          size="small"
-          icon="hourglass"
-          onClick={() =>
-            onAdd(
-              newPolicy({
-                budget: { type: 'time', minutes: 30, period: { kind: 'day' } },
-                intervention: { type: 'block' },
-              }),
-            )
-          }
-        >
-          {t('editor.addLimit')}
-        </Button>
-        <Button
-          size="small"
-          icon="wind"
-          onClick={() => onAdd(newPolicy({ intervention: frictionIntervention() }))}
-        >
-          {t('editor.addAlways')}
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-/** What happens when no condition applies; a last condition that always applies leaves nothing (#21). */
-function Otherwise({ policies }: { policies: Policy[] }) {
-  if (endsWithCatchAll(policies)) return null;
-  return (
-    <div class="policy otherwise">
-      <div class="policy-head muted">
-        <span class="policy-index" aria-hidden="true">
-          ∗
-        </span>
-        <span class="small">{t('editor.otherwise')}</span>
-      </div>
-    </div>
-  );
-}
-
 function IssueList({ issues }: { issues: Issue[] }) {
   return (
     <div class="stack stack-sm" role="group" aria-label={t('editor.issues')}>
@@ -1140,26 +989,6 @@ function IssueList({ issues }: { issues: Issue[] }) {
         </Banner>
       ))}
     </div>
-  );
-}
-
-/** Each condition as a sentence with the tone of what happens. */
-function Conditions({ g }: { g: Group }) {
-  return (
-    <ol class="plan-conditions">
-      {g.policies.length === 0 && <li class="small">{t('summary.noPolicies')}</li>}
-      {g.policies.map((p) => (
-        <li key={p.id}>
-          <span class="small">{describeCondition(p)}</span>
-          <StatusPill small tone={toneOf(p.intervention.type)} icon={interventionIcon(p.intervention.type)}>
-            {describeIntervention(p.intervention)}
-          </StatusPill>
-        </li>
-      ))}
-      {g.policies.length > 0 && !endsWithCatchAll(g.policies) && (
-        <li class="small muted otherwise">{t('summary.otherwise')}</li>
-      )}
-    </ol>
   );
 }
 
@@ -1178,7 +1007,7 @@ function Summary({
 }) {
   const sites = rule.targets.filter((x) => !x.allow);
   const exceptions = rule.targets.length - sites.length;
-  const plan = rulePlan(rule);
+  const [policy] = rule.policies;
   const row = (id: StepId, value: ComponentChildren) => (
     <div class="summary-row">
       <dt>{t(STEP_LABEL[id])}</dt>
@@ -1204,18 +1033,7 @@ function Summary({
               </StatusPill>
             )}
           </div>
-          {plan ? (
-            <p class="plan-text">{plan}</p>
-          ) : (
-            <>
-              <p class="small text-2">
-                {sites.length
-                  ? t('editor.overview.on', { sites: sitesPhrase(rule.targets) })
-                  : t('editor.overview.noSites')}
-              </p>
-              <Conditions g={rule} />
-            </>
-          )}
+          <p class="plan-text">{rulePlan(rule)}</p>
           {rule.note.trim() && <p class="small quote">“{rule.note.trim()}”</p>}
         </div>
       </div>
@@ -1228,24 +1046,11 @@ function Summary({
             {exceptions > 0 && ` · ${t('editor.exceptionsCount', { count: exceptions })}`}
           </>,
         )}
-        {/* A plan in a sentence has one condition (counting at certain times also leaves the
-            other times alone). */}
-        {row(
-          'when',
-          plan || rule.policies.length === 1
-            ? describeCondition(rule.policies[0])
-            : t('editor.overview.conditions', { count: rule.policies.length }),
-        )}
+        {row('when', describeCondition(policy))}
         {row(
           'how',
           <span class="stack stack-xs">
-            <span>
-              {plan
-                ? describeIntervention(rule.policies[0].intervention)
-                : rule.policies.length
-                  ? [...new Set(rule.policies.map((x) => describeIntervention(x.intervention)))].join(' · ')
-                  : t('editor.overview.openNormally')}
-            </span>
+            <span>{describeIntervention(policy.intervention)}</span>
             {canHaveBreaks(rule) && <span>{pauseRulesSummary(rule.pause)}</span>}
           </span>,
         )}

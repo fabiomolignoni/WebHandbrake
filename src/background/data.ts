@@ -83,7 +83,7 @@ export async function previewImport(text: string, mode: 'merge' | 'replace'): Pr
   const units = diffConfig(store.config, next);
   return {
     format: imp.format === 'group' ? 'webhandbrake' : imp.format,
-    groups: imp.groups.map((g) => ({ name: g.name, sites: g.targets.length, policies: g.policies.length })),
+    groups: imp.groups.map((g) => ({ name: g.name, sites: g.targets.length })),
     warnings: translateWarnings(imp.warnings),
     errors,
     units,

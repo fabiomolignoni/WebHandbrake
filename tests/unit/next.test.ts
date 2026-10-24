@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { decide } from '../../src/engine/decide';
 import { defaultState, delayIntervention } from '../../src/engine/defaults';
 import { HORIZON_DAYS } from '../../src/engine/limits';
 import {
@@ -59,26 +58,18 @@ describe('when a restriction ends', () => {
     expect(untilFor(c, 'https://a.test/', U)).toEqual({ until: null, next: null });
   });
 
-  it('a rolling limit per site ends when that site falls back under it (regression)', () => {
-    const rolling = { kind: 'rolling' as const, n: 60 };
+  it('a limit per site ends for the site that used it up, when its period starts again', () => {
+    const hours = { kind: 'minutes' as const, n: 120 };
     const g = group(
       'A',
       ['a.test', 'b.test'],
-      [{ budget: { type: 'time', minutes: 10, period: rolling, perSite: true }, intervention: BLOCK }],
+      [{ budget: { type: 'time', minutes: 10, period: hours, perSite: true }, intervention: BLOCK }],
     );
     const usage = new Usage();
-    usage.add(usageKeys.site('A', 'a.test'), at(0, 9, 30), 600, 1, cal);
-    const c = ctx(config([g]), at(0, 10), defaultState(), usage);
-    expect(untilFor(c, 'https://a.test/', U).until).toBe(at(0, 10, 31));
+    usage.add(usageKeys.site('A', 'a.test'), at(0, 10, 30), 600, 1, cal);
+    const c = ctx(config([g]), at(0, 11), defaultState(), usage);
+    expect(untilFor(c, 'https://a.test/', U).until).toBe(at(0, 12));
     expect(untilFor(c, 'https://b.test/', U).until).toBeNull();
-  });
-
-  it('a cool-down after Ask first of earlier versions changes nothing', () => {
-    const state = defaultState();
-    state.cooldowns['ask:A:a.test'] = { until: at(0, 10, 30), group: 'A', site: 'a.test', kind: 'ask' };
-    const c = ctx(config([group('A', ['a.test'], [{ intervention: { type: 'track' } }])]), at(0, 10), state);
-    expect(decide(c, 'https://a.test/').intervention.type).toBe('track');
-    expect(untilFor(c, 'https://a.test/', U).until).toBeNull();
   });
 });
 
@@ -128,28 +119,6 @@ describe('the next restriction of an open site', () => {
     expect(nextRestriction(c, 'https://a.test/', U)).toMatchObject({ at: at(0, 10, 15), kind: 'pause' });
   });
 
-  it('the longest visit of a visit limit runs out', () => {
-    const g = group(
-      'A',
-      ['a.test'],
-      [
-        {
-          budget: { type: 'visits', count: 3, period: { kind: 'day' }, maxVisitMinutes: 10 },
-          intervention: BLOCK,
-        },
-      ],
-    );
-    const state = defaultState();
-    state.activity[usageKeys.group('A')] = {
-      last: at(0, 10),
-      visitStart: at(0, 9, 56),
-      visitSeconds: 240,
-      run: 240,
-    };
-    const c = ctx(config([g]), at(0, 10), state);
-    expect(nextRestriction(c, 'https://a.test/', U)).toMatchObject({ at: at(0, 10, 6), kind: 'budget' });
-  });
-
   it('nothing for a page already restricted, or for an exempt one', () => {
     const c = ctx(config([group('A', ['a.test'], [{ intervention: delayIntervention(5) }])]), at(0, 10));
     expect(nextRestriction(c, 'https://a.test/', U)).toBeNull();
@@ -184,14 +153,13 @@ describe('the background alarm', () => {
     expect(nextGlobalChange(c)).toBeNull();
   });
 
-  it('looks ahead a limited number of days, and collects sessions, cool-downs and forfeits', () => {
+  it('looks ahead a limited number of days, and collects sessions and forfeits', () => {
     const state = defaultState();
     state.sessions.push(session({ startAt: at(0, 11), endAt: at(0, 12) }));
-    state.cooldowns.x = { until: at(0, 13), group: 'A', kind: 'session' };
     state.forfeits.p = at(0, 14);
     state.forfeits.far = at(0, 10) + (HORIZON_DAYS + 1) * DAY;
     const c = ctx(config([]), at(0, 10), state);
-    expect(candidateTimes(c, [])).toEqual([at(0, 11), at(0, 12), at(0, 13), at(0, 14)]);
+    expect(candidateTimes(c, [])).toEqual([at(0, 11), at(0, 12), at(0, 14)]);
   });
 });
 
@@ -218,12 +186,7 @@ describe('expired grants', () => {
     state.grants.push(
       grant({ kind: 'pass', visit: true, scope: 'site', site: 'a.test', createdAt: at(0, 10) }),
     );
-    state.activity[usageKeys.site('A', 'a.test')] = {
-      last: at(0, 10, 20),
-      visitStart: at(0, 10),
-      visitSeconds: 60,
-      run: 60,
-    };
+    state.activity[usageKeys.site('A', 'a.test')] = { last: at(0, 10, 20) };
     const c = ctx(config([]), at(0, 10, 24), state);
     expect(expiredGrants(c)).toEqual([]);
     expect(expiredGrants({ ...c, now: at(0, 10, 20) + 5 * MINUTE + 1 })).toHaveLength(1);

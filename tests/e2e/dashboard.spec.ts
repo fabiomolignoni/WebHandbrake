@@ -69,10 +69,7 @@ async function setup(h: Harness, protection: unknown = wait(30)) {
       group(
         'Social',
         ['social.test', 'chat.test'],
-        [
-          policy(BLOCK, { schedule: during(weekly([1, 2, 3, 4, 5], 540, 1020)) }),
-          policy(delay(30), { budget: timeBudget(30) }),
-        ],
+        [policy(BLOCK, { schedule: during(weekly([1, 2, 3, 4, 5], 540, 1020)) })],
       ),
       group('Video', ['video.test'], [policy(ask({ maxMinutes: 15 }))]),
     ];
@@ -116,13 +113,10 @@ for (const width of [1280, 390]) {
         if (part === 'What happens') await p.role('switch', 'Allow breaks').expectCount(blocks ? 1 : 0);
         expect(await p.overflowX(), `horizontal overflow on ${part}`).toBeLessThanOrEqual(0);
       }
-      // A single condition is asked in place; each of several opens from its sentence.
       await openPart(p, 'When');
-      if (g.policies.length > 1) await p.get('.policy-sentence').click();
       await p.role('radiogroup', 'When should it apply?').expectVisible();
       expect(await p.overflowX()).toBeLessThanOrEqual(0);
       await openPart(p, 'What happens');
-      if (g.policies.length > 1) await p.get('.policy-sentence').click();
       await p.role('radiogroup', 'What happens').expectVisible();
       expect(await p.overflowX()).toBeLessThanOrEqual(0);
     }
@@ -365,19 +359,13 @@ test('"count only" at certain times counts nothing outside them (#21)', async ({
   await p.role('heading', 'Rules', { exact: true }).expectVisible();
   const cfg = (await h.rpc('config.get')).config;
   const created = cfg.groups[cfg.groups.length - 1];
+  // One condition: the times when it counts.
   expect(created.policies.map((x: any) => [x.schedule.mode, x.intervention.type])).toEqual([
     ['during', 'track'],
-    ['always', 'allow'],
   ]);
-  // The editor states the same plan, shows the second condition, and no "otherwise" after it.
+  // The editor states the same plan.
   const editor = await h.page(`dashboard.html#/groups/${created.id}`);
   await editor.get('.plan-text').expectText('outside these times it counts nothing');
-  await editor.text('At other times the sites open normally, and only their time is counted.').expectCount(0);
-  await openPart(editor, 'When');
-  await editor.text('Allowed, time not counted', { within: '.policy' }).expectVisible();
-  await editor.get('.policy.otherwise').expectCount(0);
-  await openPart(editor, 'What happens');
-  await editor.get('.policy.otherwise').expectCount(0);
 });
 
 test('the main settings of what happens are chosen with it (#14)', async ({ h }) => {
@@ -405,7 +393,7 @@ test('the main settings of what happens are chosen with it (#14)', async ({ h })
   await p.role('radio', 'Random').click();
   await p.label('Longest wait').expectValue('90');
   await p.label('Longest wait').fill('30');
-  await p.text('Condition 1: the longest wait must be longer than the shortest.').expectVisible();
+  await p.text('The longest wait must be longer than the shortest.').expectVisible();
   await p.button('Next: details').expectEnabled(false);
   await p.role('radio', 'Longer each time').click();
   await p.text('45 s, then 55 s, then 1 min 5 s… Back to 45 s each day.').expectVisible();
@@ -516,9 +504,7 @@ test('a new rule has no breaks once they are turned off (#15)', async ({ h }) =>
   await blocked.button(/Take a break/).expectCount(0);
 });
 
-test('the rule editor shows breaks in What happens only while one of the conditions blocks', async ({
-  h,
-}) => {
+test('the rule editor shows breaks in What happens only while the rule blocks', async ({ h }) => {
   await setup(h);
   const video = (await h.rpc('config.get')).config.groups.find((g: any) => g.name === 'Video');
   const p = await h.page(`dashboard.html#/groups/${video.id}?step=breaks`);
@@ -643,11 +629,15 @@ test('the time of a new rule can start again every so many hours or days', async
 });
 
 test('in the editor a limit and its period are a number and a unit', async ({ h }) => {
-  await setup(h, REMINDER);
+  await h.configure((c) => {
+    c.groups = [
+      group('Clips', ['clips.test'], [policy(delay(30), { budget: timeBudget(30) })], {
+        protection: REMINDER,
+      }),
+    ];
+  });
   const cfg = (await h.rpc('config.get')).config;
   const p = await h.page(`dashboard.html#/groups/${cfg.groups[0].id}?step=when`);
-  // The second condition asks the questions of a new rule.
-  await p.get({ css: '.policy-sentence', nth: 1 }).click();
   await p.role('radio', /^After some time/).expectChecked();
   await p.role('radio', '30 min').expectChecked();
   await p.role('radio', 'Other').click();
@@ -665,7 +655,7 @@ test('in the editor a limit and its period are a number and a unit', async ({ h 
   await p.button('Save changes').click();
   await p.button('Yes, continue').click();
   await expect
-    .poll(async () => (await h.rpc('config.get')).config.groups[0].policies[1].budget)
+    .poll(async () => (await h.rpc('config.get')).config.groups[0].policies[0].budget)
     .toMatchObject({ type: 'time', minutes: 30 * 60, period: { kind: 'days', n: 2 } });
 });
 
@@ -755,7 +745,7 @@ test('Back from the first step returns to the welcome and keeps the draft; the r
   expect((await h.rpc('config.get')).config.groups.map((g: any) => g.protection)).toEqual([wait(86_400)]);
 });
 
-test('When and Details fold their advanced options away, and open them when the rule uses them; What happens shows everything', async ({
+test('When shows every setting of its answer, with no advanced options; Details folds its own away', async ({
   h,
 }) => {
   await h.configure((c) => {
@@ -765,11 +755,19 @@ test('When and Details fold their advanced options away, and open them when the 
   });
   const id = (await h.rpc('config.get')).config.groups[0].id;
   const p = await h.page(`dashboard.html#/groups/${id}?step=when`);
-  // When: outside certain times.
+  // When: the times, the time allowed or the visits, each with how often it starts again; a rule
+  // has one condition.
   await p.role('radio', /^At certain times/).click();
-  await p.role('radio', 'Outside these times').expectHidden();
-  await p.text('Advanced options', { exact: true }).click();
-  await p.role('radio', 'Outside these times').click();
+  await p.role('radio', 'Outside these times').expectCount(0);
+  await p.role('radio', /^After some time/).click();
+  await p.label('Starts again every', { exact: true }).expectVisible();
+  await p.text('What counts').expectCount(0);
+  await p.role('radio', /^After some visits/).click();
+  await p.label('How many visits?').fill('4');
+  await p.label('Starts again every: unit').select('hours');
+  await p.label('Starts again every', { exact: true }).fill('2');
+  await p.text('Advanced options', { exact: true }).expectCount(0);
+  await p.text('Add a condition:').expectCount(0);
   // What happens: the details of a wait, in view.
   await openPart(p, 'What happens');
   await p.role('radio', 'Wait').click();
@@ -780,16 +778,26 @@ test('When and Details fold their advanced options away, and open them when the 
   await p.label('Windows').expectHidden();
   await p.text('Advanced options', { exact: true }).click();
   await p.label('Windows').select('normal');
+  await openPart(p, 'Summary');
+  await p.get('.plan-text').expectText('After 4 visits every 2 h to video.test');
   await p.button('Save changes').click();
   await p.button('Yes, continue').click();
   await p.text('Done: your change is applied.').expectVisible();
   const saved = (await h.rpc('config.get')).config.groups[0];
-  expect(saved.policies[0].schedule.mode).toBe('outside');
+  expect(saved.policies).toHaveLength(1);
+  expect(saved.policies[0].schedule).toEqual({ mode: 'always', windows: [] });
+  expect(saved.policies[0].budget).toEqual({
+    type: 'visits',
+    count: 4,
+    period: { kind: 'minutes', n: 120 },
+    perSite: false,
+  });
   expect(saved.policies[0].intervention).toMatchObject({ type: 'delay', onBlur: 'restart' });
   expect(saved.options.privacy).toBe('normal');
-  // Opened again, each part shows the advanced options the rule uses.
+  // Opened again, each part shows what the rule uses.
   const again = await h.page(`dashboard.html#/groups/${id}?step=when`);
-  await again.role('radio', 'Outside these times').expectChecked();
+  await again.role('radio', /^After some visits/).expectChecked();
+  await again.label('How many visits?').expectValue('4');
   await openPart(again, 'What happens');
   await again.label('If you switch to another tab during the wait').expectValue('restart');
   await openPart(again, 'Details');

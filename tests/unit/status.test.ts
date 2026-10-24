@@ -1,10 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import {
-  delayIntervention,
-  frictionIntervention,
-  newPolicy,
-  withCountingGap,
-} from '../../src/engine/defaults';
+import { delayIntervention, frictionIntervention, newPolicy } from '../../src/engine/defaults';
 import { SEVERITY } from '../../src/engine/severity';
 import type { Intervention, Policy, TimeWindow } from '../../src/engine/types';
 import { setFormatPrefs } from '../../src/shared/format';
@@ -25,22 +20,12 @@ describe('rule types: what a rule does, whatever the time', () => {
       intervention: frictionIntervention(),
     });
     expect(ruleTypes([limit])).toEqual(['ask']);
-    // Counting at certain times adds a "Don't count" condition for the other times.
-    expect(ruleTypes(withCountingGap([during({ type: 'track' })]))).toEqual(['track']);
+    expect(ruleTypes([during({ type: 'track' })])).toEqual(['track']);
   });
 
-  it('lists several restrictions from the gentlest to the strongest, without the free ones', () => {
-    const types = ruleTypes([
-      policy({ type: 'block' }),
-      policy({ type: 'track' }),
-      policy(delayIntervention(10)),
-    ]);
-    expect(types).toEqual(['delay', 'block']);
-  });
-
-  it('only counts time without conditions, and says "Don\'t count" when every condition does', () => {
-    expect(ruleTypes([])).toEqual(['track']);
-    expect(ruleTypes([policy({ type: 'allow' })])).toEqual(['allow']);
+  it('a rule that never restricts only counts time', () => {
+    expect(ruleTypes([policy({ type: 'track' })])).toEqual(['track']);
+    expect(ruleTypes([policy({ type: 'allow' })])).toEqual(['track']);
   });
 });
 

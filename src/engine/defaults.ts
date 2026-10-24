@@ -102,7 +102,6 @@ export function defaultState(): RuntimeState {
     grants: [],
     sessions: [],
     pending: [],
-    cooldowns: {},
     forfeits: {},
     activity: {},
     emergency: null,
@@ -134,7 +133,7 @@ export function firmProtection(p: Protection): boolean {
  */
 export const breaksLift = (i: Intervention): boolean => i.type === 'block';
 
-/** A rule has breaks only when one of its conditions blocks. */
+/** A rule has breaks only when it blocks. */
 export const canHaveBreaks = (g: Pick<Group, 'policies'>): boolean =>
   g.policies.some((p) => breaksLift(p.intervention));
 
@@ -168,7 +167,7 @@ export function newGroup(partial: Partial<Group> = {}, now = Date.now()): Group 
     enabled: true,
     archived: false,
     targets: [],
-    policies: [],
+    policies: [newPolicy({ intervention: { type: 'track' } })],
     pause: defaultPause(),
     protection: { ...DEFAULT_PROTECTION },
     options: defaultOptions(),
@@ -282,18 +281,6 @@ export function periodMinutes(p: Period): number {
     default:
       return p.n ?? 60;
   }
-}
-
-/**
- * Counting at certain times leaves the other times alone (#21): a new rule that only counts during
- * its times gets a last condition that neither restricts nor counts, so that outside them the
- * sites are allowed and not counted.
- */
-export function withCountingGap(policies: Policy[]): Policy[] {
-  const [p] = policies;
-  return policies.length === 1 && p.intervention.type === 'track' && p.schedule.mode === 'during' && !p.budget
-    ? [...policies, newPolicy({ intervention: { type: 'allow' } })]
-    : policies;
 }
 
 /** The targets of lines in the address syntax, such as the entries of a ready-made list. */

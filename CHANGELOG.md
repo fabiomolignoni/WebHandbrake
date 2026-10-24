@@ -43,7 +43,7 @@ All notable changes to WebHandbrake are documented here. The format follows
 - Clearer texts throughout. The block page now says "This page is blocked" instead of "This space
   is protected", since Protection is what keeps a rule from being loosened. The kinds of
   intervention have one name each, the one of the "What should happen?" picker (**Ask first**,
-  **Count only**, **Don't count**), and a change to a setting names it as Settings does. The popup's
+  **Count only**), and a change to a setting names it as Settings does. The popup's
   "Stop for today" is now **Stop now**: it gives up the time left for the limit's whole period,
   which may be an hour or a week. Quotation marks and apostrophes are typographic.
 - The browser's extension and settings pages are now blocked by default while a firmly protected
@@ -54,13 +54,11 @@ All notable changes to WebHandbrake are documented here. The format follows
 - A new rule from the wizard allows no breaks until you turn on **Allow breaks**, as in the full
   editor; and with the Partner code protection, breaks need your partner's code only if you tick
   the box (it was ticked from the start).
-- Clearer texts: a rule says that its sites open normally when none of its conditions applies
-  (instead of "time is only counted"); the popup and **Why?** say "Your break lasts until 10:23.
-  After that: Block." instead of "The break or access ends", and the on-page timer of an access
-  no longer calls it a break; the plan of an **Ask first** rule in the wizard mentions the wait on
-  its page; **Later** says when a saved page opens again, or that the current rules never open it,
-  instead of "not yet available" for every page.
-
+- Clearer texts: the popup and **Why?** say "Your break lasts until 10:23. After that: Block."
+  instead of "The break or access ends", and the on-page timer of an access no longer calls it a
+  break; the plan of an **Ask first** rule in the wizard mentions the wait on its page; **Later**
+  says when a saved page opens again, or that the current rules never open it, instead of "not yet
+  available" for every page.
 - Breaks are set up in **What happens**, under Block, in the rule editor and in the wizard alike:
   whether they are allowed, how long a break can last, what it costs and how many you get. The
   rule editor no longer has a Breaks part, and a protection no longer decides what breaks cost: a
@@ -73,11 +71,9 @@ All notable changes to WebHandbrake are documented here. The format follows
   pages. A rule has six parts, **Sites**, **When**, **What happens**, **Details**, **Protection**
   and **Summary**; a new rule goes through them in order with **Back** and **Next** (the name is
   asked in Details, before the protection), a rule that exists opens on its summary and any part can
-  be opened. When and Details ask the wizard's questions and keep everything else under **Advanced
-  options**, folded away unless the rule already uses it: outside certain times, limits on visits or
-  continuous use, weekly, monthly and rolling periods, a limit only at certain times and more
-  conditions in When; windows, tabs, frames and quick focus sessions in Details. What happens shows
-  every setting of the chosen intervention. Sites has no advanced options: exceptions, typed with +
+  be opened. Details keeps windows, tabs, frames and quick focus sessions under **Advanced
+  options**, folded away unless the rule already uses them. When and What happens show every
+  setting of the answer chosen. Sites has no advanced options: exceptions, typed with +
   like any other address, sit in the list among the sites and stand out, and **Edit as text** is
   next to **Sort** (**Edit as list**, in the same place, goes back to the list). The type of an
   address changes with how it is written (`=m.youtube.com`, `example.com/page$`), as everywhere
@@ -95,12 +91,26 @@ All notable changes to WebHandbrake are documented here. The format follows
   challenge opens once you are through. “What should a break
   cost?” is now “What must you do to take a break?”, with answers such as **Confirm it** or
   **Type a phrase**.
+- **When** asks one question: **Every time**, **At certain times**, **After some time** or **After
+  some visits**, each with its settings in view. A limit on visits, before an advanced option of
+  After some time, has its own answer: how many visits, and how often they start again.
 - Whether a rule's breaks can be taken during a focus session is up to the session: **No breaks
   during the session** on Focus now does what it says for every rule, and quick sessions started
   from the popup, the right-click menu or the keyboard shortcut allow no breaks.
 
 ### Removed
 
+- Several conditions in a rule, with **Add a condition** and **Don’t count**, which left the sites
+  alone between conditions: a rule has one condition, and the rules of a site all apply, the
+  strictest first. When you update, a rule with several conditions becomes one rule for each
+  condition that restricts, named after it with a number (“Work (2)”); a condition at certain times
+  keeps only the times when it applied before, so that together they restrict at least as much as
+  before. A rule that only counts at certain times still counts nothing at the other times.
+- In When: **Outside these times** (a rule saved with it now applies at the times outside them,
+  which is the same); limits on continuous use (“at most 15 min in a row, then a 1 h stop” is now
+  15 min every 75 min); the longest visit of a limit on visits; weekly, monthly and rolling periods
+  and shifted ones (each week is now every 7 days, each month every 30 days, a rolling window a
+  period as long); and limits only at certain times, which now apply at all times.
 - **Advanced mode** (Settings › General) and **Use the full editor**: every option of a rule is
   in its part, under Advanced options.
 - **Remove duplicates** in a rule's sites: the list never holds the same address twice.

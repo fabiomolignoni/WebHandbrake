@@ -175,8 +175,7 @@ function sitesMayDiffer(cg: CompiledGroup, c: EngineContext): boolean {
         g.scope !== 'group' &&
         g.scope !== 'all' &&
         (g.groups === '*' || g.groups.includes(id)),
-    ) ||
-    Object.values(c.state.cooldowns).some((cd) => cd.group === id && cd.site)
+    )
   );
 }
 

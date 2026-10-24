@@ -53,7 +53,7 @@ test('a plain list (hosts file, uBlock syntax) becomes a rule from the import di
   await p.button('Import a file or a list…').click();
   await p.label('…or paste the content here').fill(LIST);
   await p.button('Preview').click();
-  await p.text('Imported list: 3 sites, 1 condition').expectVisible();
+  await p.text('Imported list: 3 sites').expectVisible();
   await p.text(/not a site/).expectVisible();
   await p.button('Import', { exact: true, within: 'dialog' }).click();
   await expect

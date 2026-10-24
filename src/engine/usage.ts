@@ -1,6 +1,7 @@
 /**
  * Usage accounting store: daily aggregates (statistics, day-based budgets) and minute buckets
- * for the last MINUTE_RETENTION_MINUTES (hourly/rolling budgets). Only aggregates are stored.
+ * for the last MINUTE_RETENTION_MINUTES (budgets that start again within a day). Only aggregates are
+ * stored.
  */
 
 import { MINUTE_RETENTION_MINUTES } from './limits';
@@ -111,28 +112,6 @@ export class Usage {
     let total = 0;
     for (const dk of dayKeys) total += this.days.get(dk)?.c[name] ?? 0;
     return total;
-  }
-
-  /**
-   * Instant at which the usage in a rolling window drops below `limit`, assuming no further use.
-   * Used to tell when a rolling budget refills.
-   */
-  rollingRefill(key: string, windowMinutes: number, limit: number, field: 0 | 1, now: number): number | null {
-    const m = this.minutes[key];
-    if (!m) return null;
-    const nowIdx = Math.floor(now / MINUTE);
-    const from = nowIdx - windowMinutes;
-    const entries = Object.entries(m)
-      .map(([k, v]) => [Number(k), v[field]] as const)
-      .filter(([i]) => i >= from && i <= nowIdx)
-      .sort((a, b) => a[0] - b[0]);
-    let total = entries.reduce((a, [, v]) => a + v, 0);
-    if (total < limit) return null;
-    for (const [i, v] of entries) {
-      total -= v;
-      if (total < limit) return (i + windowMinutes + 1) * MINUTE;
-    }
-    return null;
   }
 
   /**

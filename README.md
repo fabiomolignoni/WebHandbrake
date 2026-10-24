@@ -16,8 +16,8 @@ tracking: everything stays on your device.
   break, with the length, number and cost you set.
 - **Slow down instead of blocking**: say what you want to do before the site opens, wait for a
   short countdown, type random characters, or use a visual filter, a redirect or a closed tab.
-- **Rules that fit your day**: time windows (overnight too), time and visit limits per hour, day,
-  week or month, and limits on continuous use. Start from a ready-made list or paste your own
+- **Rules that fit your day**: time windows (overnight too), and time and visit limits that start
+  again every hour, day or so many days. Start from a ready-made list or paste your own
   domains, pages, wildcards, regular expressions and exceptions. **Why?** tells you which rule
   applies and when that changes.
 - **Easy to tighten, hard to undo**: each rule has its protection: a reminder, a wait of the length

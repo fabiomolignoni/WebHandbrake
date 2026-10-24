@@ -130,14 +130,13 @@ describe('the intervention page', () => {
     expect((await t.model('https://x.test/')).kind).toBe('block');
   });
 
-  it('focus sessions and closing the tab; the cool-downs after Ask first of earlier versions no longer block', async () => {
+  it('focus sessions and closing the tab', async () => {
     const t = await setup([
       group('S', ['s.test'], [{ intervention: { type: 'track' } }]),
       group('K', ['k.test'], [{ intervention: { type: 'track' } }]),
       group('C', ['close.test'], [{ intervention: { type: 'close' } }]),
     ]);
     t.store.state.sessions.push(session({ groups: ['S'], locked: true }));
-    t.store.state.cooldowns['ask:K:k.test'] = { until: T0 + 60_000, group: 'K', site: 'k.test', kind: 'ask' };
     expect(await t.model('https://s.test/')).toMatchObject({ kind: 'session', locked: true });
     expect((await t.model('https://k.test/')).kind).toBe('allow');
     expect((await t.model('https://close.test/')).kind).toBe('close');

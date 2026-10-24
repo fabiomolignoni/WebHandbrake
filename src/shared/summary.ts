@@ -73,8 +73,6 @@ export function describeSchedule(s: Schedule): string {
       return t('summary.always');
     case 'during':
       return describeWindows(s.windows);
-    case 'outside':
-      return t('summary.outside', { windows: describeWindows(s.windows) });
   }
 }
 
@@ -106,20 +104,7 @@ export function describeBudget(b: Budget): string {
         site
       );
     case 'visits':
-      return (
-        t('budget.visits', { count: b.count, period: describePeriod(b.period) }) +
-        (b.maxVisitMinutes
-          ? ` ${t('budget.visitMax', { duration: formatDuration(b.maxVisitMinutes * 60) })}`
-          : '') +
-        site
-      );
-    case 'session':
-      return (
-        t('budget.session', {
-          duration: formatDuration(b.maxMinutes * 60),
-          cooldown: formatDuration(b.cooldownMinutes * 60),
-        }) + site
-      );
+      return t('budget.visits', { count: b.count, period: describePeriod(b.period) }) + site;
   }
 }
 
@@ -163,14 +148,9 @@ export function describePolicy(p: Policy): string {
   return `${describeCondition(p)} → ${describeIntervention(p.intervention)}`;
 }
 
-/** Sentences describing a group, in evaluation order (first match wins). */
-export function summarizeGroup(g: Group): string[] {
-  if (!g.policies.length) return [t('summary.noPolicies')];
-  const lines = g.policies.map(describePolicy);
-  const last = g.policies[g.policies.length - 1];
-  const catchAll = last.schedule.mode === 'always' && !last.budget;
-  if (!catchAll) lines.push(t('summary.otherwise'));
-  return lines;
+/** A rule's condition and what happens then, as a sentence. */
+export function summarizeGroup(g: Group): string {
+  return g.policies.map(describePolicy).join(' · ');
 }
 
 export function targetTypeLabel(type: Target['type']): string {

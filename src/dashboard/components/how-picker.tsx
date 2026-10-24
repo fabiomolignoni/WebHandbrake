@@ -38,19 +38,15 @@ export function InterventionPicker({
   value,
   onChange,
   kept = {},
-  dontCount = false,
 }: {
   /** Null while nothing is chosen (a new rule). */
   value: Intervention | null;
   /** The new intervention, and what is now kept for every intervention. */
   onChange: (i: Intervention, kept: KeptInterventions) => void;
   kept?: KeptInterventions;
-  /** "Don't count" is offered too, for the times a rule with several conditions leaves alone. */
-  dontCount?: boolean;
 }) {
   const type = value?.type ?? null;
   const set = (i: Intervention) => onChange(i, { ...kept, [i.type]: i });
-  const ladder: InterventionType[] = dontCount || type === 'allow' ? ['allow', ...LADDER] : LADDER;
   return (
     <div class="stack">
       <RadioCards<InterventionType>
@@ -59,7 +55,7 @@ export function InterventionPicker({
         label={t('intervention.label')}
         class="friction-picker how-grid"
         itemClass="friction-option"
-        options={ladder.map((x) => ({ value: x, tone: toneOf(x) }))}
+        options={LADDER.map((x) => ({ value: x, tone: toneOf(x) }))}
         render={(o) => (
           <>
             <Icon name={interventionIcon(o.value)} />

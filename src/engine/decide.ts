@@ -20,16 +20,7 @@ import { breaksLift } from './defaults';
 import { type CompiledPattern, siteKeyFor } from './patterns';
 import { isNav, PASSABLE, SEVERITY } from './severity';
 import { periodRange, scheduleActive } from './time';
-import type {
-  Budget,
-  Cooldown,
-  FocusSession,
-  Grant,
-  Group,
-  Intervention,
-  Policy,
-  RuntimeState,
-} from './types';
+import type { Budget, FocusSession, Grant, Group, Intervention, Policy, RuntimeState } from './types';
 import { isExtensionUrl, type ParsedUrl, pageKey, parseUrl } from './url';
 import { type Usage, usageKeys } from './usage';
 
@@ -139,74 +130,26 @@ export function budgetStatus(
   // A forfeit of the whole policy also covers every site of a per-site budget.
   const forfeitUntil = Math.max(state.forfeits[pk] ?? 0, state.forfeits[policy.id] ?? 0);
   const forfeited = now < forfeitUntil;
-  const base = { policyId: policy.id, budget, key, inVisit, forfeited };
-  switch (budget.type) {
-    case 'time': {
-      const range = periodRange(budget.period, now, cc.cal);
-      const used = usage.sum(key, range, 0);
-      const limit = Math.round(budget.minutes * 60);
-      const exhausted = used >= limit || forfeited;
-      let refillAt: number | null = range.end;
-      if (budget.period.kind === 'rolling') {
-        refillAt = usage.rollingRefill(key, budget.period.n ?? 60, limit, 0, now);
-      }
-      if (forfeited) refillAt = Math.max(refillAt ?? 0, forfeitUntil);
-      return {
-        ...base,
-        used,
-        limit,
-        remaining: forfeited ? 0 : Math.max(0, limit - used),
-        exhausted,
-        periodStart: range.start,
-        periodEnd: range.end,
-        refillAt,
-      };
-    }
-    case 'visits': {
-      const range = periodRange(budget.period, now, cc.cal);
-      const used = usage.sum(key, range, 1);
-      const tooLong = Boolean(
-        budget.maxVisitMinutes && inVisit && act && act.visitSeconds >= budget.maxVisitMinutes * 60,
-      );
-      const exhausted = (used >= budget.count && !inVisit) || tooLong || forfeited;
-      let refillAt: number | null = range.end;
-      if (budget.period.kind === 'rolling') {
-        refillAt = usage.rollingRefill(key, budget.period.n ?? 60, budget.count, 1, now);
-      }
-      if (tooLong && act) refillAt = Math.min(refillAt ?? Infinity, act.last + visitGapMs(ctx));
-      if (forfeited) refillAt = Math.max(refillAt ?? 0, forfeitUntil);
-      return {
-        ...base,
-        used,
-        limit: budget.count,
-        remaining: forfeited ? 0 : Math.max(0, budget.count - used),
-        exhausted,
-        periodStart: range.start,
-        periodEnd: range.end,
-        refillAt,
-      };
-    }
-    case 'session': {
-      // The cool-down of this site, or one started for the whole policy.
-      const cd = [state.cooldowns[`session:${pk}`], state.cooldowns[`session:${policy.id}`]]
-        .filter((x): x is Cooldown => Boolean(x && x.until > now))
-        .sort((a, b) => b.until - a.until)[0];
-      const cooling = Boolean(cd);
-      const run = inVisit && act ? act.run : 0;
-      const limit = Math.round(budget.maxMinutes * 60);
-      const exhausted = cooling || run >= limit || forfeited;
-      return {
-        ...base,
-        used: run,
-        limit,
-        remaining: cooling ? 0 : Math.max(0, limit - run),
-        exhausted,
-        periodStart: act?.visitStart ?? now,
-        periodEnd: cooling && cd ? cd.until : now,
-        refillAt: cooling && cd ? cd.until : null,
-      };
-    }
-  }
+  const range = periodRange(budget.period, now, cc.cal);
+  const visits = budget.type === 'visits';
+  const used = usage.sum(key, range, visits ? 1 : 0);
+  const limit = visits ? budget.count : Math.round(budget.minutes * 60);
+  // A visit under way goes on to its end: the visits allowed are used up by the next one.
+  const exhausted = (visits ? used >= limit && !inVisit : used >= limit) || forfeited;
+  return {
+    policyId: policy.id,
+    budget,
+    key,
+    inVisit,
+    forfeited,
+    used,
+    limit,
+    remaining: forfeited ? 0 : Math.max(0, limit - used),
+    exhausted,
+    periodStart: range.start,
+    periodEnd: range.end,
+    refillAt: forfeited ? Math.max(range.end, forfeitUntil) : range.end,
+  };
 }
 
 export function grantActive(ctx: EngineContext, g: Grant, groupId?: string, site?: string): boolean {
@@ -239,6 +182,12 @@ export function grantCovers(g: Grant, group: Group, site: string, url: ParsedUrl
   }
 }
 
+/** A rule that only counts at certain times leaves the other times alone: nothing is counted (#21). */
+function countsAtTimes(g: Group): boolean {
+  const [p] = g.policies;
+  return Boolean(p && p.intervention.type === 'track' && p.schedule.mode === 'during' && !p.budget);
+}
+
 /** Evaluates a group whose (block) entry matched the URL. */
 export function evaluateGroup(
   ctx: EngineContext,
@@ -260,7 +209,8 @@ export function evaluateGroup(
     if (active && policyIndex === -1) policyIndex = index;
   });
 
-  let base: Intervention = policyIndex >= 0 ? group.policies[policyIndex].intervention : TRACK;
+  let base: Intervention =
+    policyIndex >= 0 ? group.policies[policyIndex].intervention : countsAtTimes(group) ? ALLOW : TRACK;
   let source: Source = policyIndex >= 0 ? 'policy' : 'none';
 
   const sessions = activeSessions(state, now).filter(

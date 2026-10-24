@@ -67,12 +67,6 @@ export async function maintenance() {
     state.grants = state.grants.filter((x) => x !== g);
     changed = true;
   }
-  for (const [k, cd] of Object.entries(state.cooldowns)) {
-    if (cd.until <= t0) {
-      delete state.cooldowns[k];
-      changed = true;
-    }
-  }
   for (const [k, until] of Object.entries(state.forfeits)) {
     if (until <= t0) {
       delete state.forfeits[k];

@@ -14,12 +14,19 @@ import {
   diffConfig,
   getPath,
   isStale,
-  scheduleBitmap,
   unusedExceptions,
 } from '../../src/engine/changes';
 import { defaultOptions, defaultPause, delayIntervention, newPolicy } from '../../src/engine/defaults';
-import { scheduleActive } from '../../src/engine/time';
-import type { Budget, Config, Intervention, PausePolicy, Policy, Schedule } from '../../src/engine/types';
+import { scheduleActive, scheduleBitmap } from '../../src/engine/time';
+import type {
+  Budget,
+  Config,
+  Intervention,
+  PausePolicy,
+  Period,
+  Policy,
+  Schedule,
+} from '../../src/engine/types';
 import { BLOCK, config, group, t } from './helpers';
 
 const NOW = 1_000_000;
@@ -50,7 +57,6 @@ describe('helpers', () => {
     expect(compareSchedules(longer, office)).toBe('subset');
     expect(compareSchedules(office, other)).toBe('other');
     expect(compareSchedules(office, { mode: 'always', windows: [] })).toBe('superset');
-    expect(compareSchedules({ mode: 'outside', windows: office.windows }, office)).toBe('other');
     // A window past midnight and one that ends where it starts.
     const night = { mode: 'during' as const, windows: [{ days: [1], start: 1380, end: 60 }] };
     const fullDay = { mode: 'during' as const, windows: [{ days: [1], start: 600, end: 600 }] };
@@ -67,7 +73,8 @@ describe('helpers', () => {
       { mode: 'during', windows: [{ days: [1], start: 60, end: 1380 }] },
       { mode: 'during', windows: [{ days: [6], start: 1380, end: 120 }] },
       { mode: 'during', windows: [{ days: [0, 3], start: 0, end: 1440 }] },
-      { mode: 'outside', windows: [{ days: [2], start: 200, end: 200 }] },
+      { mode: 'during', windows: [{ days: [2], start: 200, end: 200 }] },
+      { mode: 'always', windows: [] },
     ];
     // A week without a change of the clocks, from Sunday 4 October 2026 at midnight.
     const sunday = new Date(2026, 9, 4).getTime();
@@ -107,35 +114,20 @@ describe('helpers', () => {
 });
 
 describe('limits', () => {
-  const time = (minutes: number, period = day): Budget => ({ type: 'time', minutes, period });
+  const time = (minutes: number, period: Period = day): Budget => ({ type: 'time', minutes, period });
   const change = (a?: Budget, b?: Budget) =>
     conditionChange({ budget: a, intervention: BLOCK }, { budget: b, intervention: BLOCK });
 
-  it('less time, fewer visits or shorter use in a row restrict sooner', () => {
+  it('less time or fewer visits restrict sooner', () => {
     expect(change(time(30), time(20))).toBe('strengthen');
     expect(change(time(20), time(30))).toBe('weaken');
-    const visits = (count: number, max?: number): Budget => ({
-      type: 'visits',
-      count,
-      period: day,
-      maxVisitMinutes: max,
-    });
+    const visits = (count: number): Budget => ({ type: 'visits', count, period: day });
     expect(change(visits(3), visits(2))).toBe('strengthen');
-    expect(change(visits(3), visits(3, 10))).toBe('strengthen');
-    expect(change(visits(3, 10), visits(3))).toBe('weaken');
-    // Fewer visits but longer ones: not provably stricter.
-    expect(change(visits(3, 5), visits(2, 10))).toBe('weaken');
-    const run = (max: number, stop: number): Budget => ({
-      type: 'session',
-      maxMinutes: max,
-      cooldownMinutes: stop,
-    });
-    expect(change(run(20, 30), run(10, 60))).toBe('strengthen');
-    expect(change(run(20, 30), run(20, 10))).toBe('weaken');
+    expect(change(visits(2), visits(3))).toBe('weaken');
   });
 
   it('another period, another kind of limit or per site cannot be compared', () => {
-    expect(change(time(30), time(30, { kind: 'week' } as never))).toBe('weaken');
+    expect(change(time(30), time(30, { kind: 'days', n: 7 }))).toBe('weaken');
     expect(change(time(30), { type: 'visits', count: 1, period: day })).toBe('weaken');
     expect(change(time(30), { ...time(30), perSite: true })).toBe('weaken');
     // Removing the limit makes the condition apply always; adding one makes it apply less.

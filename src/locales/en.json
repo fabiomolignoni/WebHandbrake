@@ -75,51 +75,11 @@
   "badge.title": {
     "message": "WebHandbrake — {group}: {time} left"
   },
-  "budget.choice.session.desc": {
-    "message": "When you stay too long in one go. A few minutes away start the count again."
-  },
-  "budget.choice.time.desc": {
-    "message": "After a set amount of time on these sites."
-  },
-  "budget.choice.visits.desc": {
-    "message": "After a set number of visits to these sites."
-  },
-  "budget.counts": {
-    "message": "What counts"
-  },
-  "budget.kind.session": {
-    "message": "Time in a row"
-  },
-  "budget.kind.time": {
-    "message": "Time"
-  },
-  "budget.kind.visits": {
-    "message": "Visits"
-  },
-  "budget.onlyAt": {
-    "message": "Only at certain times"
-  },
   "budget.perSite": {
     "message": "Count each site separately"
   },
-  "budget.perSiteHelp": {
-    "message": "On: each site has its own limit. Off: the sites share one."
-  },
   "budget.perSiteSuffix": {
     "message": "(per site)"
-  },
-  "budget.session": {
-    "message": "after {duration} in a row (then a {cooldown} stop)",
-    "description": "e.g. \"after 10 min in a row (then a 1 h stop)\""
-  },
-  "budget.sessionCooldown": {
-    "message": "then stop for"
-  },
-  "budget.sessionMax": {
-    "message": "At most"
-  },
-  "budget.sessionUsed": {
-    "message": "{used} of {limit} in a row"
   },
   "budget.time": {
     "message": "after {duration} {period}",
@@ -130,12 +90,6 @@
   },
   "budget.visitHelp": {
     "message": "A new visit starts when you come back after a few minutes away."
-  },
-  "budget.visitMax": {
-    "message": "(at most {duration} each)"
-  },
-  "budget.visitMaxLabel": {
-    "message": "Limit the length of each visit"
   },
   "budget.visits": {
     "message": "after {count, plural, one {# visit} other {# visits}} {period}"
@@ -589,18 +543,6 @@
     "message": "{label}: unit",
     "description": "Name of the unit list next to a number, e.g. \"Time allowed: unit\"."
   },
-  "editor.addAlways": {
-    "message": "Add a condition for all times"
-  },
-  "editor.addLimit": {
-    "message": "Add a time limit"
-  },
-  "editor.addRule": {
-    "message": "Add a condition:"
-  },
-  "editor.addSchedule": {
-    "message": "Add a time window"
-  },
   "editor.advanced": {
     "message": "Advanced options"
   },
@@ -640,15 +582,6 @@
   "editor.fixErrors": {
     "message": "Fix the problems listed to save."
   },
-  "editor.how.intro": {
-    "message": "Choose what happens for each condition."
-  },
-  "editor.how.none": {
-    "message": "This rule has no conditions yet, so it only counts time. Add one in When first."
-  },
-  "editor.how.toWhen": {
-    "message": "Go to When"
-  },
   "editor.icon": {
     "message": "Icon"
   },
@@ -679,9 +612,6 @@
   "editor.moreActions": {
     "message": "More actions"
   },
-  "editor.moreConditions": {
-    "message": "More conditions"
-  },
   "editor.name": {
     "message": "Name"
   },
@@ -703,12 +633,6 @@
   "editor.notePlaceholder": {
     "message": "e.g. I want to finish my thesis by March."
   },
-  "editor.otherwise": {
-    "message": "At other times the sites open normally, and only their time is counted."
-  },
-  "editor.overview.conditions": {
-    "message": "{count, plural, =0 {No conditions yet} one {# condition} other {# conditions}}"
-  },
   "editor.overview.intro": {
     "message": "Choose Change to edit a part, then save."
   },
@@ -723,12 +647,6 @@
   },
   "editor.overview.noSites": {
     "message": "No sites yet"
-  },
-  "editor.overview.on": {
-    "message": "On {sites}"
-  },
-  "editor.overview.openNormally": {
-    "message": "The sites open normally."
   },
   "editor.overview.title": {
     "message": "This rule at a glance"
@@ -816,9 +734,6 @@
   },
   "editor.unsaved": {
     "message": "Unsaved changes"
-  },
-  "editor.when.intro": {
-    "message": "Each condition says when the rule acts. The first one that matches applies."
   },
   "emergency.cancel": {
     "message": "Cancel the request"
@@ -1224,7 +1139,7 @@
     "message": "I made my rules too strict. What can I do?"
   },
   "help.faq.notApplied.a": {
-    "message": "Check that the rule is on, that one of its conditions applies right now, and that no exception or break covers the site. Check also that WebHandbrake works in private windows and has access to websites (see Protection). If a site is restricted more than you expect, another rule may cover it too."
+    "message": "Check that the rule is on, that its condition applies right now, and that no exception or break covers the site. Check also that WebHandbrake works in private windows and has access to websites (see Protection). If a site is restricted more than you expect, another rule may cover it too."
   },
   "help.faq.notApplied.q": {
     "message": "Why is a site not restricted?"
@@ -1295,7 +1210,7 @@
     "message": "Insights"
   },
   "help.interventions.p1": {
-    "message": "From the gentlest: Count only, Filter (grey, blurred…), Ask first, Wait, Challenge (type something or solve a small calculation), Block, Redirect and Close tab. In a rule with several conditions, Don’t count leaves the sites alone and counts nothing."
+    "message": "From the gentlest: Count only, Filter (grey, blurred…), Ask first, Wait, Challenge (type something or solve a small calculation), Block, Redirect and Close tab."
   },
   "help.interventions.p2": {
     "message": "On every block page you can close the tab or go back. You can also save the page for later: you find it in Later once it opens again."
@@ -1427,16 +1342,16 @@
     "message": "Protecting your rules"
   },
   "help.rules.p1": {
-    "message": "A rule has one or more conditions, such as “Mon–Fri 09:00–17:00 → Block” or “Always, after 45 min a day → Wait 30 s”. The first condition that matches applies. When none matches, the sites open normally."
+    "message": "A rule has one condition, such as “Mon–Fri 09:00–17:00 → Block” or “Always, after 45 min a day → Wait 30 s”. When it does not apply, the sites open normally."
   },
   "help.rules.p2": {
-    "message": "A condition can use times of day, even overnight like 22:00–02:00. It can also have a limit: time or visits per hour, day, week or month, or a maximum time in one go followed by a stop."
+    "message": "A condition can use times of day, even overnight like 22:00–02:00. Or it can be a limit of time or visits that starts again every so often, such as every day or every 2 hours."
   },
   "help.rules.p3": {
     "message": "Time counts only while the page is on screen and you are using it, or media is playing. Several tabs never count twice. A new visit starts when you come back after {minutes} minutes away."
   },
   "help.rules.p4": {
-    "message": "When several rules cover a site, all of them apply, the strictest first, and the page opens only when every rule lets you in. To see which condition applies and until when, use “Why?” in the popup or “Test an address” in the rule editor."
+    "message": "When several rules cover a site, all of them apply, the strictest first, and the page opens only when every rule lets you in. To see which rules apply and until when, use “Why?” in the popup or “Test an address” in the rule editor."
   },
   "help.rules.title": {
     "message": "When a rule applies"
@@ -1545,7 +1460,7 @@
     "message": "Help"
   },
   "help.troubleshooting.p1": {
-    "message": "Start with “Why?” in the popup, or “Test an address” in the rule editor. They show which condition applies and when that changes."
+    "message": "Start with “Why?” in the popup, or “Test an address” in the rule editor. They show which rules apply and when that changes."
   },
   "help.troubleshooting.p2": {
     "message": "Settings › Diagnostics runs a self-test and copies a report to paste into an issue on GitHub. The report leaves out addresses unless you include them."
@@ -1626,7 +1541,7 @@
     "message": "WebHandbrake"
   },
   "import.groupLine": {
-    "message": "{name}: {sites, plural, one {# site} other {# sites}}, {policies, plural, one {# condition} other {# conditions}}"
+    "message": "{name}: {sites, plural, one {# site} other {# sites}}"
   },
   "import.help": {
     "message": "Choose a file or paste its content. If the import loosens an active rule, it waits {hours} hours, then you confirm it in Protection."
@@ -2650,18 +2565,6 @@
   "period.rollingLength": {
     "message": "In any"
   },
-  "period.style.every": {
-    "message": "Every so often"
-  },
-  "period.style.month": {
-    "message": "Each calendar month"
-  },
-  "period.style.rolling": {
-    "message": "In any window of…"
-  },
-  "period.style.week": {
-    "message": "Each calendar week"
-  },
   "permanent.ack": {
     "message": "I understand that only the emergency exit can loosen this rule."
   },
@@ -2676,24 +2579,6 @@
   },
   "permanent.title": {
     "message": "Make this rule permanent"
-  },
-  "policy.actions": {
-    "message": "Actions for condition {n}"
-  },
-  "policy.down": {
-    "message": "Move condition down"
-  },
-  "policy.edit": {
-    "message": "Edit condition"
-  },
-  "policy.number": {
-    "message": "Condition {n}"
-  },
-  "policy.remove": {
-    "message": "Remove condition"
-  },
-  "policy.up": {
-    "message": "Move condition up"
   },
   "popup.actions": {
     "message": "Quick actions"
@@ -3077,18 +2962,6 @@
   "schedule.hideGrid": {
     "message": "Hide the week grid"
   },
-  "schedule.mode.during": {
-    "message": "During these times"
-  },
-  "schedule.mode.during.desc": {
-    "message": "On the days and hours you choose, for example weekdays from 9 to 5."
-  },
-  "schedule.mode.outside": {
-    "message": "Outside these times"
-  },
-  "schedule.mode.outside.desc": {
-    "message": "At any time except the days and hours you choose."
-  },
   "schedule.overnight": {
     "message": "Runs past midnight into the next day."
   },
@@ -3118,9 +2991,6 @@
   },
   "schedule.to": {
     "message": "to"
-  },
-  "schedule.when": {
-    "message": "When"
   },
   "session.error.locked": {
     "message": "This session cannot be interrupted. Only the emergency exit can end it early."
@@ -3597,17 +3467,8 @@
     "message": "{schedule}, {budget}",
     "description": "e.g. \"Mon–Fri 09:00–17:00, after 30 min per day\""
   },
-  "summary.noPolicies": {
-    "message": "No conditions yet: the sites open normally and only their time is counted."
-  },
   "summary.noWindows": {
     "message": "no time set"
-  },
-  "summary.otherwise": {
-    "message": "At other times the sites open normally, and only their time is counted."
-  },
-  "summary.outside": {
-    "message": "Outside {windows}"
   },
   "tamper.clock-backward": {
     "message": "The system clock went back about {detail} min. WebHandbrake ignored it."
@@ -4022,7 +3883,7 @@
     "message": "Change the break rules of {name}"
   },
   "unit.field.policies": {
-    "message": "Change the conditions of {name}"
+    "message": "Change when {name} applies"
   },
   "unit.field.protection": {
     "message": "Change the protection of {name}"
@@ -4049,52 +3910,43 @@
     "message": "This rule applies to every website. Add exceptions for the sites you need."
   },
   "validate.emptyWindow": {
-    "message": "Condition {n}: a time window starts and ends at the same time."
+    "message": "A time window starts and ends at the same time."
   },
   "validate.neverReached": {
-    "message": "Condition {n}: the time allowed must be shorter than its period, or it is never reached."
+    "message": "The time allowed must be shorter than its period, or it is never reached."
   },
   "validate.noDays": {
-    "message": "Condition {n}: a time window has no days selected."
+    "message": "A time window has no days selected."
   },
   "validate.noName": {
     "message": "Give the rule a name."
-  },
-  "validate.noPolicies": {
-    "message": "Without conditions the rule only counts time."
   },
   "validate.noTargets": {
     "message": "Add at least one site."
   },
   "validate.noWindows": {
-    "message": "Condition {n}: add at least one time window."
-  },
-  "validate.outsideNoWindows": {
-    "message": "Condition {n}: “outside these times” without times means always."
+    "message": "Add at least one time window."
   },
   "validate.pauseDuration": {
     "message": "Breaks need a duration."
   },
   "validate.phrase": {
-    "message": "Condition {n}: write the phrase to type."
+    "message": "Write the phrase to type."
   },
   "validate.randomWait": {
-    "message": "Condition {n}: the longest wait must be longer than the shortest."
+    "message": "The longest wait must be longer than the shortest."
   },
   "validate.redirectUrl": {
-    "message": "Condition {n}: the redirect address must start with http:// or https://."
-  },
-  "validate.unreachable": {
-    "message": "Condition {n} can never apply: condition {m} always applies before it."
+    "message": "The redirect address must start with http:// or https://."
   },
   "validate.unusedException": {
     "message": "The exception {value} is not inside any site of this rule."
   },
   "validate.zeroBudget": {
-    "message": "Condition {n}: a limit of zero applies immediately."
+    "message": "A limit of zero applies immediately."
   },
   "validate.zeroVisits": {
-    "message": "Condition {n}: zero visits means it applies immediately."
+    "message": "Zero visits means it applies immediately."
   },
   "warning.clock": {
     "message": "Your system clock seems off by {detail} minutes. WebHandbrake uses the corrected time."
@@ -4301,7 +4153,7 @@
     "message": "On a break."
   },
   "why.policies": {
-    "message": "Conditions of the rule"
+    "message": "When the rule applies"
   },
   "why.restricted": {
     "message": "{what}."
@@ -4330,9 +4182,6 @@
   "why.whileOnSite": {
     "message": "the remaining minutes are used"
   },
-  "why.wouldApply": {
-    "message": "would apply, but an earlier condition wins"
-  },
   "wizard.back": {
     "message": "Back"
   },
@@ -4353,6 +4202,18 @@
   },
   "wizard.cond.schedule": {
     "message": "When you open {sites} ({windows})"
+  },
+  "wizard.cond.visits": {
+    "message": "After {count, plural, one {# visit} other {# visits}} {period} to {sites}",
+    "description": "e.g. \"After 3 visits a day to youtube.com\", \"After 5 visits every 2 hours to youtube.com\"."
+  },
+  "wizard.cond.visits.each": {
+    "message": "After {count, plural, one {# visit} other {# visits}} {period} to each of {sites}",
+    "description": "e.g. \"After 3 visits a day to each of youtube.com, reddit.com and 2 more sites\""
+  },
+  "wizard.cond.visits.shared": {
+    "message": "After {count, plural, one {# visit} other {# visits}} {period} in total to {sites}",
+    "description": "e.g. \"After 3 visits a day in total to youtube.com, reddit.com and 2 more sites\""
   },
   "wizard.create": {
     "message": "Create rule"
@@ -4515,7 +4376,7 @@
     "message": "For example 30 min a day, or 2 hours every 3 days."
   },
   "wizard.when.intro": {
-    "message": "Pick the moment that matters most. More conditions are in Advanced options."
+    "message": "Pick the moment that matters most."
   },
   "wizard.when.minutes": {
     "message": "How much time?"
@@ -4537,5 +4398,17 @@
   },
   "wizard.when.tooLong": {
     "message": "The time allowed must be shorter than the period, or it is never reached."
+  },
+  "wizard.when.visits": {
+    "message": "After some visits"
+  },
+  "wizard.when.visits.desc": {
+    "message": "Up to a set number of visits, then what you choose next."
+  },
+  "wizard.when.visitsPerSiteOff": {
+    "message": "{count, plural, one {# visit} other {# visits}} in total, shared by all the sites."
+  },
+  "wizard.when.visitsPerSiteOn": {
+    "message": "Each site gets its own {count, plural, one {visit} other {# visits}}."
   }
 }

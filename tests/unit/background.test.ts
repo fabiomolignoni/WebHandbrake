@@ -164,8 +164,8 @@ describe('maintenance', () => {
     const now = Date.now();
     const gap = store.config.settings.tracking.visitGapMinutes * 60_000;
     store.state.activity = {
-      'g:old': { last: now - gap - 60_000, visitStart: 0, visitSeconds: 10, run: 10 },
-      'g:new': { last: now - 1000, visitStart: now - 5000, visitSeconds: 4, run: 4 },
+      'g:old': { last: now - gap - 60_000 },
+      'g:new': { last: now - 1000 },
     };
     await maintenance();
     expect(Object.keys(store.state.activity)).toEqual(['g:new']);

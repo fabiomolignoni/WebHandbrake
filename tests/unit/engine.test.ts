@@ -44,10 +44,10 @@ describe('windows', () => {
     expect(month.kind === 'days' && month.days.length).toBe(5);
   });
 
-  it('modes during/outside/always', () => {
+  it('modes during/always', () => {
     const windows = [{ days: weekdays, start: 9 * 60, end: 17 * 60 }];
-    expect(scheduleActive({ mode: 'outside', windows }, at(0, 18), cal)).toBe(true);
-    expect(scheduleActive({ mode: 'outside', windows }, at(0, 10), cal)).toBe(false);
+    expect(scheduleActive({ mode: 'during', windows }, at(0, 18), cal)).toBe(false);
+    expect(scheduleActive({ mode: 'during', windows }, at(0, 10), cal)).toBe(true);
     expect(scheduleActive({ mode: 'always', windows: [] }, at(0, 10), cal)).toBe(true);
   });
 });
@@ -78,27 +78,26 @@ describe('decisions', () => {
     expect(d.excepted.map((e) => e.group.id)).toEqual(['A']);
   });
 
-  it('first matching policy wins; budget escalation', () => {
-    const g = group(
-      'V',
+  it('a limit steps in once used up; the strictest rule wins', () => {
+    const v = group('V', ['youtube.com'], [{ schedule: office, intervention: BLOCK }]);
+    const w = group(
+      'W',
       ['youtube.com'],
       [
-        { schedule: office, intervention: BLOCK },
         {
-          schedule: { mode: 'always', windows: [] },
           budget: { type: 'time', minutes: 45, period: { kind: 'day' } },
           intervention: delayIntervention(30),
         },
       ],
     );
     const usage = new Usage();
-    usage.add(usageKeys.group('V'), at(0, 18), 44 * 60, 1, cal);
-    const c = ctx(config([g]), at(0, 19), defaultState(), usage);
+    usage.add(usageKeys.group('W'), at(0, 18), 44 * 60, 1, cal);
+    const c = ctx(config([v, w]), at(0, 19), defaultState(), usage);
     expect(decide(c, 'https://youtube.com/').intervention.type).toBe('track');
     const r = nextRestriction(c, 'https://youtube.com/', { incognito: false });
     expect(r?.kind).toBe('budget');
     expect(r?.at).toBe(at(0, 19) + 60_000);
-    usage.add(usageKeys.group('V'), at(0, 18, 30), 60, 0, cal);
+    usage.add(usageKeys.group('W'), at(0, 18, 30), 60, 0, cal);
     expect(decide(c, 'https://youtube.com/').intervention.type).toBe('delay');
     expect(decide({ ...c, now: at(0, 10) }, 'https://youtube.com/').intervention.type).toBe('block');
     // The budget refills the next day.
@@ -151,12 +150,7 @@ describe('decisions', () => {
     const usage = new Usage();
     usage.add(usageKeys.group('M'), at(0, 9), 60, 3, cal);
     const state = defaultState();
-    state.activity[usageKeys.group('M')] = {
-      last: at(0, 9, 58),
-      visitStart: at(0, 9, 50),
-      visitSeconds: 60,
-      run: 60,
-    };
+    state.activity[usageKeys.group('M')] = { last: at(0, 9, 58) };
     const c = ctx(config([g]), at(0, 10), state, usage);
     expect(decide(c, 'https://mail.example/').intervention.type).toBe('track');
     expect(decide({ ...c, now: at(0, 10, 10) }, 'https://mail.example/').intervention.type).toBe('block');

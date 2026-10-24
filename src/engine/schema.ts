@@ -6,16 +6,19 @@
 
 import {
   canHaveBreaks,
+  DAY_MINUTES,
   defaultConfig,
   defaultOptions,
   defaultPause,
   defaultSettings,
+  everyPeriod,
   GROUP_COLORS,
   newId,
 } from './defaults';
 import { clone, isObj } from './json';
 import { MAX_WAIT_SECONDS, MIN_WAIT_SECONDS, PBKDF2_MAX_ITERATIONS, PBKDF2_MIN_ITERATIONS } from './limits';
 import { checkRegex, compilePattern, mayOverlap } from './patterns';
+import { bitmapSchedule, scheduleBitmap } from './time';
 import {
   type Config,
   type Cost,
@@ -188,6 +191,31 @@ export function normalizeIntervention(raw: unknown): Intervention {
   }
 }
 
+/**
+ * A limit starts again every so often. The weeks, months and rolling windows of earlier versions
+ * become as many days or minutes, and their offsets are dropped.
+ */
+function budgetPeriod(p: Period): Period {
+  switch (p.kind) {
+    case 'week':
+      return { kind: 'days', n: 7 };
+    case 'month':
+      return { kind: 'days', n: 30 };
+    case 'rolling':
+      return everyPeriod(p.n ?? 60);
+    case 'minutes':
+    case 'days':
+      return { kind: p.kind, n: p.n };
+    default:
+      return { kind: p.kind };
+  }
+}
+
+/**
+ * A limit of time or visits. The longest visit of earlier versions is dropped, and their limit on
+ * continuous use ("at most 15 min in a row, then stop for 1 h") becomes as much time every so often
+ * (15 min every 75 min).
+ */
 function normalizeBudget(raw: unknown): Policy['budget'] {
   if (!isObj(raw)) return undefined;
   switch (raw.type) {
@@ -195,43 +223,46 @@ function normalizeBudget(raw: unknown): Policy['budget'] {
       return {
         type: 'time',
         minutes: num(raw.minutes, 30, 0.1, 90 * 1440),
-        period: normalizePeriod(raw.period),
+        period: budgetPeriod(normalizePeriod(raw.period)),
         perSite: bool(raw.perSite, false),
       };
     case 'visits':
       return {
         type: 'visits',
         count: Math.round(num(raw.count, 3, 0, 10_000)),
-        period: normalizePeriod(raw.period),
+        period: budgetPeriod(normalizePeriod(raw.period)),
         perSite: bool(raw.perSite, false),
-        ...(typeof raw.maxVisitMinutes === 'number' && raw.maxVisitMinutes > 0
-          ? { maxVisitMinutes: num(raw.maxVisitMinutes, 10, 0.5, 1440) }
-          : {}),
       };
-    case 'session':
+    case 'session': {
+      const minutes = num(raw.maxMinutes, 10, 0.5, 1440);
+      const every = minutes + num(raw.cooldownMinutes, 30, 1, 10_080);
       return {
-        type: 'session',
-        maxMinutes: num(raw.maxMinutes, 10, 0.5, 1440),
-        cooldownMinutes: num(raw.cooldownMinutes, 30, 1, 10_080),
+        type: 'time',
+        minutes,
+        period: everyPeriod(every > DAY_MINUTES ? Math.ceil(every / DAY_MINUTES) * DAY_MINUTES : every),
         perSite: bool(raw.perSite, false),
       };
+    }
     default:
       return undefined;
   }
 }
 
+/** A condition: a limit applies at all times (earlier versions could limit only at certain times). */
 export function normalizePolicy(raw: unknown): Policy | null {
   if (!isObj(raw)) return null;
   const sched = isObj(raw.schedule) ? raw.schedule : {};
+  const budget = normalizeBudget(raw.budget);
   const p: Policy = {
     id: str(raw.id) || newId(),
-    schedule: {
-      mode: oneOf(sched.mode, ['always', 'during', 'outside'] as const, 'always'),
-      windows: normalizeWindows(sched.windows),
-    },
+    schedule: budget
+      ? { mode: 'always', windows: [] }
+      : {
+          mode: oneOf(sched.mode, ['always', 'during'] as const, 'always'),
+          windows: normalizeWindows(sched.windows),
+        },
     intervention: normalizeIntervention(raw.intervention),
   };
-  const budget = normalizeBudget(raw.budget);
   if (budget) p.budget = budget;
   return p;
 }
@@ -413,11 +444,15 @@ export function normalizeGroup(
   current?: Protection,
 ): Group | null {
   if (!isObj(raw)) return null;
+  const id = str(raw.id) || newId();
   const name = str(raw.name, '', 200);
   const pause = normalizePause(raw.pause);
+  const policy = Array.isArray(raw.policies) ? raw.policies.map(normalizePolicy).find(Boolean) : null;
+  // "Don't count" was for the times between the conditions of a rule: alone, a rule counts.
+  if (policy?.intervention.type === 'allow') policy.intervention = { type: 'track' };
   const g: Group = {
     ...raw,
-    id: str(raw.id) || newId(),
+    id,
     rev: num(raw.rev, 1, 1),
     updatedAt: num(raw.updatedAt, now),
     name: name || 'Group',
@@ -428,9 +463,15 @@ export function normalizeGroup(
     enabled: bool(raw.enabled, true),
     archived: bool(raw.archived, false),
     targets: normalizeTargets(raw.targets, errors, `Rule “${name}”`),
-    policies: Array.isArray(raw.policies)
-      ? (raw.policies.map(normalizePolicy).filter(Boolean) as Policy[])
-      : [],
+    // One condition (the migration to schema 3 split the rules that had more); without one, the
+    // rule counts the time, as it did.
+    policies: [
+      policy ?? {
+        id: `${id}-when`,
+        schedule: { mode: 'always', windows: [] },
+        intervention: { type: 'track' },
+      },
+    ],
     pause,
     protection: normalizeProtection(raw, legacy, current),
     options: mergeDefaults(defaultOptions(), raw.options),
@@ -626,7 +667,90 @@ const MIGRATIONS: Record<number, Migration> = {
     delete raw.allowlist;
     return raw;
   },
+  /**
+   * A rule has one condition, and "Outside these times" is gone: it becomes the times outside
+   * them. A rule with several conditions becomes one rule for each condition that restricts (see
+   * `ownConditions`), named after it with a number; the first keeps the rule's id.
+   */
+  2: (raw) => {
+    const dayStart = num(isObj(raw.settings) ? raw.settings.dayStart : 0, 0, 0, 720);
+    const groups: unknown[] = [];
+    for (const g of Array.isArray(raw.groups) ? raw.groups : []) {
+      if (!isObj(g) || !Array.isArray(g.policies)) {
+        groups.push(g);
+        continue;
+      }
+      const policies = g.policies
+        .map((p: unknown) => normalizePolicy(isObj(p) ? duringOnly(p, dayStart) : p))
+        .filter((p: Policy | null): p is Policy => p !== null);
+      ownConditions(policies, dayStart).forEach((policy, i) => {
+        if (i === 0) {
+          groups.push({ ...g, policies: [policy] });
+          return;
+        }
+        const n = i + 1;
+        const copy = clone(g);
+        const targets: unknown[] = Array.isArray(copy.targets) ? copy.targets : [];
+        groups.push({
+          ...copy,
+          id: g.id ? `${str(g.id)}-${n}` : newId(),
+          name: `${str(g.name, '', 190)} (${n})`,
+          targets: targets.map((t) => (isObj(t) && t.id ? { ...t, id: `${str(t.id)}-${n}` } : t)),
+          policies: [policy],
+        });
+      });
+    }
+    raw.groups = groups;
+    return raw;
+  },
 };
+
+/** "Outside these times" of earlier versions: the times outside them. */
+function duringOnly(raw: Record<string, any>, dayStart: number): Record<string, any> {
+  const s = isObj(raw.schedule) ? raw.schedule : {};
+  if (s.mode !== 'outside') return raw;
+  const bits = scheduleBitmap({ mode: 'during', windows: normalizeWindows(s.windows) }, dayStart);
+  return {
+    ...raw,
+    schedule: bitmapSchedule(
+      bits.map((b) => 1 - b),
+      dayStart,
+    ),
+  };
+}
+
+const restricts = (p: Policy) => p.intervention.type !== 'track' && p.intervention.type !== 'allow';
+
+/**
+ * The conditions of a rule of an earlier version, where the first condition that applied won,
+ * as conditions that apply on their own, every rule applying: together they restrict at least as
+ * much. A condition at certain times leaves out the times of the conditions without a limit before
+ * it; a condition that could never apply is dropped, and so are the conditions that only count or
+ * do not count, whose sites open and are counted when no condition applies (a rule that restricts
+ * nothing keeps the first that counts).
+ */
+function ownConditions(policies: Policy[], dayStart = 0): Policy[] {
+  const taken = new Uint8Array(7 * 1440);
+  const out: Policy[] = [];
+  let counting: Policy | null = null;
+  for (const p of policies) {
+    let { schedule } = p;
+    if (!p.budget) {
+      const bits = scheduleBitmap(schedule, dayStart);
+      const own = bits.map((b, i) => (b && !taken[i] ? 1 : 0));
+      bits.forEach((b, i) => {
+        if (b) taken[i] = 1;
+      });
+      if (!own.some(Boolean)) continue;
+      schedule = bitmapSchedule(own, dayStart);
+    } else if (taken.every(Boolean)) continue;
+    const q = { ...p, schedule };
+    if (restricts(q)) out.push(q);
+    else if (q.intervention.type === 'track') counting ??= q;
+  }
+  if (out.length) return out;
+  return counting ? [counting] : policies.slice(0, 1);
+}
 
 export function migrate(raw: unknown): { data: unknown; from: number; migrated: boolean } {
   if (!isObj(raw)) return { data: raw, from: 0, migrated: false };

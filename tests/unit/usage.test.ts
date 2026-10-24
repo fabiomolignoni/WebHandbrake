@@ -61,17 +61,6 @@ describe('usage', () => {
     expect(u.counterSum('shown:A', ['2026-10-05', '2026-10-06', '2026-10-07'])).toBe(4);
   });
 
-  it('tells when a rolling window falls back under its limit', () => {
-    const u = new Usage();
-    u.add(KEY, at(0, 10), 300, 0, cal);
-    u.add(KEY, at(0, 10, 20), 300, 0, cal);
-    // 600 s in the last hour, limit 400: the first 300 s leave the window at 11:01.
-    expect(u.rollingRefill(KEY, 60, 400, 0, at(0, 10, 30))).toBe(at(0, 11, 1));
-    // Already under the limit, or nothing counted: no refill to wait for.
-    expect(u.rollingRefill(KEY, 60, 1000, 0, at(0, 10, 30))).toBeNull();
-    expect(u.rollingRefill('g:none', 60, 1, 0, at(0, 10, 30))).toBeNull();
-  });
-
   it('drops minute buckets older than the retention, and empty keys', () => {
     const u = new Usage();
     u.add(KEY, at(0, 10), 10, 0, cal);
