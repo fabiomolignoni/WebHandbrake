@@ -20,7 +20,7 @@ tracking: everything stays on your device.
   again every hour, day or so many days. Start from a ready-made list or paste your own
   domains, pages, wildcards, regular expressions and exceptions. **Why?** tells you which rule
   applies and when that changes.
-- **Easy to tighten, hard to undo**: each rule has its protection: a reminder, a wait of the length
+- **Firm when you need it**: each rule has its protection: a reminder, a wait of the length
   you choose, a password, a code from a trusted person's authenticator app, a lock until a date, or
   permanent. An emergency exit always works: you wait (24 hours by default), then type a sentence.
 - **Your numbers stay on your device**: **Insights** shows your time and visits by day, rule and
@@ -44,8 +44,10 @@ Keyboard shortcuts and the right-click menu are not available on Firefox for And
 
 ## Install
 
-WebHandbrake is not in the browser stores yet. To try it, build it with Node.js (the version in
-`.nvmrc`):
+- **Firefox and Firefox for Android**:
+  [WebHandbrake on Firefox Add-ons](https://addons.mozilla.org/firefox/addon/webhandbrake/).
+
+To build it yourself, for Chrome or to try the latest code, use Node.js (the version in `.nvmrc`):
 
 ```bash
 npm ci
