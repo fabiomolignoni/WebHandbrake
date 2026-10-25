@@ -1,6 +1,6 @@
 # Privacy policy
 
-Last updated: 2026-10-19
+Last updated: 2026-10-25
 
 This policy applies to the WebHandbrake browser extension for Chrome, Firefox and Firefox for
 Android.
@@ -60,10 +60,10 @@ What is stored** shows, with their sizes.
 |---|---|---|---|---|
 | Rules and settings | Your rules and settings. The passwords of rules are kept only as salted hashes; the secret of a rule's partner code is kept as it is, because codes are checked on this device. After an update that changes the data format, a copy of the previous version is also kept until the next save. | Until you change them | **Settings › Data › Reset rules and settings…**, which waits as long as the emergency exit when it loosens an active rule | Exports: yes, the password hashes and the partner codes only if you tick **Include the passwords and the partner codes of the rules**. Backups: yes, including them. |
 | Automatic backups | Copies of your rules and settings, including the password hashes and the partner codes: one before each of the last 20 changes and one a day for 30 days. | Until newer copies replace them | Only by uninstalling WebHandbrake. **Reset** and the emergency exit do not remove them. | Not exported |
-| Breaks, sessions, pending changes and protection events | Breaks and accesses in progress (an access to a single page with its address), the last 1000 breaks taken (with the reasons that earlier versions asked for), focus sessions, pending changes, cool-downs, an emergency exit you requested, the detected clock difference, and the last 200 protection events: clock changes, settings restored from a backup, removed access to all sites or to private windows, browser blocking filters that did not match your settings, times WebHandbrake was not running, and the steps of the emergency exit. | Until they end or newer records replace them | Deleting all statistics removes the reasons of breaks | Not in exports or backups. Insights' JSON export includes the breaks. |
-| Visit tracking | For each rule and each site of a rule that you are visiting: when the visit started, how long it lasted and when you were last active. | Until the visit ends | Ends by itself | Not exported |
+| Breaks, sessions, pending changes and protection events | Breaks and accesses in progress (an access to a single page with its address), the last 1000 breaks taken (with the reasons that earlier versions asked for), focus sessions, pending changes, the limits you used up early with **Stop now**, an emergency exit you requested, the detected clock difference, and the last 200 protection events: clock changes, settings restored from a backup, removed access to all sites or to private windows, browser blocking filters that did not match your settings, times WebHandbrake was not running, and the steps of the emergency exit. | Until they end or newer records replace them | Deleting all statistics removes the reasons of breaks | Not in exports or backups. Insights' JSON export includes the breaks. |
+| Visit tracking | For each rule and each site of a rule that you are visiting: when you were last active. | Until the visit ends | Ends by itself | Not exported |
 | Daily statistics | For each day: the time and visits per rule, per site of a rule and per site (the site name, never a full address), the time on limited sites in private windows (one total, without the sites), the time on limited sites per hour, and counters of intervention pages shown, of times you continued or left, of breaks and of focus sessions. Sites outside your rules appear only with **Track time on all sites**. | 730 days by default, changed in **Settings › Time › Keep daily statistics for** | **Insights › Data › Delete data**, or **Settings › Privacy › Delete all statistics** | Exports: only if you tick **Include statistics**. **Insights › Data** also exports them as CSV or JSON. Not in backups. |
-| Recent minute counters | Time and visits per minute, per rule and per site of a rule, for limits that start again every so many minutes or hours. | 48 hours, removed by a daily clean-up, so up to about one day longer | Ends by itself | Not exported |
+| Minute-by-minute time | Time and visits per minute, per rule and per site of a rule, for limits that start again every so many minutes or hours. | 48 hours, removed by a daily clean-up, so up to about one day longer | Ends by itself | Not exported |
 | Pages saved for later | The full address and title of each page you save, also from private windows, with its rule and the time you saved it. The newest 1000 are kept. | Until you remove them | **Later › Remove** | Exports: yes. Not in backups. |
 | Sites for focus sessions | The addresses you list on **Focus** for **A few sites** and **Everything except a few sites**, and the choice you last made under **What to block**. | Until you change them | **Focus › Clear the list** | Exports: yes. Not in backups. |
 | Reasons for going in | The reason you type when WebHandbrake asks what you want to do, with the rule, the time and the minutes you chose. The newest 500 are kept. | Until you delete them | Deleting all statistics | Not in the export of **Settings › Data**. Insights' JSON export includes them. |
@@ -101,8 +101,8 @@ In Chrome, one background process serves normal and private windows.
 
 These files are not encrypted, and what happens to them is up to you.
 
-- **Exports** (**Settings › Data › Export**): your rules, settings and pages saved for later.
-  Statistics and the secrets (the password hashes and the partner codes of the rules) are
+- **Exports** (**Settings › Data › Export**): your rules, settings, pages saved for later and sites
+  for focus sessions. Statistics and the secrets (the password hashes and the partner codes of the rules) are
   included only if you tick them.
 - **Statistics exports** (**Insights › Data**): daily statistics as CSV, or as JSON together with
   the breaks (with any reasons given in earlier versions) and the reasons you gave for going in.
@@ -193,6 +193,11 @@ Every change to what WebHandbrake reads, stores or sends, or to its permissions,
 this policy, its "Last updated" date and the list below. The full history is in the
 [history of this file](https://github.com/fabiomolignoni/WebHandbrake/commits/main/PRIVACY.md).
 
+- 2026-10-25: The log of recent decisions is off until you turn it on. Daily statistics also keep
+  the time on limited sites per hour, and in private windows as one total without the sites. The
+  sites you list for focus sessions are stored and exported. Breaks no longer ask for a reason,
+  visit tracking keeps only when you were last active, and the cool-downs of limits on continuous
+  use are gone with those limits.
 - 2026-10-19: Shared lists and the Always allowed list are no longer stored or exported: their
   sites are now part of the rules. Reset is described as it works: a reset that loosens an active
   rule waits as long as the emergency exit.
