@@ -4,9 +4,13 @@
  * own entry points.
  */
 
+import { readFileSync } from 'node:fs';
 import { expect, test } from './harness';
 import { BLOCK, group, policy, REMINDER, TRACK, timeBudget } from './harness/config';
 import { expectAllowed, expectBlocked, sleep, useUntil } from './helpers';
+
+/** The version being built, which the manifest takes from package.json. */
+const VERSION = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version;
 
 test('install: the welcome page opens and the popup invites to set up', async ({ h }) => {
   await expect
@@ -125,7 +129,7 @@ test('diagnostics show the filters and recent decisions; the report hides addres
   await p.role('heading', 'Recent decisions').expectVisible();
   await p.text(/blocked\.test\/secret-path/).expectVisible();
   const report = (await h.rpc('diag.report', { includeUrls: false })).text;
-  expect(report).toContain('WebHandbrake 1.0.0');
+  expect(report).toContain(`WebHandbrake ${VERSION}`);
   expect(report).not.toContain('blocked.test');
   const full = (await h.rpc('diag.report', { includeUrls: true })).text;
   expect(full).toContain('blocked.test');
