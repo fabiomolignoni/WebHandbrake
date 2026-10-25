@@ -1,6 +1,6 @@
 {
   "name": "webhandbrake",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "A handbrake for the web: local-first, privacy-respecting browser extension to regulate your browsing with graduated friction.",
   "license": "GPL-3.0-or-later",

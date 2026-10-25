@@ -6,6 +6,8 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-25
+
 ### Added
 
 - The address guide of a rule shows how to cover every website (`*`), with exceptions for the
@@ -324,5 +326,6 @@ The first version of WebHandbrake.
   screen-reader support.
 - Firefox, Firefox for Android and Chrome from one code base.
 
-[Unreleased]: https://github.com/fabiomolignoni/WebHandbrake/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/fabiomolignoni/WebHandbrake/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/fabiomolignoni/WebHandbrake/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/fabiomolignoni/WebHandbrake/releases/tag/v1.0.0
