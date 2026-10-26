@@ -22,6 +22,7 @@ import type { TickRequest } from '../shared/rpc';
 import { updateBadge } from './badge';
 import { now } from './clock';
 import { counters } from './diagnostics-state';
+import { leavingState } from './enforce';
 import { ctx } from './engine';
 import { notify } from './notifications';
 import { reconcile } from './reconcile';
@@ -153,6 +154,8 @@ function responseFor(d: Decision, t: number, incognito: boolean, active: boolean
     filter: null,
     intention: null,
     warning: null,
+    leaving: false,
+    cover: false,
     settings: {
       timer: s.timer,
       showTimer,
@@ -229,13 +232,15 @@ export async function onTick(req: TickRequest, sender: chrome.runtime.MessageSen
       void reconcile('budget');
     }
   }
+  const res = responseFor(d, t, incognito, req.active && !locked);
   if (tab?.id !== undefined) {
     const prev = lastSeverity.get(tab.id);
     lastSeverity.set(tab.id, d.severity);
     if (prev !== undefined && prev !== d.severity && isNav(d)) void reconcile('tick-change');
     if (tab.active) void updateBadge(tab.id, req.url, incognito);
+    // A page that is still there although its decision replaces it may have refused to leave.
+    Object.assign(res, leavingState(tab, req.url, d));
   }
-  const res = responseFor(d, t, incognito, req.active && !locked);
   if (req.labels) res.labels = overlayLabels();
   return res;
 }
@@ -263,6 +268,9 @@ function overlayLabels(): Record<string, string> {
     'overlay.grace.copied',
     'overlay.timer.aria',
     'overlay.drag',
+    'overlay.cover.title',
+    'overlay.cover.body',
+    'overlay.cover.open',
   ];
   return { ...Object.fromEntries(keys.map((k) => [k, template(k)])), __locale: locale() };
 }

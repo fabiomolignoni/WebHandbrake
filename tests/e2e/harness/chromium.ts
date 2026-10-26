@@ -177,6 +177,8 @@ export async function launchChromium(opts: LaunchOptions): Promise<BrowserDriver
   };
   for (const p of context.pages()) watchPage(p);
   context.on('page', watchPage);
+  // Without a handler, Playwright answers "Leave site?" with Leave and dismisses the other dialogs.
+  if (opts.stayOnPages) context.on('dialog', (d) => void d.dismiss().catch(() => undefined));
 
   let helper: Page | null = null;
   const ready = (p: Page) => p.evaluate(() => Boolean(globalThis.chrome?.runtime?.id)).catch(() => false);

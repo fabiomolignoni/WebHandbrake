@@ -4,6 +4,7 @@
  * - Reports active time: visible + focused + recent input, or media.
  * - Shows the overlay timer, intention and warnings in an isolated shadow root.
  * - Applies filters, the grace period for unsaved text and leaves full screen.
+ * - Covers the page, with its media paused, when it refused to be replaced ("Leave site?" → Stay).
  * - Re-checks restored back/forward cache pages.
  * Nothing read from the page is stored.
  */
@@ -35,6 +36,7 @@ function start() {
   let state: TickResponse | null = null;
   let timer: ReturnType<typeof setInterval> | null = null;
   let graceUntil = 0;
+  let covered = false;
   const overlay = new Overlay();
   let filterEl: HTMLStyleElement | null = null;
 
@@ -81,9 +83,35 @@ function start() {
     tracked = res.tracked;
     applyFilter(res.filter?.css ?? null);
     overlay.update(res, labels ?? {});
-    if (!tracked) stopLoop();
+    // Not over the grace period, which comes first.
+    covered = res.cover && Date.now() >= graceUntil;
+    overlay.cover(covered, labels ?? {}, openBlockPage);
+    if (covered) still();
+    if (!tracked && !res.leaving) stopLoop();
     else startLoop();
   };
+
+  /** Asks for the block page again: the browser may ask once more whether to leave. */
+  const openBlockPage = () => {
+    void api.runtime
+      .sendMessage({ whb: 1, method: 'cs.recheck', args: { url: location.href, reason: 'cover' } })
+      .catch(() => undefined);
+  };
+
+  /** Under the cover nothing plays, in full screen or Picture-in-Picture. */
+  const still = () => {
+    for (const m of document.querySelectorAll('video, audio')) (m as HTMLMediaElement).pause();
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+    if (document.pictureInPictureElement) void document.exitPictureInPicture().catch(() => undefined);
+  };
+  // Media started again by the page stops at once.
+  document.addEventListener(
+    'play',
+    (e) => {
+      if (covered) (e.target as HTMLMediaElement).pause();
+    },
+    true,
+  );
 
   const applyFilter = (css: string | null) => {
     if (!css || css === 'none') {
@@ -102,8 +130,8 @@ function start() {
 
   const tick = async () => {
     const active = isActive(state?.settings);
-    if (!active && state && !state.timer) {
-      // Nothing to show and nothing to count: stay quiet.
+    if (!active && state && !state.timer && !state.leaving) {
+      // Nothing to show and nothing to count: stay quiet. A page to be replaced reports anyway.
       overlay.tickLocal();
       return;
     }

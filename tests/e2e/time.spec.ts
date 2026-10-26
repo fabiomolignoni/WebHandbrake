@@ -5,6 +5,7 @@
 
 import { expect, type Harness, type Tab, test } from './harness';
 import { BLOCK, group, pauseFree, policy, TRACK, timeBudget, visitBudget } from './harness/config';
+import { defaultPage } from './harness/server';
 import { expectAllowed, expectBlocked, sleep, useUntil } from './helpers';
 
 /** Seconds counted today on the sites of every rule ("on limited sites today"). */
@@ -179,4 +180,71 @@ test('typing in a page gives a grace period with a countdown and a copy button',
   expect(await p.isIntervention()).toBe(false);
   await p.expectIntervention(true, 12_000);
   expect(Date.now() - t0).toBeGreaterThan(3500);
+});
+
+test.describe('a page that asks before it is left', () => {
+  // "Leave site?" is answered Stay.
+  test.use({ launch: { stayOnPages: true } });
+
+  /**
+   * A game: once played (a click, which lets a page ask before it is left) it plays a video and
+   * asks "Leave site?" until `leave` is set. `asked` counts the times it was asked to leave.
+   */
+  const GAME = `<button id="play" type="button">Play</button>
+<script>
+  window.asked = 0;
+  addEventListener('beforeunload', (e) => {
+    window.asked++;
+    if (!window.leave) { e.preventDefault(); e.returnValue = ''; }
+  });
+  document.getElementById('play').addEventListener('click', () => {
+    const canvas = document.createElement('canvas');
+    const g = canvas.getContext('2d');
+    setInterval(() => { g.fillStyle = '#' + Math.floor(Math.random() * 4096).toString(16); g.fillRect(0, 0, 50, 50); }, 100);
+    const video = document.createElement('video');
+    video.muted = true;
+    video.srcObject = canvas.captureStream(10);
+    document.body.append(video);
+    video.play();
+  });
+</script>`;
+
+  test('that stays when its time is up is covered, with its media paused', async ({ h }) => {
+    h.server.route('game.test', (r) => ({ body: defaultPage(r.host, r.path, GAME) }));
+    await h.configure((c) => {
+      c.groups = [group('Games', ['game.test'], [policy(BLOCK, { budget: timeBudget(0.1) })])];
+    });
+    const p = await expectAllowed(h, 'http://game.test/');
+    const paused = () => p.eval(() => document.querySelector('video')?.paused ?? null);
+    const asked = () => p.eval(() => (window as unknown as { asked: number }).asked);
+    await p.button('Play').click();
+    await expect.poll(paused).toBe(false);
+    // Used until its time is up, when it is asked to leave and stays.
+    await useUntil(p, async () => (await asked()) > 0, 30_000);
+    expect(await asked()).toBeGreaterThan(0);
+    // Within seconds it is covered, without anything playing.
+    const cover = p.role('alertdialog', 'Time is up for this site.', { within: 'webhandbrake-overlay' });
+    await cover.expectVisible(5000);
+    expect(await p.isIntervention()).toBe(false);
+    expect(await paused()).toBe(true);
+    await p.eval(
+      () =>
+        void document
+          .querySelector('video')!
+          .play()
+          .catch(() => undefined),
+    );
+    await expect.poll(paused).toBe(true);
+    // It is asked again every few seconds, and stays covered meanwhile.
+    const before = await asked();
+    await expect.poll(asked, { timeout: 10_000 }).toBeGreaterThan(before);
+    await cover.expectVisible(1000);
+    expect(await p.isIntervention()).toBe(false);
+    // Once the page lets go, the button of the cover opens the block page, before the next time.
+    await p.eval(() => {
+      (window as unknown as { leave: boolean }).leave = true;
+    });
+    await p.button('Open the block page', { within: 'webhandbrake-overlay' }).click();
+    await p.expectIntervention(true, 3000);
+  });
 });

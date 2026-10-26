@@ -39,6 +39,18 @@ export const interventionTabs = new Map<
  * the choice to go on or to leave.
  */
 export const replacedTabs = new Map<number, string>();
+/**
+ * Pages to be replaced, as their content script reports them: tab id → when the page was last
+ * asked to leave (`asked`), or first reported without that (the reconciliation that asks is on its
+ * way, or the background started again). A page can refuse ("Leave site?" → Stay), as games and
+ * editors ask: it then covers itself (`refused`) and is asked again. Forgotten when the tab opens
+ * another page or the page may stay.
+ */
+const leavingTabs = new Map<number, { at: number; asked: boolean; refused: boolean }>();
+/** A page still open this long after it was asked to leave refused to. */
+const REFUSED_MS = 1500;
+/** How often a page that refused to leave is asked again. */
+const RETRY_MS = 5000;
 
 /**
  * The pages from which WebHandbrake can be turned off or removed: the extension managers, the
@@ -130,7 +142,40 @@ function shouldEnforce(d: Decision, tab: chrome.tabs.Tab, onNavigation: boolean)
 
 async function redirectTab(tabId: number, url: string) {
   counters.enforcements++;
+  leavingTabs.set(tabId, { at: now(), asked: true, refused: leavingTabs.get(tabId)?.refused ?? false });
   await quiet(updateTab(tabId, { url: interventionUrl(url) }));
+}
+
+/**
+ * What the page of a tick is to do when its decision replaces it: report until it is replaced,
+ * even unused (`leaving`), and cover itself once it refused to leave (`cover`). Such a page is
+ * asked again every few seconds. Not during a grace period, which the page shows itself.
+ */
+export function leavingState(
+  tab: chrome.tabs.Tab,
+  url: string,
+  d: Decision,
+): { leaving: boolean; cover: boolean } {
+  const id = tab.id;
+  if (id === undefined) return { leaving: false, cover: false };
+  if (!shouldEnforce(d, tab, false)) {
+    leavingTabs.delete(id);
+    return { leaving: false, cover: false };
+  }
+  if (graceTabs.has(id)) return { leaving: true, cover: false };
+  const t = now();
+  const page = leavingTabs.get(id);
+  if (!page) {
+    leavingTabs.set(id, { at: t, asked: false, refused: false });
+    return { leaving: true, cover: false };
+  }
+  if (page.asked && t - page.at >= REFUSED_MS) page.refused = true;
+  if (t - page.at >= RETRY_MS) {
+    page.at = t;
+    if (page.asked) void redirectTab(id, url);
+    else void enforceTab({ ...tab, url }, 'state');
+  }
+  return { leaving: true, cover: page.refused };
 }
 
 /**
@@ -277,6 +322,7 @@ export function registerNavigationListeners(onCommitted: (tabId: number, url: st
     nav.onCommitted,
     'webNavigation.onCommitted',
     onTopFrame((d) => {
+      leavingTabs.delete(d.tabId);
       void checkNavigation(d.tabId, d.url, 'navigation');
       onCommitted(d.tabId, d.url);
     }),
@@ -359,6 +405,7 @@ export function registerTabListeners(
   listenEverywhere(api.tabs.onRemoved, 'tabs.onRemoved', (tabId) => {
     graceTabs.delete(tabId);
     replacedTabs.delete(tabId);
+    leavingTabs.delete(tabId);
     onRemoved(tabId);
     const info = interventionTabs.get(tabId);
     interventionTabs.delete(tabId);

@@ -1202,7 +1202,7 @@
     "message": "On every block page you can close the tab or go back. You can also save the page for later: you find it in Later once it opens again."
   },
   "help.interventions.p3": {
-    "message": "If a site is about to be blocked while you are typing, you get {seconds} seconds to finish or copy your text."
+    "message": "If a site is about to be blocked while you are typing, you get {seconds} seconds to finish or copy your text. A page that asks you to stay on it (“Leave site?”) is covered, with its videos and sounds paused, until you leave it."
   },
   "help.interventions.title": {
     "message": "What can happen on a site"
@@ -2254,6 +2254,16 @@
   },
   "notify.sessionEnd.title": {
     "message": "Focus session over"
+  },
+  "overlay.cover.body": {
+    "message": "This page asked to stay open, so it stays covered until you leave it. If the browser asks whether to leave the page, choose Leave.",
+    "description": "Over a page that should have been replaced by the block page, but whose “Leave site?” question was answered Stay"
+  },
+  "overlay.cover.open": {
+    "message": "Open the block page"
+  },
+  "overlay.cover.title": {
+    "message": "Time is up for this site."
   },
   "overlay.dismiss": {
     "message": "OK"
