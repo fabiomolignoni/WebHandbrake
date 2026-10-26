@@ -291,8 +291,16 @@ test.describe('delay', () => {
     await p.expectReal('grow.test/');
     // The pass covers grow.test for the visit; the next site of the rule waits longer.
     expect(await seconds('http://grow-too.test/')).toBe(4);
+    // Asked again while the first request is open, the page gets it again: no new draw.
+    const first = (await h.rpc('intervention.get', { url: 'http://random.test/' })).ticket;
+    expect((await h.rpc('intervention.get', { url: 'http://random.test/' })).ticket).toEqual(first);
+    await h.rpc('ticket.cancel', { id: first.id });
     const waits = new Set<number>();
-    for (let i = 0; i < 8; i++) waits.add(await seconds('http://random.test/'));
+    for (let i = 0; i < 8; i++) {
+      const { ticket } = await h.rpc('intervention.get', { url: 'http://random.test/' });
+      waits.add(ticket.step.seconds);
+      await h.rpc('ticket.cancel', { id: ticket.id });
+    }
     for (const s of waits) expect(s >= 2 && s <= 6).toBe(true);
     expect(waits.size).toBeGreaterThan(1);
   });

@@ -568,7 +568,9 @@ function PassStep({
     let done = false;
     try {
       const r = await call('ticket.answer', { id: ticket.id, answer: value, minutes });
-      if (r.status === 'done') {
+      // A ticket already used is that of another page of the same site, which went in: the page
+      // looks again, and goes in too or asks anew.
+      if (r.status === 'done' || (r.status === 'error' && r.error === 'ticket.error.expired')) {
         done = true;
         onPassed();
       } else if (r.status === 'next') {

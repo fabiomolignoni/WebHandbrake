@@ -25,6 +25,11 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ### Fixed
 
+- Breaks can no longer go beyond their limits when several are asked for at once, each with its
+  cost still to answer: how many breaks and minutes are left is checked again as a break starts,
+  and one that no longer fits is refused with the reason.
+- A random wait, or one that grows with every visit, can no longer be made shorter by opening the
+  block page again or in several tabs: the pages that ask to go into the same site share one wait.
 - A system clock that was ahead for a while and was then put right, as when it synchronizes after
   the computer starts, no longer keeps WebHandbrake ahead of the right time for good: schedules,
   limits, sessions and breaks follow the right time again as soon as a few websites confirm it,

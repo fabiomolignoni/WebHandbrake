@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { compileConfig } from '../../src/engine/compile';
 import { delayIntervention } from '../../src/engine/defaults';
-import type { Config, FocusSession, Group } from '../../src/engine/types';
+import type { Config, FocusSession, Group, Intervention } from '../../src/engine/types';
 import { type FakeBrowser, installFakeBrowser } from './fake-browser';
 import { BLOCK, group, REMINDER } from './helpers';
 
@@ -111,6 +111,44 @@ describe('the intervention page', () => {
     });
     const c = await t.model('https://c.test/');
     expect(c.ticket?.step.type).toBe('math');
+  });
+
+  it('pages that ask for the same access share one request, with the same wait', async () => {
+    const random = { ...delayIntervention(10), randomTo: 600 } as ReturnType<typeof delayIntervention>;
+    const page = (seconds: number) =>
+      ({ ...delayIntervention(seconds), grant: { scope: 'page', mode: 'visit' } }) as Intervention;
+    const t = await setup([
+      group('D', ['d.test'], [{ intervention: random }]),
+      group('P', ['p.test'], [{ intervention: page(10) }]),
+    ]);
+    fake.tabs.push({ id: 2, url: `${PAGE}#https://d.test/b`, incognito: false, active: true });
+    const other = { tab: { id: 2, incognito: false }, url: PAGE } as chrome.runtime.MessageSender;
+    const first = await t.model('https://d.test/a');
+    vi.setSystemTime(T0 + 5000);
+    // Another page of the site, a moment later: the same request, waiting until the same time.
+    const second = await t.intervention.interventionModel('https://d.test/b', other);
+    expect(second.ticket).toEqual(first.ticket);
+    expect(first.ticket?.step).toMatchObject({ type: 'wait' });
+    // Opened again, the page does not draw another wait either.
+    expect((await t.model('https://d.test/a')).ticket).toEqual(first.ticket);
+    // A pass for one page: another page of the site asks for another access.
+    const p1 = (await t.model('https://p.test/1')).ticket!;
+    expect((await t.model('https://p.test/2')).ticket!.id).not.toBe(p1.id);
+    expect((await t.model('https://p.test/1')).ticket!.id).toBe(p1.id);
+    // A rule changed since asks as it is now.
+    t.store.config.groups[1].policies[0].intervention = page(20);
+    t.store.cc = compileConfig(t.store.config);
+    expect((await t.model('https://p.test/1')).ticket).toMatchObject({ step: { seconds: 20 } });
+    // The access given from one page lets the other one in, and the next request is a new one.
+    vi.setSystemTime(T0 + 600_000);
+    expect(await t.tickets.answerTicket(first.ticket!.id, '')).toMatchObject({ status: 'done' });
+    expect(await t.tickets.answerTicket(second.ticket!.id, '')).toEqual({
+      status: 'error',
+      error: 'ticket.error.expired',
+    });
+    expect((await t.intervention.interventionModel('https://d.test/b', other)).kind).toBe('allow');
+    t.store.state.grants = [];
+    expect((await t.model('https://d.test/a')).ticket!.id).not.toBe(first.ticket!.id);
   });
 
   it('a redirect fills in its placeholders; an address that is not a web page blocks', async () => {
