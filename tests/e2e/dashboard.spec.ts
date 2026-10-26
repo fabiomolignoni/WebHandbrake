@@ -386,7 +386,7 @@ test('Help lists the keys the browser gave the shortcuts, and opens its shortcut
   expect(await items.texts()).toEqual([
     'Alt+Shift+1 — open the popup',
     'Alt+Shift+2 — start a 25-minute focus session',
-    'Alt+Shift+3 — block the current site',
+    'Alt+Shift+3 — choose how to block the current site',
     'No key — open the dashboard',
   ]);
   const settings = await h.newTab(() => p.button('Change shortcuts').click());

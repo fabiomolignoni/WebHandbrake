@@ -17,6 +17,7 @@
  */
 
 import { api, quiet } from '../platform/api';
+import { openBlockSitePanel } from '../shared/block-site';
 
 /** From the private background to the main one. */
 const UP = 'bridge:up';
@@ -422,7 +423,13 @@ export function relayPrivateWindows() {
   }
 
   api.contextMenus?.onClicked?.addListener(relayEvent('contextMenus.onClicked', byTabArg));
-  api.commands?.onCommand?.addListener(relayEvent('commands.onCommand', byTabArg));
+  const command = relayEvent('commands.onCommand', byTabArg);
+  api.commands?.onCommand?.addListener((name, tab) => {
+    // The popup of a private window opens from here: the main background cannot reach the window.
+    // Only when it cannot open does the main background block the site another way.
+    if (name === 'block-site') void openBlockSitePanel(tab).then((open) => open || command(name, tab));
+    else command(name, tab);
+  });
 
   api.storage.onChanged.addListener((changes, area) => {
     if (area !== 'session') return;

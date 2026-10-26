@@ -1342,7 +1342,7 @@
     "message": "When a rule applies"
   },
   "help.shortcut.block": {
-    "message": "block the current site"
+    "message": "choose how to block the current site"
   },
   "help.shortcut.dashboard": {
     "message": "open the dashboard"

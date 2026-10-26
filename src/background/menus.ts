@@ -5,7 +5,7 @@ import { DEFAULT_SESSION_MINUTES, QUICK_SESSION_MINUTES } from '../engine/limits
 import { targetFor } from '../engine/page-target';
 import { t } from '../i18n/i18n';
 import { api, extensionUrl, features, quiet } from '../platform/api';
-import { newRuleRoute } from '../shared/block-site';
+import { newRuleRoute, openBlockSitePanel } from '../shared/block-site';
 import type { Granularity } from '../shared/rpc';
 import { listenEverywhere, sharePrivateMenus } from './bridge';
 import { addPage, defaultAddGroup } from './pages';
@@ -125,6 +125,10 @@ export function registerMenuClicks() {
 
 /** A keyboard shortcut. */
 export async function onCommand(command: string, tab?: chrome.tabs.Tab) {
+  // "Block this site" opens the popup on its panel, before anything is awaited (openBlockSitePanel).
+  // In Chrome a private tab's command comes from the private windows' background, which tried.
+  const panel =
+    command === 'block-site' && !(__TARGET__ === 'chrome' && tab?.incognito) ? openBlockSitePanel(tab) : null;
   await store.ready();
   if (command === 'start-session') {
     // Without a rule for quick sessions, the Focus page says how to choose them.
@@ -144,10 +148,11 @@ export async function onCommand(command: string, tab?: chrome.tabs.Tab) {
   } else if (command === 'open-dashboard') {
     await quiet(api.tabs.create({ url: extensionUrl('dashboard.html') }));
   } else if (command === 'block-site') {
+    if (await panel) return;
     const active = tab ?? (await quiet(api.tabs.query({ active: true, currentWindow: true })))?.[0];
     if (!active?.url) return;
-    // A rule that blocks the site right now and keeps blocking it, or else a new one in the rule
-    // editor: the shortcut is "block", not "add".
+    // Without the popup: a rule that blocks the site right now and keeps blocking it, or else a new
+    // one in the rule editor. The shortcut is "block", not "add".
     const url = active.url;
     if (!targetFor(url, 'domain')) return;
     const groupId = defaultAddGroup(url, 'domain');

@@ -45,9 +45,18 @@ function event() {
  *
  * `incognito` with `sharedWith`: the background of Chrome's private windows, which shares the
  * storage (and its change events) of the main one but has tabs and events of its own.
+ *
+ * `openPopup`: the browser has action.openPopup (Chrome 127, Firefox), which records each popup
+ * it opens in `popups`; a test makes it fail by replacing `action.openPopup`.
  */
 export function installFakeBrowser(
-  opts: { chrome?: boolean; tabs?: Tab[]; incognito?: boolean; sharedWith?: SharedStorage } = {},
+  opts: {
+    chrome?: boolean;
+    tabs?: Tab[];
+    incognito?: boolean;
+    sharedWith?: SharedStorage;
+    openPopup?: boolean;
+  } = {},
 ) {
   const tabs = opts.tabs ?? [];
   const local = opts.sharedWith?.local ?? new Map<string, unknown>();
@@ -127,7 +136,11 @@ export function installFakeBrowser(
   };
   /** The popup of the toolbar button: the manifest's until the extension sets one. */
   const popup = { value: 'popup.html' };
-  const action = {
+  const popups: chrome.action.OpenPopupOptions[] = [];
+  const action: Record<string, any> = {
+    ...(opts.openPopup
+      ? { openPopup: async (o: chrome.action.OpenPopupOptions = {}) => void popups.push(o) }
+      : {}),
     setPopup: async (o: { popup: string }) => void (popup.value = o.popup),
     onClicked: event(),
     setBadgeText: async (o: { tabId: number; text: string }) => void (badge(o.tabId).text = o.text),
@@ -295,6 +308,7 @@ export function installFakeBrowser(
     events,
     action,
     popup,
+    popups,
   };
 }
 

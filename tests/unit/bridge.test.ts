@@ -29,7 +29,7 @@ async function settle() {
 }
 
 /** Loads the modules of each background with its own browser API, as two service workers would. */
-async function start(opts: { relay?: boolean } = {}) {
+async function start(opts: { relay?: boolean; openPopup?: boolean } = {}) {
   vi.resetModules();
   main = installFakeBrowser({
     chrome: true,
@@ -41,7 +41,13 @@ async function start(opts: { relay?: boolean } = {}) {
   handle = () => false;
   bridge.listenToPrivateWindows((m, s, r) => handle(m, s, r));
   vi.resetModules();
-  priv = installFakeBrowser({ chrome: true, incognito: true, sharedWith: main, tabs: [{ ...privateTab }] });
+  priv = installFakeBrowser({
+    chrome: true,
+    incognito: true,
+    sharedWith: main,
+    tabs: [{ ...privateTab }],
+    openPopup: opts.openPopup,
+  });
   privateBridge = await import('../../src/background/bridge');
   privateApi = (globalThis as any).chrome;
   if (opts.relay !== false) privateBridge.relayPrivateWindows();
@@ -118,6 +124,28 @@ describe("Chrome's private windows: one background decides, the private one rela
     expect(native).toEqual([
       { tabId: 7, windowId: 2 },
       { tabId: 1, windowId: 1 },
+    ]);
+  });
+
+  it('the "Block this site" shortcut opens the popup of a private window from its own background', async () => {
+    await start({ openPopup: true });
+    const seen: unknown[] = [];
+    bridge.onPrivate('commands.onCommand', (...args) => void seen.push(args));
+    priv.events.onCommand.fire('block-site', { ...privateTab, windowId: 3 });
+    await settle();
+    expect(priv.popups).toEqual([{ windowId: 3 }]);
+    expect(seen).toEqual([]);
+    // The popup cannot open: the main background blocks the site another way.
+    priv.action.openPopup = async () => {
+      throw new Error('Browser window is not active.');
+    };
+    priv.events.onCommand.fire('block-site', privateTab);
+    // Other shortcuts are relayed as they are.
+    priv.events.onCommand.fire('start-session', privateTab);
+    await settle();
+    expect(seen).toEqual([
+      ['start-session', privateTab],
+      ['block-site', privateTab],
     ]);
   });
 
