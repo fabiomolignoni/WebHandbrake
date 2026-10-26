@@ -316,6 +316,24 @@ test('a clock set backwards is detected and time does not go back', async ({ h }
   await p.text(/clock/i, { within: 'main' }).expectVisible();
 });
 
+test('a clock that was ahead and was put right counts again once websites confirm it', async ({ h }) => {
+  const later = Date.now() + 3 * HOUR;
+  await h.clock.set(later);
+  await h.rpc('overview.get');
+  // The system clock is put right: until websites confirm it, the time does not go back.
+  const back = await h.rpc('test.clock', { set: Date.now(), detect: true });
+  expect(back.now).toBeGreaterThanOrEqual(later);
+  // Three sites send the right time in their Date header.
+  for (const host of ['one.test', 'two.test', 'three.test'])
+    await (await h.open(`http://${host}/`)).expectReal(`${host}/`);
+  await expect.poll(async () => Math.abs((await h.clock.now()) - Date.now())).toBeLessThan(60_000);
+  const kinds = (await h.state()).state.tamper.map((e: any) => e.kind);
+  expect(kinds).toContain('clock-backward');
+  expect(kinds).toContain('clock-realigned');
+  const p = await h.page('dashboard.html#/protection');
+  await p.text(/min ahead\. Websites confirmed the right time/, { within: 'main' }).expectVisible();
+});
+
 test('a clock set forward is corrected with the Date of web responses (no extra request)', async ({ h }) => {
   const ahead = new Date(Date.now() + 2 * HOUR).toUTCString();
   for (const host of ['one.test', 'two.test', 'three.test'])

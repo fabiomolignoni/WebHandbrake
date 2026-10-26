@@ -25,6 +25,10 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ### Fixed
 
+- A system clock that was ahead for a while and was then put right, as when it synchronizes after
+  the computer starts, no longer keeps WebHandbrake ahead of the right time for good: schedules,
+  limits, sessions and breaks follow the right time again as soon as a few websites confirm it,
+  and **Protection › Events** says so. A clock set back without that confirmation is still ignored.
 - A page that asks before you leave it (“Leave site?”), as games and editors do, no longer stays
   usable when its time is up or a rule starts to apply to it: if you choose to stay, WebHandbrake
   covers the page and pauses its videos and sounds, and asks again every few seconds. **Open the

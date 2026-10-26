@@ -3,7 +3,8 @@
  *
  * - Backward jumps of the system clock are detected by comparing the wall clock with a monotonic
  *   clock and with the highest time ever seen; the trusted time never goes backwards
- *   (conservative behaviour: restrictions last longer, budgets never refill early).
+ *   (conservative behaviour: restrictions last longer, budgets never refill early), unless the
+ *   Date headers confirm an earlier time (a clock that was ahead and was put right).
  * - Forward jumps are detected by comparing the clock with the Date header of HTTP responses the
  *   browser already receives (no additional requests, no data stored).
  */
@@ -152,6 +153,24 @@ export function addSample(host: string, offset: number) {
     }
   } else if (current !== 0) {
     store.state.clockOffset = 0;
+    void store.saveState();
+  }
+  // A time seen ahead of the confirmed one comes from a system clock that was ahead (or corrected)
+  // and went back before the sites could tell. The sites do not depend on the system clock, so the
+  // time goes back to the confirmed one; a clock set back without them keeps the highest time seen.
+  const confirmed = Date.now() + (store.state.clockOffset || 0) + testOffset;
+  const seen = Math.max(
+    store.state.lastWall || 0,
+    anchor ? Math.round(anchor.trusted + (monotonic() - anchor.mono)) : 0,
+  );
+  if (seen - confirmed > CLOCK_SKEW_THRESHOLD_MS) {
+    store.state.lastWall = confirmed;
+    anchor = null;
+    store.addTamper({
+      at: confirmed,
+      kind: 'clock-realigned',
+      detail: String(Math.round((seen - confirmed) / 60_000)),
+    });
     void store.saveState();
   }
 }

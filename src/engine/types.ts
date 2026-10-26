@@ -431,6 +431,7 @@ export interface TamperEvent {
   kind:
     | 'clock-backward'
     | 'clock-skew'
+    | 'clock-realigned'
     | 'state-restored'
     | 'host-permission'
     | 'private-access'
