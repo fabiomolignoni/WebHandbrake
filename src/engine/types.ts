@@ -351,6 +351,12 @@ export interface Grant {
   until?: number;
   /** Ends with the visit. */
   visit?: boolean;
+  /**
+   * A visit that no tab shows since a tab went to another page: when, and that tab. It ends unless
+   * a tab shows it again within VISIT_RETURN_MS, or at once when that tab is closed.
+   */
+  leftAt?: number;
+  leftTab?: number;
   /** Highest intervention severity this grant lets through. */
   severity: number;
   intention?: string;

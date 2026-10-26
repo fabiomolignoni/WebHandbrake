@@ -3,8 +3,10 @@
  * and filters, operated with real clicks and keystrokes.
  */
 
-import { expect, test } from './harness';
-import { ask, BLOCK, challenge, delay, filter, group, policy, REMINDER } from './harness/config';
+import { VISIT_RETURN_MS } from '../../src/engine/limits';
+import { expect, type Tab, test } from './harness';
+import { ask, BLOCK, challenge, delay, filter, group, pauseFree, policy, REMINDER } from './harness/config';
+import { defaultPage } from './harness/server';
 import { challengeCode, expectAllowed, expectBlocked, sleep } from './helpers';
 
 const today = () => {
@@ -164,13 +166,57 @@ test.describe('delay', () => {
     await expect.poll(passes).toBe(0);
     await h.rpc('test.reconcile');
     const q = await expectBlocked(h, 'http://wait.test/');
-    // Leaving the site in the same tab ends it too.
     await q.button('Continue', { exact: true }).click(6000);
     await q.expectReal('wait.test/');
+    // A sign-in on another site that comes back to the site in the same tab keeps it.
+    await q.goto('http://accounts.signin.test/');
+    await q.expectReal('accounts.signin.test/');
+    await q.goto('http://wait.test/auth/callback');
+    await q.expectReal('wait.test/auth/callback');
+    expect(await passes()).toBe(1);
+    // Leaving the site in the same tab, and staying away, ends it too.
     await q.goto('http://elsewhere.test/');
+    await q.expectReal('elsewhere.test/');
+    await h.clock.advance(VISIT_RETURN_MS);
     await expect.poll(passes).toBe(0);
-    await h.rpc('test.reconcile');
     await expectBlocked(h, 'http://wait.test/');
+  });
+
+  test('going in from the page leads straight to the site, without "available again" on the way (regression)', async ({
+    h,
+  }) => {
+    await h.configure((c) => {
+      c.groups = [
+        group('Wait', ['wait.test'], [policy(delay(1))]),
+        group('News', ['news.test'], [policy(BLOCK)], { pause: { ...pauseFree, cost: { type: 'none' } } }),
+      ];
+    });
+    // Slow sites: the page stays in view while they load. It notes "available again" where the
+    // test can read it once the page is gone.
+    h.server.route(/^(wait|news)\.test$/, (r) => ({ body: defaultPage(r.host, r.path), delayMs: 2000 }));
+    const watch = (p: Tab) =>
+      p.eval(() => {
+        new MutationObserver(() => {
+          if (document.querySelector('.banner.ok'))
+            void chrome.storage.session.set({ 'test.availableAgain': true });
+        }).observe(document.body, { childList: true, subtree: true });
+      });
+    const shown = () =>
+      h.control.eval(() =>
+        chrome.storage.session.get('test.availableAgain').then((r) => Boolean(r['test.availableAgain'])),
+      );
+    const wait = await expectBlocked(h, 'http://wait.test/');
+    await watch(wait);
+    await wait.button('Continue', { exact: true }).click(6000);
+    await wait.expectReal('wait.test/', 8000);
+    expect(await shown()).toBe(false);
+    // A break taken on the page, the same.
+    const news = await expectBlocked(h, 'http://news.test/');
+    await watch(news);
+    await news.button(/Take a break/).click();
+    await news.button('Start the break').click();
+    await news.expectReal('news.test/', 8000);
+    expect(await shown()).toBe(false);
   });
 
   test('a pass for one page leaves the rest of the site restricted', async ({ h }) => {

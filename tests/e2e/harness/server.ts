@@ -19,6 +19,8 @@ export interface Reply {
   status?: number;
   headers?: Record<string, string>;
   body?: string;
+  /** Answers this long after the request: a slow site. */
+  delayMs?: number;
 }
 
 type Route = { host: string | RegExp; path?: string | RegExp; reply: (req: LoggedRequest) => Reply };
@@ -64,8 +66,12 @@ export class TestServer {
         return;
       }
       const reply = route?.reply(logged) ?? { body: defaultPage(host, path) };
-      res.writeHead(reply.status ?? 200, { 'content-type': 'text/html; charset=utf-8', ...reply.headers });
-      res.end(reply.body ?? '');
+      const send = () => {
+        res.writeHead(reply.status ?? 200, { 'content-type': 'text/html; charset=utf-8', ...reply.headers });
+        res.end(reply.body ?? '');
+      };
+      if (reply.delayMs) setTimeout(send, reply.delayMs);
+      else send();
     });
   }
 

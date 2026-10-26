@@ -59,15 +59,19 @@ function go(url: string) {
 /**
  * Goes (back) to the blocked URL. Local files and browser pages cannot be opened by an extension
  * page: the background reopens them in this tab, or, where the browser refuses it, history.back()
- * returns to them (they were replaced after loading, so they are in the history).
+ * returns to them (they were replaced after loading, so they are in the history). False when the
+ * page cannot be left.
  */
-async function returnTo(url: string) {
+async function returnTo(url: string): Promise<boolean> {
   if (/^https?:\/\//i.test(url)) {
     location.replace(url);
-    return;
+    return true;
   }
   const r = await call('tabs.reopen', { url }).catch(() => ({ ok: false }));
-  if (!r.ok && history.length > 1) history.back();
+  if (r.ok) return true;
+  if (history.length < 2) return false;
+  history.back();
+  return true;
 }
 
 let customSheet: CSSStyleSheet | null = null;
@@ -173,9 +177,20 @@ function App() {
     titleRef.current?.focus();
   }, [m?.kind, m?.group?.id]);
 
+  // Going in from this page: 'asking' while an answer or a break being taken may let the page
+  // through, 'leaving' once the site opens. The change that lets it through is then the person's
+  // own: the page goes on to the site, without showing "available again" in the meantime. A change
+  // put off this way is looked at if the person stays.
+  const going = useRef<false | 'asking' | 'leaving'>(false);
+  const missed = useRef(false);
+
   // When the restriction ends, offer to reopen the page (or reopen automatically).
   const recheck = async () => {
     if (!m || m.kind === 'selftest' || m.kind === 'allow') return;
+    if (going.current) {
+      missed.current = true;
+      return;
+    }
     const d: DecisionView = await call('explain', { url });
     if (!isNav(d)) {
       const settings = (await call('config.get', {})).config.settings;
@@ -187,6 +202,11 @@ function App() {
     }
   };
   useEffect(() => onBackgroundChange(() => void recheck()), [m]);
+  const stay = (check = missed.current) => {
+    going.current = false;
+    missed.current = false;
+    if (check) void recheck();
+  };
   useEffect(() => {
     if (!m?.until) return;
     const delay = m.until - Date.now() + 800;
@@ -194,10 +214,10 @@ function App() {
     const id = setTimeout(() => void recheck(), delay);
     return () => clearTimeout(id);
   }, [m?.until]);
-  // Coming back with the back button re-checks.
+  // Coming back with the back button re-checks: the person is here again.
   useEffect(() => {
     const onShow = (e: PageTransitionEvent) => {
-      if (e.persisted) void recheck();
+      if (e.persisted) stay(true);
     };
     window.addEventListener('pageshow', onShow);
     return () => window.removeEventListener('pageshow', onShow);
@@ -253,8 +273,12 @@ function App() {
   const passed = async () => {
     // Another rule may still restrict the page: it asks next, here.
     const d = await call('explain', { url }).catch(() => null);
-    if (d && isNav(d)) return void load();
-    if (bounceGuard(url)) void returnTo(url);
+    if (d && isNav(d)) {
+      stay(false);
+      return void load();
+    }
+    going.current = 'leaving';
+    if (!bounceGuard(url) || !(await returnTo(url))) stay(true);
   };
   const passable = Boolean(m.ticket) && !reopen;
 
@@ -317,7 +341,14 @@ function App() {
         )}
 
         {passable ? (
-          <PassStep key={m.ticket!.id} ticket={m.ticket!} model={m} onPassed={passed} onClose={closeTab} />
+          <PassStep
+            key={m.ticket!.id}
+            ticket={m.ticket!}
+            model={m}
+            onAnswer={(on) => (on ? (going.current = 'asking') : stay())}
+            onPassed={passed}
+            onClose={closeTab}
+          />
         ) : (
           m.kind !== 'selftest' && (
             <div class="actions">
@@ -341,7 +372,13 @@ function App() {
         )}
 
         {m.pause && m.kind !== 'session' && !reopen && (
-          <BreakOffer pause={m.pause} onTake={() => setPauseOpen(true)} />
+          <BreakOffer
+            pause={m.pause}
+            onTake={() => {
+              going.current = 'asking';
+              setPauseOpen(true);
+            }}
+          />
         )}
         {m.kind === 'session' && m.locked && <p class="small muted">{t('iv.session.locked')}</p>}
       </div>
@@ -349,8 +386,14 @@ function App() {
         <PauseDialog
           options={m.pause}
           url={url}
-          onClose={() => setPauseOpen(false)}
-          onStarted={() => void returnTo(url)}
+          onClose={() => {
+            setPauseOpen(false);
+            if (going.current === 'asking') stay();
+          }}
+          onStarted={() => {
+            going.current = 'leaving';
+            void returnTo(url).then((left) => left || stay(true));
+          }}
         />
       )}
       <Toasts />
@@ -451,11 +494,14 @@ const RING = 2 * Math.PI * 46;
 function PassStep({
   ticket: initial,
   model,
+  onAnswer,
   onPassed,
   onClose,
 }: {
   ticket: TicketView;
   model: InterventionModel;
+  /** An answer is on its way (true), or it did not let the page through (false). */
+  onAnswer: (on: boolean) => void;
   onPassed: () => void;
   onClose: () => void;
 }) {
@@ -518,10 +564,14 @@ function PassStep({
     }
     setBusy(true);
     setError(null);
+    onAnswer(true);
+    let done = false;
     try {
       const r = await call('ticket.answer', { id: ticket.id, answer: value, minutes });
-      if (r.status === 'done') onPassed();
-      else if (r.status === 'next') {
+      if (r.status === 'done') {
+        done = true;
+        onPassed();
+      } else if (r.status === 'next') {
         // A new step starts empty: what was typed for the previous one does not carry over.
         setTicket(r.ticket);
         setValue('');
@@ -532,6 +582,7 @@ function PassStep({
         if (r.ticket) setTicket(r.ticket);
       }
     } finally {
+      if (!done) onAnswer(false);
       setBusy(false);
     }
   };

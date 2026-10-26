@@ -10,9 +10,19 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 - On Firefox for Android, WebHandbrake in the Extensions menu opens the dashboard instead of the
   popup, in its tab when it is already open.
+- The text under the countdown of a wait no longer tells you to breathe slowly: it says when you
+  can continue.
 
 ### Fixed
 
+- Signing in on another site (**Sign in with Google**) and coming back no longer asks for the wait
+  or the challenge again: an access for the rest of the visit gives a tab that leaves the site 2
+  minutes to come back. Closing the tab still ends the visit at once.
+- Going in from the block page, after a wait, a question or a challenge or with a break, leads
+  straight to the site: the page no longer shows “This page is available again.” for a moment on
+  the way.
+- A phone’s keyboard no longer corrects the addresses typed in a rule’s sites, in the list of a
+  focus session or in **Test an address**.
 - Insights › **Day by day** shows the same time for a day in **Total** and in **By site**, and
   **By site** adds up to the total. Days recorded before 1.1.0 kept the time in private windows only
   in the total: it is now their **Private windows** part. Tabs counted at the same time (**Count

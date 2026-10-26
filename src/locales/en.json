@@ -1205,7 +1205,7 @@
     "message": "What can happen on a site"
   },
   "help.interventions.visit": {
-    "message": "After a wait or a challenge, you usually get in for the rest of the visit. The visit ends when you leave those pages or stop using them for {minutes} minutes. When several rules apply to a page, each one asks in turn."
+    "message": "After a wait or a challenge, you usually get in for the rest of the visit. The visit ends when you close those pages, stay away from them for {returnMinutes} minutes (time enough to sign in on another site and come back) or stop using them for {minutes} minutes. When several rules apply to a page, each one asks in turn."
   },
   "help.issue": {
     "message": "Report a problem or suggest an idea"
@@ -1925,7 +1925,7 @@
     "message": "Take a moment…"
   },
   "iv.delay.hint": {
-    "message": "Breathe slowly. You can continue when the circle closes."
+    "message": "You can continue when the circle closes."
   },
   "iv.delay.left": {
     "message": "You can continue in {seconds} s."

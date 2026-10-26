@@ -302,7 +302,8 @@ describe('accesses for the visit end when no tab shows the site (#19)', () => {
       },
     ];
     const ids = () => store.state.grants.map((g) => g.id);
-    return { endLeftVisits, ids };
+    const pass = () => store.state.grants.find((g) => g.id === 'pass');
+    return { endLeftVisits, ids, pass };
   }
 
   it('closing the last tab of the site ends the access', async () => {
@@ -311,7 +312,7 @@ describe('accesses for the visit end when no tab shows the site (#19)', () => {
     await endLeftVisits();
     expect(ids()).toEqual(['pass']);
     tabs.splice(0, 1);
-    await endLeftVisits(1);
+    await endLeftVisits({ closed: 1 });
     expect(ids()).toEqual([]);
   });
 
@@ -328,7 +329,7 @@ describe('accesses for the visit end when no tab shows the site (#19)', () => {
   it('a tab that is closing does not keep it, even when the browser still lists it', async () => {
     tabs.push({ id: 1, url: 'https://wait.test/a' });
     const { endLeftVisits, ids } = await setup('site');
-    await endLeftVisits(1);
+    await endLeftVisits({ closed: 1 });
     expect(ids()).toEqual([]);
   });
 
@@ -342,6 +343,43 @@ describe('accesses for the visit end when no tab shows the site (#19)', () => {
     s = await setup('group');
     await s.endLeftVisits();
     expect(s.ids()).toEqual(['pass']);
+  });
+
+  it('a tab that goes to sign in on another site and comes back keeps it', async () => {
+    tabs.push({ id: 1, url: 'https://wait.test/' });
+    const { endLeftVisits, ids, pass } = await setup('site');
+    tabs[0] = { id: 1, url: 'https://accounts.google.test/signin' };
+    await endLeftVisits({ navigated: 1 });
+    expect(pass()).toMatchObject({ leftTab: 1 });
+    const { leftAt } = pass()!;
+    // The pages of the sign-in do not make it any longer.
+    tabs[0] = { id: 1, url: 'https://accounts.google.test/challenge' };
+    await endLeftVisits({ navigated: 1 });
+    expect(pass()?.leftAt).toBe(leftAt);
+    tabs[0] = { id: 1, url: 'https://wait.test/auth/callback' };
+    await endLeftVisits({ navigated: 1 });
+    expect(ids()).toEqual(['pass']);
+    expect(pass()?.leftAt).toBeUndefined();
+    expect(pass()?.leftTab).toBeUndefined();
+  });
+
+  it('a tab that stays away, or is closed while away, ends it', async () => {
+    const { VISIT_RETURN_MS } = await import('../../src/engine/limits');
+    tabs.push({ id: 1, url: 'https://elsewhere.test/' }, { id: 2, url: 'https://other.test/' });
+    let s = await setup('site');
+    await s.endLeftVisits({ navigated: 1 });
+    // Another tab closing does not end it; the one that left does.
+    tabs.splice(1, 1);
+    await s.endLeftVisits({ closed: 2 });
+    expect(s.ids()).toEqual(['pass']);
+    await s.endLeftVisits({ closed: 1 });
+    expect(s.ids()).toEqual([]);
+    vi.resetModules();
+    s = await setup('site');
+    await s.endLeftVisits({ navigated: 1 });
+    s.pass()!.leftAt! -= VISIT_RETURN_MS;
+    await s.endLeftVisits({ navigated: 1 });
+    expect(s.ids()).toEqual([]);
   });
 
   it('an access for a number of minutes is not a visit and stays', async () => {

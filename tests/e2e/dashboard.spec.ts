@@ -309,7 +309,12 @@ test('the Wait protection takes a wait of any length, typed as a number and a un
 test('a new rule takes wildcards and every website, and the editor warns (#20, #23)', async ({ h }) => {
   const p = await h.page('dashboard.html#/groups/new');
   await p.role('heading', 'Which sites?').expectVisible();
-  await p.placeholder('Add a site, or paste a list…').fill('*  *news*');
+  // An address, not words: a phone's keyboard neither capitalises nor corrects it.
+  const field = p.placeholder('Add a site, or paste a list…');
+  expect(await field.attr('autocorrect')).toBe('off');
+  expect(await field.attr('autocapitalize')).toBe('off');
+  expect(await field.attr('spellcheck')).toBe('false');
+  await field.fill('*  *news*');
   await p.button('Add', { exact: true }).click();
   await p.text('Every website', { exact: true }).expectVisible();
   await p.text('*news*', { exact: true }).expectVisible();
