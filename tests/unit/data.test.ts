@@ -168,20 +168,25 @@ describe('saved for later', () => {
 });
 
 describe('"Block this site / page"', () => {
-  it('adds the entry to a rule, or creates one; an exception of the same entry gives way', async () => {
-    const t = await setup([group('A', ['+a.test'], [{ intervention: BLOCK }], { protection: REMINDER })]);
+  it('adds the entry to a rule; an exception of the same entry gives way', async () => {
+    const t = await setup([
+      group('A', ['+a.test'], [{ intervention: BLOCK }], { protection: REMINDER }),
+      group('B', ['b.test'], [{ intervention: BLOCK }], { protection: REMINDER }),
+    ]);
     const r = await t.pages.addPage('https://www.a.test/x', 'domain', 'A');
     expect(r.applied.length).toBeGreaterThan(0);
     expect(t.store.config.groups[0].targets.map((x) => [x.type, x.value, Boolean(x.allow)])).toEqual([
       ['domain', 'a.test', false],
     ]);
-    await t.pages.addPage('https://b.test/', 'domain', null, 'Later');
-    expect(t.store.config.groups.map((g) => g.name)).toEqual(['A', 'Later']);
-    // Never named after the site: without a name, "Blocked sites".
-    await t.pages.addPage('https://c.test/', 'domain', null, '');
-    expect(t.store.config.groups[2].name).toBe('Blocked sites');
-    expect(t.store.meta.lastAddGroup).toBe(t.store.config.groups[2].id);
+    await t.pages.addPage('https://c.test/', 'domain', 'B');
+    expect(t.store.config.groups[1].targets.map((x) => x.value)).toEqual(['b.test', 'c.test']);
+    expect(t.store.meta.lastAddGroup).toBe('B');
     expect((await t.pages.addPage('about:config', 'domain', 'A')).errors).toHaveLength(1);
+    // A new rule is created in the rule editor, not here: a rule that is gone is an error.
+    expect((await t.pages.addPage('https://d.test/', 'domain', 'gone')).errors).toEqual([
+      'This rule no longer exists.',
+    ]);
+    expect(t.store.config.groups.map((g) => g.name)).toEqual(['A', 'B']);
   });
 });
 

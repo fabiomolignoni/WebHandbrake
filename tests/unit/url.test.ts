@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { targetFor } from '../../src/engine/page-target';
+import { pageRule, targetFor } from '../../src/engine/page-target';
 import {
   displayHost,
   isExtensionUrl,
@@ -10,6 +10,7 @@ import {
   toAsciiHost,
   unwrapUrl,
 } from '../../src/engine/url';
+import { newRuleRoute, routePage } from '../../src/shared/block-site';
 
 describe('addresses', () => {
   it('view-source: and reader mode are unwrapped, so the page itself is evaluated', () => {
@@ -99,5 +100,32 @@ describe('"Block this site / page"', () => {
     expect(targetFor('about:config', 'domain')).toBeNull();
     expect(targetFor('file:///x', 'page')).toBeNull();
     expect(targetFor('https://a.test/', 'domain')?.id).not.toBe(targetFor('https://a.test/', 'domain')?.id);
+  });
+
+  it('New rule… starts the rule editor with the entry, blocked at all times', () => {
+    const r = pageRule('https://www.news.test/world/?id=4', 'path');
+    expect(r?.targets.map((x) => [x.type, x.value, Boolean(x.allow)])).toEqual([
+      ['path', 'news.test/world', false],
+    ]);
+    expect(r?.policies).toEqual([
+      { id: expect.any(String), schedule: { mode: 'always', windows: [] }, intervention: { type: 'block' } },
+    ]);
+    expect(pageRule('about:config', 'domain')).toBeNull();
+  });
+
+  it('the route of the rule editor keeps the address whole', () => {
+    const url = 'https://a.test/p?q=1&r=a b#top';
+    const route = newRuleRoute(url, 'page');
+    expect(route).toMatch(/^\/groups\/new\?/);
+    // The router splits the hash at its first "?".
+    expect(route.split('?')).toHaveLength(2);
+    expect(route).not.toContain('#');
+    const query = new URLSearchParams(route.split('?')[1]);
+    expect(routePage(query)).toEqual({ url, granularity: 'page' });
+    expect(routePage(new URLSearchParams({ url, granularity: 'everything' }))).toEqual({
+      url,
+      granularity: 'domain',
+    });
+    expect(routePage(new URLSearchParams({ template: 'social' }))).toBeNull();
   });
 });

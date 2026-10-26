@@ -255,7 +255,7 @@ describe('menus and shortcuts', () => {
     ]);
   });
 
-  it('a click adds the page or the link to a rule; a focus item starts a session', async () => {
+  it('a click adds the page or the link to a rule, New rule… opens the rule editor; a focus item starts a session', async () => {
     const t = await setup([group('A', ['a.test'], [{ intervention: BLOCK }])]);
     const { onMenuClicked } = await import('../../src/background/menus');
     await onMenuClicked({
@@ -263,14 +263,15 @@ describe('menus and shortcuts', () => {
       linkUrl: 'https://b.test/x',
       editable: false,
     } as chrome.contextMenus.OnClickData);
+    // New rule…: the rule editor, with the page in a new rule, which exists once created there.
     await onMenuClicked({
       menuItemId: 'page|new',
-      pageUrl: 'https://c.test/p',
+      pageUrl: 'https://c.test/p?q=1',
       editable: false,
     } as chrome.contextMenus.OnClickData);
-    expect(t.store.config.groups.map((g) => g.targets.map((x) => x.value))).toEqual([
-      ['a.test', 'b.test'],
-      ['c.test/p'],
+    expect(t.store.config.groups.map((g) => g.targets.map((x) => x.value))).toEqual([['a.test', 'b.test']]);
+    expect(fake.created.map((x) => x.url)).toEqual([
+      'chrome-extension://test/dashboard.html#/groups/new?url=https%3A%2F%2Fc.test%2Fp%3Fq%3D1&granularity=page',
     ]);
     await onMenuClicked({ menuItemId: 'focus|50', editable: false } as chrome.contextMenus.OnClickData);
     expect(t.store.state.sessions[0].endAt - t.store.state.sessions[0].startAt).toBe(50 * 60_000);
@@ -291,16 +292,19 @@ describe('menus and shortcuts', () => {
     t.store.cc = compileConfig(t.store.config);
     await onCommand('block-site', { id: 9, url: 'https://other.test/' } as chrome.tabs.Tab);
     expect(t.store.config.groups[1].targets.map((x) => x.value)).toEqual(['a.test', 'other.test']);
-    // None blocks now: a new rule that blocks at all times, without breaks, as from the wizard.
+    // None blocks now and keeps blocking: a new rule, set up in the rule editor.
     t.store.config.groups[1].archived = true;
     t.store.cc = compileConfig(t.store.config);
     t.store.meta.lastAddGroup = 'Evening';
     await onCommand('block-site', { id: 9, url: 'https://third.test/' } as chrome.tabs.Tab);
-    const added = t.store.config.groups[3];
-    expect(added).toMatchObject({ name: 'Blocked sites', pause: { allowed: false } });
-    expect(added.targets.map((x) => x.value)).toEqual(['third.test']);
+    expect(t.store.config.groups).toHaveLength(3);
+    // A page that cannot be blocked: nothing.
+    await onCommand('block-site', { id: 9, url: 'about:config' } as chrome.tabs.Tab);
     await onCommand('open-dashboard');
-    expect(fake.created.map((x) => x.url)).toEqual(['chrome-extension://test/dashboard.html']);
+    expect(fake.created.map((x) => x.url)).toEqual([
+      'chrome-extension://test/dashboard.html#/groups/new?url=https%3A%2F%2Fthird.test%2F&granularity=domain',
+      'chrome-extension://test/dashboard.html',
+    ]);
     await onCommand('start-session');
     expect(t.store.state.sessions).toHaveLength(1);
   });

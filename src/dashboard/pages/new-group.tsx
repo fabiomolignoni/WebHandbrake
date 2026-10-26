@@ -5,6 +5,7 @@
 
 import { clone } from '../../engine/json';
 import { t } from '../../i18n/i18n';
+import type { RulePage } from '../../shared/block-site';
 import { call } from '../../shared/rpc';
 import { toast } from '../../ui/components';
 import { Icon } from '../../ui/icons';
@@ -16,7 +17,8 @@ import { navigate } from '../router';
 /** The draft of a new rule, kept for the session. */
 const STORE = 'whb-new-rule';
 
-export function NewGroupPage({ template }: { template: string | null }) {
+/** `page`: "Block this site" › New rule… starts the rule with the page in it, blocked at all times. */
+export function NewGroupPage({ template, page = null }: { template: string | null; page?: RulePage | null }) {
   const { model } = useDashboard();
   const flow = useSaveFlow();
 
@@ -26,6 +28,7 @@ export function NewGroupPage({ template }: { template: string | null }) {
         mode="create"
         store={STORE}
         template={template}
+        page={page}
         head={
           <div>
             <a href="#/groups" class="back quiet">

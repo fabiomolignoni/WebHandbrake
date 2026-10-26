@@ -2,7 +2,7 @@
 
 import type { CompiledGroup } from '../engine/compile';
 import { evaluateGroup } from '../engine/decide';
-import { breaksLift, newGroup, newPolicy } from '../engine/defaults';
+import { breaksLift } from '../engine/defaults';
 import { clone } from '../engine/json';
 import { candidateTimes } from '../engine/next';
 import { type Granularity, targetFor } from '../engine/page-target';
@@ -37,9 +37,9 @@ export function blockingIn(cg: CompiledGroup, url: string, granularity: Granular
 
 /**
  * The rule that "Block this site" adds to unless told otherwise: the last one used, or else
- * the first one, that blocks the page now and keeps blocking it. Null for a new rule: in a rule
- * that applies only at certain times or after a limit, the page would open again, or not be
- * blocked at all yet.
+ * the first one, that blocks the page now and keeps blocking it. Null for a new rule, set up in the
+ * rule editor: in a rule that applies only at certain times or after a limit, the page would open
+ * again, or not be blocked at all yet.
  */
 export function defaultAddGroup(url: string, granularity: Granularity, c = ctx()): string | null {
   const always = (cg: CompiledGroup | undefined) => {
@@ -51,25 +51,13 @@ export function defaultAddGroup(url: string, granularity: Granularity, c = ctx()
   return c.cc.groups.find((cg) => always(cg))?.group.id ?? null;
 }
 
-export async function addPage(
-  url: string,
-  granularity: Granularity,
-  groupId: string | null,
-  newGroupName?: string,
-): Promise<SaveResult> {
+export async function addPage(url: string, granularity: Granularity, groupId: string): Promise<SaveResult> {
   await store.ready();
   const target = targetFor(url, granularity);
   if (!target) return emptySaveResult([t('addPage.error.unsupported')]);
   const next: Config = clone(store.config);
-  let group = groupId ? next.groups.find((g) => g.id === groupId) : undefined;
-  if (!group) {
-    // A rule that blocks at all times, without breaks until they are turned on, as from the wizard.
-    group = newGroup({
-      name: newGroupName?.trim() || t('addPage.newGroupName'),
-      policies: [newPolicy({ intervention: { type: 'block' } })],
-    });
-    next.groups.push(group);
-  }
+  const group = next.groups.find((g) => g.id === groupId);
+  if (!group) return emptySaveResult([t('addPage.error.noRule')]);
   const exists = group.targets.some((x) => !x.allow && x.type === target.type && x.value === target.value);
   if (!exists) {
     // Adding a blocking entry replaces an identical exception, if any.

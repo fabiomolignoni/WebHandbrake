@@ -11,12 +11,11 @@
   "access.repeat": {
     "message": "Repeat the password"
   },
+  "addPage.error.noRule": {
+    "message": "This rule no longer exists."
+  },
   "addPage.error.unsupported": {
     "message": "Only web pages can be blocked from here."
-  },
-  "addPage.newGroupName": {
-    "message": "Blocked sites",
-    "description": "Default name of a group created from the popup or the context menu"
   },
   "ask.minReason": {
     "message": "Reason of at least"
@@ -2598,6 +2597,10 @@
   "popup.add.action": {
     "message": "Block"
   },
+  "popup.add.continue": {
+    "message": "Continue in the editor",
+    "description": "Button of the popup's “Block this site” panel when “New rule…” is chosen: it opens the rule editor with the site in a new rule."
+  },
   "popup.add.domain": {
     "message": "Whole site"
   },
@@ -2616,9 +2619,6 @@
   "popup.add.newGroup": {
     "message": "New rule…"
   },
-  "popup.add.newGroupName": {
-    "message": "Name of the new rule"
-  },
   "popup.add.outcomeLater": {
     "message": "“{rule}” blocks it from {when}. Until then it stays open."
   },
@@ -2626,7 +2626,7 @@
     "message": "“{rule}” does not block. The site gets what this rule does instead."
   },
   "popup.add.outcomeNew": {
-    "message": "A new rule that blocks it at all times."
+    "message": "A new rule that blocks it at all times, set up in the rule editor."
   },
   "popup.add.outcomeNow": {
     "message": "Blocked right away, at all times."

@@ -210,10 +210,13 @@ test('"Block this site" from the context menu, for a page and for a link', async
   const tab = await expectAllowed(h, 'http://forum.test/thread/1');
   await h.rpc('test.menu', { menuItemId: `site|${groupId}`, pageUrl: 'http://forum.test/thread/1' });
   await tab.expectIntervention(true, 5000);
-  await h.rpc('test.menu', { menuItemId: 'link|new', linkUrl: 'http://video.test/watch?v=1' });
-  const cfg = (await h.rpc('config.get')).config;
-  expect(cfg.groups.map((g: any) => g.name)).toEqual(['Social', 'Blocked sites']);
-  await expectBlocked(h, 'http://video.test/other');
+  // New rule… opens the rule editor with the site in a new rule, which exists once created there.
+  const editor = await h.newTab(() =>
+    h.rpc('test.menu', { menuItemId: 'link|new', linkUrl: 'http://video.test/watch?v=1' }),
+  );
+  await editor.role('heading', 'Which sites?').expectVisible();
+  await editor.text('video.test', { within: '.target-row' }).expectVisible();
+  expect((await h.rpc('config.get')).config.groups.map((g: any) => g.name)).toEqual(['Social']);
   // The menu can be turned off.
   await h.configure((c) => {
     c.settings.contextMenu = false;

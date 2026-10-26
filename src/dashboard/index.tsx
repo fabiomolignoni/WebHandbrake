@@ -3,6 +3,7 @@
 import { render } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { t } from '../i18n/i18n';
+import { routePage } from '../shared/block-site';
 import { formatWhen } from '../shared/format';
 import type { Overview } from '../shared/models';
 import { setWeekStart } from '../shared/summary';
@@ -87,7 +88,11 @@ function App() {
     case 'groups':
       page =
         route.path[1] === 'new' ? (
-          <NewGroupPage template={route.query.get('template')} />
+          <NewGroupPage
+            key={route.query.toString()}
+            template={route.query.get('template')}
+            page={routePage(route.query)}
+          />
         ) : route.path[1] ? (
           <GroupEditorPage key={route.path[1]} id={route.path[1]} step={route.query.get('step')} />
         ) : (
