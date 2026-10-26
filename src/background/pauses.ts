@@ -207,22 +207,43 @@ export async function startPause(
     );
   // The codes of the partners of the rules covered, unless a rule's breaks do not need it.
   steps.push(...partnerSteps(covered.filter((g) => partnerOf(g)?.breaks)));
-  const { view } = await createTicket(
-    {
-      kind: 'pause',
-      groups: opts.groups.map((g) => g.id),
-      minutes,
-      shown: shownPage(req.url, sender),
-    },
-    steps,
-  );
-  return { ticket: view };
+  try {
+    const { view } = await createTicket(
+      {
+        kind: 'pause',
+        groups: opts.groups.map((g) => g.id),
+        minutes,
+        shown: shownPage(req.url, sender),
+      },
+      steps,
+    );
+    return { ticket: view };
+  } catch (e) {
+    // A break without a cost starts at once: another one may have used up what was left.
+    return { ticket: null, error: e instanceof Error ? e.message : 'ticket.error.failed' };
+  }
+}
+
+/**
+ * Why a break of these rules for this long cannot start now, if it cannot. The limits are checked
+ * again as the break starts, not only when it is asked: breaks asked together, each with its cost
+ * still to answer, would otherwise all start.
+ */
+function refusal(ids: string[], minutes: number, t: number): string | null {
+  const groups = store.config.groups.filter((g) => ids.includes(g.id));
+  if (groups.length < ids.length || groups.some((g) => !g.pause.allowed))
+    return 'pause.unavailable.notAllowed';
+  const opts = optionsFor(groups, undefined, null, t);
+  if (!opts.available) return opts.reason ?? 'pause.unavailable.notAllowed';
+  return minutes > opts.maxMinutes ? 'pause.error.duration' : null;
 }
 
 registerExecutor('pause', async (ticket) => {
   if (ticket.purpose.kind !== 'pause') return;
   const p = ticket.purpose;
   const t0 = now();
+  const refused = refusal(p.groups, p.minutes, t0);
+  if (refused) throw new Error(refused);
   const grant: Grant = {
     id: crypto.randomUUID(),
     kind: 'pause',

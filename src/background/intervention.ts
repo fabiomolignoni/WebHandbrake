@@ -283,6 +283,10 @@ async function passTicket(url: string, i: Intervention, incognito: boolean) {
     mode = i.grant.mode;
     minutes = i.grant.minutes;
   }
+  // The pages that ask for the same access, as the rule is now, share one ticket and its wait:
+  // opening the page again, or in several tabs, draws no new random wait and starts no increasing
+  // one again from the same number of passes.
+  const covered = scope === 'page' ? pageKey(url) : scope === 'site' ? primary.site : null;
   const { view } = await createTicket(
     {
       kind: 'pass',
@@ -296,6 +300,7 @@ async function passTicket(url: string, i: Intervention, incognito: boolean) {
       incognito,
     },
     steps,
+    JSON.stringify([primary.group.id, i, covered]),
   );
   return view;
 }

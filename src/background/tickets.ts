@@ -74,6 +74,8 @@ export interface Ticket {
   collected: { intention?: string; minutes?: number };
   failures: number;
   lockedUntil?: number;
+  /** What the ticket gives, when pages that ask for the same share it (passes). */
+  key?: string;
 }
 
 type Executor = (t: Ticket) => Promise<unknown>;
@@ -166,12 +168,19 @@ export function ticketView(t: Ticket): TicketView {
   };
 }
 
-/** Creates a ticket. With no steps the purpose is executed immediately and null is returned. */
+/**
+ * Creates a ticket. With no steps the purpose is executed immediately and null is returned. With a
+ * key, a ticket of the same key not yet answered is returned instead: one at a time for the same
+ * thing, with its wait, its code and its wrong answers.
+ */
 export async function createTicket(
   purpose: Purpose,
   steps: Step[],
+  key?: string,
 ): Promise<{ view: TicketView | null; result?: unknown }> {
   await load();
+  const same = key && [...tickets.values()].find((x) => x.key === key && x.expiresAt >= now());
+  if (same) return { view: ticketView(same) };
   if (!steps.length) {
     const exec = executors.get(purpose.kind);
     const result = exec
@@ -204,6 +213,7 @@ export async function createTicket(
     active: {},
     collected: {},
     failures: 0,
+    key,
   };
   activate(t);
   tickets.set(t.id, t);

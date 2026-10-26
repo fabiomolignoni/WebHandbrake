@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Group } from '../../src/engine/types';
+import type { TicketView } from '../../src/shared/models';
 import { installFakeBrowser } from './fake-browser';
 import { BLOCK, group, PERMANENT, REMINDER, wait } from './helpers';
 
@@ -108,6 +109,101 @@ describe('a running break', () => {
     await cancelPause(store.state.grants[0].id);
     expect(store.state.pauses[0]).toMatchObject({ minutes: 15, used: 0 });
     expect(pauseOptions(url)).toMatchObject({ available: true, remainingCount: 1 });
+  });
+});
+
+describe('breaks asked together', () => {
+  const T0 = new Date(2026, 9, 5, 10).getTime();
+  const url = 'https://video.test/';
+
+  beforeEach(() => {
+    vi.resetModules();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(T0);
+    installFakeBrowser();
+  });
+  afterEach(() => vi.useRealTimers());
+
+  async function setup(limit: Group['pause']['limit']) {
+    const { store } = await import('../../src/background/store');
+    const pauses = await import('../../src/background/pauses');
+    const tickets = await import('../../src/background/tickets');
+    await store.ready();
+    const g = pausable(
+      group('G', ['video.test'], [{ intervention: BLOCK }]),
+      { type: 'delay', seconds: 30 },
+      { maxMinutes: 15, limit },
+    );
+    store.config = { ...store.config, groups: [g] };
+    const { compileConfig } = await import('../../src/engine/compile');
+    store.cc = compileConfig(store.config);
+    // Asked one after the other, before any of them starts: each one is available when asked.
+    const asked: TicketView[] = [];
+    for (let i = 0; i < 3; i++) asked.push((await pauses.startPause({ url, minutes: 15 })).ticket!);
+    const answer = (i: number, at: number) => {
+      vi.setSystemTime(at);
+      return tickets.answerTicket(asked[i].id, '');
+    };
+    return { store, answer };
+  }
+
+  it('start only while the breaks of the period last, checked again as each one starts', async () => {
+    const { store, answer } = await setup({ count: 1, period: { kind: 'day' } });
+    expect(await answer(0, T0 + 31_000)).toMatchObject({ status: 'done' });
+    const refused = { status: 'error', error: 'pause.unavailable.noneLeft' };
+    expect(await answer(1, T0 + 31_000 + 16 * 60_000)).toEqual(refused);
+    expect(await answer(2, T0 + 31_000 + 32 * 60_000)).toEqual(refused);
+    expect(store.state.pauses).toHaveLength(1);
+    expect(store.state.grants.filter((g) => g.kind === 'pause')).toHaveLength(1);
+  });
+
+  it('start only while the minutes of the period last, and for no longer than they leave', async () => {
+    const { store, answer } = await setup({ minutes: 20, period: { kind: 'day' } });
+    expect(await answer(0, T0 + 31_000)).toMatchObject({ status: 'done' });
+    // 5 minutes are left: not a break of 15.
+    expect(await answer(1, T0 + 31_000 + 16 * 60_000)).toEqual({
+      status: 'error',
+      error: 'pause.error.duration',
+    });
+    store.state.pauses[0].minutes = 20;
+    expect(await answer(2, T0 + 31_000 + 32 * 60_000)).toEqual({
+      status: 'error',
+      error: 'pause.unavailable.noMinutesLeft',
+    });
+    expect(store.state.pauses).toHaveLength(1);
+  });
+
+  it('do not start once their rule no longer allows breaks', async () => {
+    const { store, answer } = await setup({ period: { kind: 'day' } });
+    store.config.groups[0].pause.allowed = false;
+    expect(await answer(0, T0 + 31_000)).toEqual({ status: 'error', error: 'pause.unavailable.notAllowed' });
+    store.config.groups = [];
+    expect(await answer(1, T0 + 31_000)).toEqual({ status: 'error', error: 'pause.unavailable.notAllowed' });
+    expect(store.state.pauses).toEqual([]);
+  });
+
+  it('without a cost, the second one asked together is refused, not started', async () => {
+    const { store } = await import('../../src/background/store');
+    const pauses = await import('../../src/background/pauses');
+    await store.ready();
+    const g = pausable(
+      group('G', ['video.test'], [{ intervention: BLOCK }]),
+      { type: 'none' },
+      {
+        maxMinutes: 15,
+        limit: { count: 1, period: { kind: 'day' } },
+      },
+    );
+    store.config = { ...store.config, groups: [g] };
+    const { compileConfig } = await import('../../src/engine/compile');
+    store.cc = compileConfig(store.config);
+    const both = await Promise.all([
+      pauses.startPause({ groupId: 'G', minutes: 15 }),
+      pauses.startPause({ groupId: 'G', minutes: 15 }),
+    ]);
+    expect(both).toContainEqual({ ticket: null });
+    expect(both).toContainEqual({ ticket: null, error: 'pause.unavailable.noneLeft' });
+    expect(store.state.pauses).toHaveLength(1);
   });
 });
 
