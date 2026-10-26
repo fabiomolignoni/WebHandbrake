@@ -47,7 +47,7 @@ export interface Api {
 
   'config.save': { req: { config: Config }; res: SaveResult };
   'config.addPage': {
-    req: { url: string; granularity: Granularity; groupId: string | null; newGroupName?: string };
+    req: { url: string; granularity: Granularity; groupId: string };
     res: SaveResult;
   };
   'group.export': { req: { groupId: string }; res: { filename: string; text: string } };

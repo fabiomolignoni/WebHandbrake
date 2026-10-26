@@ -60,7 +60,7 @@ const handlers: { [M in Method]: Handler<M> } = {
     const { config, errors } = normalizeConfig(a.config);
     return proposeConfig(config, 'edit', { errors });
   },
-  'config.addPage': (a) => addPage(a.url, a.granularity, a.groupId, a.newGroupName),
+  'config.addPage': (a) => addPage(a.url, a.granularity, a.groupId),
   'group.export': (a) => exportGroupFile(a.groupId),
 
   'ticket.answer': (a) => answerTicket(a.id, a.answer, a.minutes),

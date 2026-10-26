@@ -2,8 +2,10 @@
 
 import { isGroupActive } from '../engine/compile';
 import { DEFAULT_SESSION_MINUTES, QUICK_SESSION_MINUTES } from '../engine/limits';
+import { targetFor } from '../engine/page-target';
 import { t } from '../i18n/i18n';
 import { api, extensionUrl, features, quiet } from '../platform/api';
+import { newRuleRoute } from '../shared/block-site';
 import type { Granularity } from '../shared/rpc';
 import { listenEverywhere, sharePrivateMenus } from './bridge';
 import { addPage, defaultAddGroup } from './pages';
@@ -101,8 +103,15 @@ export async function onMenuClicked(info: chrome.contextMenus.OnClickData, tab?:
   if (!item || !arg) return;
   const url = root === 'link' ? info.linkUrl : (info.pageUrl ?? tab?.url);
   if (!url) return;
+  // A new rule is set up in the rule editor, with the page in it, and exists once created there.
+  if (arg === 'new') return openNewRule(url, item.granularity);
   // One configuration change at a time, as for the changes made from the dashboard.
-  await store.mutate(() => addPage(url, item.granularity, arg === 'new' ? null : arg));
+  await store.mutate(() => addPage(url, item.granularity, arg));
+}
+
+/** The rule editor with a new rule that blocks the page. */
+async function openNewRule(url: string, granularity: Granularity) {
+  await quiet(api.tabs.create({ url: extensionUrl(`dashboard.html#${newRuleRoute(url, granularity)}`) }));
 }
 
 export function registerMenuClicks() {
@@ -137,9 +146,13 @@ export async function onCommand(command: string, tab?: chrome.tabs.Tab) {
   } else if (command === 'block-site') {
     const active = tab ?? (await quiet(api.tabs.query({ active: true, currentWindow: true })))?.[0];
     if (!active?.url) return;
-    // A rule that blocks the site right now, or a new one: the shortcut is "block", not "add".
+    // A rule that blocks the site right now and keeps blocking it, or else a new one in the rule
+    // editor: the shortcut is "block", not "add".
     const url = active.url;
-    await store.mutate(() => addPage(url, 'domain', defaultAddGroup(url, 'domain')));
+    if (!targetFor(url, 'domain')) return;
+    const groupId = defaultAddGroup(url, 'domain');
+    if (groupId) await store.mutate(() => addPage(url, 'domain', groupId));
+    else await openNewRule(url, 'domain');
   }
 }
 

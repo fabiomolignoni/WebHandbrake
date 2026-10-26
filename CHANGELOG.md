@@ -15,6 +15,11 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ### Changed
 
+- **Block this site** › **New rule…**, in the popup and in the right-click menu, no longer creates
+  a rule called “Blocked sites” at once: it opens the rule editor with the site in a new rule that
+  blocks it at all times. You go through the parts, name the rule and choose its protection, and
+  the rule exists once you create it. Adding the site to a rule that exists is as before. The
+  keyboard shortcut does the same when no rule blocks the site now and keeps blocking it.
 - On Firefox for Android, WebHandbrake in the Extensions menu opens the dashboard instead of the
   popup, in its tab when it is already open.
 - The editor of a rule that exists lists **Summary** first among its parts, since the rule opens

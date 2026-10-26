@@ -1,10 +1,15 @@
-/** The entry that "Block this site / page" adds for a URL, shared by the popup preview. */
+/**
+ * The entry that "Block this site / page" adds for a URL, shared by the popup preview, and the
+ * rule that its "New rule…" starts in the rule editor.
+ */
 
-import { newId } from './defaults';
-import type { Target } from './types';
+import { newId, newPolicy } from './defaults';
+import type { Group, Target } from './types';
 import { parseUrl, stripWww } from './url';
 
 export type Granularity = 'domain' | 'host' | 'path' | 'page';
+
+export const GRANULARITIES: readonly Granularity[] = ['domain', 'host', 'path', 'page'];
 
 export function targetFor(url: string, granularity: Granularity): Target | null {
   const p = parseUrl(url);
@@ -26,4 +31,13 @@ export function targetFor(url: string, granularity: Granularity): Target | null 
       return { id: newId(), type: 'page', value: `${host}${path || '/'}${q ? `?${q}` : ''}` };
     }
   }
+}
+
+/**
+ * What a new rule from "Block this site" › New rule… starts with: the page's entry, blocked at all
+ * times, since blocking is what was asked. Null for a page that cannot be blocked.
+ */
+export function pageRule(url: string, granularity: Granularity): Pick<Group, 'targets' | 'policies'> | null {
+  const target = targetFor(url, granularity);
+  return target && { targets: [target], policies: [newPolicy({ intervention: { type: 'block' } })] };
 }

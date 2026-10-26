@@ -28,9 +28,11 @@ import {
   targetsFromLines,
 } from '../../engine/defaults';
 import { clone } from '../../engine/json';
+import { pageRule } from '../../engine/page-target';
 import type { Group, Intervention, Policy, Protection, Target } from '../../engine/types';
 import { hasErrors, type Issue, validateGroup } from '../../engine/validate';
 import { t } from '../../i18n/i18n';
+import type { RulePage } from '../../shared/block-site';
 import { call } from '../../shared/rpc';
 import { describeCondition, describeIntervention } from '../../shared/summary';
 import {
@@ -280,6 +282,8 @@ type Props =
       store: string;
       /** A ready-made list to start from; a fresh draft is started. */
       template?: string | null;
+      /** A page to block ("Block this site" › New rule…); a fresh draft is started. */
+      page?: RulePage | null;
       /** The top of the page: its heading and links. */
       head: ComponentChildren;
       /** A step shown as done before the rule's own (first run: "Installed"). */
@@ -303,11 +307,15 @@ export function RuleEditor(props: Props) {
 
   const fresh = (): NewRuleDraft => {
     const used = new Set(cfg.groups.map((g) => g.color));
-    const policy = newPolicy({ intervention: frictionIntervention() });
-    const memory: Memory = { ...emptyMemory(), pending: [policy.id] };
+    const page =
+      props.mode === 'create' && props.page ? pageRule(props.page.url, props.page.granularity) : null;
+    const policy = page?.policies[0] ?? newPolicy({ intervention: frictionIntervention() });
+    // What happens is chosen actively, unless the rule is for a page to block.
+    const memory: Memory = { ...emptyMemory(), pending: page ? [] : [policy.id] };
     let group = newGroup({
       color: GROUP_COLORS.find((c) => !used.has(c)) ?? GROUP_COLORS[cfg.groups.length % GROUP_COLORS.length],
       policies: [policy],
+      targets: page?.targets ?? [],
       pause: defaultPause(),
     });
     const template = props.mode === 'create' ? props.template : null;
@@ -317,7 +325,9 @@ export function RuleEditor(props: Props) {
     }
     return { group, protection: null, step: 0, reached: 0, memory };
   };
-  const [restored] = useState(() => (props.mode === 'create' && !props.template ? load(props.store) : null));
+  const [restored] = useState(() =>
+    props.mode === 'create' && !props.template && !props.page ? load(props.store) : null,
+  );
   const [start] = useState<NewRuleDraft>(() =>
     existing
       ? { group: existing, protection: existing.protection, step: 0, reached: 0, memory: emptyMemory() }

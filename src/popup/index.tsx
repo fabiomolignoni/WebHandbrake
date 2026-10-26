@@ -10,6 +10,7 @@ import { type Granularity, targetFor } from '../engine/page-target';
 import { isNav } from '../engine/severity';
 import { t } from '../i18n/i18n';
 import { api, extensionUrl, isAndroid } from '../platform/api';
+import { newRuleRoute } from '../shared/block-site';
 import { formatWhen } from '../shared/format';
 import type { DecisionView, PopupModel } from '../shared/models';
 import { call } from '../shared/rpc';
@@ -186,7 +187,6 @@ function AddSite({ m, onDone, onCancel }: { m: PopupModel; onDone: () => void; o
   const [granularity, setGranularity] = useState<Granularity>('domain');
   // A rule that blocks the page right now, or a new one: "Block" should block.
   const [groupId, setGroupId] = useState<string>(m.addTo ?? 'new');
-  const [name, setName] = useState('');
   const flow = useSaveFlow();
   const url = m.tab?.url ?? '';
   const options: { value: Granularity; label: string }[] = [
@@ -208,14 +208,9 @@ function AddSite({ m, onDone, onCancel }: { m: PopupModel; onDone: () => void; o
     return true;
   });
   const add = async () => {
-    const ok = await flow.run(
-      call('config.addPage', {
-        url,
-        granularity,
-        groupId: groupId === 'new' ? null : groupId,
-        newGroupName: name,
-      }),
-    );
+    // A new rule is set up in the rule editor, with the page in it, and exists once created there.
+    if (groupId === 'new') return openDashboard(newRuleRoute(url, granularity));
+    const ok = await flow.run(call('config.addPage', { url, granularity, groupId }));
     if (ok) onDone();
   };
   return (
@@ -261,15 +256,6 @@ function AddSite({ m, onDone, onCancel }: { m: PopupModel; onDone: () => void; o
           <option value="new">{t('popup.add.newGroup')}</option>
         </select>
       </div>
-      {groupId === 'new' && (
-        <input
-          class="input"
-          value={name}
-          placeholder={t('addPage.newGroupName')}
-          aria-label={t('popup.add.newGroupName')}
-          onInput={(e) => setName((e.target as HTMLInputElement).value)}
-        />
-      )}
       <p class="small text-2" aria-live="polite">
         {addOutcome(m.groups.find((g) => g.id === groupId))}
       </p>
@@ -277,9 +263,16 @@ function AddSite({ m, onDone, onCancel }: { m: PopupModel; onDone: () => void; o
         <Button variant="ghost" size="small" onClick={onCancel}>
           {t('common.cancel')}
         </Button>
-        <Button variant="primary" size="small" icon="plus" onClick={add}>
-          {t('popup.add.action')}
-        </Button>
+        {groupId === 'new' ? (
+          <Button variant="primary" size="small" onClick={add}>
+            {t('popup.add.continue')}
+            <Icon name="arrow-right" />
+          </Button>
+        ) : (
+          <Button variant="primary" size="small" icon="plus" onClick={add}>
+            {t('popup.add.action')}
+          </Button>
+        )}
       </div>
       {flow.element}
     </section>

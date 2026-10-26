@@ -63,13 +63,12 @@ test('"Block site" adds this page, this section or the whole site, and restricts
   await popup.role('radio', /Whole site/).expectChecked();
   await popup.role('radio', /This section/).expectVisible();
   await popup.role('radio', /This page/).click();
-  await popup.label('Add to').select('new');
-  await popup.label('Name of the new rule').fill('Shopping');
+  // The rule that blocks at all times is the default.
+  await popup.text('Blocked right away, at all times.').expectVisible();
   await popup.button('Block', { exact: true }).click();
   await site.expectIntervention(true, 5000);
-  const cfg = (await h.rpc('config.get')).config;
-  const shopping = cfg.groups.find((g: any) => g.name === 'Shopping');
-  expect(shopping.targets[0]).toMatchObject({ type: 'page', value: 'shop.test/cart/item?id=3' });
+  const [misc] = (await h.rpc('config.get')).config.groups;
+  expect(misc.targets[1]).toMatchObject({ type: 'page', value: 'shop.test/cart/item?id=3' });
   // Only that page: the rest of the site still loads.
   await expectAllowed(h, 'http://shop.test/cart/other');
 });
@@ -86,14 +85,61 @@ test('"Block site" blocks: a rule that does not block now is not the default, an
   const site = await expectAllowed(h, 'http://wiki.test/article');
   const popup = await h.popup(site);
   await popup.button('Block site').click();
-  await popup.text('A new rule that blocks it at all times.').expectVisible();
+  await popup.text('A new rule that blocks it at all times, set up in the rule editor.').expectVisible();
+  await popup.button('Continue in the editor').expectVisible();
   await popup.label('Add to').select(rule.id);
   await popup.text(/^“Never now” does not block/).expectVisible();
-  await popup.label('Add to').select('new');
-  await popup.button('Block', { exact: true }).click();
+  await popup.button('Block', { exact: true }).expectVisible();
+});
+
+test('"Block site" › New rule… sets the rule up in the rule editor, with the site blocked at all times', async ({
+  h,
+}) => {
+  await h.configure((c) => {
+    c.groups = [group('Misc', ['misc.test'], [policy(TRACK)])];
+  });
+  const site = await expectAllowed(h, 'http://wiki.test/article/1');
+  const open = async () => {
+    const popup = await h.popup(site);
+    await popup.button('Block site').click();
+    await popup.role('radio', /This section/).click();
+    // The name is asked in the editor's Details.
+    await popup.label('Add to').expectValue('new');
+    await popup.get('.panel input').expectCount(0);
+    return h.newTab(() => popup.button('Continue in the editor').click());
+  };
+
+  // Cancelled: nothing is created.
+  let p = await open();
+  await p.role('heading', 'Which sites?').expectVisible();
+  await p.text('wiki.test/article/1', { within: '.target-row' }).expectVisible();
+  await p.button('Cancel').click();
+  await p.role('heading', 'Rules', { exact: true }).expectVisible();
+  expect((await h.rpc('config.get')).config.groups).toHaveLength(1);
+  await expectAllowed(h, 'http://wiki.test/article/2');
+
+  // Created: every part is seen, Block at all times is already chosen.
+  p = await open();
+  await p.text('wiki.test/article/1', { within: '.target-row' }).expectVisible();
+  await p.button('Next: when').click();
+  await p.role('radio', /Every time/).expectChecked();
+  await p.button('Next: what happens').click();
+  await p.role('radio', 'Block').expectChecked();
+  await p.button('Next: protection').click();
+  await p.role('radio', /^Reminder/).click();
+  await p.button('Next: details').click();
+  await p.label('Name', { exact: true }).expectValue('');
+  await p.label('Name', { exact: true }).fill('Wiki');
+  await p.button('Next: summary').click();
+  await p.get('.plan-text').expectText('WebHandbrake blocks the page.');
+  await p.button('Create rule').click();
+  await p.role('heading', 'Rules', { exact: true }).expectVisible();
+  const wiki = (await h.rpc('config.get')).config.groups.find((g: any) => g.name === 'Wiki');
+  expect(wiki.targets.map((x: any) => [x.type, x.value])).toEqual([['path', 'wiki.test/article/1']]);
+  expect(wiki.policies[0]).toMatchObject({ schedule: { mode: 'always' }, intervention: { type: 'block' } });
+  expect(wiki.pause.allowed).toBe(false);
   await site.expectIntervention(true, 5000);
-  const added = (await h.rpc('config.get')).config.groups[1];
-  expect(added).toMatchObject({ name: 'Blocked sites', pause: { allowed: false } });
+  await expectAllowed(h, 'http://wiki.test/');
 });
 
 test('"Save for later" from the popup, counted in its footer', async ({ h }) => {
