@@ -127,5 +127,11 @@ export const INACTIVE_GAP_MS = 10 * 60_000;
  */
 export const RECHECK_GRANT_MS = 2 * 60_000;
 
+/**
+ * A tab that leaves what an access for the visit covers can come back within this long and the
+ * visit goes on: a sign-in on another site (Sign in with Google) that returns to the site.
+ */
+export const VISIT_RETURN_MS = 2 * 60_000;
+
 /** How far ahead the next decision changes (schedule boundaries, period ends) are looked for. */
 export const HORIZON_DAYS = 8;

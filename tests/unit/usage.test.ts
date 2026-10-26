@@ -36,6 +36,23 @@ describe('usage', () => {
     expect(u.dirtyMinutes).toBe(false);
   });
 
+  it('keeps the hours of the totals and of the sites, not of the rules', () => {
+    const u = new Usage();
+    for (const key of ['a:', 'o:', 'p:', 'h:x.test', 'h:', KEY, 's:A:x.test'])
+      u.add(key, at(0, 10, 30), 10, 1, cal, false);
+    u.add('h:x.test', at(0, 11), 5, 0, cal, false);
+    // A visit without time has no hour.
+    u.add('p:', at(0, 12), 0, 1, cal, false);
+    const d = u.days.get('2026-10-05');
+    expect(d?.h).toEqual({ '10': 10 });
+    expect(d?.hk).toEqual({
+      'o:': { '10': 10 },
+      'p:': { '10': 10 },
+      'h:x.test': { '10': 10, '11': 5 },
+      'h:': { '10': 10 },
+    });
+  });
+
   it('sums over days or over minutes, seconds or visits', () => {
     const u = new Usage();
     u.add(KEY, at(0, 9), 60, 1, cal);

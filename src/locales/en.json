@@ -606,6 +606,9 @@
   "editor.next.details": {
     "message": "Next: details"
   },
+  "editor.next.sites": {
+    "message": "Next: sites"
+  },
   "editor.next.summary": {
     "message": "Next: summary"
   },
@@ -1205,7 +1208,7 @@
     "message": "What can happen on a site"
   },
   "help.interventions.visit": {
-    "message": "After a wait or a challenge, you usually get in for the rest of the visit. The visit ends when you leave those pages or stop using them for {minutes} minutes. When several rules apply to a page, each one asks in turn."
+    "message": "After a wait or a challenge, you usually get in for the rest of the visit. The visit ends when you close those pages, stay away from them for {returnMinutes} minutes (time enough to sign in on another site and come back) or stop using them for {minutes} minutes. When several rules apply to a page, each one asks in turn."
   },
   "help.issue": {
     "message": "Report a problem or suggest an idea"
@@ -1268,7 +1271,7 @@
     "message": "No account, no server, no tracking. WebHandbrake makes no network requests of its own. Your rules, settings and statistics stay in your browser."
   },
   "help.privacy.p2": {
-    "message": "Statistics are daily totals per rule and per site, plus the time per hour on limited sites, never full addresses. In private windows, only what your limits need is kept. Statistics are kept for {days} days; limits keep their totals for {keepDays} days even if you delete them."
+    "message": "Statistics are daily totals per rule and per site, plus the time per hour on limited sites and per site, never full addresses. In private windows, only what your limits need is kept. Statistics are kept for {days} days; limits keep their totals for {keepDays} days even if you delete them."
   },
   "help.privacy.p3": {
     "message": "A small script runs on the sites of your rules to show the timer and filters and to notice whether you are active. With “Track time on all sites” or some advanced entries, it runs on every site. Nothing it reads is stored, apart from the time."
@@ -1613,8 +1616,14 @@
   "insights.hours": {
     "message": "Hour by hour"
   },
+  "insights.hoursAllLabel": {
+    "message": "Time per hour, on limited sites and outside your rules"
+  },
   "insights.hoursLabel": {
     "message": "Time on limited sites per hour"
+  },
+  "insights.hoursSitesLabel": {
+    "message": "Time per site per hour"
   },
   "insights.impulses": {
     "message": "{count, plural, one {time you chose not to go in} other {times you chose not to go in}}"
@@ -1645,6 +1654,9 @@
   },
   "insights.next": {
     "message": "Next period"
+  },
+  "insights.noHourSites": {
+    "message": "No hour-by-hour detail by site for this day: earlier versions kept only the total."
   },
   "insights.noHours": {
     "message": "No hour-by-hour detail for this day."
@@ -1925,7 +1937,7 @@
     "message": "Take a moment…"
   },
   "iv.delay.hint": {
-    "message": "Breathe slowly. You can continue when the circle closes."
+    "message": "You can continue when the circle closes."
   },
   "iv.delay.left": {
     "message": "You can continue in {seconds} s."

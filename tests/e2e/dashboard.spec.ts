@@ -106,6 +106,15 @@ for (const width of [1280, 390]) {
         location.hash = `#/groups/${id}`;
       }, g.id);
       await p.get('.editor-steps').waitFor('visible');
+      // A rule opens on its summary, which comes first.
+      await p.get('.editor-steps [aria-current="step"]').expectText('Summary');
+      await p.text('Part 1 of 6').expectVisible();
+      const labels = () =>
+        p.eval(() => [...document.querySelectorAll('.editor-steps .label')].map((x) => x.textContent));
+      expect(await labels()).toEqual(Object.keys(PARTS));
+      // It leads to the next part, Sites, as every part does.
+      await p.button('Next: sites').click();
+      await p.role('heading', PARTS.Sites).expectVisible();
       // Every part of the rule opens. A break lifts a block only, so only a rule that blocks has
       // breaks, under what happens.
       const blocks = g.policies.some((x: any) => x.intervention.type === 'block');
@@ -115,6 +124,9 @@ for (const width of [1280, 390]) {
         if (part === 'What happens') await p.role('switch', 'Allow breaks').expectCount(blocks ? 1 : 0);
         expect(await p.overflowX(), `horizontal overflow on ${part}`).toBeLessThanOrEqual(0);
       }
+      // The last part leads back to the summary.
+      await p.button('Next: summary').click();
+      await p.role('heading', PARTS.Summary).expectVisible();
       await openPart(p, 'When');
       await p.role('radiogroup', 'When should it apply?').expectVisible();
       expect(await p.overflowX()).toBeLessThanOrEqual(0);
@@ -309,7 +321,12 @@ test('the Wait protection takes a wait of any length, typed as a number and a un
 test('a new rule takes wildcards and every website, and the editor warns (#20, #23)', async ({ h }) => {
   const p = await h.page('dashboard.html#/groups/new');
   await p.role('heading', 'Which sites?').expectVisible();
-  await p.placeholder('Add a site, or paste a list…').fill('*  *news*');
+  // An address, not words: a phone's keyboard neither capitalises nor corrects it.
+  const field = p.placeholder('Add a site, or paste a list…');
+  expect(await field.attr('autocorrect')).toBe('off');
+  expect(await field.attr('autocapitalize')).toBe('off');
+  expect(await field.attr('spellcheck')).toBe('false');
+  await field.fill('*  *news*');
   await p.button('Add', { exact: true }).click();
   await p.text('Every website', { exact: true }).expectVisible();
   await p.text('*news*', { exact: true }).expectVisible();
@@ -1080,11 +1097,14 @@ test('insights show the time per rule and site, and the impulses resisted', asyn
   await insights.press('Home');
   for (let i = 0; i < (new Date().getDay() + 6) % 7; i++) await insights.press('ArrowRight');
   await expect.poll(tip).toMatch(/^\d.*video\.test/);
-  // A day hour by hour.
+  // A day hour by hour, split by site as the days were.
   await insights.role('radio', 'Day').click();
   await insights.text('Hour by hour', { exact: true }).expectVisible();
-  await insights.role('img', 'Time on limited sites per hour').expectVisible();
+  await insights.role('img', 'Time per site per hour').expectVisible();
+  await insights.get({ css: '.legend li', text: 'video.test' }).expectVisible();
   expect(await insights.get('.bars .col').count()).toBe(24);
+  await insights.role('radio', 'Total').click();
+  await insights.role('img', 'Time on limited sites per hour').expectVisible();
   const today = await h.page('dashboard.html#/today');
   await today.text('Video', { within: 'main' }).expectVisible();
 });
@@ -1127,4 +1147,21 @@ test('insights by site add up to the total, and fit a phone screen', async ({ h,
     expect(await insights.overflowX(), `horizontal overflow at ${width}px`).toBeLessThanOrEqual(0);
     await insights.press('Escape');
   }
+  /** The time of the current hour, which the chart shows first from the keyboard. */
+  const thisHour = async () => {
+    await insights.eval(() => (document.querySelector('.bars') as HTMLElement).focus());
+    await insights.get('.chart-tip').expectVisible();
+    const time = await insights.eval(() => document.querySelector('.chart-tip strong')?.textContent ?? '');
+    await insights.eval(() => (document.activeElement as HTMLElement | null)?.blur());
+    return time;
+  };
+  // The hours add up the same way.
+  await insights.role('radio', 'Day').click();
+  await insights.role('img', 'Time per site per hour').expectVisible();
+  const hour = await thisHour();
+  expect(hour).toMatch(/^\d/);
+  await insights.role('radio', 'Total').click();
+  await insights.role('img', 'Time on limited sites per hour').expectVisible();
+  expect(await thisHour()).toBe(hour);
+  expect(await insights.overflowX()).toBeLessThanOrEqual(0);
 });

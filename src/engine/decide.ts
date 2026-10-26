@@ -17,6 +17,7 @@ import {
   redirectKey,
 } from './compile';
 import { breaksLift } from './defaults';
+import { VISIT_RETURN_MS } from './limits';
 import { type CompiledPattern, siteKeyFor } from './patterns';
 import { isNav, PASSABLE, SEVERITY } from './severity';
 import { periodRange, scheduleActive } from './time';
@@ -155,6 +156,7 @@ export function budgetStatus(
 export function grantActive(ctx: EngineContext, g: Grant, groupId?: string, site?: string): boolean {
   const { now, state } = ctx;
   if (g.until !== undefined && now >= g.until) return false;
+  if (g.leftAt !== undefined && now >= g.leftAt + VISIT_RETURN_MS) return false;
   if (g.visit) {
     const key =
       g.scope === 'site' && site && groupId

@@ -351,6 +351,12 @@ export interface Grant {
   until?: number;
   /** Ends with the visit. */
   visit?: boolean;
+  /**
+   * A visit that no tab shows since a tab went to another page: when, and that tab. It ends unless
+   * a tab shows it again within VISIT_RETURN_MS, or at once when that tab is closed.
+   */
+  leftAt?: number;
+  leftTab?: number;
   /** Highest intervention severity this grant lets through. */
   severity: number;
   intention?: string;
@@ -470,6 +476,11 @@ export interface DayRecord {
   c: Record<string, number>;
   /** Seconds of the a: total (time on limited sites) per clock hour, "0" to "23". */
   h?: Record<string, number>;
+  /**
+   * The same for the time outside the rules and the time by site (o:, p: and h: keys), which add up
+   * to the hours of a: and o:. Days of earlier versions have none.
+   */
+  hk?: Record<string, Record<string, number>>;
 }
 
 /** Minute buckets for the last 48 hours: key → minute index → [seconds, visits]. */

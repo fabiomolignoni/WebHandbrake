@@ -100,6 +100,9 @@ function AddBox({
             class="textarea mono grow"
             value={text}
             aria-label={placeholder}
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellcheck={false}
             onInput={(e) => setText((e.target as HTMLTextAreaElement).value)}
           />
         ) : (
@@ -109,7 +112,9 @@ function AddBox({
             value={text}
             placeholder={placeholder}
             aria-label={placeholder}
+            // Addresses, not words: a phone's keyboard neither capitalises nor corrects them.
             autoCapitalize="off"
+            autoCorrect="off"
             spellcheck={false}
             onInput={(e) => setText((e.target as HTMLInputElement).value)}
             onKeyDown={(e) => {
@@ -234,6 +239,7 @@ function Row({
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
             autoCapitalize="off"
+            autoCorrect="off"
             spellcheck={false}
             onFocus={(e) => {
               const el = e.target as HTMLInputElement;
@@ -357,6 +363,9 @@ function TextEditor({
         rows={14}
         value={text}
         aria-label={t('targets.textMode')}
+        autoCapitalize="off"
+        autoCorrect="off"
+        spellcheck={false}
         onInput={(e) => setText((e.target as HTMLTextAreaElement).value)}
       />
       {errors.length > 0 && (

@@ -5,7 +5,7 @@
 
 import type { CompiledGroup } from './compile';
 import { type Decision, decide, type EngineContext, grantActive, type UrlContext } from './decide';
-import { HORIZON_DAYS } from './limits';
+import { HORIZON_DAYS, VISIT_RETURN_MS } from './limits';
 import { isNav, SEVERITY, severityOf } from './severity';
 import { DAY, periodRange, scheduleBoundaries } from './time';
 import type { Intervention } from './types';
@@ -48,6 +48,7 @@ export function candidateTimes(ctx: EngineContext, groups: CompiledGroup[]): num
   }
   for (const g of state.grants) {
     add(g.until);
+    if (g.leftAt !== undefined) add(g.leftAt + VISIT_RETURN_MS);
     if (g.visit) {
       const keys = Object.keys(state.activity).filter((k) => k.startsWith('g:') || k.startsWith('s:'));
       let last = g.createdAt;

@@ -69,8 +69,8 @@ function main() {
 
   api.idle?.onStateChanged?.addListener((s) => setIdleState(s as 'active' | 'idle' | 'locked'));
 
-  registerNavigationListeners(() => {
-    void endLeftVisits();
+  registerNavigationListeners((tabId) => {
+    void endLeftVisits({ navigated: tabId });
   });
   registerTabListeners(
     (tabId) => {
@@ -81,7 +81,7 @@ function main() {
     },
     (tabId) => {
       forgetTab(tabId);
-      void endLeftVisits(tabId);
+      void endLeftVisits({ closed: tabId });
     },
   );
   registerPermissionListeners();

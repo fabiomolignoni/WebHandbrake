@@ -6,13 +6,33 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Insights › **Hour by hour** can split each hour by site (**By site**), as **Day by day** does,
+  and both charts keep the choice. With **Track time on all sites**, its **Total** has the time
+  outside your rules too, as a part of its own. The hours by site are kept from this version on:
+  days recorded earlier have them in total only.
+
 ### Changed
 
 - On Firefox for Android, WebHandbrake in the Extensions menu opens the dashboard instead of the
   popup, in its tab when it is already open.
+- The editor of a rule that exists lists **Summary** first among its parts, since the rule opens
+  on it. Like every part it leads to the next one (**Next: sites**), and **Details**, the last
+  part, leads back to it.
+- The text under the countdown of a wait no longer tells you to breathe slowly: it says when you
+  can continue.
 
 ### Fixed
 
+- Signing in on another site (**Sign in with Google**) and coming back no longer asks for the wait
+  or the challenge again: an access for the rest of the visit gives a tab that leaves the site 2
+  minutes to come back. Closing the tab still ends the visit at once.
+- Going in from the block page, after a wait, a question or a challenge or with a break, leads
+  straight to the site: the page no longer shows “This page is available again.” for a moment on
+  the way.
+- A phone’s keyboard no longer corrects the addresses typed in a rule’s sites, in the list of a
+  focus session or in **Test an address**.
 - Chrome: in private windows, a restricted page shows the intervention page instead of Chrome's
   error page ("blocked by an extension"), so **Ask first**, **Wait**, **Challenge**, **Redirect**,
   breaks and passes work there too, not only blocking. WebHandbrake now runs a background of its
@@ -31,6 +51,8 @@ All notable changes to WebHandbrake are documented here. The format follows
 - Insights › **By site** has the visits in private windows, besides their time.
 - Insights › **By site** and **By rule** no longer run off the side of a phone screen: a long site
   name wraps, and the time and the visits stay on one line.
+- The charts of Insights no longer list a part of "0 min" (such as **Other sites**) that was only
+  the rounding of the time.
 
 ## [1.1.0] - 2026-10-25
 
