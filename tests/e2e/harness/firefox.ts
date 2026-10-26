@@ -100,10 +100,10 @@ class FirefoxTab implements TabDriver {
     return id;
   }
   /**
-   * WebDriver scrolls only an element outside the viewport, so a sticky bar can still cover it:
-   * an element that a sticky or fixed element covers at its centre is centred first. An option
-   * is clicked through its list, which WebDriver scrolls to the bottom edge, under the dashboard's
-   * sticky action bar: a list outside the viewport is centred too.
+   * WebDriver scrolls only an element outside the viewport, and only to its bottom edge, so a
+   * sticky bar can still cover it (the dashboard's action bar, its navigation on a phone): an
+   * element outside the viewport, or that a sticky or fixed element covers at its centre, is
+   * centred first. An option is clicked through its list, which is centred instead.
    */
   private async uncover(id: string) {
     await this.s.wd.classic('POST', '/execute/sync', {
@@ -111,11 +111,11 @@ class FirefoxTab implements TabDriver {
         const el = list ?? arguments[0];
         const r = el.getBoundingClientRect();
         let top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-        if (!top && list) {
+        if (!top) {
           el.scrollIntoView({ block: 'center', inline: 'nearest' });
           return;
         }
-        if (!top || top === el || el.contains(top)) return;
+        if (top === el || el.contains(top)) return;
         for (; top; top = top.parentElement) {
           if (['sticky', 'fixed'].includes(getComputedStyle(top).position)) {
             el.scrollIntoView({ block: 'center', inline: 'nearest' });
