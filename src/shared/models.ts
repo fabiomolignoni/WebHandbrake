@@ -337,6 +337,9 @@ export interface StatsDay {
   private: number;
 }
 
+/** An hour of the period, split as a day is: its time by site adds up to `seconds` and `outside`. */
+export type StatsHour = Omit<StatsDay, 'day' | 'visits'>;
+
 export interface StatsModel {
   from: string;
   to: string;
@@ -377,6 +380,11 @@ export interface StatsModel {
    * has time but no hours (recorded before they were kept).
    */
   hours: number[] | null;
+  /**
+   * The hours split as the days are (index 0 to 23, by `stack`), or null when a day of the period
+   * has time but not its hours by site (recorded by an earlier version).
+   */
+  hourParts: StatsHour[] | null;
 }
 
 export interface DiagModel {

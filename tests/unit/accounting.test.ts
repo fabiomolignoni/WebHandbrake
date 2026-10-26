@@ -110,6 +110,10 @@ describe('counting time', () => {
       'p:',
       's:A:a.test',
     ]);
+    // The hours by site add up to the hours of the totals, also without a name.
+    const rec = t.store.usage.days.get('2026-10-05')!;
+    expect(rec.h).toEqual({ '10': 2 });
+    expect(rec.hk).toEqual({ 'o:': { '10': 2 }, 'h:elsewhere.test': { '10': 1 }, 'p:': { '10': 3 } });
   });
 
   it('by site, tabs counted at the same time share the seconds of the total', async () => {

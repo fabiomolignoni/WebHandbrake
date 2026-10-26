@@ -6,10 +6,20 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Insights › **Hour by hour** can split each hour by site (**By site**), as **Day by day** does,
+  and both charts keep the choice. With **Track time on all sites**, its **Total** has the time
+  outside your rules too, as a part of its own. The hours by site are kept from this version on:
+  days recorded earlier have them in total only.
+
 ### Changed
 
 - On Firefox for Android, WebHandbrake in the Extensions menu opens the dashboard instead of the
   popup, in its tab when it is already open.
+- The editor of a rule that exists lists **Summary** first among its parts, since the rule opens
+  on it. Like every part it leads to the next one (**Next: sites**), and **Details**, the last
+  part, leads back to it.
 - The text under the countdown of a wait no longer tells you to breathe slowly: it says when you
   can continue.
 
@@ -36,6 +46,8 @@ All notable changes to WebHandbrake are documented here. The format follows
 - Insights › **By site** has the visits in private windows, besides their time.
 - Insights › **By site** and **By rule** no longer run off the side of a phone screen: a long site
   name wraps, and the time and the visits stay on one line.
+- The charts of Insights no longer list a part of "0 min" (such as **Other sites**) that was only
+  the rounding of the time.
 
 ## [1.1.0] - 2026-10-25
 
