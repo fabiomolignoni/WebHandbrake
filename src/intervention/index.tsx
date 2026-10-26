@@ -523,7 +523,10 @@ function PassStep({
   const intervention = model.decision?.intervention;
   const delayOpts = intervention?.type === 'delay' ? intervention : null;
 
-  // The countdown pauses or restarts when the page loses focus.
+  // The wait pauses or starts again when you switch to another tab. The background times it and
+  // follows where the page is shown; the page tells it when it is hidden or shown again (which the
+  // background cannot always see: a window covered, another app on Android) and shows the wait as
+  // it is then.
   const waitSeconds = step.type === 'wait' ? step.seconds : (delayOpts?.seconds ?? 0);
   const [readyAt, setReadyAt] = useState<number>(
     step.type === 'wait' || step.type === 'intention' ? step.readyAt : 0,
@@ -531,22 +534,29 @@ function PassStep({
   useEffect(() => {
     if (step.type === 'wait' || step.type === 'intention') setReadyAt(step.readyAt);
   }, [ticket]);
+  const follows = Boolean(delayOpts) && delayOpts?.onBlur !== 'ignore';
   useEffect(() => {
-    if (!delayOpts || delayOpts.onBlur === 'ignore') return;
+    if (!follows) return;
     let hiddenAt = 0;
     const onVis = () => {
-      if (document.visibilityState === 'hidden') hiddenAt = Date.now();
-      else if (hiddenAt) {
+      const visible = document.visibilityState === 'visible';
+      const told = call('ticket.shown', { id: ticket.id, visible }).catch(() => null);
+      if (!visible) {
+        hiddenAt = Date.now();
+        return;
+      }
+      if (hiddenAt) {
+        // Shown at once, until the background's answer: the time away added, or the wait again.
         const away = Date.now() - hiddenAt;
         hiddenAt = 0;
-        // The wait of this ticket (random or increasing delays make it longer than the base).
-        if (delayOpts.onBlur === 'restart') setReadyAt(Date.now() + waitSeconds * 1000);
+        if (delayOpts?.onBlur === 'restart') setReadyAt(Date.now() + waitSeconds * 1000);
         else setReadyAt((r) => r + away);
       }
+      void told.then((v) => v && setTicket(v));
     };
     document.addEventListener('visibilitychange', onVis);
     return () => document.removeEventListener('visibilitychange', onVis);
-  }, [delayOpts, waitSeconds]);
+  }, [follows, delayOpts, ticket.id, waitSeconds]);
 
   // Never more than the wait itself: the page's clock may be a moment behind when it opens.
   const total = step.type === 'wait' || step.type === 'intention' ? step.seconds : Number.POSITIVE_INFINITY;
@@ -589,14 +599,16 @@ function PassStep({
     }
   };
 
-  // Automatic continuation.
+  // Automatic continuation, once the page is seen again after a wait that pauses or starts again:
+  // the wait it shows is then the background's.
   const auto = useRef(false);
   useEffect(() => {
-    if (step.type === 'wait' && delayOpts?.autoContinue && left === 0 && !auto.current) {
+    const seen = !follows || document.visibilityState === 'visible';
+    if (step.type === 'wait' && delayOpts?.autoContinue && left === 0 && !auto.current && seen) {
       auto.current = true;
       void submit();
     }
-  }, [left]);
+  }, [left, ticket]);
 
   return (
     <form

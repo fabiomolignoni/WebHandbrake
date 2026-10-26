@@ -351,6 +351,154 @@ describe('the intervention page', () => {
   });
 });
 
+describe('a wait that pauses or starts again when you switch tabs', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(T0);
+    fake = installFakeBrowser();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.doUnmock('../../src/background/reconcile');
+  });
+
+  /** The events of the tabs are handled in the background: until it has looked at them. */
+  const settle = async () => {
+    for (let i = 0; i < 5; i++) await new Promise((r) => setTimeout(r, 0));
+  };
+
+  async function waiting(onBlur: 'pause' | 'restart' | 'ignore', opts: { background?: boolean } = {}) {
+    const t = await setup([
+      group('W', ['w.test'], [{ intervention: { ...delayIntervention(30), onBlur } as Intervention }]),
+    ]);
+    t.tickets.registerWaitListeners();
+    fake.tabs[0].windowId = 1;
+    fake.tabs[0].active = !opts.background;
+    fake.tabs.push({ id: 3, url: 'https://other.test/', incognito: false, active: false, windowId: 1 });
+    const m = await t.model('https://w.test/');
+    const id = m.ticket!.id;
+    /** Shows a tab of the window, as the person switching to it. */
+    const activate = async (tabId: number, at: number) => {
+      vi.setSystemTime(at);
+      for (const tab of fake.tabs) if (tab.windowId === 1) tab.active = tab.id === tabId;
+      fake.events.onActivated.fire({ tabId, windowId: 1 });
+      await settle();
+    };
+    const answer = (at: number) => {
+      vi.setSystemTime(at);
+      return t.tickets.answerTicket(id, '');
+    };
+    const notYet = (readyAt: number) => ({
+      status: 'error',
+      error: 'ticket.error.notYet',
+      ticket: { step: { type: 'wait', readyAt } },
+    });
+    return { ...t, id, activate, answer, notYet };
+  }
+
+  it('pauses while another tab is shown: an answer before the end it moved to is refused', async () => {
+    const t = await waiting('pause');
+    // 10 s of the wait, then 30 s on another tab: 20 s are left when the page is shown again.
+    await t.activate(3, T0 + 10_000);
+    // Answered while away, it would end 20 s after the page is shown again.
+    expect(await t.answer(T0 + 30_000)).toMatchObject(t.notYet(T0 + 50_000));
+    await t.activate(1, T0 + 40_000);
+    expect(await t.answer(T0 + 45_000)).toMatchObject(t.notYet(T0 + 60_000));
+    expect(await t.answer(T0 + 60_000)).toMatchObject({ status: 'done' });
+  });
+
+  it('starts again once the page is shown again', async () => {
+    const t = await waiting('restart');
+    await t.activate(3, T0 + 25_000);
+    await t.activate(1, T0 + 40_000);
+    expect(await t.answer(T0 + 60_000)).toMatchObject(t.notYet(T0 + 70_000));
+    expect(await t.answer(T0 + 70_000)).toMatchObject({ status: 'done' });
+  });
+
+  it('keeps going if the rule says so', async () => {
+    const t = await waiting('ignore');
+    await t.activate(3, T0 + 10_000);
+    expect(await t.answer(T0 + 30_000)).toMatchObject({ status: 'done' });
+  });
+
+  it('pauses while the window is minimised, or while the page says it is hidden', async () => {
+    const t = await waiting('pause');
+    vi.setSystemTime(T0 + 10_000);
+    fake.windows.set(1, 'minimized');
+    fake.events.onFocusChanged.fire(-1);
+    await settle();
+    vi.setSystemTime(T0 + 20_000);
+    fake.windows.delete(1);
+    fake.events.onFocusChanged.fire(1);
+    await settle();
+    // Covered by another window: only the page can tell. Another tab's word does not count.
+    vi.setSystemTime(T0 + 25_000);
+    const elsewhere = { tab: { id: 3 } } as chrome.runtime.MessageSender;
+    expect(await t.tickets.ticketShown(t.id, elsewhere.tab?.id, false)).toMatchObject({
+      step: { readyAt: T0 + 40_000 },
+    });
+    expect(await t.tickets.ticketShown(t.id, 1, false)).toMatchObject({ step: { readyAt: T0 + 40_000 } });
+    vi.setSystemTime(T0 + 35_000);
+    expect(await t.tickets.ticketShown(t.id, 1, true)).toMatchObject({ step: { readyAt: T0 + 50_000 } });
+    expect(await t.answer(T0 + 45_000)).toMatchObject(t.notYet(T0 + 50_000));
+    // Saying it is in view does not make a tab in the background visible.
+    await t.activate(3, T0 + 46_000);
+    await t.tickets.ticketShown(t.id, 1, true);
+    expect(await t.answer(T0 + 50_000)).toMatchObject(t.notYet(T0 + 54_000));
+  });
+
+  it('counts down in a tab opened in the background until the page is seen', async () => {
+    const t = await waiting('pause', { background: true });
+    // Another tab shown before the page was: its wait goes on, as it always did.
+    await t.activate(3, T0 + 20_000);
+    await t.activate(1, T0 + 25_000);
+    // Seen, then left for 2 s.
+    await t.activate(3, T0 + 28_000);
+    await t.activate(1, T0 + 30_000);
+    expect(await t.answer(T0 + 31_000)).toMatchObject(t.notYet(T0 + 32_000));
+    expect(await t.answer(T0 + 32_000)).toMatchObject({ status: 'done' });
+  });
+
+  it('goes on while another page of the same wait is in view', async () => {
+    const t = await waiting('pause');
+    fake.tabs.push({ id: 4, url: `${PAGE}#https://w.test/b`, incognito: false, active: true, windowId: 2 });
+    const other = await t.intervention.interventionModel('https://w.test/b', {
+      tab: { id: 4, incognito: false },
+      url: PAGE,
+    } as chrome.runtime.MessageSender);
+    expect(other.ticket?.id).toBe(t.id);
+    await t.activate(3, T0 + 10_000);
+    expect(await t.answer(T0 + 30_000)).toMatchObject({ status: 'done' });
+  });
+
+  it('closed and opened again, the same wait goes on from where it was', async () => {
+    const t = await waiting('pause');
+    vi.setSystemTime(T0 + 10_000);
+    await t.intervention.closeSenderTab(t.sender);
+    fake.events.onRemoved.fire(1);
+    await settle();
+    vi.setSystemTime(T0 + 300_000);
+    fake.tabs.push({ id: 5, url: `${PAGE}#https://w.test/`, incognito: false, active: true, windowId: 1 });
+    const again = await t.intervention.interventionModel('https://w.test/', {
+      tab: { id: 5, incognito: false },
+      url: PAGE,
+    } as chrome.runtime.MessageSender);
+    expect(again.ticket).toMatchObject({ id: t.id, step: { readyAt: T0 + 320_000 } });
+    expect(await t.answer(T0 + 319_000)).toMatchObject(t.notYet(T0 + 320_000));
+  });
+
+  it('a tab that shows another page no longer shows the wait', async () => {
+    const t = await waiting('pause');
+    t.store.config.groups.push(group('B', ['b.test'], [{ intervention: BLOCK }]));
+    t.store.cc = compileConfig(t.store.config);
+    vi.setSystemTime(T0 + 10_000);
+    fake.tabs[0].url = `${PAGE}#https://b.test/`;
+    await t.model('https://b.test/');
+    expect(await t.answer(T0 + 40_000)).toMatchObject(t.notYet(T0 + 60_000));
+  });
+});
+
 describe('custom CSS', () => {
   beforeEach(() => {
     vi.resetModules();

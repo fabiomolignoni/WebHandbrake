@@ -28,7 +28,7 @@ import { reconcile } from './reconcile';
 import { countSessionStop } from './sessions';
 import { store } from './store';
 import { queryTabs, removeTab, updateTab } from './tabs';
-import { createTicket, registerExecutor, type Step } from './tickets';
+import { createTicket, registerExecutor, type Step, showTicket } from './tickets';
 
 const shownRecently = new Map<string, number>();
 
@@ -96,6 +96,19 @@ export async function interventionModel(
   url: string,
   sender: chrome.runtime.MessageSender,
 ): Promise<InterventionModel> {
+  const m = await modelOf(url, sender);
+  // The tab shows this page now, and no longer any other: the background follows where a wait
+  // that pauses or starts again when its page is left is shown.
+  const i = m.decision?.intervention;
+  m.ticket = await showTicket(
+    sender.tab?.id,
+    m.ticket,
+    i?.type === 'delay' ? (i.onBlur ?? 'pause') : 'ignore',
+  );
+  return m;
+}
+
+async function modelOf(url: string, sender: chrome.runtime.MessageSender): Promise<InterventionModel> {
   await store.ready();
   const tab = sender.tab;
   const incognito = Boolean(tab?.incognito);

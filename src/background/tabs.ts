@@ -29,6 +29,10 @@ export async function onTab<T>(
 
 export const getTab = (id: number) => onTab(id, () => api.tabs.get(id), 'tabs.get', id);
 
+/** The window of a tab (whether it is minimised). */
+export const getWindow = (tabId: number, windowId: number) =>
+  onTab(tabId, () => api.windows.get(windowId), 'windows.get', windowId);
+
 export const updateTab = (id: number, props: chrome.tabs.UpdateProperties) =>
   onTab(id, () => api.tabs.update(id, props), 'tabs.update', id, props);
 

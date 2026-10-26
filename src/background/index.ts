@@ -22,6 +22,7 @@ import { ALARM_NEXT, ALARM_PERIODIC, ensurePeriodicAlarm, reconcile } from './re
 import { store } from './store';
 import { getTab } from './tabs';
 import { testLog } from './test-log';
+import { registerWaitListeners } from './tickets';
 import { registerToolbar } from './toolbar';
 
 if (__TEST__) captureErrors('background', (m) => testLog.errors.push(m));
@@ -84,6 +85,7 @@ function main() {
       void endLeftVisits({ closed: tabId });
     },
   );
+  registerWaitListeners();
   registerPermissionListeners();
   registerMenuClicks();
   registerCommands();
