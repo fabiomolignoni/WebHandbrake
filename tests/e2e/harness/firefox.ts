@@ -263,12 +263,13 @@ export async function launchFirefox(opts: LaunchOptions): Promise<BrowserDriver>
     'extensions.webextOptionalPermissionPrompts': false,
     'extensions.background.idle.timeout': opts.backgroundIdleMs ?? 30_000,
     'ui.prefersReducedMotion': 0,
+    ...(opts.stayOnPages ? { 'dom.disable_beforeunload': false } : {}),
   };
   const wd = await WebDriverSession.start(bins.geckodriver, {
     browserName: 'firefox',
     webSocketUrl: true,
     pageLoadStrategy: 'none',
-    unhandledPromptBehavior: 'ignore',
+    unhandledPromptBehavior: opts.stayOnPages ? { default: 'ignore', beforeUnload: 'dismiss' } : 'ignore',
     'moz:firefoxOptions': {
       binary: bins.firefox,
       args: process.env.HEADED ? [] : ['-headless'],

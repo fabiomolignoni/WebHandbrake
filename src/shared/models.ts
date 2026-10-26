@@ -441,6 +441,10 @@ export interface TickResponse {
   filter: { css: string } | null;
   intention: { text: string; until: number | null } | null;
   warning: { id: string; seconds: number; text: string } | null;
+  /** The page is to be replaced by the block page: it reports until it is, even unused. */
+  leaving: boolean;
+  /** The page refused to be replaced ("Leave site?" → Stay): it covers itself until it leaves. */
+  cover: boolean;
   settings: {
     timer: Config['settings']['timer'];
     showTimer: boolean;

@@ -48,6 +48,11 @@ export interface LaunchOptions {
   profile?: string;
   /** Firefox: idle time after which the event page is suspended (ms). */
   backgroundIdleMs?: number;
+  /**
+   * A page that asks before it is left ("Leave site?") is answered Stay. Otherwise Playwright and
+   * geckodriver answer Leave.
+   */
+  stayOnPages?: boolean;
 }
 
 export interface BrowserDriver {

@@ -48,6 +48,21 @@ button:focus-visible { outline: 2px solid #a6b2f4; outline-offset: 2px; }
   .bar { background: #3a4247; }
 }
 @media (prefers-reduced-motion: reduce) { .bar > i { transition: none; } }
+.cover {
+  position: fixed; inset: 0; width: auto; height: auto; max-width: none; max-height: none; margin: 0; border: 0;
+  pointer-events: auto; display: grid; place-items: center; padding: 24px; overflow: auto;
+  color: #1d2327; background: #fbfaf7; font-size: 15px; line-height: 1.5;
+}
+.cover > div { max-width: 480px; text-align: center; }
+.cover h2 { margin: 0 0 8px; font-size: 20px; font-weight: 650; }
+.cover p { margin: 0 0 20px; }
+.cover button { background: #4850a5; color: #fff; padding: 8px 16px; }
+.cover button:hover { background: #3c4390; }
+.cover button:focus-visible { outline-color: #4850a5; }
+@media (prefers-color-scheme: dark) {
+  .cover { color: #eceeea; background: #22282c; }
+  .cover button:focus-visible { outline-color: #a6b2f4; }
+}
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 `;
 
@@ -81,10 +96,15 @@ export class Overlay {
   private lastUpdate = Date.now();
   private soundOn = false;
   private lastKind: string | null = null;
+  private coverEl: HTMLElement | null = null;
   onHide: () => void = () => {};
 
   private ensure() {
-    if (this.root) return;
+    if (this.root) {
+      // The page may have removed it (a site that rewrites its body).
+      if (!this.host!.isConnected) (document.body ?? document.documentElement).appendChild(this.host!);
+      return;
+    }
     this.host = document.createElement('webhandbrake-overlay');
     this.host.style.cssText = 'all: initial; position: fixed; z-index: 2147483647;';
     // Open in the test build only, so that the end-to-end suite can read the overlay.
@@ -266,6 +286,58 @@ export class Overlay {
     panel.appendChild(row);
     this.layer!.appendChild(panel);
     if (autoHideMs) setTimeout(() => panel.remove(), autoHideMs);
+  }
+
+  /**
+   * Covers a page that refused to be replaced by the block page ("Leave site?" → Stay) until it
+   * leaves: nothing of it can be seen or used, and the keys stay in the cover. It cannot be closed;
+   * its button (`open`) asks for the block page again. In the top layer where the browser has one,
+   * above the page's own dialogs.
+   */
+  cover(on: boolean, labels: Record<string, string>, open: () => void) {
+    if (!on) {
+      this.coverEl?.remove();
+      this.coverEl = null;
+      return;
+    }
+    this.ensure();
+    if (!this.coverEl) {
+      const el = document.createElement('div');
+      el.className = 'cover';
+      el.setAttribute('role', 'alertdialog');
+      el.setAttribute('aria-modal', 'true');
+      el.setAttribute('aria-labelledby', 'whb-cover-title');
+      el.setAttribute('aria-describedby', 'whb-cover-body');
+      el.innerHTML =
+        '<div><h2 id="whb-cover-title"></h2><p id="whb-cover-body"></p><button type="button"></button></div>';
+      el.querySelector('button')!.addEventListener('click', open);
+      for (const type of ['keydown', 'keyup', 'keypress']) {
+        el.addEventListener(type, (e) => {
+          e.stopPropagation();
+          if ((e as KeyboardEvent).key === 'Tab') e.preventDefault();
+        });
+      }
+      if ('popover' in el) el.popover = 'manual';
+      this.layer!.appendChild(el);
+      this.coverEl = el;
+    }
+    const el = this.coverEl;
+    if (el.popover && !el.matches(':popover-open')) {
+      try {
+        el.showPopover();
+      } catch {
+        // Not in the document yet: the next update shows it.
+      }
+    }
+    el.querySelector('h2')!.textContent = labels['overlay.cover.title'] ?? '';
+    el.querySelector('p')!.textContent = labels['overlay.cover.body'] ?? '';
+    const button = el.querySelector('button')!;
+    button.textContent = labels['overlay.cover.open'] ?? '';
+    // Out of the page: what it had focused no longer gets the keys.
+    if (document.activeElement !== this.host) {
+      (document.activeElement as HTMLElement | null)?.blur?.();
+      button.focus();
+    }
   }
 
   /** A countdown that cannot be postponed, with a button to copy the draft. */

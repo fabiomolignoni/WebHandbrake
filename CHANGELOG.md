@@ -25,6 +25,11 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ### Fixed
 
+- A page that asks before you leave it (“Leave site?”), as games and editors do, no longer stays
+  usable when its time is up or a rule starts to apply to it: if you choose to stay, WebHandbrake
+  covers the page and pauses its videos and sounds, and asks again every few seconds. **Open the
+  block page** on the cover leaves it. The grace period to finish what you are typing still comes
+  first.
 - Signing in on another site (**Sign in with Google**) and coming back no longer asks for the wait
   or the challenge again: an access for the rest of the visit gives a tab that leaves the site 2
   minutes to come back. Closing the tab still ends the visit at once.

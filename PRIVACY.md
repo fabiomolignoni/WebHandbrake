@@ -38,7 +38,8 @@ lists.
 - **Inside the pages where its page script runs**: whether the page is visible and its window has
   the focus, when you last used the keyboard, mouse or touch screen, whether audio or video is
   playing, and the page's address. This is used to count active time and to show the timer,
-  filters and the grace period.
+  filters and the grace period, and to cover a page that asks to stay open when it should be
+  replaced.
 - **The text of the field you are typing in**, inside the page only. It is used to know whether
   you are typing when a restriction starts, so that you get the grace period, and for the **Copy my draft** button
   of the grace period. It is never sent to the rest of WebHandbrake and never stored.
@@ -162,7 +163,7 @@ does with it.
 | `webRequest` | Reading the `Date` header of top-level pages that the browser loads anyway, for the clock check. | Blocking, changing or storing a request. |
 | `alarms` | Waking WebHandbrake when a schedule, limit, break or session changes, and once a minute for maintenance. | — |
 | `idle` | Stopping time counting when you are inactive or the screen is locked. | — |
-| `scripting` | Adding the page script that shows the timer, filters and the grace period and counts active time, on the sites described in [What WebHandbrake reads](#what-webhandbrake-reads). | Reading the text you type outside the page, or storing page content. |
+| `scripting` | Adding the page script that shows the timer, filters and the grace period, covers a page that asks to stay open when it should be replaced, and counts active time, on the sites described in [What WebHandbrake reads](#what-webhandbrake-reads). | Reading the text you type outside the page, or storing page content. |
 | `contextMenus` | The right-click menu that blocks a site or starts a focus session (on a computer). | — |
 | `notifications` (optional) | Showing the system notifications you turn on; the browser asks for it when you turn them on in **Settings › Feedback**. | Showing notifications you did not turn on. |
 | `<all_urls>` (access to all sites) | Checking the address of each page against your rules, redirecting a restricted page before it loads, running the page script and reading the `Date` header. Without it, restricted pages can only be blocked with the browser's error page. | Sending anything anywhere. |

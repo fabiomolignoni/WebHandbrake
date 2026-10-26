@@ -243,6 +243,113 @@ describe('what the page shows', () => {
   });
 });
 
+describe('a page that refuses to leave', () => {
+  const PAGE = 'chrome-extension://test/intervention.html#https://a.test/';
+  /** Lets the calls started by a tick finish. */
+  const settle = async () => {
+    for (let i = 0; i < 20; i++) await vi.advanceTimersByTimeAsync(0);
+  };
+  const prepared = () => fake.messages.filter((m) => m.message.cmd === 'prepare').length;
+  /** "Leave site?" → Stay: the tab keeps its page. */
+  const stay = () => {
+    fake.tabs[0].url = 'https://a.test/';
+  };
+
+  beforeEach(() => {
+    vi.resetModules();
+    vi.useFakeTimers({ now: T0 });
+    reconciled.length = 0;
+    fake = installFakeBrowser();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.doUnmock('../../src/background/reconcile');
+  });
+
+  it('is asked again, covered once it stayed, and asked every few seconds', async () => {
+    const t = await setup([group('A', ['a.test'], [{ intervention: BLOCK }])]);
+    // Not asked yet: the reconciliation that asks may be on its way. The page reports meanwhile.
+    expect(await t.tick(T0)).toMatchObject({ leaving: true, cover: false });
+    await t.tick(T0 + 4000);
+    await settle();
+    expect(fake.tabs[0].url).toBe('https://a.test/');
+    // Asked a few seconds later, as on a change of state: with a grace period if it is in use.
+    await t.tick(T0 + 5000);
+    await settle();
+    expect(prepared()).toBe(1);
+    expect(fake.tabs[0].url).toBe(PAGE);
+    stay();
+    // Still there a moment later: it stayed, and covers itself.
+    expect((await t.tick(T0 + 6000)).cover).toBe(false);
+    expect((await t.tick(T0 + 7000)).cover).toBe(true);
+    // Asked again every few seconds, without another grace period, and covered meanwhile.
+    expect((await t.tick(T0 + 9000)).cover).toBe(true);
+    await settle();
+    expect(fake.tabs[0].url).toBe('https://a.test/');
+    expect((await t.tick(T0 + 10_000)).cover).toBe(true);
+    await settle();
+    expect(fake.tabs[0].url).toBe(PAGE);
+    stay();
+    expect((await t.tick(T0 + 10_500)).cover).toBe(true);
+    expect(prepared()).toBe(1);
+  });
+
+  it('is not covered during a grace period, which it shows itself', async () => {
+    const t = await setup([group('A', ['a.test'], [{ intervention: BLOCK }])]);
+    const enforce = await import('../../src/background/enforce');
+    await t.tick(T0);
+    await t.tick(T0 + 5000);
+    await settle();
+    stay();
+    expect((await t.tick(T0 + 7000)).cover).toBe(true);
+    // A change of state gives the page in use a grace period: it is neither covered nor asked meanwhile.
+    fake.contentReply.fn = (_tab, m) => (m.cmd === 'prepare' ? { grace: 30 } : undefined);
+    await enforce.enforceTab({ ...fake.tabs[0] } as chrome.tabs.Tab, 'state');
+    expect(prepared()).toBe(2);
+    expect(await t.tick(T0 + 20_000)).toMatchObject({ leaving: true, cover: false });
+    await settle();
+    expect(fake.tabs[0].url).toBe('https://a.test/');
+  });
+
+  it('a page that may stay, or that the rules leave open, is forgotten', async () => {
+    const g = group('A', ['a.test/games'], [{ intervention: BLOCK }]);
+    const t = await setup([g]);
+    const games = 'https://a.test/games';
+    await t.tick(T0, games);
+    await t.tick(T0 + 5000, games);
+    await settle();
+    stay();
+    expect((await t.tick(T0 + 7000, games)).cover).toBe(true);
+    // The site took the page elsewhere without leaving it: nothing to cover.
+    expect(await t.tick(T0 + 8000, 'https://a.test/home')).toMatchObject({ leaving: false, cover: false });
+    // Back on it, it is asked again before it is covered.
+    expect(await t.tick(T0 + 9000, games)).toMatchObject({ leaving: true, cover: false });
+    // A rule for the tab in use leaves a tab in the background alone.
+    g.options.tabs = 'active';
+    t.store.cc = compileConfig(t.store.config);
+    const background = t.tab(2, { active: false, url: games });
+    expect(await t.tick(T0 + 10_000, games, background)).toMatchObject({ leaving: false, cover: false });
+  });
+
+  it('a new page in the tab starts again', async () => {
+    const t = await setup([group('A', ['a.test'], [{ intervention: BLOCK }])]);
+    const enforce = await import('../../src/background/enforce');
+    enforce.registerNavigationListeners(() => {});
+    await t.tick(T0);
+    await t.tick(T0 + 5000);
+    await settle();
+    stay();
+    expect((await t.tick(T0 + 7000)).cover).toBe(true);
+    // Another page of the site loads and is asked to leave at once: it has not refused yet.
+    vi.setSystemTime(T0 + 8000);
+    fake.events.onCommitted.fire({ tabId: 1, frameId: 0, url: 'https://a.test/next' });
+    await settle();
+    expect(fake.tabs[0].url).toBe('chrome-extension://test/intervention.html#https://a.test/next');
+    stay();
+    expect((await t.tick(T0 + 8500, 'https://a.test/next')).cover).toBe(false);
+  });
+});
+
 describe('filters', () => {
   beforeEach(() => {
     vi.resetModules();

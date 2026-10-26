@@ -120,7 +120,7 @@ export interface Api {
   'onboarding.done': { req: Record<string, never>; res: void };
 
   'cs.tick': { req: TickRequest; res: TickResponse };
-  'cs.recheck': { req: { url: string; reason: 'bfcache' | 'spa' | 'load' }; res: void };
+  'cs.recheck': { req: { url: string; reason: 'bfcache' | 'spa' | 'load' | 'cover' }; res: void };
   'cs.graceDone': { req: { url: string }; res: void };
 }
 
