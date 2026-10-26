@@ -1,4 +1,7 @@
-/** Statistics: queries, export and deletion. Only daily aggregates exist, with the hours of the total. */
+/**
+ * Statistics: queries, export and deletion. Only daily aggregates exist, with the hours of the totals
+ * and of the sites.
+ */
 
 import { BUDGET_KEEP_DAYS } from '../engine/limits';
 import { addDays, dayKey, dayStartAt, logicalDayOf, parseDayKey } from '../engine/time';
@@ -7,7 +10,7 @@ import { displayHost, stripWww } from '../engine/url';
 import { impulsesOf, usageKeys } from '../engine/usage';
 import { api } from '../platform/api';
 import { timestampSuffix } from '../shared/format';
-import type { StatsDay, StatsModel } from '../shared/models';
+import type { StatsDay, StatsHour, StatsModel } from '../shared/models';
 import { broadcast } from './reconcile';
 import { store } from './store';
 
@@ -135,6 +138,49 @@ export async function getStats(from: string, to: string): Promise<StatsModel> {
     for (const [hk, sec] of Object.entries(rec.h)) hours[Number(hk)] += sec;
   }
 
+  /**
+   * The hours split as the days are. On the day an update started keeping the hours by site, its
+   * earlier hours have none: their time is among the other sites, as the time without a site.
+   */
+  let hourParts: StatsHour[] | null = Array.from({ length: 24 }, () => ({
+    seconds: 0,
+    outside: 0,
+    sites: stack.map(() => 0),
+    otherSites: 0,
+    private: 0,
+  }));
+  const stacked = new Map(stack.map((host, i) => [usageKeys.host(host), i]));
+  for (const d of days) {
+    const rec = records.get(d);
+    if (!rec || !hourParts) continue;
+    if (!rec.hk) {
+      if (Object.entries(rec.t).some(([key, [sec]]) => sec > 0 && /^[ahop]:/.test(key))) hourParts = null;
+      continue;
+    }
+    // The time of each hour that its sites and private windows leave out.
+    const rest = Array.from({ length: 24 }, (_, i) => rec.h?.[i] ?? 0);
+    for (const [key, hours] of Object.entries(rec.hk)) {
+      const at = stacked.get(key);
+      for (const [hour, sec] of Object.entries(hours)) {
+        const i = Number(hour);
+        const x = hourParts[i];
+        if (key === usageKeys.outside) {
+          x.outside += sec;
+          rest[i] += sec;
+          continue;
+        }
+        rest[i] -= sec;
+        if (key === usageKeys.private) x.private += sec;
+        else if (at === undefined) x.otherSites += sec;
+        else x.sites[at] += sec;
+      }
+    }
+    for (let i = 0; i < 24; i++) {
+      hourParts[i].seconds += rec.h?.[i] ?? 0;
+      hourParts[i].otherSites += Math.max(0, rest[i]);
+    }
+  }
+
   // The breaks and the reasons of the same logical days as the totals.
   const fromMs = dayStartAt(parseDayKey(from), store.cc.cal);
   const toMs = dayStartAt(addDays(parseDayKey(to), 1), store.cc.cal);
@@ -183,6 +229,7 @@ export async function getStats(from: string, to: string): Promise<StatsModel> {
       .reverse(),
     intentions: store.intentions.filter((i) => i.at >= fromMs && i.at < toMs).reverse(),
     hours,
+    hourParts,
   };
 }
 
@@ -241,6 +288,20 @@ export async function exportStats(format: 'csv' | 'json') {
     }
     for (const [hour, sec] of Object.entries(rec.h ?? {}))
       rows.push([day, 'hour', hour, '', String(Math.round(sec)), '']);
+    // The hours of the other totals and of the sites: "9", or "9:example.com" for a site.
+    for (const [key, hours] of Object.entries(rec.hk ?? {})) {
+      const [kind, ...rest] = key.split(':');
+      const site = rest.join(':');
+      for (const [hour, sec] of Object.entries(hours))
+        rows.push([
+          day,
+          `${CSV_KINDS[kind]}-hour`,
+          kind === 'h' ? `${hour}:${site}` : hour,
+          '',
+          String(Math.round(sec)),
+          '',
+        ]);
+    }
     for (const [name, n] of Object.entries(rec.c)) rows.push([day, 'counter', name, '', '', String(n)]);
   }
   return {
@@ -324,6 +385,12 @@ export async function deleteStats(
       delete rec.t[usageKeys.host(host)];
       const unnamed = rec.t[usageKeys.host('')] ?? [0, 0];
       rec.t[usageKeys.host('')] = [unnamed[0] + time[0], unnamed[1] + time[1]];
+      const hours = rec.hk?.[usageKeys.host(host)];
+      if (rec.hk && hours) {
+        delete rec.hk[usageKeys.host(host)];
+        const into = (rec.hk[usageKeys.host('')] ??= {});
+        for (const [hour, sec] of Object.entries(hours)) into[hour] = (into[hour] ?? 0) + sec;
+      }
       items[`u:${day}`] = rec;
     }
     if (Object.keys(items).length) await api.storage.local.set(items);

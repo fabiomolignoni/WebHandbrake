@@ -1,5 +1,5 @@
 /**
- * Insights: day, week, month, year; per group and per site; the hours of a day, the days of
+ * Insights: day, week, month, year; per group and per site; the hours of a day and the days of
  * a period (in total or by site), and comparison with the previous period; attempts and
  * pauses; neutral language.
  * Charts always have text labels and a table alternative.
@@ -145,8 +145,10 @@ function Columns({
   const tipEl = useRef<HTMLDivElement>(null);
   const total = (c: Column) => (c.parts ? c.parts.reduce((a, b) => a + b, 0) : c.seconds);
   const max = Math.max(1, ...columns.map(total));
+  // A part that rounds to no time is the rounding of the totals and the sites: it is not shown.
+  const some = (p: number) => p >= 0.5;
   // A series that has no time in the period is not in the legend.
-  const shown = series?.map((_, i) => columns.some((c) => (c.parts?.[i] ?? 0) > 0));
+  const shown = series?.map((_, i) => columns.some((c) => some(c.parts?.[i] ?? 0)));
   const active = tip !== null && tip < columns.length ? columns[tip] : null;
   const last = columns.length - 1;
 
@@ -239,17 +241,17 @@ function Columns({
                     const sum = total(c);
                     return (
                       <div class={`col${i === tip ? ' active' : ''}`} key={c.key}>
-                        {c.parts && sum > 0 ? (
+                        {c.parts && some(sum) ? (
                           <div class="stacked" style={{ height: `${(sum / max) * 100}%` }}>
                             {c.parts.map((p, j) =>
-                              p > 0 ? (
+                              some(p) ? (
                                 <div key={j} style={{ flexGrow: p, background: series?.[j]?.color }} />
                               ) : null,
                             )}
                           </div>
                         ) : (
                           <div
-                            class={`bar${sum ? '' : ' empty-bar'}${c.current && !c.parts ? ' today' : ''}`}
+                            class={`bar${some(sum) ? '' : ' empty-bar'}${c.current && !c.parts ? ' today' : ''}`}
                             style={{ height: `${Math.max(2, (sum / max) * 100)}%` }}
                           />
                         )}
@@ -264,7 +266,7 @@ function Columns({
                     {active.parts && series && (
                       <ul>
                         {active.parts.map((p, j) =>
-                          p > 0 ? (
+                          some(p) ? (
                             <li key={j}>
                               <span class="key" style={{ background: series[j]?.color }} />
                               <strong class="num">{formatDuration(p)}</strong>
@@ -348,7 +350,47 @@ function Columns({
   );
 }
 
-type TrendMode = 'total' | 'sites';
+/** How the hours and the days are shown: in total, or split by site. */
+type SplitMode = 'total' | 'sites';
+
+/** The split by site: the sites with the most time in the period, the other sites, private windows. */
+function siteSeries(stack: string[]): Series[] {
+  return [
+    ...stack.map((name, i) => ({ name, color: `var(--series-${i + 1})` })),
+    { name: t('insights.otherSites'), color: 'var(--series-other)' },
+    { name: t('insights.private'), color: 'var(--series-private)' },
+  ];
+}
+
+/** A total with the time outside the rules (Track time on all sites). */
+function outsideSeries(): Series[] {
+  return [
+    { name: t('insights.limitedSites'), color: 'var(--accent)' },
+    { name: t('insights.outsideRules'), color: 'var(--series-other)' },
+  ];
+}
+
+function SplitPicker({
+  s,
+  bySite,
+  onMode,
+}: {
+  s: StatsModel;
+  bySite: boolean;
+  onMode: (m: SplitMode) => void;
+}) {
+  return (
+    <Segmented
+      value={bySite ? 'sites' : 'total'}
+      onChange={onMode}
+      label={t('insights.mode')}
+      options={[
+        { value: 'total', label: t('insights.mode.total') },
+        { value: 'sites', label: t('insights.mode.sites'), disabled: !s.stack.length },
+      ]}
+    />
+  );
+}
 
 function Trend({
   s,
@@ -360,8 +402,8 @@ function Trend({
   s: StatsModel;
   span: Span;
   cal: { dayStart: number; weekStart: number };
-  mode: TrendMode;
-  onMode: (m: TrendMode) => void;
+  mode: SplitMode;
+  onMode: (m: SplitMode) => void;
 }) {
   // A year is shown month by month, the other periods day by day.
   const months = span === 'year';
@@ -385,15 +427,7 @@ function Trend({
     <div class="card stack">
       <div class="card-head">
         <h2>{months ? t('insights.trend.months') : t('insights.trend')}</h2>
-        <Segmented
-          value={bySite ? 'sites' : 'total'}
-          onChange={onMode}
-          label={t('insights.mode')}
-          options={[
-            { value: 'total', label: t('insights.mode.total') },
-            { value: 'sites', label: t('insights.mode.sites'), disabled: !s.stack.length },
-          ]}
-        />
+        <SplitPicker s={s} bySite={bySite} onMode={onMode} />
       </div>
       <Columns
         columns={columns}
@@ -415,52 +449,73 @@ function Trend({
                     : 'insights.trendLabel',
               )
         }
-        series={
-          bySite
-            ? [
-                ...s.stack.map((name, i) => ({ name, color: `var(--series-${i + 1})` })),
-                { name: t('insights.otherSites'), color: 'var(--series-other)' },
-                { name: t('insights.private'), color: 'var(--series-private)' },
-              ]
-            : outside
-              ? [
-                  { name: t('insights.limitedSites'), color: 'var(--accent)' },
-                  { name: t('insights.outsideRules'), color: 'var(--series-other)' },
-                ]
-              : undefined
-        }
+        series={bySite ? siteSeries(s.stack) : outside ? outsideSeries() : undefined}
       />
     </div>
   );
 }
 
-/** The hours of one day, from the hour the day starts. */
-function Hours({ s, cal }: { s: StatsModel; cal: { dayStart: number; weekStart: number } }) {
+/** The hours of one day, from the hour the day starts, in total or by site as the days are. */
+function Hours({
+  s,
+  cal,
+  mode,
+  onMode,
+}: {
+  s: StatsModel;
+  cal: { dayStart: number; weekStart: number };
+  mode: SplitMode;
+  onMode: (m: SplitMode) => void;
+}) {
   const d = parseDayKey(s.from);
   const first = Math.floor(cal.dayStart / 60);
   const now = new Date();
   const isToday = s.from === dayKey(logicalDayOf(now.getTime(), cal));
+  // Days of earlier versions have the hours of the time on limited sites only.
+  const split = s.hourParts;
+  const bySite = mode === 'sites' && s.stack.length > 0;
+  const outside = !bySite && Boolean(split?.some((x) => x.outside > 0));
   const columns: Column[] = [];
   for (let i = 0; i < 24; i++) {
     const hour = (first + i) % 24;
     // Hours before the one the day starts at belong to the next calendar day.
     const at = new Date(d.y, d.m, d.d + (hour < first ? 1 : 0), hour).getTime();
+    const x = split?.[hour];
     columns.push({
       key: String(hour),
       label: i % 3 === 0 ? formatHour(at) : '',
       minor: i % 6 !== 0,
       name: `${formatTime(at)}–${formatTime(at + HOUR)}`,
-      seconds: s.hours?.[hour] ?? 0,
+      seconds: x ? x.seconds + x.outside : (s.hours?.[hour] ?? 0),
+      parts:
+        x && bySite
+          ? [...x.sites, x.otherSites, x.private]
+          : x && outside
+            ? [x.seconds, x.outside]
+            : undefined,
       current: isToday && now.getHours() === hour,
     });
   }
   return (
     <div class="card stack">
-      <h2>{t('insights.hours')}</h2>
-      {s.hours ? (
-        <Columns columns={columns} head={t('insights.hour')} label={t('insights.hoursLabel')} spread />
-      ) : (
+      <div class="card-head">
+        <h2>{t('insights.hours')}</h2>
+        {s.hours && <SplitPicker s={s} bySite={bySite} onMode={onMode} />}
+      </div>
+      {!s.hours ? (
         <p class="muted small">{t('insights.noHours')}</p>
+      ) : bySite && !split ? (
+        <p class="muted small">{t('insights.noHourSites')}</p>
+      ) : (
+        <Columns
+          columns={columns}
+          head={t('insights.hour')}
+          label={t(
+            bySite ? 'insights.hoursSitesLabel' : outside ? 'insights.hoursAllLabel' : 'insights.hoursLabel',
+          )}
+          series={bySite ? siteSeries(s.stack) : outside ? outsideSeries() : undefined}
+          spread
+        />
       )}
     </div>
   );
@@ -562,7 +617,8 @@ export function InsightsPage() {
   const [span, setSpan] = useState<Span>('week');
   const [offset, setOffset] = useState(0);
   const [del, setDel] = useState(false);
-  const [trendMode, setTrendMode] = useState<TrendMode>('total');
+  // The hours and the days split the same way.
+  const [split, setSplit] = useState<SplitMode>('total');
   const range = rangeFor(span, offset, cal);
   const { data: s, reload } = useModel('stats.get', range, [range.from, range.to]);
   const exportAs = async (format: 'csv' | 'json') => {
@@ -664,9 +720,9 @@ export function InsightsPage() {
           ) : (
             <>
               {span === 'day' ? (
-                <Hours s={s} cal={cal} />
+                <Hours s={s} cal={cal} mode={split} onMode={setSplit} />
               ) : (
-                <Trend s={s} span={span} cal={cal} mode={trendMode} onMode={setTrendMode} />
+                <Trend s={s} span={span} cal={cal} mode={split} onMode={setSplit} />
               )}
               <div class="grid" style={{ ['--min' as string]: '320px' }}>
                 <div class="card stack">

@@ -34,6 +34,9 @@ export function impulsesOf(counters: Record<string, number>): number {
   return Math.max(0, offered - took);
 }
 
+/** Keys whose hours a day keeps besides those of a: the time outside the rules and by site. */
+const HOURS_BY_KEY = /^[ohp]:/;
+
 export function emptyDay(): DayRecord {
   return { t: {}, c: {} };
 }
@@ -67,10 +70,15 @@ export class Usage {
     cur[0] += seconds;
     cur[1] += visits;
     d.t[key] = cur;
-    if (key === usageKeys.all && seconds) {
+    if (seconds && (key === usageKeys.all || HOURS_BY_KEY.test(key))) {
       const hk = String(new Date(t).getHours());
-      d.h ??= {};
-      d.h[hk] = (d.h[hk] ?? 0) + seconds;
+      let h: Record<string, number>;
+      if (key === usageKeys.all) h = d.h ??= {};
+      else {
+        d.hk ??= {};
+        h = d.hk[key] ??= {};
+      }
+      h[hk] = (h[hk] ?? 0) + seconds;
     }
     this.dirtyDays.add(dk);
     if (!minuteBuckets) return;

@@ -8,8 +8,8 @@
  * A new rule goes through the parts in order (a short wizard, NN/g: creating is infrequent and
  * done by people new to the concepts) and is kept for the session; the same parts create the
  * first rule in first run, with another top of the page. A rule that exists opens on its summary
- * ("check your answers", GOV.UK), every part can be opened at any time, and one draft covers every
- * part and is saved at once.
+ * ("check your answers", GOV.UK), which comes first among its parts; every part can be opened at
+ * any time, and one draft covers every part and is saved at once.
  */
 
 import type { ComponentChildren } from 'preact';
@@ -64,6 +64,8 @@ import { TestUrl } from './test-url';
 
 const STEPS = ['sites', 'when', 'how', 'protection', 'details', 'summary'] as const;
 type StepId = (typeof STEPS)[number];
+/** The parts of a rule that exists: it opens on its summary, which comes first. */
+const EDIT_STEPS: readonly StepId[] = ['summary', 'sites', 'when', 'how', 'protection', 'details'];
 
 const STEP_ICON: Record<StepId, string> = {
   sites: 'globe',
@@ -95,8 +97,12 @@ const STEP_INTRO: Partial<Record<Exclude<StepId, 'summary'>, string>> = {
   protection: 'wizard.protection.intro',
   details: 'editor.details.intro',
 };
-/** The Next button, by the part it opens. */
-const NEXT_LABEL: Record<Exclude<StepId, 'sites'>, string> = {
+/**
+ * The Next button, by the part it opens. A rule that exists goes from its summary to Sites, and from
+ * its last part back to the summary.
+ */
+const NEXT_LABEL: Record<StepId, string> = {
+  sites: 'editor.next.sites',
   when: 'wizard.next.when',
   how: 'wizard.next.how',
   protection: 'wizard.next.protection',
@@ -328,6 +334,7 @@ export function RuleEditor(props: Props) {
   });
   const [reached, setReached] = useState(start.reached);
   const index = STEPS.indexOf(step);
+  const order: readonly StepId[] = creating ? STEPS : EDIT_STEPS;
   const titleRef = useRef<HTMLHeadingElement>(null);
   const moved = useRef(creating);
   const flow = useSaveFlow();
@@ -729,7 +736,9 @@ export function RuleEditor(props: Props) {
 
   // ---------------------------------------------------------------- the page
   const groupState = model.groups[draft.id];
-  const nextStep: StepId | null = STEPS[index + 1] ?? null;
+  const nextStep: StepId | null = creating
+    ? (STEPS[index + 1] ?? null)
+    : EDIT_STEPS[(EDIT_STEPS.indexOf(step) + 1) % EDIT_STEPS.length];
   const title =
     step === 'summary' ? t(creating ? 'wizard.review.title' : 'editor.overview.title') : t(STEP_TITLE[step]);
   const intro =
@@ -800,7 +809,7 @@ export function RuleEditor(props: Props) {
               </span>
             </li>
           )}
-          {STEPS.map((id, i) => {
+          {order.map((id, i) => {
             const current = id === step;
             const label = <span class="label">{t(STEP_LABEL[id])}</span>;
             if (creating) {
@@ -886,7 +895,10 @@ export function RuleEditor(props: Props) {
       <section class="card stack stack-lg" aria-labelledby="rule-step-title">
         <div>
           <p class="overline">
-            {t(creating ? 'wizard.stepOf' : 'editor.partOf', { n: index + 1, total: STEPS.length })}
+            {t(creating ? 'wizard.stepOf' : 'editor.partOf', {
+              n: order.indexOf(step) + 1,
+              total: STEPS.length,
+            })}
           </p>
           <h2 id="rule-step-title" ref={titleRef} tabIndex={-1}>
             {title}
@@ -898,7 +910,7 @@ export function RuleEditor(props: Props) {
         {!creating && nextStep && (
           <div class="row end">
             <button type="button" class="link-btn small row nowrap" onClick={() => go(nextStep)}>
-              {t(NEXT_LABEL[nextStep as Exclude<StepId, 'sites'>])}
+              {t(NEXT_LABEL[nextStep])}
               <Icon name="chevron-right" />
             </button>
           </div>
@@ -928,7 +940,7 @@ export function RuleEditor(props: Props) {
             )}
             {nextStep ? (
               <Button variant="primary" disabled={blocked(step)} onClick={() => go(nextStep)}>
-                {t(NEXT_LABEL[nextStep as Exclude<StepId, 'sites'>])}
+                {t(NEXT_LABEL[nextStep])}
                 <Icon name="chevron-right" />
               </Button>
             ) : (
