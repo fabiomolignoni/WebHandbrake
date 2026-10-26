@@ -54,6 +54,8 @@ export interface Api {
 
   'ticket.answer': { req: { id: string; answer?: string; minutes?: number }; res: TicketAnswer };
   'ticket.cancel': { req: { id: string }; res: void };
+  /** The page of a ticket was hidden or shown again: the ticket as it is now (its wait moved). */
+  'ticket.shown': { req: { id: string; visible: boolean }; res: TicketView | null };
 
   'pause.options': { req: { url?: string; groupId?: string; incognito?: boolean | null }; res: PauseOptions };
   'pause.start': { req: PauseRequest; res: { ticket: TicketView | null; error?: string } };

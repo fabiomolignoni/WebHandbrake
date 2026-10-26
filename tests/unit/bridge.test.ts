@@ -65,6 +65,7 @@ describe("Chrome's private windows: one background decides, the private one rela
     for (const name of [
       'tabs.onUpdated',
       'tabs.onActivated',
+      'windows.onFocusChanged',
       'webNavigation.onCommitted',
       'webRequest.onHeadersReceived',
       'contextMenus.onClicked',
@@ -77,6 +78,7 @@ describe("Chrome's private windows: one background decides, the private one rela
     priv.events.onUpdated.fire(7, { status: 'loading' }, privateTab);
     priv.events.onUpdated.fire(7, { url: 'https://p.test/b' }, privateTab);
     priv.events.onActivated.fire({ tabId: 7, windowId: 2 });
+    priv.events.onFocusChanged.fire(2);
     priv.events.onCommitted.fire({ tabId: 7, frameId: 3, url: 'https://ads.test/' });
     priv.events.onCommitted.fire({ tabId: 7, frameId: 0, url: 'https://p.test/b' });
     priv.events.onHeadersReceived.fire({
@@ -95,6 +97,7 @@ describe("Chrome's private windows: one background decides, the private one rela
       // Only the changes of address, and the top frame.
       ['tabs.onUpdated', [7, { url: 'https://p.test/b' }, privateTab]],
       ['tabs.onActivated', [{ tabId: 7, windowId: 2 }]],
+      ['windows.onFocusChanged', [2]],
       ['webNavigation.onCommitted', [{ tabId: 7, frameId: 0, url: 'https://p.test/b' }]],
       // Only the headers the clock reads.
       [
@@ -167,6 +170,10 @@ describe("Chrome's private windows: one background decides, the private one rela
     expect(await tabs.getTab(7)).toMatchObject({ id: 7, url: 'https://p.test/', incognito: true });
     expect(await tabs.getTab(1)).toMatchObject({ id: 1, incognito: false });
     expect((await tabs.queryTabs({})).map((t) => t.id)).toEqual([1, 7]);
+
+    priv.windows.set(2, 'minimized');
+    expect(await tabs.getWindow(7, 2)).toEqual({ id: 2, state: 'minimized' });
+    expect(await tabs.getWindow(1, 2)).toEqual({ id: 2, state: 'normal' });
 
     await tabs.updateTab(7, { url: PAGE });
     expect(priv.tabs[0].url).toBe(PAGE);

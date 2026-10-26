@@ -13,11 +13,13 @@ import {
   TICKET_TTL_MS,
 } from '../engine/limits';
 import type { Cost, Group } from '../engine/types';
-import { sessionStore } from '../platform/api';
+import { api, extensionUrl, features, INTERVENTION_PAGE, quiet, sessionStore } from '../platform/api';
 import type { StepView, TicketPurposeKind, TicketView } from '../shared/models';
+import { listenEverywhere } from './bridge';
 import { now } from './clock';
 import { randomInt, randomText, verifyPassword } from './crypto';
 import { store } from './store';
+import { getTab, getWindow } from './tabs';
 import { matchStep } from './totp';
 
 export type Step =
@@ -76,6 +78,25 @@ export interface Ticket {
   lockedUntil?: number;
   /** What the ticket gives, when pages that ask for the same share it (passes). */
   key?: string;
+  /** A wait that pauses or starts again when its page is left: the tabs that show it. */
+  watch?: Watch;
+}
+
+/**
+ * Where the wait of a pass is shown, for a rule whose wait pauses or starts again when you switch
+ * to another tab. The background follows the tabs itself: a page that stops its own countdown
+ * (with the developer tools) does not skip what leaving it adds.
+ */
+interface Watch {
+  onBlur: 'pause' | 'restart';
+  /** The tabs whose page shows the ticket. */
+  tabs: number[];
+  /** Those of them whose page said it is hidden (a window covered, another app on Android). */
+  hidden: number[];
+  /** Whether a tab showed it: a page opened in the background counts down until it is seen. */
+  seen: boolean;
+  /** Since when no tab shows it. */
+  awayAt?: number;
 }
 
 type Executor = (t: Ticket) => Promise<unknown>;
@@ -133,7 +154,7 @@ function stepView(t: Ticket): StepView {
   const step = t.steps[t.index];
   switch (step.type) {
     case 'wait':
-      return { type: 'wait', seconds: step.seconds, readyAt: t.active.readyAt ?? now() };
+      return { type: 'wait', seconds: step.seconds, readyAt: waitEnd(t, now()) ?? now() };
     case 'text':
       return { type: 'text', text: t.active.text ?? '', length: step.length };
     case 'math':
@@ -251,6 +272,8 @@ export async function answerTicket(
 ): Promise<AnswerResult> {
   const t = await getTicket(id);
   if (!t) return { status: 'error', error: 'ticket.error.expired' };
+  // An event of the tabs may still be on its way: where the wait is shown is looked at now.
+  if (t.watch && (await serially(() => follow(t)))) await persist();
   const n = now();
   if (t.lockedUntil && n < t.lockedUntil)
     return { status: 'error', error: 'ticket.error.tooMany', ticket: ticketView(t) };
@@ -283,7 +306,7 @@ export async function answerTicket(
     case 'confirm':
       break;
     case 'wait':
-      if (n < (t.active.readyAt ?? 0) - 500)
+      if (n < (waitEnd(t, n) ?? 0) - 500)
         return { status: 'error', error: 'ticket.error.notYet', ticket: ticketView(t) };
       break;
     case 'text':
@@ -341,6 +364,146 @@ export async function answerTicket(
   } catch (e) {
     return { status: 'error', error: e instanceof Error ? e.message : 'ticket.error.failed' };
   }
+}
+
+// ---------------------------------------------------------------------------
+// Waits that pause or start again when their page is left
+// ---------------------------------------------------------------------------
+
+/**
+ * When the wait of a ticket ends. While no tab shows a wait followed, it ends later the longer it
+ * is away, or a whole wait after it is shown again.
+ */
+function waitEnd(t: Ticket, n: number): number | undefined {
+  const end = t.active.readyAt;
+  const w = t.watch;
+  const step = t.steps[t.index];
+  if (end === undefined || w?.awayAt === undefined || step?.type !== 'wait') return end;
+  return w.onBlur === 'restart' ? n + step.seconds * 1000 : end + (n - w.awayAt);
+}
+
+let following: Promise<unknown> = Promise.resolve();
+
+/** Looks at the tabs of the waits one change at a time: each one reads them, then decides. */
+function serially<T>(fn: () => Promise<T>): Promise<T> {
+  const run = following.then(fn);
+  following = run.catch(() => undefined);
+  return run;
+}
+
+/** What a tab shows of a wait: in view, hidden, or nothing any more (null). */
+async function tabShows(id: number, hidden: number[]): Promise<'visible' | 'hidden' | null> {
+  const tab = await quiet(getTab(id));
+  if (!tab?.url?.startsWith(extensionUrl(INTERVENTION_PAGE))) return null;
+  if (!tab.active || hidden.includes(id)) return 'hidden';
+  if (!features.windows || tab.windowId === undefined) return 'visible';
+  const win = await quiet(getWindow(id, tab.windowId));
+  return win?.state === 'minimized' ? 'hidden' : 'visible';
+}
+
+/**
+ * Looks at where the wait of a ticket is shown, and moves it as the page would: while no tab shows
+ * it, it is away; shown again, it ends as much later as it was away, or starts again. Run serially.
+ * Returns whether the ticket changed.
+ */
+async function follow(t: Ticket): Promise<boolean> {
+  const w = t.watch;
+  if (!w) return false;
+  const shows = await Promise.all(w.tabs.map((id) => tabShows(id, w.hidden)));
+  const before = JSON.stringify([w, t.active.readyAt]);
+  w.tabs = w.tabs.filter((_, i) => shows[i] !== null);
+  w.hidden = w.hidden.filter((id) => w.tabs.includes(id));
+  const n = now();
+  if (shows.includes('visible')) {
+    w.seen = true;
+    const end = waitEnd(t, n);
+    if (w.awayAt !== undefined && end !== undefined) {
+      t.active.readyAt = end;
+      // The time to answer still comes after the wait.
+      t.expiresAt = Math.max(t.expiresAt, end + TICKET_TTL_MS);
+    }
+    delete w.awayAt;
+  } else if (w.seen && w.awayAt === undefined) w.awayAt = n;
+  return JSON.stringify([w, t.active.readyAt]) !== before;
+}
+
+/**
+ * The page of a tab shows this ticket now, or none: a tab shows one page at a time. The wait of a
+ * pass that pauses or starts again when its page is left is followed in its tabs from now on.
+ * Returns the ticket as it is now: coming back to a wait left moves it.
+ */
+export async function showTicket(
+  tabId: number | undefined,
+  view: TicketView | null,
+  onBlur: 'pause' | 'restart' | 'ignore',
+): Promise<TicketView | null> {
+  if (tabId === undefined) return view;
+  await load();
+  const shown = view ? tickets.get(view.id) : undefined;
+  const followed = shown?.steps[shown.index]?.type === 'wait' && onBlur !== 'ignore';
+  if (!followed && ![...tickets.values()].some((t) => t.watch?.tabs.includes(tabId))) return view;
+  const changed = await serially(async () => {
+    let any = false;
+    for (const t of [...tickets.values()]) {
+      if (t === shown || !t.watch?.tabs.includes(tabId)) continue;
+      t.watch.tabs = t.watch.tabs.filter((id) => id !== tabId);
+      any = (await follow(t)) || any;
+    }
+    if (!followed) return any;
+    shown.watch ??= { onBlur, tabs: [], hidden: [], seen: false };
+    if (!shown.watch.tabs.includes(tabId)) shown.watch.tabs.push(tabId);
+    await follow(shown);
+    return true;
+  });
+  if (changed) await persist();
+  return shown ? ticketView(shown) : view;
+}
+
+/**
+ * The page of a ticket says whether it is in view, which the background cannot always see (a
+ * window covered by another, another app on Android): it can only make the wait longer. Returns the
+ * ticket as it is now, for the page to show.
+ */
+export async function ticketShown(
+  id: string,
+  tabId: number | undefined,
+  visible: boolean,
+): Promise<TicketView | null> {
+  const t = await getTicket(id);
+  if (!t) return null;
+  const w = t.watch;
+  if (w && tabId !== undefined && w.tabs.includes(tabId)) {
+    await serially(() => {
+      w.hidden = w.hidden.filter((x) => x !== tabId);
+      if (!visible) w.hidden.push(tabId);
+      return follow(t);
+    });
+    await persist();
+  }
+  return ticketView(t);
+}
+
+/** The tabs changed (another one shown, one closed, a window minimised): the waits look again. */
+async function followAll() {
+  await load();
+  if (![...tickets.values()].some((t) => t.watch)) return;
+  const changed = await serially(async () => {
+    let any = false;
+    for (const t of [...tickets.values()]) any = (await follow(t)) || any;
+    return any;
+  });
+  if (changed) await persist();
+}
+
+/** Listens to the changes of the tabs and windows, in the private windows too. */
+export function registerWaitListeners() {
+  const again = () => void followAll();
+  listenEverywhere(api.tabs.onActivated, 'tabs.onActivated', again);
+  listenEverywhere(api.tabs.onRemoved, 'tabs.onRemoved', again);
+  listenEverywhere(api.tabs.onUpdated, 'tabs.onUpdated', (_id: number, info: { url?: string }) => {
+    if (info.url) again();
+  });
+  listenEverywhere(api.windows?.onFocusChanged, 'windows.onFocusChanged', again);
 }
 
 /** The key under which the last accepted step of a partner secret is kept. */

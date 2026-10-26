@@ -39,6 +39,7 @@ function event() {
  * `chrome: true` behaves like Chrome's storage, which returns objects with sorted keys; Firefox
  * keeps the order in which the keys were written. `tabs` are the open tabs that `tabs.query()`
  * returns; the array can be changed later, and `tabs.update()` changes it as a browser would.
+ * `windows` holds the state of the windows that is not 'normal' (as 'minimized'), by id.
  * What the extension does to the browser (rules, alarms, badges, messages to tabs,
  * notifications…) is kept in the returned object, for the tests to look at.
  *
@@ -116,6 +117,7 @@ export function installFakeBrowser(
   /** What a content script answers to a message from the background (by default nothing). */
   const contentReply: { fn: (tabId: number, message: any) => unknown } = { fn: () => undefined };
   const permissions = { hostAccess: true, notifications: true, incognito: true };
+  const windows = new Map<number, string>();
   let nextTab = 1000;
 
   const tabById = (id: number) => tabs.find((t) => t.id === id);
@@ -144,6 +146,7 @@ export function installFakeBrowser(
     onActivated: event(),
     onRemoved: event(),
     onCreated: event(),
+    onFocusChanged: event(),
     onAlarm: event(),
     onMenuClicked: event(),
     onCommand: event(),
@@ -225,6 +228,10 @@ export function installFakeBrowser(
       onRemoved: events.onRemoved,
       onCreated: events.onCreated,
     },
+    windows: {
+      get: async (id: number) => ({ id, state: windows.get(id) ?? 'normal' }),
+      onFocusChanged: events.onFocusChanged,
+    },
     webNavigation: {
       onCommitted: events.onCommitted,
       onHistoryStateUpdated: events.onHistoryStateUpdated,
@@ -284,6 +291,7 @@ export function installFakeBrowser(
     scripts,
     contentReply,
     permissions,
+    windows,
     events,
     action,
     popup,

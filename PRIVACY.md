@@ -44,6 +44,8 @@ lists.
   you are typing when a restriction starts, so that you get the grace period, and for the **Copy my draft** button
   of the grace period. It is never sent to the rest of WebHandbrake and never stored.
 - **Whether the device is idle or locked**, to stop counting time.
+- **Which tab of a window is shown, and whether the window is minimised**, while a wait that
+  pauses or starts again when you switch to another tab is in progress, to time it.
 
 The page script runs on the sites of your active rules. It runs on every site when **Track time on
 all sites** is on, when an active rule has a regular expression, when an active rule has an
@@ -77,8 +79,9 @@ closes. **Settings › Privacy** does not list it.
   that WebHandbrake restricted, with their full address, what happened, the rule and the time,
   private windows included, only if you turn on **Settings › Diagnostics › Keep a log** (it is off
   by default). **Clear the log** empties it.
-- **Costs in progress**: a wait, challenge or confirmation that you have started. Each expires
-  after 60 minutes.
+- **Costs in progress**: a wait, challenge or confirmation that you have started; for a wait that
+  pauses or starts again when you switch to another tab, also the tabs that show it and since when
+  none does. Each expires 60 minutes after its wait is over.
 - Which reasons for going in have already been recalled on the page, and a marker that WebHandbrake is
   running.
 - In Chrome, with private windows open: the last message passed each way between their background
@@ -208,7 +211,9 @@ this policy, its "Last updated" date and the list below. The full history is in 
   keeps one total of the time outside your rules. Deleting one site keeps its time without its
   name. An access for the rest of a visit that a tab leaves keeps when and in which tab, for 2
   minutes at most. In Chrome, private windows have a background process of their own, which passes
-  what happens there to the main one through the browser's memory.
+  what happens there to the main one through the browser's memory. A wait that pauses or starts
+  again when you switch tabs keeps which tabs show it, and WebHandbrake reads whether their window
+  is minimised.
 - 2026-10-25: The log of recent decisions is off until you turn it on. Daily statistics also keep
   the time on limited sites per hour, and in private windows as one total without the sites. The
   sites you list for focus sessions are stored and exported. Breaks no longer ask for a reason,

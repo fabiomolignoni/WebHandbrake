@@ -40,7 +40,7 @@ import { endSession, extendSession, saveFocusLists, startSession } from './sessi
 import { deleteStats, exportStats, getStats } from './stats';
 import { store } from './store';
 import { TEST_CONTENT_METHODS, testHandlers } from './testing';
-import { answerTicket, cancelTicket } from './tickets';
+import { answerTicket, cancelTicket, ticketShown } from './tickets';
 import { configModel, dismissWarning, overviewModel, popupModel } from './views';
 
 type Handler<M extends Method> = (
@@ -65,6 +65,7 @@ const handlers: { [M in Method]: Handler<M> } = {
 
   'ticket.answer': (a) => answerTicket(a.id, a.answer, a.minutes),
   'ticket.cancel': (a) => cancelTicket(a.id),
+  'ticket.shown': (a, s) => ticketShown(a.id, s.tab?.id, a.visible),
 
   'pause.options': (a, s) => pauseOptions(a.url, a.groupId, a.incognito ?? s.tab?.incognito ?? null),
   'pause.start': (a, s) => startPause({ ...a, incognito: a.incognito ?? s.tab?.incognito ?? null }, s),

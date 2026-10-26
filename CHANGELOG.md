@@ -25,6 +25,11 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ### Fixed
 
+- A wait that pauses or starts again when you switch to another tab is now timed by WebHandbrake
+  itself, not by the block page: switching tabs or minimising the window adds to the wait even if
+  the page's countdown is stopped (from the developer tools), and **Open the page as soon as the
+  wait is over** waits until the page is in view again. A page closed and opened again goes on with the same wait,
+  paused or started again as the rule says.
 - Breaks can no longer go beyond their limits when several are asked for at once, each with its
   cost still to answer: how many breaks and minutes are left is checked again as a break starts,
   and one that no longer fits is refused with the reason.

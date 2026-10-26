@@ -305,6 +305,35 @@ test.describe('delay', () => {
     expect(waits.size).toBeGreaterThan(1);
   });
 
+  test("a wait that pauses on another tab is timed by the background, even with the page's countdown stopped", async ({
+    h,
+  }) => {
+    await h.configure((c) => {
+      c.groups = [group('Wait', ['wait.test'], [policy(delay(5, { onBlur: 'pause' }))])];
+    });
+    const p = await expectBlocked(h, 'http://wait.test/');
+    const cont = p.button('Continue', { exact: true });
+    await cont.expectEnabled(false);
+    // The page no longer hears that it is hidden, as if its countdown were stopped.
+    await p.eval(() => {
+      document.addEventListener('visibilitychange', (e) => e.stopImmediatePropagation(), true);
+    });
+    const other = await h.open('http://elsewhere.test/');
+    const id = await p.id();
+    expect((await h.tabs()).find((t) => t.id === id)?.active).toBe(false);
+    await sleep(6000);
+    await p.front();
+    // The page thinks the wait is over; the background added the time spent on the other tab.
+    await cont.click();
+    await p.text('Not yet — the wait is not over.').expectVisible();
+    // The page then shows the background's wait, and goes in once it is over.
+    await cont.expectEnabled(false);
+    await cont.expectEnabled(true, 8000);
+    await cont.click();
+    await p.expectReal('wait.test/');
+    await other.close();
+  });
+
   test('the wait cannot be skipped by calling the background early', async ({ h }) => {
     await h.configure((c) => {
       c.groups = [group('Wait', ['wait.test'], [policy(delay(30))])];

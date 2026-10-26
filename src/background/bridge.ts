@@ -37,6 +37,7 @@ export type PrivateEvent =
   | 'tabs.onUpdated'
   | 'tabs.onActivated'
   | 'tabs.onRemoved'
+  | 'windows.onFocusChanged'
   | 'webNavigation.onCommitted'
   | 'webNavigation.onHistoryStateUpdated'
   | 'webNavigation.onReferenceFragmentUpdated'
@@ -60,6 +61,7 @@ const CALLS = {
   'tabs.update': (id: number, props: chrome.tabs.UpdateProperties) => api.tabs.update(id, props),
   'tabs.remove': (id: number) => api.tabs.remove(id),
   'tabs.sendMessage': (id: number, message: unknown) => api.tabs.sendMessage(id, message),
+  'windows.get': (id: number) => api.windows.get(id),
   'scripting.executeScript': async (tabId: number, files: string[]) => {
     await api.scripting.executeScript({ target: { tabId }, files });
   },
@@ -380,6 +382,8 @@ export function relayPrivateWindows() {
     void syncTabs();
   });
   api.tabs.onCreated.addListener(() => void syncTabs());
+  // A window minimised or brought back: a wait that pauses when its page is left looks again.
+  api.windows?.onFocusChanged?.addListener(relayEvent('windows.onFocusChanged', () => undefined));
 
   const nav = api.webNavigation;
   if (nav) {
