@@ -217,6 +217,9 @@ describe('statistics', () => {
     expect(s.siteTotal).toEqual({ count: 0, seconds: 600, visits: 2 });
     expect(s.days[0]).toMatchObject({ seconds: 600, sites: [], otherSites: 600, private: 0 });
     expect(JSON.stringify(store.usage.days.get('2026-10-07'))).not.toContain('video.test');
+    // Its hours too.
+    expect(store.usage.days.get('2026-10-07')?.hk).toEqual({ 'h:': { '12': 600 } });
+    expect(s.hourParts?.[12]).toEqual({ seconds: 600, outside: 0, sites: [], otherSites: 600, private: 0 });
   });
 
   it('the hours of a day hold its time on limited sites by clock hour', async () => {
@@ -231,6 +234,56 @@ describe('statistics', () => {
     expect(s.hours?.reduce((a, b) => a + b, 0)).toBe(s.total.seconds);
     const csv = (await stats.exportStats('csv')).text.split('\n');
     expect(csv).toContain('2026-10-07,hour,9,,120,');
+  });
+
+  it('the hours split by site as the days do, with the time outside the rules', async () => {
+    const { store, stats } = await setup();
+    const nine = new Date(2026, 9, 7, 9, 30).getTime();
+    store.usage.add('o:', nine, 300, 0, store.cc.cal, false);
+    store.usage.add('h:elsewhere.test', nine, 250, 1, store.cc.cal, false);
+    store.usage.add('p:', nine, 50, 1, store.cc.cal, false);
+    const s = await stats.getStats('2026-10-07', '2026-10-07');
+    expect(s.stack).toEqual(['video.test', 'elsewhere.test']);
+    expect(s.hourParts?.[12]).toEqual({
+      seconds: 600,
+      outside: 0,
+      sites: [600, 0],
+      otherSites: 0,
+      private: 0,
+    });
+    expect(s.hourParts?.[9]).toEqual({
+      seconds: 0,
+      outside: 300,
+      sites: [0, 250],
+      otherSites: 0,
+      private: 50,
+    });
+    // Each hour adds up, and the hours make the day.
+    const hours = s.hourParts ?? [];
+    for (const h of hours) expect(columns(h)[1]).toBe(columns(h)[0]);
+    expect(hours.reduce((a, h) => a + columns(h)[0], 0)).toBe(columns(s.days[0])[0]);
+    const csv = (await stats.exportStats('csv')).text.split('\n');
+    expect(csv).toContain('2026-10-07,site-hour,12:video.test,,600,');
+    expect(csv).toContain('2026-10-07,outside-rules-hour,9,,300,');
+    expect(csv).toContain('2026-10-07,private-hour,9,,50,');
+  });
+
+  it('the hours of days of earlier versions are not split by site, except those after the update', async () => {
+    const { store, stats } = await setup();
+    // 4 October has time on limited sites only, as recorded before the sites had hours.
+    expect((await stats.getStats('2026-10-04', '2026-10-04')).hourParts).toBeNull();
+    expect((await stats.getStats('2026-10-04', '2026-10-07')).hourParts).toBeNull();
+    // A day without time has nothing to miss.
+    const empty = (await stats.getStats('2026-10-05', '2026-10-05')).hourParts;
+    expect(empty?.map((h) => columns(h))).toEqual(Array(24).fill([0, 0]));
+    // The day of the update: the hours before it are among the other sites.
+    delete store.usage.days.get('2026-10-07')?.hk;
+    const six = new Date(2026, 9, 7, 18).getTime();
+    store.usage.add('a:', six, 60, 0, store.cc.cal);
+    store.usage.add('h:video.test', six, 60, 1, store.cc.cal, false);
+    const s = await stats.getStats('2026-10-07', '2026-10-07');
+    expect(s.hourParts?.[12]).toEqual({ seconds: 600, outside: 0, sites: [0], otherSites: 600, private: 0 });
+    expect(s.hourParts?.[18]).toEqual({ seconds: 60, outside: 0, sites: [60], otherSites: 0, private: 0 });
   });
 
   it('a day recorded without hours gets them from the minute buckets, or says it has none', async () => {
