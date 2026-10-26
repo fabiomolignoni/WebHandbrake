@@ -393,7 +393,8 @@ blockquote {
 .grid {
   display: grid;
   gap: var(--s4);
-  grid-template-columns: repeat(auto-fit, minmax(var(--min, 260px), 1fr));
+  /* A column never wider than the grid, on a screen narrower than its minimum. */
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--min, 260px), 100%), 1fr));
 }
 .muted {
   color: var(--muted);
@@ -1918,6 +1919,12 @@ a.kpi:hover .caption {
   font-size: var(--fs-sm);
   white-space: nowrap;
   pointer-events: none;
+  max-width: 100%;
+}
+/* A long site name wraps, so that the tip stays over the chart. */
+.chart-tip li .muted {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .chart-tip ul {
   display: grid;
@@ -1973,6 +1980,9 @@ a.kpi:hover .caption {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  /* A long site name wraps on a narrow screen. */
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 .legend .key {
   width: 10px;
@@ -1992,6 +2002,25 @@ a.kpi:hover .caption {
   border-radius: 999px;
   background: var(--accent);
   min-width: 2px;
+}
+/* Insights by rule and by site: a long name wraps anywhere, the time and the visits never do. */
+.table.ranked td:first-child {
+  width: 100%;
+  overflow-wrap: anywhere;
+}
+.table.ranked td.num {
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .table.ranked td {
+    padding-inline: var(--s1);
+  }
+  .table.ranked td:first-child {
+    padding-inline-start: 0;
+  }
+  .table.ranked td:last-child {
+    padding-inline-end: 0;
+  }
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -2816,14 +2845,12 @@ a.kpi:hover .caption {
 /*
  * The toolbar popup is sized by the browser from its content, starting from a tiny viewport:
  * use a fixed width and never viewport-relative widths (100%, vw, max-width media queries),
- * otherwise Firefox collapses the popup to zero width. On Android the popup is a full page.
+ * otherwise Firefox collapses the popup to zero width. Android has no popup: its button opens the
+ * dashboard.
  */
 body.page-popup {
   width: 380px;
   background: var(--bg);
-}
-:root.mobile body.page-popup {
-  width: auto;
 }
 .popup {
   min-height: 200px;
@@ -2966,8 +2993,8 @@ body.page-popup {
   cursor: not-allowed;
 }
 /*
- * The way to the dashboard: a full-width bar at the end of the popup, where reading ends and the
- * thumb rests on Android. It stays in view when the popup scrolls (Chrome caps it at 600 px).
+ * The way to the dashboard: a full-width bar at the end of the popup, where reading ends. It stays
+ * in view when the popup scrolls (Chrome caps it at 600 px).
  */
 .popup .foot {
   position: sticky;
@@ -2976,9 +3003,6 @@ body.page-popup {
   padding: var(--s3);
   border-top: 1px solid var(--border);
   background: var(--bg);
-}
-:root.mobile .popup {
-  min-height: 100dvh;
 }
 .open-dashboard {
   display: flex;

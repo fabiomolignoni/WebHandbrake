@@ -68,15 +68,13 @@ function credit(d: Decision, incognito: boolean, t: number) {
   const gap = s.tracking.visitGapMinutes * 60_000;
   const parsed = d.parsed;
 
-  // A rule whose condition allows its sites without counting gets no time.
+  // A rule whose condition allows its sites without counting gets no time. The time outside the
+  // rules (Track time on all sites) has a total of its own.
   const counted = d.groups.filter((r) => r.intervention.type !== 'allow');
-  if (counted.length) {
-    const any = creditSeconds(usageKeys.all, t);
-    if (any > 0) store.usage.add(usageKeys.all, t, any, 0, cal);
-    // Private windows have one total instead of their sites, so that the sites add up.
-    const priv = incognito ? creditSeconds(usageKeys.private, t) : 0;
-    if (priv > 0) store.usage.add(usageKeys.private, t, priv, 0, cal, false);
-  }
+  const outside = !counted.length && Boolean(parsed?.web) && s.tracking.allSites;
+  const totalKey = outside ? usageKeys.outside : usageKeys.all;
+  const any = counted.length || outside ? creditSeconds(totalKey, t) : 0;
+  if (any > 0) store.usage.add(totalKey, t, any, 0, cal, !outside);
   for (const r of counted) {
     const gk = usageKeys.group(r.group.id);
     const sk = usageKeys.site(r.group.id, r.site);
@@ -87,16 +85,17 @@ function credit(d: Decision, incognito: boolean, t: number) {
       store.usage.add(key, t, sec, visit ? 1 : 0, cal);
     }
   }
-  // No per-site detail for private windows; budgets above are still consumed.
-  if (parsed?.web && !incognito && (counted.length || s.tracking.allSites)) {
-    const host = stripWww(parsed.host);
-    const hk = usageKeys.host(host);
-    const sec = creditSeconds(hk, t);
-    if (sec > 0) {
-      const last = hostLastActive.get(host) ?? 0;
-      hostLastActive.set(host, t);
-      store.usage.add(hk, t, sec, t - last > gap ? 1 : 0, cal, false);
-    }
+  // By site: each second of a total goes to the site whose page counted it, so that the sites add
+  // up to the totals whatever the number of tabs. Private windows keep no sites: their time goes to
+  // one total, with the visits found per site in memory only. Budgets above are consumed either way.
+  if (any > 0) {
+    // A page that is not a website has no site.
+    const host = parsed?.web ? stripWww(parsed.host) : '';
+    const seen = incognito ? `private:${host}` : host;
+    const last = hostLastActive.get(seen) ?? 0;
+    hostLastActive.set(seen, t);
+    const key = incognito ? usageKeys.private : usageKeys.host(host);
+    store.usage.add(key, t, any, t - last > gap ? 1 : 0, cal, false);
   }
   store.scheduleUsage();
   store.scheduleState();

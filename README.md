@@ -40,7 +40,8 @@ runs in private windows only if you allow it.
 | Firefox | 140 |
 | Firefox for Android | 142 |
 
-Keyboard shortcuts and the right-click menu are not available on Firefox for Android.
+Keyboard shortcuts and the right-click menu are not available on Firefox for Android, where
+WebHandbrake in the Extensions menu opens the dashboard instead of the popup.
 
 ## Install
 

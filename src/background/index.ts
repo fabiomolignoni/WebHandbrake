@@ -20,6 +20,7 @@ import { registerPermissionListeners } from './permissions';
 import { ALARM_NEXT, ALARM_PERIODIC, ensurePeriodicAlarm, reconcile } from './reconcile';
 import { store } from './store';
 import { testLog } from './test-log';
+import { registerToolbar } from './toolbar';
 
 if (__TEST__) captureErrors('background', (m) => testLog.errors.push(m));
 
@@ -78,6 +79,7 @@ registerPermissionListeners();
 registerMenuClicks();
 registerCommands();
 registerNotificationClicks();
+registerToolbar();
 initClockObserver();
 
 async function boot() {

@@ -118,8 +118,8 @@ describe('statistics', () => {
     const { stats } = await setup();
     const s = await stats.getStats('2026-10-06', '2026-10-07');
     expect(s.days).toEqual([
-      { day: '2026-10-06', seconds: 300, visits: 0, sites: [0, 300], otherSites: 0, private: 0 },
-      { day: '2026-10-07', seconds: 600, visits: 0, sites: [600, 0], otherSites: 0, private: 0 },
+      { day: '2026-10-06', seconds: 300, visits: 0, outside: 0, sites: [0, 300], otherSites: 0, private: 0 },
+      { day: '2026-10-07', seconds: 600, visits: 0, outside: 0, sites: [600, 0], otherSites: 0, private: 0 },
     ]);
     expect(s.stack).toEqual(['video.test', 'news.test']);
     expect(s.total).toEqual({ seconds: 900, visits: 2 });
@@ -154,16 +154,69 @@ describe('statistics', () => {
     const { store, stats } = await setup();
     for (let i = 0; i < 120; i++) store.usage.add(`h:s${i}.test`, T0, 10, 1, store.cc.cal, false);
     store.usage.add('a:', T0, 1200 + 200, 0, store.cc.cal);
-    store.usage.add('p:', T0, 200, 0, store.cc.cal, false);
+    store.usage.add('p:', T0, 200, 3, store.cc.cal, false);
     const s = await stats.getStats('2026-10-07', '2026-10-07');
     expect(s.sites).toHaveLength(100);
     expect(s.siteTotal).toEqual({ count: 121, seconds: 600 + 1200, visits: 2 + 120 });
-    expect(s.private).toBe(200);
+    expect(s.private).toEqual({ seconds: 200, visits: 3 });
     expect(s.days[0].private).toBe(200);
     // The sites and the private windows make the total.
-    expect(s.siteTotal.seconds + s.private).toBe(s.total.seconds);
+    expect(s.siteTotal.seconds + s.private.seconds).toBe(s.total.seconds);
     const csv = (await stats.exportStats('csv')).text.split('\n');
-    expect(csv).toContain('2026-10-07,private,,,200,0');
+    expect(csv).toContain('2026-10-07,private,,,200,3');
+  });
+
+  /** The time of a day's column without and with its split by site. */
+  const columns = (d: {
+    seconds: number;
+    outside: number;
+    sites: number[];
+    otherSites: number;
+    private: number;
+  }) => [d.seconds + d.outside, d.sites.reduce((a, b) => a + b, 0) + d.otherSites + d.private];
+
+  it('with every site tracked, the days have the time outside the rules, which their sites hold too', async () => {
+    const { store, stats } = await setup();
+    store.usage.add('o:', T0, 300, 0, store.cc.cal, false);
+    store.usage.add('h:elsewhere.test', T0, 250, 1, store.cc.cal, false);
+    store.usage.add('p:', T0, 50, 1, store.cc.cal, false);
+    const s = await stats.getStats('2026-10-07', '2026-10-07');
+    expect(s.days[0]).toMatchObject({ seconds: 600, outside: 300, private: 50, otherSites: 0 });
+    expect(columns(s.days[0])).toEqual([900, 900]);
+    // On limited sites only.
+    expect(s.total.seconds).toBe(600);
+    const csv = (await stats.exportStats('csv')).text.split('\n');
+    expect(csv).toContain('2026-10-07,outside-rules,,,300,0');
+  });
+
+  it('days of earlier versions add up too: the time their sites miss was in private windows', async () => {
+    const { store, stats } = await setup();
+    // Until 1.1.0, the time in private windows was only in the total.
+    store.usage.add('a:', T0, 400, 0, store.cc.cal);
+    // A few seconds are the rounding of the clocks that each site had.
+    store.usage.add('a:', T0 - dayMs, 20, 0, store.cc.cal);
+    // Tabs open at the same time could count more on their sites than in the total.
+    store.usage.add('h:extra.test', T0 - 3 * dayMs, 150, 1, store.cc.cal, false);
+    const s = await stats.getStats('2026-10-04', '2026-10-07');
+    const [fourth, , sixth, seventh] = s.days;
+    expect(seventh).toMatchObject({ seconds: 1000, private: 400 });
+    expect(sixth).toMatchObject({ seconds: 320, private: 0, otherSites: 20 });
+    // 100 s in the total, 150 s on its sites.
+    expect(fourth).toMatchObject({ seconds: 150, private: 0 });
+    for (const d of s.days) expect(columns(d)).toEqual([d.seconds, d.seconds]);
+    expect(s.private.seconds).toBe(400);
+    // The sites and the private windows, listed or not, have the time of the columns.
+    expect(s.siteTotal.seconds + s.private.seconds).toBe(s.days.reduce((a, d) => a + d.seconds, 0));
+  });
+
+  it('a deleted site leaves its time to the other sites, without its name', async () => {
+    const { store, stats } = await setup();
+    await stats.deleteStats('site', undefined, undefined, 'video.test');
+    const s = await stats.getStats('2026-10-07', '2026-10-07');
+    expect(s.sites).toEqual([]);
+    expect(s.siteTotal).toEqual({ count: 0, seconds: 600, visits: 2 });
+    expect(s.days[0]).toMatchObject({ seconds: 600, sites: [], otherSites: 600, private: 0 });
+    expect(JSON.stringify(store.usage.days.get('2026-10-07'))).not.toContain('video.test');
   });
 
   it('the hours of a day hold its time on limited sites by clock hour', async () => {

@@ -174,7 +174,9 @@ export function WelcomePage() {
                         : 'welcome.pin.chrome',
                   )}
                 </span>
-                <span class="small muted">{t('welcome.pin.why')}</span>
+                <span class="small muted">
+                  {browser === 'firefox-android' ? t('welcome.pin.whyAndroid') : t('welcome.pin.why')}
+                </span>
               </span>
             </li>
             {firstSite && (

@@ -1247,7 +1247,7 @@
     "message": "What WebHandbrake cannot do"
   },
   "help.mobile.p1": {
-    "message": "WebHandbrake works on Firefox for Android. Open the popup from the Extensions menu, and the dashboard from the add-on’s settings."
+    "message": "WebHandbrake works on Firefox for Android, without the popup: WebHandbrake in the Extensions menu opens the dashboard."
   },
   "help.mobile.p2": {
     "message": "Android has no keyboard shortcuts or right-click menu, and the browser’s extension pages cannot be blocked there. Time counts only while Firefox is open on screen."
@@ -1625,6 +1625,9 @@
   "insights.legend": {
     "message": "Sites"
   },
+  "insights.limitedSites": {
+    "message": "Limited sites"
+  },
   "insights.mode": {
     "message": "Show"
   },
@@ -1657,6 +1660,10 @@
   },
   "insights.otherSites": {
     "message": "Other sites"
+  },
+  "insights.outsideRules": {
+    "message": "Outside your rules",
+    "description": "Time on sites that no rule limits, counted with Track time on all sites"
   },
   "insights.pauses": {
     "message": "{count, plural, one {break} other {breaks}} ({minutes} min)"
@@ -1723,6 +1730,12 @@
   },
   "insights.trend.months": {
     "message": "Month by month"
+  },
+  "insights.trendAllLabel": {
+    "message": "Time per day, on limited sites and outside your rules"
+  },
+  "insights.trendAllLabel.months": {
+    "message": "Time per month, on limited sites and outside your rules"
   },
   "insights.trendLabel": {
     "message": "Time on limited sites per day"
@@ -4018,6 +4031,9 @@
   },
   "welcome.pin.why": {
     "message": "One tap to see the status of a site, take a break or block the site."
+  },
+  "welcome.pin.whyAndroid": {
+    "message": "One tap to open the dashboard."
   },
   "welcome.private.title": {
     "message": "Also in private windows"

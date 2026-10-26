@@ -6,6 +6,27 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- On Firefox for Android, WebHandbrake in the Extensions menu opens the dashboard instead of the
+  popup, in its tab when it is already open.
+
+### Fixed
+
+- Insights › **Day by day** shows the same time for a day in **Total** and in **By site**, and
+  **By site** adds up to the total. Days recorded before 1.1.0 kept the time in private windows only
+  in the total: it is now their **Private windows** part. Tabs counted at the same time (**Count
+  tabs that are open but not active**, **Count background audio and video**) each counted the
+  whole time on their sites: they now share the seconds of the total. A site deleted from the
+  statistics left its time in the total only: it now stays among the other sites, without its
+  name.
+- With **Track time on all sites**, Insights › **Day by day** has the time outside your rules in
+  **Total** too, as a part of its own, as **By site** has; private windows count that time in their
+  total, which they did only on limited sites.
+- Insights › **By site** has the visits in private windows, besides their time.
+- Insights › **By site** and **By rule** no longer run off the side of a phone screen: a long site
+  name wraps, and the time and the visits stay on one line.
+
 ## [1.1.0] - 2026-10-25
 
 ### Added
