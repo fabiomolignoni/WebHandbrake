@@ -1100,7 +1100,7 @@
     "message": "Emergency exit"
   },
   "help.faq.clock.a": {
-    "message": "Time never goes back for WebHandbrake: setting the clock back makes restrictions last longer, not shorter. It also compares your clock with the time websites send and uses the corrected time (Settings › Time). Changing the time zone moves your schedules."
+    "message": "Setting the system clock back does not take WebHandbrake back in time: restrictions last longer, not shorter. It also compares your clock with the time websites send and uses the corrected time (Settings › Time), so a clock that was ahead and was put right counts again once several websites confirm it. Changing the time zone moves your schedules."
   },
   "help.faq.clock.q": {
     "message": "What if I change the system clock?"
@@ -3479,6 +3479,10 @@
   },
   "tamper.clock-backward": {
     "message": "The system clock went back about {detail} min. WebHandbrake ignored it."
+  },
+  "tamper.clock-realigned": {
+    "message": "WebHandbrake’s time was about {detail} min ahead. Websites confirmed the right time, so it went back to it.",
+    "description": "In Protection › Events. The system clock was ahead (for example before it synchronized) and was put right; the time sent by several websites confirmed it."
   },
   "tamper.clock-skew": {
     "message": "The system clock is off by about {detail} min. WebHandbrake uses the correct time."

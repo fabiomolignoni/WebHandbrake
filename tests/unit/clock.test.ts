@@ -15,7 +15,7 @@ async function load() {
 describe('the trusted clock', () => {
   beforeEach(() => {
     vi.resetModules();
-    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.useFakeTimers({ toFake: ['Date', 'performance'] });
     vi.setSystemTime(T0);
     installFakeBrowser();
   });
@@ -70,6 +70,83 @@ describe('the trusted clock', () => {
     // Once the system clock is right again, the correction goes.
     for (const host of ['a.test', 'b.test', 'c.test']) clock.addSample(host, 500);
     expect(store.state.clockOffset).toBe(0);
+  });
+
+  it('a clock that was ahead and was put right counts again once the sites confirm it', async () => {
+    const { store, clock } = await load();
+    // The system clock is two hours ahead for a minute (before it synchronizes), then put right.
+    vi.setSystemTime(T0 + 2 * HOUR);
+    clock.now();
+    vi.advanceTimersByTime(60_000);
+    vi.setSystemTime(T0 + 60_000);
+    expect(clock.now()).toBe(T0 + 2 * HOUR + 60_000);
+    expect(store.state.tamper.map((e) => [e.kind, e.detail])).toEqual([['clock-backward', '120']]);
+    // Two sites are not enough.
+    clock.addSample('a.test', 0);
+    clock.addSample('b.test', -500);
+    expect(clock.now()).toBe(T0 + 2 * HOUR + 60_000);
+    clock.addSample('c.test', 500);
+    expect(store.state.clockOffset).toBe(0);
+    expect(store.state.lastWall).toBe(T0 + 60_000);
+    expect(store.state.tamper.map((e) => [e.kind, e.detail])).toEqual([
+      ['clock-backward', '120'],
+      ['clock-realigned', '120'],
+    ]);
+    vi.advanceTimersByTime(3 * HOUR);
+    expect(clock.now()).toBe(Date.now());
+    expect(store.state.tamper).toHaveLength(2);
+    // Once is enough: the sites that agree again change nothing.
+    clock.addSample('d.test', 0);
+    expect(store.state.tamper).toHaveLength(2);
+  });
+
+  it('a time ahead by less than the threshold stays the floor', async () => {
+    const { store, clock } = await load();
+    vi.setSystemTime(T0 + CLOCK_SKEW_THRESHOLD_MS - 60_000);
+    clock.now();
+    vi.setSystemTime(T0);
+    for (const host of ['a.test', 'b.test', 'c.test']) clock.addSample(host, 0);
+    expect(clock.now()).toBe(T0 + CLOCK_SKEW_THRESHOLD_MS - 60_000);
+    expect(store.state.tamper.map((e) => e.kind)).toEqual(['clock-backward']);
+  });
+
+  it('a correction that the system clock made useless does not leave the time ahead', async () => {
+    const { store, clock } = await load();
+    // The system clock is two hours behind: the sites correct it.
+    vi.setSystemTime(T0 - 2 * HOUR);
+    for (const host of ['a.test', 'b.test', 'c.test']) clock.addSample(host, 2 * HOUR);
+    expect(clock.now()).toBe(T0);
+    // Put right, it is two hours ahead with the correction, until the sites tell.
+    vi.setSystemTime(T0 + 60_000);
+    expect(clock.now()).toBe(T0 + 2 * HOUR + 60_000);
+    for (const host of ['a.test', 'b.test', 'c.test']) clock.addSample(host, 0);
+    expect(store.state.clockOffset).toBe(0);
+    expect(clock.now()).toBe(T0 + 60_000);
+    // No backward jump of the system clock to report: the correction went.
+    expect(store.state.tamper.map((e) => [e.kind, e.detail])).toEqual([
+      ['clock-skew', '120'],
+      ['clock-realigned', '120'],
+    ]);
+  });
+
+  it('the time goes back to the corrected one when the system clock is still wrong', async () => {
+    const { store, clock } = await load();
+    const ahead = -2 * HOUR;
+    for (const host of ['a.test', 'b.test', 'c.test']) clock.addSample(host, ahead);
+    expect(clock.now()).toBe(T0 + ahead);
+    // The system clock goes three more hours ahead, then back.
+    vi.setSystemTime(T0 + 3 * HOUR);
+    clock.now();
+    vi.setSystemTime(T0);
+    expect(clock.now()).toBe(T0 + HOUR);
+    for (const host of ['a.test', 'b.test', 'c.test']) clock.addSample(host, ahead);
+    expect(store.state.clockOffset).toBe(ahead);
+    expect(clock.now()).toBe(T0 + ahead);
+    expect(store.state.tamper.map((e) => [e.kind, e.detail])).toEqual([
+      ['clock-skew', '-120'],
+      ['clock-backward', '180'],
+      ['clock-realigned', '180'],
+    ]);
   });
 
   it('sites that disagree, or a small difference, change nothing', async () => {

@@ -337,6 +337,7 @@ const DYNAMIC = {
   'tamper.{x}': [
     'clock-backward',
     'clock-skew',
+    'clock-realigned',
     'state-restored',
     'host-permission',
     'private-access',
