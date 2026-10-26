@@ -12,9 +12,12 @@ export const usageKeys = {
   all: 'a:',
   group: (groupId: string) => `g:${groupId}`,
   site: (groupId: string, site: string) => `s:${groupId}:${site}`,
+  /** Time on a site in normal windows; `h:` alone is the time without a site (not a website, a deleted site). */
   host: (host: string) => `h:${host}`,
-  /** Time on limited sites in private windows, which keep no site detail. */
+  /** Time and visits in private windows, which keep no site detail: their part of `host`. */
   private: 'p:',
+  /** Time outside the rules (Track time on all sites), which `all` leaves out. */
+  outside: 'o:',
 };
 
 /**

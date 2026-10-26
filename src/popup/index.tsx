@@ -492,10 +492,11 @@ function App() {
   );
 }
 
-// On Android the popup opens as a full page: let it take the whole width.
-if (isAndroid) document.documentElement.classList.add('mobile');
-
-void bootPage().then((s) => {
-  setWeekStart(s.weekStart);
-  render(<App />, document.getElementById('app')!);
-});
+// On Android the button opens the dashboard (background/toolbar.ts): the popup shows only if it is
+// tapped before the background has started, and goes to the dashboard as well.
+if (isAndroid) openDashboard();
+else
+  void bootPage().then((s) => {
+    setWeekStart(s.weekStart);
+    render(<App />, document.getElementById('app')!);
+  });

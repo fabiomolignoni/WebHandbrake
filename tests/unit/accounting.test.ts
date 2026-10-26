@@ -88,14 +88,44 @@ describe('counting time', () => {
     });
     await t.tick(T0, 'https://elsewhere.test/');
     expect(t.seconds('h:elsewhere.test')).toEqual([1, 1]);
+    // The time outside the rules has a total of its own.
+    expect(t.seconds('o:')).toEqual([1, 0]);
     await t.tick(T0 + 1000, 'https://a.test/', t.tab(7, { incognito: true }));
     await t.tick(T0 + 2000, 'https://a.test/x', t.tab(8, { incognito: true }));
     expect(t.seconds('g:A')[0]).toBe(2);
     expect(t.seconds('h:a.test')).toEqual([0, 0]);
-    // One total of the time on limited sites in private windows instead, so that the sites add up.
+    // One total of the time in private windows instead, with the visits of their sites, so that
+    // the sites add up: outside the rules too.
+    expect(t.seconds('p:')).toEqual([2, 1]);
     await t.tick(T0 + 3000, 'https://elsewhere.test/', t.tab(7, { incognito: true }));
-    expect(t.seconds('p:')).toEqual([2, 0]);
+    expect(t.seconds('p:')).toEqual([3, 2]);
     expect(t.seconds('a:')).toEqual([2, 0]);
+    expect(t.seconds('o:')).toEqual([2, 0]);
+    // Its sites stay unknown: no key names them.
+    expect(Object.keys(t.store.usage.days.get('2026-10-05')!.t).sort()).toEqual([
+      'a:',
+      'g:A',
+      'h:elsewhere.test',
+      'o:',
+      'p:',
+      's:A:a.test',
+    ]);
+  });
+
+  it('by site, tabs counted at the same time share the seconds of the total', async () => {
+    const t = await setup([group('A', ['a.test', 'b.test'], [{ intervention: { type: 'track' } }])], (s) => {
+      s.tracking.countInactive = true;
+    });
+    for (let i = 0; i < 4; i++) {
+      await t.tick(T0 + i * 1000, 'https://a.test/', t.tab(1));
+      await t.tick(T0 + i * 1000 + 500, 'https://b.test/', t.tab(2));
+    }
+    // Each site has been open for the whole time, which the rule counts once.
+    expect(t.seconds('a:')[0]).toBe(4.5);
+    expect(t.seconds('g:A')[0]).toBe(4.5);
+    expect(t.seconds('h:a.test')[0] + t.seconds('h:b.test')[0]).toBe(4.5);
+    expect(t.seconds('h:a.test')[1]).toBe(1);
+    expect(t.seconds('h:b.test')[1]).toBe(1);
   });
 
   it('a rule over every website counts the time of each site on its own (#20)', async () => {

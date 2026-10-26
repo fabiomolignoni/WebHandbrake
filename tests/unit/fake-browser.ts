@@ -82,7 +82,11 @@ export function installFakeBrowser(opts: { chrome?: boolean; tabs?: Tab[] } = {}
     if (!badges.has(tabId)) badges.set(tabId, {});
     return badges.get(tabId)!;
   };
+  /** The popup of the toolbar button: the manifest's until the extension sets one. */
+  const popup = { value: 'popup.html' };
   const action = {
+    setPopup: async (o: { popup: string }) => void (popup.value = o.popup),
+    onClicked: event(),
     setBadgeText: async (o: { tabId: number; text: string }) => void (badge(o.tabId).text = o.text),
     setBadgeBackgroundColor: async (o: { tabId: number; color: string }) =>
       void (badge(o.tabId).color = o.color),
@@ -233,6 +237,8 @@ export function installFakeBrowser(opts: { chrome?: boolean; tabs?: Tab[] } = {}
     contentReply,
     permissions,
     events,
+    action,
+    popup,
   };
 }
 

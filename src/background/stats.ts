@@ -7,7 +7,7 @@ import { displayHost, stripWww } from '../engine/url';
 import { impulsesOf, usageKeys } from '../engine/usage';
 import { api } from '../platform/api';
 import { timestampSuffix } from '../shared/format';
-import type { StatsModel } from '../shared/models';
+import type { StatsDay, StatsModel } from '../shared/models';
 import { broadcast } from './reconcile';
 import { store } from './store';
 
@@ -26,6 +26,13 @@ function daysBetween(from: string, to: string): string[] {
 
 /** Sites that the days split their time by; the rest is "other sites". */
 export const STACK_SITES = 6;
+
+/**
+ * Time of a day's total that its sites leave out, from which a day without a total for private
+ * windows is taken to have one: the versions before 1.1.0 counted the time in private windows only
+ * in the total. Less is the rounding of those versions, whose sites had clocks of their own.
+ */
+export const EARLIER_PRIVATE_SECONDS = 60;
 
 function sumKey(records: Map<string, DayRecord>, days: string[], key: string, field: 0 | 1) {
   let n = 0;
@@ -46,6 +53,7 @@ export async function getStats(from: string, to: string): Promise<StatsModel> {
 
   const groups = new Map<string, { seconds: number; visits: number }>();
   const sites = new Map<string, { seconds: number; visits: number }>();
+  const unnamed = { seconds: 0, visits: 0 };
   const counters = { shown: 0, proceeded: 0, left: 0, pauses: 0, pauseMinutes: 0, sessions: 0, impulses: 0 };
   for (const d of days) {
     const rec = records.get(d);
@@ -58,10 +66,12 @@ export async function getStats(from: string, to: string): Promise<StatsModel> {
         g.visits += v;
         groups.set(key.slice(2), g);
       } else if (key.startsWith('h:')) {
-        const h = sites.get(key.slice(2)) ?? { seconds: 0, visits: 0 };
+        // The time without a site is among the other sites.
+        const host = key.slice(2);
+        const h = (host ? sites.get(host) : unnamed) ?? { seconds: 0, visits: 0 };
         h.seconds += s;
         h.visits += v;
-        sites.set(key.slice(2), h);
+        if (host) sites.set(host, h);
       }
     }
     for (const [name, n] of Object.entries(rec.c)) {
@@ -80,17 +90,39 @@ export async function getStats(from: string, to: string): Promise<StatsModel> {
     .map(([host, v]) => ({ host, ...v }))
     .sort((a, b) => b.seconds - a.seconds);
   const stack = siteList.slice(0, STACK_SITES).map((x) => x.host);
-  const bySite = (d: string) => {
-    const t = records.get(d)?.t ?? {};
+  /**
+   * A day's time on limited sites and outside the rules, and the same time by site: the two add up,
+   * whatever days of earlier versions hold.
+   */
+  const dayOf = (day: string): StatsDay => {
+    const t = records.get(day)?.t ?? {};
     const own = stack.map((host) => t[usageKeys.host(host)]?.[0] ?? 0);
     let all = 0;
     for (const [key, [sec]] of Object.entries(t)) if (key.startsWith('h:')) all += sec;
+    const limited = t[usageKeys.all]?.[0] ?? 0;
+    const outside = t[usageKeys.outside]?.[0] ?? 0;
+    let priv = t[usageKeys.private]?.[0] ?? 0;
+    let rest = Math.max(0, limited + outside - all - priv);
+    if (!t[usageKeys.private] && rest >= EARLIER_PRIVATE_SECONDS) {
+      priv += rest;
+      rest = 0;
+    }
+    // The rest has no site: among the other sites, as the time without a site.
+    unnamed.seconds += rest;
+    const otherSites = Math.max(0, all - own.reduce((a, b) => a + b, 0)) + rest;
     return {
+      day,
+      // More than the time on limited sites only on days of earlier versions, whose sites could count
+      // more: tabs open at the same time, sites outside the rules.
+      seconds: Math.max(limited, all + priv + rest - outside),
+      visits: t[usageKeys.all]?.[1] ?? 0,
+      outside,
       sites: own,
-      otherSites: Math.max(0, all - own.reduce((a, b) => a + b, 0)),
-      private: t[usageKeys.private]?.[0] ?? 0,
+      otherSites,
+      private: priv,
     };
   };
+  const byDay = days.map(dayOf);
 
   let hours: number[] | null = Array(24).fill(0);
   for (const d of days) {
@@ -110,12 +142,7 @@ export async function getStats(from: string, to: string): Promise<StatsModel> {
   return {
     from,
     to,
-    days: days.map((d) => ({
-      day: d,
-      seconds: sumKey(records, [d], usageKeys.all, 0),
-      visits: sumKey(records, [d], usageKeys.all, 1),
-      ...bySite(d),
-    })),
+    days: byDay,
     total: {
       seconds: sumKey(records, days, usageKeys.all, 0),
       visits: [...groups.values()].reduce((a, g) => a + g.visits, 0),
@@ -132,10 +159,13 @@ export async function getStats(from: string, to: string): Promise<StatsModel> {
     sites: siteList.slice(0, 100),
     siteTotal: {
       count: siteList.length,
-      seconds: siteList.reduce((a, x) => a + x.seconds, 0),
-      visits: siteList.reduce((a, x) => a + x.visits, 0),
+      seconds: siteList.reduce((a, x) => a + x.seconds, unnamed.seconds),
+      visits: siteList.reduce((a, x) => a + x.visits, unnamed.visits),
     },
-    private: sumKey(records, days, usageKeys.private, 0),
+    private: {
+      seconds: byDay.reduce((a, d) => a + d.private, 0),
+      visits: sumKey(records, days, usageKeys.private, 1),
+    },
     stack,
     counters,
     pauses: store.state.pauses
@@ -155,6 +185,16 @@ export async function getStats(from: string, to: string): Promise<StatsModel> {
     hours,
   };
 }
+
+/** The kind of each usage key in the CSV export. */
+const CSV_KINDS: Record<string, string> = {
+  g: 'group',
+  s: 'group-site',
+  h: 'site',
+  p: 'private',
+  o: 'outside-rules',
+  a: 'all-limited',
+};
 
 function csvCell(v: string | number): string {
   const s = String(v);
@@ -190,19 +230,9 @@ export async function exportStats(format: 'csv' | 'json') {
     for (const [key, [s, v]] of Object.entries(rec.t)) {
       const [kind, ...rest] = key.split(':');
       const id = rest.join(':');
-      const label =
-        kind === 'g'
-          ? 'group'
-          : kind === 's'
-            ? 'group-site'
-            : kind === 'h'
-              ? 'site'
-              : kind === 'p'
-                ? 'private'
-                : 'all-limited';
       rows.push([
         day,
-        label,
+        CSV_KINDS[kind] ?? 'all-limited',
         id,
         kind === 'g' ? (names.get(id) ?? '') : '',
         String(Math.round(s)),
@@ -288,10 +318,13 @@ export async function deleteStats(
     const records = await store.loadDays(keys);
     const items: Record<string, DayRecord> = {};
     for (const [day, rec] of records) {
-      if (rec.t[`h:${host}`]) {
-        delete rec.t[`h:${host}`];
-        items[`u:${day}`] = rec;
-      }
+      const time = rec.t[usageKeys.host(host)];
+      if (!time) continue;
+      // Its time stays among the other sites, without a site, so that the sites add up to the total.
+      delete rec.t[usageKeys.host(host)];
+      const unnamed = rec.t[usageKeys.host('')] ?? [0, 0];
+      rec.t[usageKeys.host('')] = [unnamed[0] + time[0], unnamed[1] + time[1]];
+      items[`u:${day}`] = rec;
     }
     if (Object.keys(items).length) await api.storage.local.set(items);
     // The breaks taken on the site no longer say where.

@@ -321,13 +321,17 @@ export interface SessionRequest {
   noPauses: boolean;
 }
 
+/** A day; its time by site (sites, other sites and private windows) adds up to `seconds` and `outside`. */
 export interface StatsDay {
   day: string;
+  /** Seconds on limited sites. */
   seconds: number;
   visits: number;
+  /** Seconds outside the rules (Track time on all sites). */
+  outside: number;
   /** Seconds per site of `StatsModel.stack`, in the same order. */
   sites: number[];
-  /** Seconds on the other sites. */
+  /** Seconds on the other sites, and without a site. */
   otherSites: number;
   /** Seconds in private windows, which keep no site detail. */
   private: number;
@@ -342,10 +346,10 @@ export interface StatsModel {
   groups: { id: string; name: string; color: string; seconds: number; visits: number }[];
   /** The sites with the most time, at most 100. */
   sites: { host: string; seconds: number; visits: number }[];
-  /** All the sites of the period, beyond those listed. */
+  /** All the sites of the period, beyond those listed, and the time without a site. */
   siteTotal: { count: number; seconds: number; visits: number };
-  /** Seconds on limited sites in private windows, which keep no site detail. */
-  private: number;
+  /** Time and visits in private windows, which keep no site detail. */
+  private: { seconds: number; visits: number };
   /** The sites with the most time in the period, which the days split their time by. */
   stack: string[];
   counters: {

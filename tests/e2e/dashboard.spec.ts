@@ -14,6 +14,7 @@ import {
   pauseFree,
   policy,
   REMINDER,
+  TRACK,
   timeBudget,
   wait,
   window as weekly,
@@ -1086,4 +1087,44 @@ test('insights show the time per rule and site, and the impulses resisted', asyn
   expect(await insights.get('.bars .col').count()).toBe(24);
   const today = await h.page('dashboard.html#/today');
   await today.text('Video', { within: 'main' }).expectVisible();
+});
+
+test('insights by site add up to the total, and fit a phone screen', async ({ h, browserName }) => {
+  const long = 'www.averyveryverylonghostnamewithouthyphens.test';
+  await h.configure((c) => {
+    c.groups = [group('Reading', [long, 'news.test'], [policy(TRACK)])];
+  });
+  // Both tabs stay open: a headless browser may count the first one with the second.
+  for (const url of [`http://${long}/`, 'http://news.test/']) {
+    const p = await expectAllowed(h, url);
+    await useUntil(p, async () => false, 2500);
+  }
+  await h.rpc('test.flush');
+  const insights = await h.page('dashboard.html#/insights');
+  /** The time of today's column, as its tip shows it. */
+  const todayColumn = async () => {
+    await insights.get('.bars').click();
+    await insights.press('Home');
+    for (let i = 0; i < (new Date().getDay() + 6) % 7; i++) await insights.press('ArrowRight');
+    const time = await insights.eval(() => document.querySelector('.chart-tip strong')?.textContent ?? '');
+    await insights.press('Escape');
+    return time;
+  };
+  const total = await todayColumn();
+  expect(total).toMatch(/^\d/);
+  await insights.role('radio', 'By site').click();
+  await insights.get('.bars .stacked').expectVisible();
+  expect(await todayColumn()).toBe(total);
+  for (const width of [390, 360]) {
+    await insights.viewport(width, 900);
+    // Firefox keeps a minimum window width: the narrowest it allows.
+    if (browserName === 'chromium') expect(await insights.eval(() => window.innerWidth)).toBe(width);
+    await insights.text(long.slice(4), { within: 'main' }).expectVisible();
+    expect(await insights.overflowX(), `horizontal overflow at ${width}px`).toBeLessThanOrEqual(0);
+    // The time of a column, with the names of its sites, stays over the chart.
+    await insights.get('.bars').click();
+    await insights.get('.chart-tip').expectVisible();
+    expect(await insights.overflowX(), `horizontal overflow at ${width}px`).toBeLessThanOrEqual(0);
+    await insights.press('Escape');
+  }
 });

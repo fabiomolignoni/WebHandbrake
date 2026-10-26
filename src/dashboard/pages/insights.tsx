@@ -371,12 +371,14 @@ function Trend({
   // Labels for at most ~16 columns, so they never overlap.
   const every = Math.max(1, Math.ceil(days.length / 16));
   const bySite = mode === 'sites' && s.stack.length > 0;
+  // With Track time on all sites, the total has the time outside the rules too, as By site has.
+  const outside = !bySite && days.some((d) => d.outside > 0);
   const columns: Column[] = days.map((d, i) => ({
     key: d.day,
     label: i % every === 0 ? dayLabel(d.day, days.length) : '',
     name: dayName(d.day),
-    seconds: d.seconds,
-    parts: bySite ? [...d.sites, d.otherSites, d.private] : undefined,
+    seconds: d.seconds + d.outside,
+    parts: bySite ? [...d.sites, d.otherSites, d.private] : outside ? [d.seconds, d.outside] : undefined,
     current: d.day === todayKey,
   }));
   return (
@@ -398,8 +400,20 @@ function Trend({
         head={months ? t('insights.month') : t('insights.day')}
         label={
           months
-            ? t(bySite ? 'insights.trendSitesLabel.months' : 'insights.trendLabel.months')
-            : t(bySite ? 'insights.trendSitesLabel' : 'insights.trendLabel')
+            ? t(
+                bySite
+                  ? 'insights.trendSitesLabel.months'
+                  : outside
+                    ? 'insights.trendAllLabel.months'
+                    : 'insights.trendLabel.months',
+              )
+            : t(
+                bySite
+                  ? 'insights.trendSitesLabel'
+                  : outside
+                    ? 'insights.trendAllLabel'
+                    : 'insights.trendLabel',
+              )
         }
         series={
           bySite
@@ -408,7 +422,12 @@ function Trend({
                 { name: t('insights.otherSites'), color: 'var(--series-other)' },
                 { name: t('insights.private'), color: 'var(--series-private)' },
               ]
-            : undefined
+            : outside
+              ? [
+                  { name: t('insights.limitedSites'), color: 'var(--accent)' },
+                  { name: t('insights.outsideRules'), color: 'var(--series-other)' },
+                ]
+              : undefined
         }
       />
     </div>
@@ -455,12 +474,14 @@ function monthly(s: StatsModel): StatsDay[] {
       day: k,
       seconds: 0,
       visits: 0,
+      outside: 0,
       sites: d.sites.map(() => 0),
       otherSites: 0,
       private: 0,
     };
     cur.seconds += d.seconds;
     cur.visits += d.visits;
+    cur.outside += d.outside;
     d.sites.forEach((sec, i) => {
       cur.sites[i] += sec;
     });
@@ -636,7 +657,7 @@ export function InsightsPage() {
               ))}
             </div>
           </div>
-          {s.total.seconds === 0 && s.counters.shown === 0 ? (
+          {s.days.every((d) => d.seconds + d.outside === 0) && s.counters.shown === 0 ? (
             <div class="card">
               <Empty icon="chart" title={t('insights.empty')} />
             </div>
@@ -653,7 +674,7 @@ export function InsightsPage() {
                   {s.groups.length === 0 ? (
                     <p class="muted small">{t('insights.none')}</p>
                   ) : (
-                    <table class="table">
+                    <table class="table ranked">
                       <tbody>
                         {s.groups.map((g) => (
                           <tr key={g.id}>
@@ -681,10 +702,10 @@ export function InsightsPage() {
                 </div>
                 <div class="card stack">
                   <h2>{t('insights.bySite')}</h2>
-                  {s.sites.length === 0 && !s.private ? (
+                  {s.siteTotal.seconds === 0 && !s.private.seconds ? (
                     <p class="muted small">{t('insights.none')}</p>
                   ) : (
-                    <table class="table">
+                    <table class="table ranked">
                       <tbody>
                         {listed.map((x) => (
                           <tr key={x.host}>
@@ -699,23 +720,31 @@ export function InsightsPage() {
                             <td class="num small muted">{t('insights.visits', { count: x.visits })}</td>
                           </tr>
                         ))}
-                        {unlisted && unlisted.count > 0 && (
+                        {/* With the time without a site, which has no name: less than a second is rounding. */}
+                        {unlisted && (unlisted.count > 0 || unlisted.seconds >= 1) && (
                           <tr>
-                            <td class="muted">{t('insights.moreSites', { count: unlisted.count })}</td>
+                            <td class="muted">
+                              {unlisted.count > 0
+                                ? t('insights.moreSites', { count: unlisted.count })
+                                : t('insights.otherSites')}
+                            </td>
                             <td class="num">{formatDuration(unlisted.seconds)}</td>
                             <td class="num small muted">
-                              {t('insights.visits', { count: unlisted.visits })}
+                              {unlisted.visits > 0 && t('insights.visits', { count: unlisted.visits })}
                             </td>
                           </tr>
                         )}
-                        {s.private > 0 && (
+                        {s.private.seconds > 0 && (
                           <tr>
                             <td>
                               <span class="muted">{t('insights.private')}</span>
                               <div class="small muted">{t('insights.private.help')}</div>
                             </td>
-                            <td class="num">{formatDuration(s.private)}</td>
-                            <td />
+                            <td class="num">{formatDuration(s.private.seconds)}</td>
+                            <td class="num small muted">
+                              {/* None on the days of earlier versions. */}
+                              {s.private.visits > 0 && t('insights.visits', { count: s.private.visits })}
+                            </td>
                           </tr>
                         )}
                       </tbody>
