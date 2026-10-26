@@ -9,6 +9,7 @@ import { api, extensionUrl, quiet, sessionStore } from '../platform/api';
 import { captureErrors } from '../shared/test-hooks';
 import { forgetTab, initIdle, setIdleState } from './accounting';
 import { updateBadge } from './badge';
+import { isPrivateBackground, listenToPrivateWindows, relayPrivateWindows } from './bridge';
 import { initClockObserver, restoreTestClock } from './clock';
 import { registerNavigationListeners, registerTabListeners } from './enforce';
 import { endLeftVisits } from './intervention';
@@ -19,6 +20,7 @@ import { periodic } from './periodic';
 import { registerPermissionListeners } from './permissions';
 import { ALARM_NEXT, ALARM_PERIODIC, ensurePeriodicAlarm, reconcile } from './reconcile';
 import { store } from './store';
+import { getTab } from './tabs';
 import { testLog } from './test-log';
 import { registerToolbar } from './toolbar';
 
@@ -26,61 +28,70 @@ if (__TEST__) captureErrors('background', (m) => testLog.errors.push(m));
 
 let startupEvent = false;
 
-api.runtime.onMessage.addListener(onMessage);
+// In Chrome this script runs a second time as the background of the private windows, which only
+// relays their events to this one (bridge.ts).
+if (isPrivateBackground()) relayPrivateWindows();
+else main();
 
-api.runtime.onInstalled.addListener((details) => {
-  startupEvent = true;
-  void (async () => {
-    await store.ready();
-    await initI18n(store.config.settings.language);
-    if (details.reason === 'install') {
-      store.meta.installedAt = Date.now();
-      await store.saveMeta();
-      if (!store.config.settings.onboarded)
-        await quiet(api.tabs.create({ url: extensionUrl('dashboard.html#/welcome') }));
-    }
-    store.meta.version = api.runtime.getManifest().version;
-    await store.saveMeta();
-    await reconcile('installed', { config: true });
-  })();
-});
+function main() {
+  api.runtime.onMessage.addListener(onMessage);
+  listenToPrivateWindows(onMessage);
 
-api.runtime.onStartup.addListener(() => {
-  startupEvent = true;
-  void reconcile('startup', { config: true });
-});
-
-api.alarms.onAlarm.addListener((alarm) => {
-  void (async () => {
-    await store.ready();
-    if (alarm.name === ALARM_NEXT) await reconcile('alarm');
-    else if (alarm.name === ALARM_PERIODIC) await periodic();
-  })();
-});
-
-api.idle?.onStateChanged?.addListener((s) => setIdleState(s as 'active' | 'idle' | 'locked'));
-
-registerNavigationListeners(() => {
-  void endLeftVisits();
-});
-registerTabListeners(
-  (tabId) => {
+  api.runtime.onInstalled.addListener((details) => {
+    startupEvent = true;
     void (async () => {
-      const tab = await quiet(api.tabs.get(tabId));
-      if (tab?.id !== undefined) await updateBadge(tab.id, tab.url, Boolean(tab.incognito));
+      await store.ready();
+      await initI18n(store.config.settings.language);
+      if (details.reason === 'install') {
+        store.meta.installedAt = Date.now();
+        await store.saveMeta();
+        if (!store.config.settings.onboarded)
+          await quiet(api.tabs.create({ url: extensionUrl('dashboard.html#/welcome') }));
+      }
+      store.meta.version = api.runtime.getManifest().version;
+      await store.saveMeta();
+      await reconcile('installed', { config: true });
     })();
-  },
-  (tabId) => {
-    forgetTab(tabId);
-    void endLeftVisits(tabId);
-  },
-);
-registerPermissionListeners();
-registerMenuClicks();
-registerCommands();
-registerNotificationClicks();
-registerToolbar();
-initClockObserver();
+  });
+
+  api.runtime.onStartup.addListener(() => {
+    startupEvent = true;
+    void reconcile('startup', { config: true });
+  });
+
+  api.alarms.onAlarm.addListener((alarm) => {
+    void (async () => {
+      await store.ready();
+      if (alarm.name === ALARM_NEXT) await reconcile('alarm');
+      else if (alarm.name === ALARM_PERIODIC) await periodic();
+    })();
+  });
+
+  api.idle?.onStateChanged?.addListener((s) => setIdleState(s as 'active' | 'idle' | 'locked'));
+
+  registerNavigationListeners(() => {
+    void endLeftVisits();
+  });
+  registerTabListeners(
+    (tabId) => {
+      void (async () => {
+        const tab = await quiet(getTab(tabId));
+        if (tab?.id !== undefined) await updateBadge(tab.id, tab.url, Boolean(tab.incognito));
+      })();
+    },
+    (tabId) => {
+      forgetTab(tabId);
+      void endLeftVisits(tabId);
+    },
+  );
+  registerPermissionListeners();
+  registerMenuClicks();
+  registerCommands();
+  registerNotificationClicks();
+  registerToolbar();
+  initClockObserver();
+  void boot();
+}
 
 async function boot() {
   if (__TEST__) await restoreTestClock();
@@ -104,5 +115,3 @@ async function boot() {
   await ensurePeriodicAlarm();
   await reconcile('boot', { config: true });
 }
-
-void boot();

@@ -6,6 +6,7 @@
 import { contentMatchPatterns } from '../engine/patterns';
 import { api, features, quiet } from '../platform/api';
 import { store } from './store';
+import { injectScript, queryTabs } from './tabs';
 
 const SCRIPT_ID = 'whb-content';
 
@@ -55,9 +56,9 @@ export async function updateContentScripts(force = false) {
 
 /** Injects the content script into tabs opened before the registration (install, new groups). */
 async function injectIntoOpenTabs(matches: string[]) {
-  const tabs = (await quiet(api.tabs.query({ url: matches.filter((m) => !m.startsWith('file:')) }))) ?? [];
+  const tabs = (await quiet(queryTabs({ url: matches.filter((m) => !m.startsWith('file:')) }))) ?? [];
   for (const tab of tabs) {
     if (tab.id === undefined || tab.discarded) continue;
-    void quiet(api.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] }));
+    void quiet(injectScript(tab.id, ['content.js']));
   }
 }

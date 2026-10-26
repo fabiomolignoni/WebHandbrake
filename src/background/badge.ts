@@ -9,6 +9,7 @@ import { api, blockedUrlFrom, quiet } from '../platform/api';
 import { formatBadge, formatDuration } from '../shared/format';
 import { ctx } from './engine';
 import { store } from './store';
+import { onTab, queryTabs } from './tabs';
 
 const action = () => api.action ?? (api as unknown as { browserAction?: typeof chrome.action }).browserAction;
 
@@ -37,13 +38,18 @@ export async function updateBadge(tabId: number, url: string | undefined, incogn
       }
     }
   }
-  await quiet(a.setBadgeText({ tabId, text }));
-  if (text) await quiet(a.setBadgeBackgroundColor({ tabId, color }));
-  await quiet(a.setTitle({ tabId, title }));
+  await quiet(onTab(tabId, () => a.setBadgeText({ tabId, text }), 'action.setBadgeText', { tabId, text }));
+  if (text) {
+    const details = { tabId, color };
+    await quiet(
+      onTab(tabId, () => a.setBadgeBackgroundColor(details), 'action.setBadgeBackgroundColor', details),
+    );
+  }
+  await quiet(onTab(tabId, () => a.setTitle({ tabId, title }), 'action.setTitle', { tabId, title }));
 }
 
 export async function updateActiveBadges() {
-  const tabs = (await quiet(api.tabs.query({ active: true }))) ?? [];
+  const tabs = (await quiet(queryTabs({ active: true }))) ?? [];
   for (const tab of tabs)
     if (tab.id !== undefined) await updateBadge(tab.id, tab.url, Boolean(tab.incognito));
 }

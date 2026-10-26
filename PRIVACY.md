@@ -80,6 +80,9 @@ closes. **Settings › Privacy** does not list it.
   after 60 minutes.
 - Which reasons for going in have already been recalled on the page, and a marker that WebHandbrake is
   running.
+- In Chrome, with private windows open: the last message passed each way between their background
+  and the main one (it can hold the address of a private tab), the numbers of the private tabs and
+  the items of the right-click menu (see [Private windows](#private-windows)).
 
 Deleting statistics never refills a limit. The totals that your limits use (per rule and per site
 of a rule), the number of times you continued past an intervention, and the dates of breaks
@@ -97,7 +100,11 @@ WebHandbrake runs in private windows only if you allow it in the browser. When i
 - pages you save for later keep their address and title;
 - **Recent decisions** includes private windows until the browser closes.
 
-In Chrome, one background process serves normal and private windows.
+In Chrome, private windows have a background process of their own, so that the intervention page
+can open there. It keeps nothing: it passes the addresses of their tabs and the messages of
+WebHandbrake's pages there to the main process through the browser's memory (`storage.session`),
+where each message is replaced by the next one and all are gone when the browser closes. The main
+process keeps the data, as for normal windows.
 
 ## Files you create
 
@@ -160,7 +167,7 @@ does with it.
 | `notifications` (optional) | Showing the system notifications you turn on; the browser asks for it when you turn them on in **Settings › Feedback**. | Showing notifications you did not turn on. |
 | `<all_urls>` (access to all sites) | Checking the address of each page against your rules, redirecting a restricted page before it loads, running the page script and reading the `Date` header. Without it, restricted pages can only be blocked with the browser's error page. | Sending anything anywhere. |
 | `web_accessible_resources` | Letting the browser show the intervention page (`intervention.html` and the script, style sheet and icons it loads) in place of a restricted page. | — |
-| `incognito` (Chrome only) | Set to "spanning": one background process serves normal and private windows. | Running in private windows without your permission. |
+| `incognito` (Chrome only) | Set to "split": private windows have a background process of their own, which Chrome needs to show the intervention page there. It keeps nothing and passes everything to the main one. | Running in private windows without your permission. |
 
 ## Store declarations
 
@@ -198,7 +205,8 @@ this policy, its "Last updated" date and the list below. The full history is in 
 - 2026-10-26: Daily statistics keep the visits in private windows too, and their time on every
   site with **Track time on all sites**, still as one total without the sites; that setting also
   keeps one total of the time outside your rules. Deleting one site keeps its time without its
-  name.
+  name. In Chrome, private windows have a background process of their own, which passes what
+  happens there to the main one through the browser's memory.
 - 2026-10-25: The log of recent decisions is off until you turn it on. Daily statistics also keep
   the time on limited sites per hour, and in private windows as one total without the sites. The
   sites you list for focus sessions are stored and exported. Breaks no longer ask for a reason,

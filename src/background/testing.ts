@@ -5,7 +5,7 @@
  * (a context menu click, a keyboard shortcut, the system going idle).
  */
 
-import { api, quiet } from '../platform/api';
+import { quiet } from '../platform/api';
 import { setIdleState } from './accounting';
 import { now, setTestClock, testClockOffset } from './clock';
 import { contentMatches } from './contentscripts';
@@ -15,6 +15,7 @@ import { onCommand, onMenuClicked } from './menus';
 import { periodic } from './periodic';
 import { reconcile } from './reconcile';
 import { store } from './store';
+import { getTab } from './tabs';
 import { testLog } from './test-log';
 
 /** Changes every time the background starts: a test can tell that it was restarted. */
@@ -66,11 +67,11 @@ export function testHandlers(): Record<string, Handler> {
     'test.reconcile': () => reconcile('test', { config: true }),
     'test.flush': () => store.flushAll(),
     'test.menu': async (a: chrome.contextMenus.OnClickData & { tabId?: number }) => {
-      const tab = a.tabId !== undefined ? await quiet(api.tabs.get(a.tabId)) : undefined;
+      const tab = a.tabId !== undefined ? await quiet(getTab(a.tabId)) : undefined;
       await onMenuClicked(a, tab);
     },
     'test.command': async (a: { command: string; tabId?: number }) => {
-      const tab = a.tabId !== undefined ? await quiet(api.tabs.get(a.tabId)) : undefined;
+      const tab = a.tabId !== undefined ? await quiet(getTab(a.tabId)) : undefined;
       await onCommand(a.command, tab);
     },
     'test.idle': (a: { state: 'active' | 'idle' | 'locked' }) => setIdleState(a.state),

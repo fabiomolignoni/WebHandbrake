@@ -9,7 +9,7 @@ import { useState } from 'preact/hooks';
 import { type Granularity, targetFor } from '../engine/page-target';
 import { isNav } from '../engine/severity';
 import { t } from '../i18n/i18n';
-import { extensionUrl, isAndroid } from '../platform/api';
+import { api, extensionUrl, isAndroid } from '../platform/api';
 import { formatWhen } from '../shared/format';
 import type { DecisionView, PopupModel } from '../shared/models';
 import { call } from '../shared/rpc';
@@ -292,12 +292,19 @@ function AddSite({ m, onDone, onCancel }: { m: PopupModel; onDone: () => void; o
  */
 const forTab = __TEST__ ? Number(new URLSearchParams(location.search).get('tab')) || undefined : undefined;
 
-function App() {
-  const {
-    data: m,
-    reload,
-    error,
-  } = useModel('popup.get', forTab !== undefined ? { tabId: forTab } : {}, [], 5000);
+/**
+ * The tab the popup is for: the active tab of its own window, named to the background. In Chrome
+ * the private windows have a background of their own (background/bridge.ts), and the current
+ * window of the main one can be another window.
+ */
+async function ownTab(): Promise<number | undefined> {
+  if (forTab !== undefined) return forTab;
+  const [tab] = (await api.tabs.query({ active: true, currentWindow: true }).catch(() => [])) ?? [];
+  return tab?.id;
+}
+
+function App({ tabId }: { tabId?: number }) {
+  const { data: m, reload, error } = useModel('popup.get', tabId !== undefined ? { tabId } : {}, [], 5000);
   const [adding, setAdding] = useState(false);
   const [pausing, setPausing] = useState(false);
   const now = useNow(1000);
@@ -496,7 +503,7 @@ function App() {
 // tapped before the background has started, and goes to the dashboard as well.
 if (isAndroid) openDashboard();
 else
-  void bootPage().then((s) => {
+  void Promise.all([bootPage(), ownTab()]).then(([s, tabId]) => {
     setWeekStart(s.weekStart);
-    render(<App />, document.getElementById('app')!);
+    render(<App tabId={tabId} />, document.getElementById('app')!);
   });

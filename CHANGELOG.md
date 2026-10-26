@@ -13,6 +13,11 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ### Fixed
 
+- Chrome: in private windows, a restricted page shows the intervention page instead of Chrome's
+  error page ("blocked by an extension"), so **Ask first**, **Wait**, **Challenge**, **Redirect**,
+  breaks and passes work there too, not only blocking. WebHandbrake now runs a background of its
+  own in private windows, which passes everything to the main one: the rules, the limits, the
+  breaks and the statistics stay the same in every window.
 - Insights › **Day by day** shows the same time for a day in **Total** and in **By site**, and
   **By site** adds up to the total. Days recorded before 1.1.0 kept the time in private windows only
   in the total: it is now their **Private windows** part. Tabs counted at the same time (**Count

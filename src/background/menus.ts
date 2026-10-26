@@ -5,6 +5,7 @@ import { DEFAULT_SESSION_MINUTES, QUICK_SESSION_MINUTES } from '../engine/limits
 import { t } from '../i18n/i18n';
 import { api, extensionUrl, features, quiet } from '../platform/api';
 import type { Granularity } from '../shared/rpc';
+import { listenEverywhere, sharePrivateMenus } from './bridge';
 import { addPage, defaultAddGroup } from './pages';
 import { startSession } from './sessions';
 import { store } from './store';
@@ -33,20 +34,33 @@ export async function rebuildMenus() {
   if (!features.contextMenus) return;
   await quiet(api.contextMenus.removeAll());
   if (__TEST__) testLog.menus = [];
-  if (!store.config.settings.contextMenu) return;
+  const items = menuItems();
+  for (const props of items) create(props);
+  // Chrome's private windows show the items of their own background (bridge.ts).
+  await sharePrivateMenus(items);
+}
+
+function menuItems(): chrome.contextMenus.CreateProperties[] {
+  const items: chrome.contextMenus.CreateProperties[] = [];
+  if (!store.config.settings.contextMenu) return items;
   const groups = store.config.groups.filter(isGroupActive);
   const urlPatterns = ['http://*/*', 'https://*/*'];
   for (const item of ROOT_ITEMS) {
-    create({
+    items.push({
       id: item.id,
       title: t(item.key),
       contexts: ctxs(item.contexts),
       ...(item.id === 'link' ? { targetUrlPatterns: urlPatterns } : { documentUrlPatterns: urlPatterns }),
     });
     for (const g of groups) {
-      create({ id: `${item.id}|${g.id}`, parentId: item.id, title: g.name, contexts: ctxs(item.contexts) });
+      items.push({
+        id: `${item.id}|${g.id}`,
+        parentId: item.id,
+        title: g.name,
+        contexts: ctxs(item.contexts),
+      });
     }
-    create({
+    items.push({
       id: `${item.id}|new`,
       parentId: item.id,
       title: t('menu.newGroup'),
@@ -54,16 +68,17 @@ export async function rebuildMenus() {
     });
   }
   // A quick session blocks the rules marked for it: with none, it would block nothing.
-  if (!groups.some((g) => g.options.quickSession)) return;
-  create({ id: 'focus', title: t('menu.focus'), contexts: ctxs(['page', 'action']) });
+  if (!groups.some((g) => g.options.quickSession)) return items;
+  items.push({ id: 'focus', title: t('menu.focus'), contexts: ctxs(['page', 'action']) });
   for (const m of QUICK_SESSION_MINUTES) {
-    create({
+    items.push({
       id: `focus|${m}`,
       parentId: 'focus',
       title: t('menu.focusMinutes', { minutes: m }),
       contexts: ctxs(['page', 'action']),
     });
   }
+  return items;
 }
 
 /** A click on one of the context menu items. */
@@ -92,7 +107,11 @@ export async function onMenuClicked(info: chrome.contextMenus.OnClickData, tab?:
 
 export function registerMenuClicks() {
   if (!features.contextMenus) return;
-  api.contextMenus.onClicked.addListener((info, tab) => void onMenuClicked(info, tab));
+  listenEverywhere(
+    api.contextMenus.onClicked,
+    'contextMenus.onClicked',
+    (info, tab) => void onMenuClicked(info, tab),
+  );
 }
 
 /** A keyboard shortcut. */
@@ -126,5 +145,9 @@ export async function onCommand(command: string, tab?: chrome.tabs.Tab) {
 
 export function registerCommands() {
   if (!features.commands) return;
-  api.commands.onCommand.addListener((command, tab) => void onCommand(command, tab));
+  listenEverywhere(
+    api.commands.onCommand,
+    'commands.onCommand',
+    (command, tab) => void onCommand(command, tab),
+  );
 }

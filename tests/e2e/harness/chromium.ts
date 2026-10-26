@@ -247,14 +247,43 @@ export async function launchChromium(opts: LaunchOptions): Promise<BrowserDriver
         cdp.close();
       }
     },
+    async allowPrivateWindows() {
+      const page = await context.newPage();
+      try {
+        await page.goto(`chrome://extensions/?id=${origin.slice('chrome-extension://'.length)}`);
+        await page.evaluate(async (id) => {
+          const dp = (chrome as any).developerPrivate;
+          const done = (resolve: () => void, reject: (e: Error) => void) => () => {
+            const e = chrome.runtime.lastError;
+            if (e) reject(new Error(e.message));
+            else resolve();
+          };
+          // Without the developer mode, Chromium turns off the unpacked extension it reloads.
+          await new Promise<void>((resolve, reject) =>
+            dp.updateProfileConfiguration({ inDeveloperMode: true }, done(resolve, reject)),
+          );
+          await new Promise<void>((resolve, reject) =>
+            dp.updateExtensionConfiguration(
+              { extensionId: id, incognitoAccess: true },
+              done(resolve, reject),
+            ),
+          );
+        }, origin.slice('chrome-extension://'.length));
+      } finally {
+        await page.close().catch(() => undefined);
+      }
+      // The extension starts again: its pages are closed.
+      helper = null;
+    },
     async stopBackground() {
       const page = await helperPage();
       const cdp = await context.newCDPSession(page);
       const { targetInfos } = await cdp.send('Target.getTargets');
-      const sw = targetInfos.find((t) => t.type === 'service_worker' && t.url.startsWith(origin));
-      if (sw) await cdp.send('Target.closeTarget', { targetId: sw.targetId });
+      // The background of the private windows too, when they are open.
+      const workers = targetInfos.filter((t) => t.type === 'service_worker' && t.url.startsWith(origin));
+      for (const sw of workers) await cdp.send('Target.closeTarget', { targetId: sw.targetId });
       await cdp.detach().catch(() => undefined);
-      return Boolean(sw);
+      return workers.length > 0;
     },
     async close() {
       await context.close().catch(() => undefined);

@@ -64,7 +64,15 @@ export interface BrowserDriver {
   tabs(): Promise<{ tab: TabDriver; url: string }[]>;
   /** An extension page (test.html) opened at launch, from which the harness calls the background. */
   control(): Promise<TabDriver>;
-  /** Terminates the background (Chrome service worker); false when the browser cannot. */
+  /**
+   * Lets the extension run in private windows, as the person does on the browser's page of the
+   * extension, which reloads it (Chromium only).
+   */
+  allowPrivateWindows?(): Promise<void>;
+  /**
+   * Terminates the background (Chrome service worker, with the one of the private windows); false
+   * when the browser cannot.
+   */
   stopBackground(): Promise<boolean>;
   /**
    * Starts again as a browser just launched, without launching it: every tab is closed and the

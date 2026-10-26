@@ -10,6 +10,7 @@ import { api, quiet } from '../platform/api';
 import { formatDuration } from '../shared/format';
 import type { ChangedBroadcast } from '../shared/rpc';
 import { updateActiveBadges } from './badge';
+import { broadcastToPrivate } from './bridge';
 import { updateContentScripts } from './contentscripts';
 import { counters } from './diagnostics-state';
 import { syncRules } from './dnr-sync';
@@ -148,4 +149,5 @@ export async function ensurePeriodicAlarm() {
 export function broadcast(changed: ChangedBroadcast['changed']) {
   const msg: ChangedBroadcast = { whb: 1, changed };
   void quiet(api.runtime.sendMessage(msg));
+  broadcastToPrivate(msg);
 }
