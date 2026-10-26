@@ -305,31 +305,30 @@ test.describe('delay', () => {
     expect(waits.size).toBeGreaterThan(1);
   });
 
-  test("a wait that pauses on another tab is timed by the background, even with the page's countdown stopped", async ({
+  test('a wait that pauses on another tab is timed by the background, whatever the page shows', async ({
     h,
   }) => {
     await h.configure((c) => {
       c.groups = [group('Wait', ['wait.test'], [policy(delay(5, { onBlur: 'pause' }))])];
     });
-    const p = await expectBlocked(h, 'http://wait.test/');
-    const cont = p.button('Continue', { exact: true });
-    await cont.expectEnabled(false);
-    // The page no longer hears that it is hidden, as if its countdown were stopped.
-    await p.eval(() => {
-      document.addEventListener('visibilitychange', (e) => e.stopImmediatePropagation(), true);
-    });
+    const url = 'http://wait.test/';
+    const p = await expectBlocked(h, url);
+    await p.button('Continue', { exact: true }).expectEnabled(false);
     const other = await h.open('http://elsewhere.test/');
-    const id = await p.id();
-    expect((await h.tabs()).find((t) => t.id === id)?.active).toBe(false);
     await sleep(6000);
+    // Answered while another tab is shown, after the 5 s the wait had: refused. The request is the
+    // page's, which every request for the site shares.
+    const { ticket } = await h.rpc('intervention.get', { url });
+    expect(await h.rpc('ticket.answer', { id: ticket.id, answer: '' })).toMatchObject({
+      status: 'error',
+      error: 'ticket.error.notYet',
+    });
+    // Shown again, the page has what was left of its wait, then goes in.
     await p.front();
-    // The page thinks the wait is over; the background added the time spent on the other tab.
-    await cont.click();
-    await p.text('Not yet — the wait is not over.').expectVisible();
-    // The page then shows the background's wait, and goes in once it is over.
-    await cont.expectEnabled(false);
-    await cont.expectEnabled(true, 8000);
-    await cont.click();
+    const end = (await h.rpc('intervention.get', { url })).ticket.step.readyAt as number;
+    expect(end - (await h.clock.now())).toBeGreaterThan(1000);
+    await expect.poll(() => h.clock.now(), { timeout: 10_000 }).toBeGreaterThanOrEqual(end);
+    await p.button('Continue', { exact: true }).click();
     await p.expectReal('wait.test/');
     await other.close();
   });
