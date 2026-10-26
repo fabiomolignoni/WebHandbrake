@@ -13,11 +13,13 @@ import { isNav, NAV_SEVERITY, SEVERITY } from '../engine/severity';
 import type { Group } from '../engine/types';
 import { parseUrl } from '../engine/url';
 import { api, blockedUrlFrom, extensionUrl, interventionUrl, quiet } from '../platform/api';
+import { listenEverywhere } from './bridge';
 import { now } from './clock';
 import { counters, logDecision } from './diagnostics-state';
 import { dnrStatus } from './dnr-sync';
 import { ctx, decideUrl, firmProtection, groupActiveNow, groupProtection } from './engine';
 import { store } from './store';
+import { getTab, messageTab, queryTabs, updateTab } from './tabs';
 
 /** Tabs in their grace period: tab id → deadline. */
 const graceTabs = new Map<number, number>();
@@ -128,7 +130,7 @@ function shouldEnforce(d: Decision, tab: chrome.tabs.Tab, onNavigation: boolean)
 
 async function redirectTab(tabId: number, url: string) {
   counters.enforcements++;
-  await quiet(api.tabs.update(tabId, { url: interventionUrl(url) }));
+  await quiet(updateTab(tabId, { url: interventionUrl(url) }));
 }
 
 /**
@@ -161,9 +163,9 @@ export async function enforceTab(
     if (deadline && t < deadline) return false;
     if (deadline === undefined) {
       const grace = store.config.settings.interventions.graceSeconds;
-      const res = (await quiet(
-        api.tabs.sendMessage(tab.id, { whb: 1, cmd: 'prepare', graceSeconds: grace }),
-      )) as { grace?: number } | undefined;
+      const res = (await quiet(messageTab(tab.id, { whb: 1, cmd: 'prepare', graceSeconds: grace }))) as
+        | { grace?: number }
+        | undefined;
       if (res?.grace) {
         graceTabs.set(tab.id, t + res.grace * 1000 + 3000);
         setTimeout(() => void finishGrace(tab.id!), res.grace * 1000 + 3500);
@@ -187,26 +189,26 @@ export async function enforceTab(
 export async function finishGrace(tabId: number) {
   if (!graceTabs.has(tabId)) return;
   graceTabs.set(tabId, 0);
-  const tab = await quiet(api.tabs.get(tabId));
+  const tab = await quiet(getTab(tabId));
   if (tab) await enforceTab(tab, 'state');
   graceTabs.delete(tabId);
 }
 
 /** Applies the current state to every open tab, after a change of the rules or of the state. */
 export async function enforceAllTabs(reason: 'state' | 'config' = 'state') {
-  const tabs = await quiet(api.tabs.query({}));
+  const tabs = await quiet(queryTabs({}));
   if (!tabs) return;
   await Promise.all(tabs.map((tab) => enforceTab(tab, reason).catch(() => false)));
   // Refresh in-page state (filters, timers) of tabs that stay.
   for (const tab of tabs) {
     if (tab.id === undefined || !tab.url || !/^https?:/.test(tab.url)) continue;
-    void quiet(api.tabs.sendMessage(tab.id, { whb: 1, cmd: 'refresh' }));
+    void quiet(messageTab(tab.id, { whb: 1, cmd: 'refresh' }));
   }
 }
 
 /** Number of tabs showing an intervention for a URL that is allowed again. */
 export async function restorableTabs(): Promise<chrome.tabs.Tab[]> {
-  const tabs = (await quiet(api.tabs.query({}))) ?? [];
+  const tabs = (await quiet(queryTabs({}))) ?? [];
   return tabs.filter((tab) => {
     const blocked = blockedUrlFrom(tab.url);
     if (!blocked || !/^https?:/.test(blocked)) return false;
@@ -218,7 +220,7 @@ export async function reopenBlockedTabs(): Promise<number> {
   const tabs = await restorableTabs();
   for (const tab of tabs) {
     const blocked = blockedUrlFrom(tab.url);
-    if (tab.id !== undefined && blocked) await quiet(api.tabs.update(tab.id, { url: blocked }));
+    if (tab.id !== undefined && blocked) await quiet(updateTab(tab.id, { url: blocked }));
   }
   return tabs.length;
 }
@@ -252,7 +254,7 @@ async function checkNavigation(tabId: number, url: string, reason: 'navigation' 
   }
   interventionTabs.delete(tabId);
   replacedTabs.delete(tabId);
-  const tab = await quiet(api.tabs.get(tabId));
+  const tab = await quiet(getTab(tabId));
   if (!tab) return;
   tab.url = url;
   await enforceTab(tab, reason);
@@ -265,28 +267,35 @@ async function checkNavigation(tabId: number, url: string, reason: 'navigation' 
  */
 export const BLOCKED_BY_RULE = /BLOCKED_BY_CLIENT|NS_ERROR_ABORT\b|\b2147500036\b|blocked/i;
 
+/** The listeners of the navigations, in every window (private ones included: bridge.ts). */
 export function registerNavigationListeners(onCommitted: (tabId: number, url: string) => void) {
   const nav = api.webNavigation;
   if (!nav) return;
   // Second layer after DNR: committed navigations (what the filters cannot express, such as rules
   // for normal or private windows only).
-  nav.onCommitted.addListener(
+  listenEverywhere(
+    nav.onCommitted,
+    'webNavigation.onCommitted',
     onTopFrame((d) => {
       void checkNavigation(d.tabId, d.url, 'navigation');
       onCommitted(d.tabId, d.url);
     }),
   );
   // Single page applications.
-  nav.onHistoryStateUpdated.addListener(
+  listenEverywhere(
+    nav.onHistoryStateUpdated,
+    'webNavigation.onHistoryStateUpdated',
     onTopFrame((d) => {
       void (async () => {
         await checkNavigation(d.tabId, d.url, 'navigation');
         // The content script may be idle on a page that was not tracked: wake it up.
-        void quiet(api.tabs.sendMessage(d.tabId, { whb: 1, cmd: 'refresh' }));
+        void quiet(messageTab(d.tabId, { whb: 1, cmd: 'refresh' }));
       })();
     }),
   );
-  nav.onReferenceFragmentUpdated.addListener(
+  listenEverywhere(
+    nav.onReferenceFragmentUpdated,
+    'webNavigation.onReferenceFragmentUpdated',
     onTopFrame((d) => {
       if (store.cc.groups.some((g) => g.index.all.some((cp) => cp.fragment !== null))) {
         void checkNavigation(d.tabId, d.url, 'navigation');
@@ -294,12 +303,14 @@ export function registerNavigationListeners(onCommitted: (tabId: number, url: st
     }),
   );
   // Groups limited to normal or private windows are not in the DNR rules: act early.
-  nav.onBeforeNavigate.addListener(
+  listenEverywhere(
+    nav.onBeforeNavigate,
+    'webNavigation.onBeforeNavigate',
     onTopFrame((d) => {
       void (async () => {
         await store.ready();
         if (!store.cc.groups.some((g) => g.group.options.privacy !== 'all')) return;
-        const tab = await quiet(api.tabs.get(d.tabId));
+        const tab = await quiet(getTab(d.tabId));
         if (!tab) return;
         const real = decideUrl(d.url, Boolean(tab.incognito));
         const viaDnr = decideUrl(d.url, null);
@@ -308,13 +319,15 @@ export function registerNavigationListeners(onCommitted: (tabId: number, url: st
     }),
   );
   // Without host access DNR can only block; show the intervention page instead.
-  nav.onErrorOccurred.addListener(
+  listenEverywhere(
+    nav.onErrorOccurred,
+    'webNavigation.onErrorOccurred',
     onTopFrame((d) => {
       const err = (d as unknown as { error?: string }).error ?? '';
       if (dnrStatus.hostAccess || !BLOCKED_BY_RULE.test(err)) return;
       void (async () => {
         await store.ready();
-        const tab = await quiet(api.tabs.get(d.tabId));
+        const tab = await quiet(getTab(d.tabId));
         if (tab && isNav(decideUrl(d.url, Boolean(tab.incognito)))) await redirectTab(d.tabId, d.url);
       })();
     }),
@@ -325,7 +338,7 @@ export function registerTabListeners(
   onActivated: (tabId: number) => void,
   onRemoved: (tabId: number) => void,
 ) {
-  api.tabs.onUpdated.addListener((_tabId, info, tab) => {
+  listenEverywhere(api.tabs.onUpdated, 'tabs.onUpdated', (_tabId, info, tab) => {
     if (!info.url) return;
     // Internal pages, local files, reader mode and view-source are not seen by DNR.
     if (/^https?:/i.test(info.url)) return;
@@ -335,15 +348,15 @@ export function registerTabListeners(
       await enforceTab({ ...tab, url: info.url }, 'navigation');
     })();
   });
-  api.tabs.onActivated.addListener(({ tabId }) => {
+  listenEverywhere(api.tabs.onActivated, 'tabs.onActivated', ({ tabId }) => {
     void (async () => {
       await store.ready();
-      const tab = await quiet(api.tabs.get(tabId));
+      const tab = await quiet(getTab(tabId));
       if (tab) await enforceTab(tab, 'activation');
       onActivated(tabId);
     })();
   });
-  api.tabs.onRemoved.addListener((tabId) => {
+  listenEverywhere(api.tabs.onRemoved, 'tabs.onRemoved', (tabId) => {
     graceTabs.delete(tabId);
     replacedTabs.delete(tabId);
     onRemoved(tabId);

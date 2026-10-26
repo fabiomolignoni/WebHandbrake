@@ -17,6 +17,7 @@ import {
 } from '../engine/limits';
 import type { TamperEvent } from '../engine/types';
 import { api, features } from '../platform/api';
+import { onPrivate } from './bridge';
 import { store } from './store';
 
 let anchor: { trusted: number; mono: number } | null = null;
@@ -87,36 +88,43 @@ function report(e: TamperEvent) {
   void store.saveState();
 }
 
-/** Observes Date headers of responses to detect a clock set forward. */
+type HeadersDetails = Pick<chrome.webRequest.OnHeadersReceivedDetails, 'url' | 'responseHeaders'> & {
+  fromCache?: boolean;
+};
+
+function onHeaders(details: HeadersDetails): undefined {
+  if (!store.config.settings.clock.useDateHeaders) return;
+  if (details.fromCache) return;
+  const headers = details.responseHeaders ?? [];
+  let date: string | undefined;
+  let age = 0;
+  for (const h of headers) {
+    const name = h.name.toLowerCase();
+    if (name === 'date') date = h.value;
+    else if (name === 'age') age = Number(h.value) || 0;
+  }
+  if (!date || age > 0) return;
+  const server = Date.parse(date);
+  if (!Number.isFinite(server)) return;
+  let host = '';
+  try {
+    host = new URL(details.url).hostname;
+  } catch {
+    return;
+  }
+  addSample(host, server - Date.now());
+}
+
+/** Observes Date headers of responses to detect a clock set forward (private windows too). */
 export function initClockObserver() {
   if (!features.webRequest) return;
   try {
     api.webRequest.onHeadersReceived.addListener(
-      (details) => {
-        if (!store.config.settings.clock.useDateHeaders) return;
-        if ((details as { fromCache?: boolean }).fromCache) return;
-        const headers = details.responseHeaders ?? [];
-        let date: string | undefined;
-        let age = 0;
-        for (const h of headers) {
-          const name = h.name.toLowerCase();
-          if (name === 'date') date = h.value;
-          else if (name === 'age') age = Number(h.value) || 0;
-        }
-        if (!date || age > 0) return;
-        const server = Date.parse(date);
-        if (!Number.isFinite(server)) return;
-        let host = '';
-        try {
-          host = new URL(details.url).hostname;
-        } catch {
-          return;
-        }
-        addSample(host, server - Date.now());
-      },
+      onHeaders,
       { urls: ['http://*/*', 'https://*/*'], types: ['main_frame'] },
       ['responseHeaders'],
     );
+    onPrivate('webRequest.onHeadersReceived', onHeaders);
   } catch {
     // webRequest unavailable: Date header checks are optional.
   }

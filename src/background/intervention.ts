@@ -8,7 +8,7 @@ import { dayKeyOf } from '../engine/time';
 import type { Grant, Intervention } from '../engine/types';
 import { displayHost, pageKey, parseUrl } from '../engine/url';
 import { usageKeys } from '../engine/usage';
-import { api, blockedUrlFrom, extensionUrl, INTERVENTION_PAGE, quiet } from '../platform/api';
+import { blockedUrlFrom, extensionUrl, INTERVENTION_PAGE, quiet } from '../platform/api';
 import type { InterventionModel, PauseOptions } from '../shared/models';
 import { now } from './clock';
 import { randomInt } from './crypto';
@@ -27,6 +27,7 @@ import { pauseOptions } from './pauses';
 import { reconcile } from './reconcile';
 import { countSessionStop } from './sessions';
 import { store } from './store';
+import { queryTabs, removeTab, updateTab } from './tabs';
 import { createTicket, registerExecutor, type Step } from './tickets';
 
 const shownRecently = new Map<string, number>();
@@ -376,7 +377,7 @@ export async function endLeftVisits(tab: { closed?: number; navigated?: number }
   await store.ready();
   const visits = store.state.grants.filter((g) => g.kind === 'pass' && g.visit);
   if (!visits.length) return;
-  const tabs = (await quiet(api.tabs.query({}))) ?? [];
+  const tabs = (await quiet(queryTabs({}))) ?? [];
   const c = ctx();
   const shown = new Set<Grant>();
   for (const t of tabs) {
@@ -422,7 +423,7 @@ export async function interventionLeft(sender: chrome.runtime.MessageSender) {
 }
 
 export async function closeSenderTab(sender: chrome.runtime.MessageSender) {
-  if (sender.tab?.id !== undefined) await quiet(api.tabs.remove(sender.tab.id));
+  if (sender.tab?.id !== undefined) await quiet(removeTab(sender.tab.id));
 }
 
 /**
@@ -443,7 +444,7 @@ export async function reopenInTab(
     : !isNav(decideUrl(url, Boolean(sender.tab?.incognito)));
   if (!allowed) return { ok: false };
   try {
-    await api.tabs.update(tabId, { url });
+    await updateTab(tabId, { url });
     return { ok: true };
   } catch {
     return { ok: false };

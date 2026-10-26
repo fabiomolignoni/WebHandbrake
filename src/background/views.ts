@@ -24,6 +24,7 @@ import { blockingIn, defaultAddGroup } from './pages';
 import { activePauses, pauseOptions } from './pauses';
 import { broadcast } from './reconcile';
 import { store } from './store';
+import { getTab } from './tabs';
 
 export function todayStats(): TodayStats {
   const c = ctx();
@@ -154,7 +155,7 @@ export async function popupModel(tabId?: number): Promise<PopupModel> {
   await store.ready();
   const c = ctx();
   let tab: chrome.tabs.Tab | undefined;
-  if (tabId !== undefined) tab = await quiet(api.tabs.get(tabId));
+  if (tabId !== undefined) tab = await quiet(getTab(tabId));
   else tab = (await quiet(api.tabs.query({ active: true, currentWindow: true })))?.[0];
   const rawUrl = tab?.url ?? '';
   const url = blockedUrlFrom(rawUrl) ?? rawUrl;

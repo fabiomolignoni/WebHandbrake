@@ -514,6 +514,31 @@ export class Harness {
     return this.page(`popup.html${id !== undefined ? `?tab=${id}` : ''}`);
   }
 
+  /**
+   * Lets the extension run in private windows (Chromium), which starts it again, and waits for its
+   * background.
+   */
+  async allowPrivateWindows() {
+    if (!this.driver.allowPrivateWindows) throw new Error(`allowPrivateWindows: not in ${this.browser}`);
+    await this.driver.allowPrivateWindows();
+    await expect
+      .poll(
+        async () => {
+          await this.attachControl();
+          return this.control.eval(() => chrome.extension.isAllowedIncognitoAccess());
+        },
+        { timeout: 20_000 },
+      )
+      .toBe(true);
+  }
+
+  /** Opens a web page in a new private window, as a user typing the address there. */
+  openPrivate(url: string): Promise<Tab> {
+    return this.newTab(() =>
+      this.control.eval((u: string) => chrome.windows.create({ incognito: true, url: u }), url),
+    );
+  }
+
   /** Runs `trigger` and returns the tab it opened. */
   async newTab(trigger: () => Promise<unknown>): Promise<Tab> {
     const tab = new Tab(this, await this.driver.waitForNewTab(trigger));

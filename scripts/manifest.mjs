@@ -68,7 +68,9 @@ export function manifest(target, version) {
   if (target === 'chrome') {
     m.minimum_chrome_version = '121';
     m.background = { service_worker: 'background.js' };
-    m.incognito = 'spanning';
+    // A background of its own in private windows: Chrome opens the extension's pages (the
+    // intervention page) in a private tab only then. It relays to the main one (background/bridge.ts).
+    m.incognito = 'split';
   } else {
     m.background = { scripts: ['background.js'] };
     m.browser_specific_settings = {

@@ -15,6 +15,15 @@ function sortKeys(v: unknown): unknown {
 type Tab = Partial<chrome.tabs.Tab>;
 type Listener = (...args: any[]) => unknown;
 
+/** The storage of a browser, with the change events of every background that uses it. */
+interface SharedStorage {
+  local: Map<string, unknown>;
+  session: Map<string, unknown>;
+  storageEvents: FakeEvent[];
+}
+
+type FakeEvent = ReturnType<typeof event>;
+
 /** An event whose listeners a test can call. */
 function event() {
   const listeners: Listener[] = [];
@@ -32,12 +41,36 @@ function event() {
  * returns; the array can be changed later, and `tabs.update()` changes it as a browser would.
  * What the extension does to the browser (rules, alarms, badges, messages to tabs,
  * notifications…) is kept in the returned object, for the tests to look at.
+ *
+ * `incognito` with `sharedWith`: the background of Chrome's private windows, which shares the
+ * storage (and its change events) of the main one but has tabs and events of its own.
  */
-export function installFakeBrowser(opts: { chrome?: boolean; tabs?: Tab[] } = {}) {
+export function installFakeBrowser(
+  opts: { chrome?: boolean; tabs?: Tab[]; incognito?: boolean; sharedWith?: SharedStorage } = {},
+) {
   const tabs = opts.tabs ?? [];
-  const local = new Map<string, unknown>();
-  const session = new Map<string, unknown>();
-  const area = (m: Map<string, unknown>) => ({
+  const local = opts.sharedWith?.local ?? new Map<string, unknown>();
+  const session = opts.sharedWith?.session ?? new Map<string, unknown>();
+  /** storage.onChanged of every background that shares the storage. */
+  const storageEvents: FakeEvent[] = opts.sharedWith?.storageEvents ?? [];
+  const onStorageChanged = event();
+  storageEvents.push(onStorageChanged);
+  /** Like the browser: only the values that change, reported after the write. */
+  const changed = (name: string, m: Map<string, unknown>, items: [string, unknown][]) => {
+    const changes: Record<string, { oldValue?: unknown; newValue?: unknown }> = {};
+    for (const [k, v] of items) {
+      const old = m.get(k);
+      if (JSON.stringify(old) === JSON.stringify(v)) continue;
+      changes[k] = { oldValue: old, newValue: v };
+      if (v === undefined) m.delete(k);
+      else m.set(k, v);
+    }
+    if (Object.keys(changes).length)
+      queueMicrotask(() => {
+        for (const e of storageEvents) e.fire(JSON.parse(JSON.stringify(changes)), name);
+      });
+  };
+  const area = (m: Map<string, unknown>, name: string) => ({
     async get(keys?: string | string[] | null) {
       const clone = (v: unknown) => {
         if (v === undefined) return v;
@@ -52,10 +85,18 @@ export function installFakeBrowser(opts: { chrome?: boolean; tabs?: Tab[] } = {}
       return out;
     },
     async set(items: Record<string, unknown>) {
-      for (const [k, v] of Object.entries(items)) m.set(k, JSON.parse(JSON.stringify(v)));
+      changed(
+        name,
+        m,
+        Object.entries(items).map(([k, v]) => [k, JSON.parse(JSON.stringify(v))]),
+      );
     },
     async remove(keys: string | string[]) {
-      for (const k of Array.isArray(keys) ? keys : [keys]) m.delete(k);
+      changed(
+        name,
+        m,
+        (Array.isArray(keys) ? keys : [keys]).map((k) => [k, undefined]),
+      );
     },
     async getBytesInUse() {
       return JSON.stringify([...m]).length;
@@ -102,6 +143,7 @@ export function installFakeBrowser(opts: { chrome?: boolean; tabs?: Tab[] } = {}
     onUpdated: event(),
     onActivated: event(),
     onRemoved: event(),
+    onCreated: event(),
     onAlarm: event(),
     onMenuClicked: event(),
     onCommand: event(),
@@ -123,7 +165,7 @@ export function installFakeBrowser(opts: { chrome?: boolean; tabs?: Tab[] } = {}
       sendMessage: async (m: unknown) => void broadcasts.push(m),
       lastError: undefined,
     },
-    storage: { local: area(local), session: area(session) },
+    storage: { local: area(local, 'local'), session: area(session, 'session'), onChanged: onStorageChanged },
     declarativeNetRequest: {
       MAX_NUMBER_OF_REGEX_RULES: 1000,
       MAX_NUMBER_OF_DYNAMIC_RULES: 30000,
@@ -146,7 +188,10 @@ export function installFakeBrowser(opts: { chrome?: boolean; tabs?: Tab[] } = {}
       onAdded: event(),
       onRemoved: event(),
     },
-    extension: { isAllowedIncognitoAccess: async () => permissions.incognito },
+    extension: {
+      isAllowedIncognitoAccess: async () => permissions.incognito,
+      inIncognitoContext: Boolean(opts.incognito),
+    },
     tabs: {
       query: async (q: { active?: boolean; url?: string[] } = {}) =>
         tabs.filter((t) => q.active === undefined || Boolean(t.active) === q.active).map((t) => ({ ...t })),
@@ -178,6 +223,7 @@ export function installFakeBrowser(opts: { chrome?: boolean; tabs?: Tab[] } = {}
       onUpdated: events.onUpdated,
       onActivated: events.onActivated,
       onRemoved: events.onRemoved,
+      onCreated: events.onCreated,
     },
     webNavigation: {
       onCommitted: events.onCommitted,
@@ -223,6 +269,8 @@ export function installFakeBrowser(opts: { chrome?: boolean; tabs?: Tab[] } = {}
   return {
     local,
     session,
+    storageEvents,
+    onStorageChanged,
     tabs,
     rules,
     alarms,
