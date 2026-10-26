@@ -277,7 +277,7 @@ describe('menus and shortcuts', () => {
     expect(t.store.state.sessions[0].endAt - t.store.state.sessions[0].startAt).toBe(50 * 60_000);
   });
 
-  it('the shortcut adds the site to the last rule used, or the first one, that blocks it right now', async () => {
+  it('without the popup, the shortcut adds the site to the last rule used, or the first one, that blocks it right now', async () => {
     const t = await setup([
       group('Evening', ['e.test'], [{ intervention: BLOCK, schedule: evening }]),
       group('A', ['a.test'], [{ intervention: BLOCK }]),
@@ -307,6 +307,47 @@ describe('menus and shortcuts', () => {
     ]);
     await onCommand('start-session');
     expect(t.store.state.sessions).toHaveLength(1);
+  });
+
+  it('the shortcut opens the popup on "Block this site" for its tab, and the popup reads the note once', async () => {
+    fake = installFakeBrowser({
+      openPopup: true,
+      tabs: [{ id: 1, url: 'https://a.test/', active: true, incognito: false, windowId: 4 }],
+    });
+    const t = await setup([group('A', ['a.test'], [{ intervention: BLOCK }])]);
+    const before = JSON.stringify(t.store.config);
+    const { onCommand } = await import('../../src/background/menus');
+    const { NOTE_MS, takeBlockSiteNote } = await import('../../src/shared/block-site');
+    const tab = { id: 1, url: 'https://new.test/', windowId: 4 } as chrome.tabs.Tab;
+    await onCommand('block-site', tab);
+    expect(fake.popups).toEqual([{ windowId: 4 }]);
+    expect(JSON.stringify(t.store.config)).toBe(before);
+    expect(fake.created).toEqual([]);
+    // The popup of another tab opens as usual, and so does a later one.
+    expect(await takeBlockSiteNote(2)).toBe(false);
+    await onCommand('block-site', tab);
+    expect(await takeBlockSiteNote(1, Date.now() + NOTE_MS)).toBe(false);
+    await onCommand('block-site', tab);
+    expect(await takeBlockSiteNote(1)).toBe(true);
+    expect(await takeBlockSiteNote(1)).toBe(false);
+
+    // A popup that cannot open (a window not in front): blocked as without the popup, no note left.
+    fake.action.openPopup = async () => {
+      throw new Error('Browser window is not active.');
+    };
+    await onCommand('block-site', tab);
+    expect(t.store.config.groups[0].targets.map((x) => x.value)).toEqual(['a.test', 'new.test']);
+    expect(fake.session.size).toBe(0);
+  });
+
+  it("Chrome: a private tab's shortcut opens the popup from the private windows' background", async () => {
+    fake = installFakeBrowser({ openPopup: true, chrome: true });
+    const t = await setup([group('A', ['a.test'], [{ intervention: BLOCK }])]);
+    const { onCommand } = await import('../../src/background/menus');
+    // Relayed only when the popup could not open there: the main background blocks the site.
+    await onCommand('block-site', { id: 7, url: 'https://p.test/', incognito: true } as chrome.tabs.Tab);
+    expect(fake.popups).toEqual([]);
+    expect(t.store.config.groups[0].targets.map((x) => x.value)).toEqual(['a.test', 'p.test']);
   });
 
   it('without a rule for quick sessions, no focus item and the shortcut opens the Focus page', async () => {

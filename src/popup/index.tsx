@@ -5,12 +5,12 @@
  */
 
 import { render } from 'preact';
-import { useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { type Granularity, targetFor } from '../engine/page-target';
 import { isNav } from '../engine/severity';
 import { t } from '../i18n/i18n';
 import { api, extensionUrl, isAndroid } from '../platform/api';
-import { newRuleRoute } from '../shared/block-site';
+import { newRuleRoute, takeBlockSiteNote } from '../shared/block-site';
 import { formatWhen } from '../shared/format';
 import type { DecisionView, PopupModel } from '../shared/models';
 import { call } from '../shared/rpc';
@@ -183,11 +183,26 @@ function addOutcome(g: PopupModel['groups'][number] | undefined): string {
   return t('popup.add.outcomeNever', { rule: g.name });
 }
 
-function AddSite({ m, onDone, onCancel }: { m: PopupModel; onDone: () => void; onCancel: () => void }) {
+function AddSite({
+  m,
+  focus,
+  onDone,
+  onCancel,
+}: {
+  m: PopupModel;
+  /** Opened by the keyboard shortcut: the keys go on from the choice of what to block. */
+  focus: boolean;
+  onDone: () => void;
+  onCancel: () => void;
+}) {
   const [granularity, setGranularity] = useState<Granularity>('domain');
   // A rule that blocks the page right now, or a new one: "Block" should block.
   const [groupId, setGroupId] = useState<string>(m.addTo ?? 'new');
   const flow = useSaveFlow();
+  const panel = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (focus) panel.current?.querySelector<HTMLElement>('[role="radio"][aria-checked="true"]')?.focus();
+  }, []);
   const url = m.tab?.url ?? '';
   const options: { value: Granularity; label: string }[] = [
     { value: 'domain', label: t('popup.add.domain') },
@@ -214,7 +229,7 @@ function AddSite({ m, onDone, onCancel }: { m: PopupModel; onDone: () => void; o
     if (ok) onDone();
   };
   return (
-    <section class="panel" aria-labelledby="add-title">
+    <section class="panel" aria-labelledby="add-title" ref={panel}>
       <div class="row between nowrap">
         <strong id="add-title">{t('popup.add.title')}</strong>
         <IconButton icon="x" label={t('common.close')} variant="ghost" size="small" onClick={onCancel} />
@@ -296,9 +311,10 @@ async function ownTab(): Promise<number | undefined> {
   return tab?.id;
 }
 
-function App({ tabId }: { tabId?: number }) {
+/** `blockSite`: opened by the "Block this site" shortcut, on its panel. */
+function App({ tabId, blockSite }: { tabId?: number; blockSite: boolean }) {
   const { data: m, reload, error } = useModel('popup.get', tabId !== undefined ? { tabId } : {}, [], 5000);
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding] = useState(blockSite);
   const [pausing, setPausing] = useState(false);
   const now = useNow(1000);
   if (error)
@@ -391,9 +407,10 @@ function App({ tabId }: { tabId?: number }) {
             )}
           </div>
         )}
-        {adding && (
+        {adding && m.canAdd && (
           <AddSite
             m={m}
+            focus={blockSite}
             onCancel={() => setAdding(false)}
             onDone={() => {
               setAdding(false);
@@ -496,7 +513,10 @@ function App({ tabId }: { tabId?: number }) {
 // tapped before the background has started, and goes to the dashboard as well.
 if (isAndroid) openDashboard();
 else
-  void Promise.all([bootPage(), ownTab()]).then(([s, tabId]) => {
+  void Promise.all([
+    bootPage(),
+    ownTab().then(async (tabId) => [tabId, await takeBlockSiteNote(tabId)] as const),
+  ]).then(([s, [tabId, blockSite]]) => {
     setWeekStart(s.weekStart);
-    render(<App tabId={tabId} />, document.getElementById('app')!);
+    render(<App tabId={tabId} blockSite={blockSite} />, document.getElementById('app')!);
   });

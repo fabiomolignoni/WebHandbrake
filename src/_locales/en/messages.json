@@ -16,7 +16,7 @@
     "description": "Keyboard shortcut description"
   },
   "cmdBlockSite": {
-    "message": "Block the current site",
+    "message": "Choose how to block the current site",
     "description": "Keyboard shortcut description"
   },
   "cmdOpenDashboard": {

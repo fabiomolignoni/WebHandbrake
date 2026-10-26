@@ -84,6 +84,9 @@ closes. **Settings › Privacy** does not list it.
   none does. Each expires 60 minutes after its wait is over.
 - Which reasons for going in have already been recalled on the page, and a marker that WebHandbrake is
   running.
+- For a few seconds after the **Block this site** keyboard shortcut, the number of the tab it was
+  pressed in, so that the popup opens on **Block this site** for that tab. The popup removes it as
+  it opens.
 - In Chrome, with private windows open: the last message passed each way between their background
   and the main one (it can hold the address of a private tab), the numbers of the private tabs and
   the items of the right-click menu (see [Private windows](#private-windows)).
@@ -213,7 +216,8 @@ this policy, its "Last updated" date and the list below. The full history is in 
   minutes at most. In Chrome, private windows have a background process of their own, which passes
   what happens there to the main one through the browser's memory. A wait that pauses or starts
   again when you switch tabs keeps which tabs show it, and WebHandbrake reads whether their window
-  is minimised.
+  is minimised. The **Block this site** shortcut leaves the number of its tab in memory for the
+  popup, for a few seconds.
 - 2026-10-25: The log of recent decisions is off until you turn it on. Daily statistics also keep
   the time on limited sites per hour, and in private windows as one total without the sites. The
   sites you list for focus sessions are stored and exported. Breaks no longer ask for a reason,

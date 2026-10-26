@@ -224,32 +224,59 @@ test('"Block this site" from the context menu, for a page and for a link', async
   expect((await h.state()).menus).toEqual([]);
 });
 
-test('the "block this site" shortcut adds the site to the last rule used', async ({ h }) => {
+test('the "block this site" shortcut opens the popup on its panel, for the tab it was pressed in', async ({
+  h,
+}) => {
   await h.configure((c) => {
-    c.groups = [
-      group('Old', ['old.test'], [policy(BLOCK)]),
-      group('Social', ['social.test'], [policy(BLOCK)]),
-    ];
-    for (const g of c.groups) g.protection = REMINDER;
+    c.groups = [group('Social', ['social.test'], [policy(BLOCK)])];
   });
-  const [oldId, socialId] = (await h.rpc('config.get')).config.groups.map((g: any) => g.id);
-  await h.rpc('config.addPage', { url: 'http://first.test/', granularity: 'domain', groupId: oldId });
+  const before = (await h.rpc('config.get')).config;
   const tab = await expectAllowed(h, 'http://shortcut.test/page');
   await h.rpc('test.command', { command: 'block-site', tabId: await tab.id() });
-  await tab.expectIntervention(true, 5000);
-  let cfg = (await h.rpc('config.get')).config;
-  expect(cfg.groups[0].targets.map((t: any) => t.value)).toContain('shortcut.test');
-  // The last rule used is archived: the shortcut must not add sites to a rule that blocks nothing.
+  // The browser's own popup: what it shows is read from the extension's views.
+  const popup = () =>
+    h.control.eval(() =>
+      chrome.extension.getViews({ type: 'popup' }).map((w) => ({
+        panel: w.document.querySelector('#add-title')?.textContent ?? null,
+        focus: w.document.activeElement?.getAttribute('role') ?? null,
+        site: w.document.querySelector('.hero .host')?.textContent ?? null,
+      })),
+    );
+  await expect.poll(popup).toEqual([{ panel: 'Block this site', focus: 'radio', site: 'shortcut.test' }]);
+  // Nothing is added until a choice is made there.
+  expect((await h.rpc('config.get')).config.groups).toEqual(before.groups);
+});
+
+test('a popup opened by the shortcut shows "Block this site" once, and only for its tab', async ({ h }) => {
   await h.configure((c) => {
-    c.groups[0].archived = true;
+    c.groups = [group('Social', ['social.test'], [policy(BLOCK)])];
   });
-  const next = await expectAllowed(h, 'http://next.test/');
-  await h.rpc('test.command', { command: 'block-site', tabId: await next.id() });
-  await next.expectIntervention(true, 5000);
-  cfg = (await h.rpc('config.get')).config;
-  expect(cfg.groups.find((g: any) => g.id === socialId).targets.map((t: any) => t.value)).toContain(
-    'next.test',
-  );
+  const [social] = (await h.rpc('config.get')).config.groups;
+  const tab = await expectAllowed(h, 'http://shortcut.test/page');
+  const other = await expectAllowed(h, 'http://other.test/');
+  // What the background leaves for the popup before it opens it (shared/block-site.ts).
+  const note = (tabId: number) =>
+    h.control.eval(
+      (id: number) => chrome.storage.session.set({ 'popup:block-site': { tabId: id, at: Date.now() } }),
+      tabId,
+    );
+  await note(await tab.id());
+  const elsewhere = await h.popup(other);
+  await elsewhere.button('Block site').expectVisible();
+  await elsewhere.text('Block this site', { exact: true }).expectCount(0);
+  await note(await tab.id());
+  const popup = await h.popup(tab);
+  await popup.text('Block this site', { exact: true }).expectVisible();
+  await popup.role('radio', /Whole site/).expectChecked();
+  await popup.label('Add to').expectValue(social.id);
+  await popup.button('Block', { exact: true }).click();
+  await tab.expectIntervention(true, 5000);
+  const cfg = (await h.rpc('config.get')).config;
+  expect(cfg.groups[0].targets.map((t: any) => t.value)).toEqual(['social.test', 'shortcut.test']);
+  // Read once: the next popup opens as usual.
+  const again = await h.popup(tab);
+  await again.button('Block site').expectVisible();
+  await again.text('Block this site', { exact: true }).expectCount(0);
 });
 
 test('the badge can be turned off', async ({ h }) => {
