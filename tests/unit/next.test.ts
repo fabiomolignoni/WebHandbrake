@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defaultState, delayIntervention } from '../../src/engine/defaults';
-import { HORIZON_DAYS } from '../../src/engine/limits';
+import { HORIZON_DAYS, VISIT_RETURN_MS } from '../../src/engine/limits';
 import {
   candidateTimes,
   expiredGrants,
@@ -190,5 +190,25 @@ describe('expired grants', () => {
     const c = ctx(config([]), at(0, 10, 24), state);
     expect(expiredGrants(c)).toEqual([]);
     expect(expiredGrants({ ...c, now: at(0, 10, 20) + 5 * MINUTE + 1 })).toHaveLength(1);
+  });
+
+  it('a visit that no tab shows ends when no tab comes back in time, and the alarm wakes up then', () => {
+    const state = defaultState();
+    const leftAt = at(0, 10, 1);
+    state.grants.push(
+      grant({
+        kind: 'pass',
+        visit: true,
+        scope: 'site',
+        site: 'a.test',
+        createdAt: at(0, 10),
+        leftAt,
+        leftTab: 1,
+      }),
+    );
+    const c = ctx(config([]), leftAt + VISIT_RETURN_MS - 1, state);
+    expect(expiredGrants(c)).toEqual([]);
+    expect(candidateTimes(c, [])).toContain(leftAt + VISIT_RETURN_MS);
+    expect(expiredGrants({ ...c, now: leftAt + VISIT_RETURN_MS })).toHaveLength(1);
   });
 });

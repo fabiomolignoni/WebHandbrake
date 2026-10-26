@@ -2,7 +2,7 @@
 
 import { type Decision, decide, grantCovers } from '../engine/decide';
 import { ASK_WAIT_SECONDS, askChoices } from '../engine/defaults';
-import { MAX_CUSTOM_CSS_CHARS, RECHECK_GRANT_MS } from '../engine/limits';
+import { MAX_CUSTOM_CSS_CHARS, RECHECK_GRANT_MS, VISIT_RETURN_MS } from '../engine/limits';
 import { isNav, NAV_SEVERITY, SEVERITY } from '../engine/severity';
 import { dayKeyOf } from '../engine/time';
 import type { Grant, Intervention } from '../engine/types';
@@ -366,27 +366,45 @@ function restartUnusedAccesses(grant: Grant, url: string, incognito: boolean, t0
 
 /**
  * An access given for the visit ends as soon as no tab shows what it covers: closing
- * the last tab of the site, or leaving it, ends the visit, so opening the site again restricts it
- * again (#19). A tab left open still ends it after the visit gap. A tab on the
+ * the last tab of the site ends the visit, so opening the site again restricts it
+ * again (#19). A tab that leaves it for another page has VISIT_RETURN_MS to come back, as a
+ * sign-in on another site does (Sign in with Google, then back to the site); closing that tab
+ * ends it at once. A tab left open still ends it after the visit gap. A tab on the
  * intervention page counts as showing its address: it is where the access was just given.
  */
-export async function endLeftVisits(closedTabId?: number) {
+export async function endLeftVisits(tab: { closed?: number; navigated?: number } = {}) {
   await store.ready();
   const visits = store.state.grants.filter((g) => g.kind === 'pass' && g.visit);
   if (!visits.length) return;
   const tabs = (await quiet(api.tabs.query({}))) ?? [];
   const c = ctx();
   const shown = new Set<Grant>();
-  for (const tab of tabs) {
-    if (tab.id === closedTabId || !tab.url) continue;
-    const d = decide(c, blockedUrlFrom(tab.url) ?? tab.url, { incognito: Boolean(tab.incognito) });
+  for (const t of tabs) {
+    if (t.id === tab.closed || !t.url) continue;
+    const d = decide(c, blockedUrlFrom(t.url) ?? t.url, { incognito: Boolean(t.incognito) });
     const parsed = d.parsed;
     if (!parsed) continue;
     for (const g of visits) if (d.groups.some((r) => grantCovers(g, r.group, r.site, parsed))) shown.add(g);
   }
-  const left = visits.filter((g) => !shown.has(g));
-  if (!left.length) return;
-  store.state.grants = store.state.grants.filter((g) => !left.includes(g));
+  let changed = false;
+  const ended: Grant[] = [];
+  for (const g of visits) {
+    if (shown.has(g)) {
+      // Back in time: the visit goes on.
+      if (g.leftAt === undefined) continue;
+      delete g.leftAt;
+      delete g.leftTab;
+      changed = true;
+    } else if (g.leftAt === undefined && tab.navigated !== undefined) {
+      g.leftAt = c.now;
+      g.leftTab = tab.navigated;
+      changed = true;
+    } else if (g.leftAt === undefined || g.leftTab === tab.closed || c.now >= g.leftAt + VISIT_RETURN_MS) {
+      ended.push(g);
+    }
+  }
+  if (!changed && !ended.length) return;
+  store.state.grants = store.state.grants.filter((g) => !ended.includes(g));
   await store.saveState();
   await reconcile('visit-left');
 }

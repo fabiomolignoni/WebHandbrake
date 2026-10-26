@@ -21,6 +21,7 @@ import {
   DEFAULT_SESSION_MINUTES,
   MINUTE_RETENTION_MINUTES,
   RECENT_SNAPSHOTS,
+  VISIT_RETURN_MS,
   WAIT_IN_DIALOG_SECONDS,
 } from '../engine/limits';
 import { formatHM } from '../engine/time';
@@ -35,6 +36,8 @@ export interface HelpFacts {
   waitDialogMinutes: number;
   /** Time away after which coming back to a site starts a new visit. */
   visitGapMinutes: number;
+  /** Time a tab that left the pages of an access for the visit has to come back to them. */
+  visitReturnMinutes: number;
   /** Inactivity after which time stops being counted. */
   idleSeconds: number;
   /** Grace period to finish typing before a page is replaced. */
@@ -62,6 +65,7 @@ export function helpFacts(): HelpFacts {
     confirmHours: s.protection.confirmHours,
     waitDialogMinutes: WAIT_IN_DIALOG_SECONDS / 60,
     visitGapMinutes: s.tracking.visitGapMinutes,
+    visitReturnMinutes: VISIT_RETURN_MS / 60_000,
     idleSeconds: s.tracking.idleSeconds,
     graceSeconds: s.interventions.graceSeconds,
     retentionDays: s.tracking.retentionDays,
@@ -130,7 +134,10 @@ export const HELP_TOPICS: HelpTopic[] = [
     title: 'help.interventions.title',
     blocks: [
       { p: 'help.interventions.p1' },
-      { p: 'help.interventions.visit', params: (f) => ({ minutes: f.visitGapMinutes }) },
+      {
+        p: 'help.interventions.visit',
+        params: (f) => ({ minutes: f.visitGapMinutes, returnMinutes: f.visitReturnMinutes }),
+      },
       { p: 'help.interventions.p2' },
       { p: 'help.interventions.p3', params: (f) => ({ seconds: f.graceSeconds }) },
     ],

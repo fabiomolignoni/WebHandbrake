@@ -40,6 +40,9 @@ export function TestUrl({
           value={url}
           placeholder="reddit.com/r/…"
           aria-label={t('test.url')}
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellcheck={false}
           onInput={(e) => setUrl((e.target as HTMLInputElement).value)}
         />
         <Button type="submit" size="small" variant="primary">
