@@ -10,7 +10,7 @@ import { isNav } from '../../engine/severity';
 import type { Group } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { api, browserName } from '../../platform/api';
-import { formatWhen } from '../../shared/format';
+import { whenParams } from '../../shared/format';
 import type { DecisionView } from '../../shared/models';
 import { call } from '../../shared/rpc';
 import { Button, ToneIcon } from '../../ui/components';
@@ -33,7 +33,7 @@ const sampleSite = (g: Group) =>
 function tryText(site: string, d: DecisionView | null): string {
   if (!d || isNav(d)) return t('welcome.try.body', { site });
   if (d.restriction?.kind === 'budget') return t('welcome.try.afterLimit', { site });
-  if (d.restriction) return t('welcome.try.later', { site, when: formatWhen(d.restriction.at) });
+  if (d.restriction) return t('welcome.try.later', { site, ...whenParams(d.restriction.at) });
   return t('welcome.try.notNow', { site });
 }
 
@@ -174,9 +174,7 @@ export function WelcomePage() {
                         : 'welcome.pin.chrome',
                   )}
                 </span>
-                <span class="small muted">
-                  {browser === 'firefox-android' ? t('welcome.pin.whyAndroid') : t('welcome.pin.why')}
-                </span>
+                <span class="small muted">{t('welcome.pin.why')}</span>
               </span>
             </li>
             {firstSite && (

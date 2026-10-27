@@ -3,9 +3,9 @@
  * of the rule editor's summary (implementation intentions).
  */
 
-import { ASK_WAIT_SECONDS, DAY_MINUTES, everyPeriod, periodMinutes } from '../engine/defaults';
+import { ASK_WAIT_SECONDS } from '../engine/defaults';
 import { ALL_SITES } from '../engine/patterns';
-import type { Group, Intervention, Target, TimeWindow } from '../engine/types';
+import type { Group, Intervention, Period, Target, TimeWindow } from '../engine/types';
 import { t } from '../i18n/i18n';
 import { formatDuration } from '../shared/format';
 import { describePeriod, describeWindows } from '../shared/summary';
@@ -60,7 +60,7 @@ export function planSentence(
   windows: TimeWindow[],
   /** The minutes allowed (after some time) or the visits (after some visits). */
   amount: number,
-  every = DAY_MINUTES,
+  every: Period = { kind: 'day' },
   /** Whether a limit is for one site, shared by several or for each of them. */
   limitSites: 'one' | 'shared' | 'each' = 'one',
 ): string {
@@ -94,15 +94,20 @@ export function rulePlan(g: Group): string {
     sites,
     [],
     b.type === 'visits' ? b.count : b.minutes,
-    periodMinutes(b.period),
+    b.period,
     several ? (b.perSite ? 'each' : 'shared') : 'one',
   );
 }
 
-/** "a day", "an hour", "every 3 days": how often the time allowed starts again. */
-function periodPhrase(every: number): string {
-  const period = everyPeriod(every);
-  if (period.kind === 'day') return t('wizard.period.day');
-  if (period.kind === 'hour') return t('wizard.period.hour');
-  return describePeriod(period);
+/** "a day", "a week", "every 3 days": how often the time allowed starts again. */
+function periodPhrase(period: Period): string {
+  switch (period.kind) {
+    case 'hour':
+    case 'day':
+    case 'week':
+    case 'month':
+      return t(`wizard.period.${period.kind}`);
+    default:
+      return describePeriod(period);
+  }
 }

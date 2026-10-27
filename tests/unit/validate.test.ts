@@ -50,6 +50,11 @@ describe('rule validation', () => {
     expect(keys(limit(30 * 60, { kind: 'minutes', n: 120 }))).toContain('validate.neverReached');
     expect(keys(limit(59, { kind: 'hour' }))).toEqual([]);
     expect(keys(limit(30 * 60, { kind: 'days', n: 2 }))).toEqual([]);
+    // A week lasts 7 days, and a month 31 days at most: 30 days can be reached in a long month.
+    expect(keys(limit(7 * 1440, { kind: 'week' }))).toContain('validate.neverReached');
+    expect(keys(limit(7 * 1440 - 1, { kind: 'week' }))).toEqual([]);
+    expect(keys(limit(31 * 1440, { kind: 'month' }))).toContain('validate.neverReached');
+    expect(keys(limit(30 * 1440, { kind: 'month' }))).toEqual([]);
   });
 
   it('limits of nothing, and what happens: redirect address, phrase, durations', () => {

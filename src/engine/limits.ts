@@ -133,5 +133,18 @@ export const RECHECK_GRANT_MS = 2 * 60_000;
  */
 export const VISIT_RETURN_MS = 2 * 60_000;
 
+/**
+ * A redirect of the server this soon after an access was given carries it to the page it sends to,
+ * as a short link does (youtu.be → youtube.com): going in through it does not ask again.
+ */
+export const REDIRECT_PASS_MS = 15_000;
+
+/**
+ * The background counts the time of a page without ticks (reader view) in stretches, which the
+ * periodic alarm ends every minute. A stretch longer than this had no alarm, as while the computer
+ * slept: it counts one second, as a gap between ticks does.
+ */
+export const MAX_STRETCH_MS = 3 * 60_000;
+
 /** How far ahead the next decision changes (schedule boundaries, period ends) are looked for. */
 export const HORIZON_DAYS = 8;

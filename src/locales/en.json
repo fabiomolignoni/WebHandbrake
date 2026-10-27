@@ -18,98 +18,136 @@
     "message": "Only web pages can be blocked from here."
   },
   "ask.minReason": {
-    "message": "Reason of at least"
+    "message": "Reason of at least",
+    "description": "Rule editor, Ask first: screen-reader label of the field with the shortest reason."
+  },
+  "ask.minReasonFields": {
+    "message": "Reason of at least {length}",
+    "description": "Rule editor, Ask first: a sentence around a field. {length} is the number field with its unit (“20 characters”); move it where your sentence needs it."
   },
   "ask.minReasonUnit": {
-    "message": "{n, plural, one {character} other {characters}}"
+    "message": "{n, plural, one {character} other {characters}}",
+    "description": "Unit inside the number field of ask.minReasonFields. {n}: the number in the field."
   },
   "backup.reason.add-page": {
-    "message": "Site added"
+    "message": "Site added",
+    "description": "Settings › Data › Automatic backups: why a backup was made."
   },
   "backup.reason.daily": {
-    "message": "Daily copy"
+    "message": "Daily copy",
+    "description": "Settings › Data › Automatic backups: why a backup was made."
   },
   "backup.reason.edit": {
-    "message": "Before a change"
+    "message": "Before a change",
+    "description": "Settings › Data › Automatic backups: why a backup was made."
   },
   "backup.reason.emergency": {
-    "message": "Emergency exit"
+    "message": "Emergency exit",
+    "description": "Settings › Data › Automatic backups: why a backup was made."
   },
   "backup.reason.import": {
-    "message": "Before an import"
+    "message": "Before an import",
+    "description": "Settings › Data › Automatic backups: why a backup was made."
   },
   "backup.reason.import-group": {
-    "message": "Before importing a rule"
+    "message": "Before importing a rule",
+    "description": "Settings › Data › Automatic backups: why a backup was made."
   },
   "backup.reason.import-list": {
-    "message": "Before importing a list"
+    "message": "Before importing a list",
+    "description": "Settings › Data › Automatic backups: why a backup was made."
   },
   "backup.reason.import-webhandbrake": {
-    "message": "Before an import"
+    "message": "Before an import",
+    "description": "Settings › Data › Automatic backups: why a backup was made."
   },
   "backup.reason.install": {
-    "message": "Installation"
+    "message": "Installation",
+    "description": "Settings › Data › Automatic backups: why a backup was made."
   },
   "backup.reason.onboarding": {
-    "message": "Setup"
+    "message": "Setup",
+    "description": "Settings › Data › Automatic backups: why a backup was made."
   },
   "backup.reason.other": {
-    "message": "Automatic copy"
+    "message": "Automatic copy",
+    "description": "Settings › Data › Automatic backups: why a backup was made."
   },
   "backup.reason.password": {
-    "message": "Password change"
+    "message": "Password change",
+    "description": "Settings › Data › Automatic backups: why a backup was made."
   },
   "backup.reason.pending": {
-    "message": "Confirmed change"
+    "message": "Confirmed change",
+    "description": "Settings › Data › Automatic backups: why a backup was made."
   },
   "backup.reason.reset": {
-    "message": "Before a reset"
+    "message": "Before a reset",
+    "description": "Settings › Data › Automatic backups: why a backup was made."
   },
   "backup.reason.restore": {
-    "message": "Before a restore"
+    "message": "Before a restore",
+    "description": "Settings › Data › Automatic backups: why a backup was made."
   },
   "backups.error.notFound": {
     "message": "This backup no longer exists."
   },
+  "badge.hours": {
+    "message": "{n}h",
+    "description": "Toolbar badge, at most 4 characters with the number: time left in hours. {n}: a number."
+  },
+  "badge.minutes": {
+    "message": "{n}m",
+    "description": "Toolbar badge, at most 4 characters with the number: time left in minutes. {n}: a number."
+  },
+  "badge.seconds": {
+    "message": "{n}s",
+    "description": "Toolbar badge, at most 4 characters with the number: time left in seconds. {n}: a number."
+  },
   "badge.title": {
-    "message": "WebHandbrake — {group}: {time} left"
+    "message": "WebHandbrake — {group}: {time} left",
+    "description": "Tooltip of the toolbar button. {time}: the time left, such as “4:59” or “1:02:30”. {group}: the name of a rule, such as “Social media”."
   },
   "budget.perSite": {
     "message": "Count each site separately"
   },
-  "budget.perSiteSuffix": {
-    "message": "(per site)"
-  },
   "budget.time": {
-    "message": "after {duration} {period}",
-    "description": "e.g. \"after 45 min per day\""
+    "message": "after {duration} {period}{perSite, select, yes { (per site)} other {}}",
+    "description": "Part of a rule summary, after the times: “Mon–Fri 09:00–17:00, after 45 min per day”. {duration}: a length of time, such as “45 min” or “1 h 30 min”; {period}: how often it starts again, such as “per day” or “every 3 days” (period.* messages); {perSite}: yes when each site has its own limit."
   },
   "budget.timeUsed": {
-    "message": "{used} of {limit} used"
+    "message": "{used} of {limit} used",
+    "description": "Under a time limit. {used} and {limit}: lengths of time, such as “20 min” of “45 min”."
   },
   "budget.visitHelp": {
     "message": "A new visit starts when you come back after a few minutes away."
   },
   "budget.visits": {
-    "message": "after {count, plural, one {# visit} other {# visits}} {period}"
+    "message": "after {count, plural, one {# visit} other {# visits}} {period}{perSite, select, yes { (per site)} other {}}",
+    "description": "Part of a rule summary, after the times: “Mon–Fri 09:00–17:00, after 3 visits per day”. {count}: a number of visits; {period}: how often it starts again, such as “per day” or “every 3 days” (period.* messages); {perSite}: yes when each site has its own limit."
   },
   "budget.visitsQuestion": {
     "message": "How many visits?"
   },
   "budget.visitsUnit": {
-    "message": "visits"
+    "message": "{n, plural, one {visit} other {visits}}",
+    "description": "Unit inside a number field of visits. {n}: the number in the field."
   },
   "budget.visitsUsed": {
-    "message": "{used, plural, one {# visit} other {# visits}} of {limit}"
+    "message": "{used, plural, one {# visit} other {# visits}} of {limit}",
+    "description": "Under a visit limit: “2 visits of 5”. {used} and {limit}: numbers of visits."
   },
   "challenge.canvasLabel": {
-    "message": "{length} characters to type, shown as an image."
+    "message": "{length, plural, one {# character to type, shown as an image.} other {# characters to type, shown as an image.}}",
+    "description": "Screen-reader label of the image that shows random characters to type. {length}: a number of characters."
   },
   "challenge.chars": {
-    "message": "characters"
+    "message": "{n, plural, one {character} other {characters}}",
+    "description": "Unit inside the number field of the challenge length. {n}: the number in the field."
   },
   "challenge.kind": {
-    "message": "Challenge"
+    "message": "Challenge",
+    "description": "Rule editor, Challenge: label of the choice of what to type."
   },
   "challenge.kind.math": {
     "message": "A small calculation"
@@ -121,7 +159,8 @@
     "message": "Random characters"
   },
   "challenge.length": {
-    "message": "Length"
+    "message": "Length",
+    "description": "Rule editor, Challenge: label of the number of random characters."
   },
   "challenge.phrase": {
     "message": "Phrase to type"
@@ -136,13 +175,15 @@
     "message": "Needs attention"
   },
   "checklist.clock.no": {
-    "message": "The system clock was changed {count, plural, one {once} other {# times}} in the last {days} days."
+    "message": "The system clock was changed {count, plural, one {once} other {# times}} in the last {days, plural, one {# day} other {# days}}.",
+    "description": "Protection › “How solid is your protection?”. {count}: a number. {days}: a number of days."
   },
   "checklist.clock.ok": {
-    "message": "No changes to the system clock in the last {days} days."
+    "message": "No changes to the system clock in the last {days, plural, one {# day} other {# days}}.",
+    "description": "Protection › “How solid is your protection?”. {days}: a number of days."
   },
   "checklist.host.no": {
-    "message": "No access to websites: blocked pages show a browser error instead."
+    "message": "No access to websites: blocked pages show a browser error first, and filters, timers, warnings and the grace period do not work."
   },
   "checklist.host.ok": {
     "message": "Has access to all websites."
@@ -181,7 +222,8 @@
     "message": "Not blocked right now."
   },
   "checklist.ok": {
-    "message": "OK"
+    "message": "OK",
+    "description": "Protection › “How solid is your protection?”: a check that passed."
   },
   "checklist.rules.error": {
     "message": "Blocking could not be fully set up. See Diagnostics."
@@ -190,10 +232,12 @@
     "message": "Blocking works for all your rules."
   },
   "checklist.rules.overflow": {
-    "message": "{count, plural, one {# entry is} other {# entries are}} checked more slowly, so their pages may appear for a moment. See Diagnostics."
+    "message": "{count, plural, one {# entry is} other {# entries are}} checked more slowly, so their pages may appear for a moment. See Diagnostics.",
+    "description": "Protection › “How solid is your protection?”. {count}: a number."
   },
   "checklist.score": {
-    "message": "{passed} of {total} checks passed"
+    "message": "{passed} of {total, plural, one {# check} other {# checks}} passed",
+    "description": "Protection › “How solid is your protection?”. {passed}: a number. {total}: a number."
   },
   "checklist.someToCheck": {
     "message": "Some ways around your rules are still open."
@@ -217,16 +261,23 @@
     "message": "Loading…"
   },
   "common.minutes": {
-    "message": "{n, plural, one {# min} other {# min}}"
+    "message": "{n, plural, one {# min} other {# min}}",
+    "description": "A number of minutes, abbreviated. {n}: a number."
   },
   "common.newTab": {
-    "message": "(opens in a new tab)"
+    "message": "(opens in a new tab)",
+    "description": "Screen-reader text after a link that opens a new tab."
   },
   "common.no": {
-    "message": "no"
+    "message": "no",
+    "description": "Inside diag.perm.*: “Notifications: no”."
   },
   "common.ok": {
     "message": "OK"
+  },
+  "common.quote": {
+    "message": "“{text}”",
+    "description": "Text quoted inside a sentence, such as a rule’s name or a reason the person typed. Use the quotation marks of your language (« », „ “…). {text}: text typed by the person."
   },
   "common.save": {
     "message": "Save"
@@ -235,28 +286,36 @@
     "message": "Undo"
   },
   "common.yes": {
-    "message": "yes"
+    "message": "yes",
+    "description": "Inside diag.perm.*: “Notifications: yes”."
   },
   "cost.confirm": {
-    "message": "a confirmation"
+    "message": "a confirmation",
+    "description": "What a break or a change costs, inside other messages: “Cost: {cost}” (pause.summary.cost) and “Breaks: up to 15 min each. Cost: {cost}.” Starts in lower case."
   },
   "cost.delay": {
-    "message": "a {seconds} s wait"
+    "message": "a {seconds} s wait",
+    "description": "What a break or a change costs, inside pause.summary.cost and similar: “Cost: a 30 s wait”. {seconds}: a number of seconds."
   },
   "cost.math": {
-    "message": "a small calculation"
+    "message": "a small calculation",
+    "description": "What a break or a change costs, inside other messages: “Cost: {cost}” (pause.summary.cost) and “Breaks: up to 15 min each. Cost: {cost}.” Starts in lower case."
   },
   "cost.none": {
-    "message": "no cost"
+    "message": "no cost",
+    "description": "What a break or a change costs, inside other messages: “Cost: {cost}” (pause.summary.cost) and “Breaks: up to 15 min each. Cost: {cost}.” Starts in lower case."
   },
   "cost.password": {
-    "message": "your password"
+    "message": "your password",
+    "description": "What a break or a change costs, inside other messages: “Cost: {cost}” (pause.summary.cost) and “Breaks: up to 15 min each. Cost: {cost}.” Starts in lower case."
   },
   "cost.phrase": {
-    "message": "typing a phrase"
+    "message": "typing a phrase",
+    "description": "What a break or a change costs, inside other messages: “Cost: {cost}” (pause.summary.cost) and “Breaks: up to 15 min each. Cost: {cost}.” Starts in lower case."
   },
   "cost.random": {
-    "message": "typing {length} random characters"
+    "message": "typing {length, plural, one {# random character} other {# random characters}}",
+    "description": "What a break or a change costs, inside pause.summary.cost and similar. {length}: a number of characters."
   },
   "dailyMinutes.custom": {
     "message": "Time allowed"
@@ -269,7 +328,8 @@
     "message": "Automatic backups"
   },
   "data.backupsHelp": {
-    "message": "A copy is saved before each change and once a day. If restoring one loosens an active rule, it waits {hours} hours, then you confirm it in Protection."
+    "message": "A copy is saved before each change and once a day. If restoring one loosens an active rule, it waits {hours, plural, one {# hour} other {# hours}}, then you confirm it in Protection.",
+    "description": "Settings › Data. {hours}: a number of hours."
   },
   "data.copied": {
     "message": "Copied to the clipboard."
@@ -284,16 +344,19 @@
     "message": "Download file"
   },
   "data.export": {
-    "message": "Export"
+    "message": "Export",
+    "description": "Settings › Data: a section title (a verb, like the button)."
   },
   "data.exportHelp": {
     "message": "Save your rules and settings to a file. You can import it here or on another device."
   },
   "data.groupsCount": {
-    "message": "{count, plural, one {# rule} other {# rules}}"
+    "message": "{count, plural, one {# rule} other {# rules}}",
+    "description": "Settings › Data: how many rules there are. {count}: a number."
   },
   "data.import": {
-    "message": "Import"
+    "message": "Import",
+    "description": "Settings › Data: a section title (a verb, like the button)."
   },
   "data.importAction": {
     "message": "Import a file or a list…"
@@ -311,19 +374,22 @@
     "message": "No backups yet."
   },
   "data.reset": {
-    "message": "Reset"
+    "message": "Reset",
+    "description": "Settings › Data: a section title (a verb)."
   },
   "data.resetAction": {
     "message": "Reset rules and settings…"
   },
   "data.resetConfirm": {
-    "message": "Reset all rules and settings? If this loosens an active rule, it waits {hours} hours, then you confirm it in Protection."
+    "message": "Reset all rules and settings? If this loosens an active rule, it waits {hours, plural, one {# hour} other {# hours}}, then you confirm it in Protection.",
+    "description": "Settings › Data: confirmation before a reset. {hours}: a number of hours."
   },
   "data.resetHelp": {
     "message": "Go back to the default rules and settings. Statistics and saved pages are kept."
   },
   "data.restore": {
-    "message": "Restore"
+    "message": "Restore",
+    "description": "Settings › Data › Automatic backups: the button that restores a backup."
   },
   "days.everyDay": {
     "message": "Every day"
@@ -332,13 +398,12 @@
     "message": "No days"
   },
   "days.weekdays": {
-    "message": "Mon–Fri"
+    "message": "Mon–Fri",
+    "description": "Days of a time window: Monday to Friday, abbreviated."
   },
   "days.weekends": {
-    "message": "Weekends"
-  },
-  "delay.and": {
-    "message": "and"
+    "message": "Weekends",
+    "description": "Days of a time window: Saturday and Sunday."
   },
   "delay.auto": {
     "message": "Open the page as soon as the wait is over"
@@ -346,38 +411,46 @@
   "delay.autoHelp": {
     "message": "When off, you choose: continue or close the tab."
   },
-  "delay.between": {
-    "message": "Between"
-  },
   "delay.countdown": {
     "message": "Show the countdown"
   },
   "delay.countdownHelp": {
     "message": "When off, you don’t see how many seconds are left."
   },
-  "delay.eachTime": {
-    "message": "each time you go in"
+  "delay.fixedFields": {
+    "message": "Wait {seconds}",
+    "description": "Rule editor, Wait: a sentence around a field. {seconds} is the length field (number and unit); move it where your sentence needs it."
+  },
+  "delay.growingFields": {
+    "message": "Wait {first} plus {step} each time you go in",
+    "description": "Rule editor, Wait, “Longer each time”: a sentence around two fields. {first} is the first wait, {step} what is added each time; move them where your sentence needs them."
   },
   "delay.growingHelp": {
-    "message": "{first}, then {second}, then {third}… Back to {first} each day."
+    "message": "{first}, then {second}, then {third}… Back to {first} each day.",
+    "description": "Under delay.growingFields: an example of the waits. {first}, {second}, {third}: lengths of time, such as “10 s”, “20 s”, “30 s”."
   },
   "delay.increase": {
-    "message": "Extra wait each time you go in"
+    "message": "Extra wait each time you go in",
+    "description": "Rule editor, Wait: screen-reader label of the field with what each wait adds."
   },
   "delay.length": {
     "message": "How long?"
   },
   "delay.length.fixed": {
-    "message": "Fixed"
+    "message": "Fixed",
+    "description": "Rule editor, Wait: a choice of how long the wait lasts."
   },
   "delay.length.growing": {
-    "message": "Longer each time"
+    "message": "Longer each time",
+    "description": "Rule editor, Wait: a choice of how long the wait lasts."
   },
   "delay.length.random": {
-    "message": "Random"
+    "message": "Random",
+    "description": "Rule editor, Wait: a choice of how long the wait lasts."
   },
   "delay.longest": {
-    "message": "Longest wait"
+    "message": "Longest wait",
+    "description": "Rule editor, Wait: screen-reader label of the longest wait field."
   },
   "delay.onBlur": {
     "message": "If you switch to another tab during the wait"
@@ -391,14 +464,17 @@
   "delay.onBlur.restart": {
     "message": "The wait starts again"
   },
-  "delay.plus": {
-    "message": "plus"
+  "delay.rangeFields": {
+    "message": "Between {shortest} and {longest}",
+    "description": "Rule editor, Wait, “Random”: a sentence around two fields. {shortest} and {longest} are the length fields; move them where your sentence needs them."
   },
   "delay.seconds": {
-    "message": "Wait"
+    "message": "Wait",
+    "description": "Rule editor, Wait: screen-reader label of the field with the length of the wait."
   },
   "delay.shortest": {
-    "message": "Shortest wait"
+    "message": "Shortest wait",
+    "description": "Rule editor, Wait: screen-reader label of the shortest wait field."
   },
   "diag.clearLog": {
     "message": "Clear the log"
@@ -422,10 +498,12 @@
     "message": "Include addresses"
   },
   "diag.invalidTargets": {
-    "message": "Entries that could not be used: {list}"
+    "message": "Entries that could not be used: {list}",
+    "description": "Settings › Diagnostics. {list}: addresses, joined with commas."
   },
   "diag.lastError": {
-    "message": "The browser refused some filters: {error}"
+    "message": "The browser refused some filters: {error}",
+    "description": "Settings › Diagnostics. {error}: the error message of the browser, in English."
   },
   "diag.log": {
     "message": "Recent decisions"
@@ -443,16 +521,20 @@
     "message": "Open an issue on GitHub"
   },
   "diag.overflow": {
-    "message": "{count, plural, one {# entry is} other {# entries are}} checked more slowly, without browser filters."
+    "message": "{count, plural, one {# entry is} other {# entries are}} checked more slowly, without browser filters.",
+    "description": "Settings › Diagnostics. {count}: a number."
   },
   "diag.perm.host": {
-    "message": "Access to all sites: {ok}"
+    "message": "Access to all sites: {ok}",
+    "description": "Settings › Diagnostics. {ok}: “yes” or “no” (common.yes, common.no)."
   },
   "diag.perm.incognito": {
-    "message": "Allowed in private windows: {ok}"
+    "message": "Allowed in private windows: {ok}",
+    "description": "Settings › Diagnostics. {ok}: “yes” or “no” (common.yes, common.no)."
   },
   "diag.perm.notifications": {
-    "message": "Notifications: {ok}"
+    "message": "Notifications: {ok}",
+    "description": "Settings › Diagnostics. {ok}: “yes” or “no” (common.yes, common.no)."
   },
   "diag.permissions": {
     "message": "Permissions"
@@ -482,50 +564,67 @@
     "message": "Opens a test page. If blocking works, you see a confirmation."
   },
   "diag.url": {
-    "message": "Address"
+    "message": "Address",
+    "description": "Settings › Diagnostics: a column of the log of recent decisions."
   },
   "diag.what": {
-    "message": "Decision"
+    "message": "Decision",
+    "description": "Settings › Diagnostics: a column of the log of recent decisions."
   },
   "diag.when": {
-    "message": "Time"
+    "message": "Time",
+    "description": "Settings › Diagnostics: a column of the log of recent decisions."
   },
   "diag.where": {
-    "message": "Where"
+    "message": "Where",
+    "description": "Settings › Diagnostics: a column of the log of recent decisions."
   },
   "duration.d": {
-    "message": "{d, plural, one {# day} other {# days}}"
+    "message": "{d, plural, one {# day} other {# days}}",
+    "description": "A length of time in days. {d}: a number."
   },
   "duration.h": {
-    "message": "{h} h"
+    "message": "{h} h",
+    "description": "A length of time in hours, abbreviated. {h}: a number."
   },
   "duration.hm": {
-    "message": "{h} h {m} min"
+    "message": "{h} h {m} min",
+    "description": "A length of time in hours and minutes, abbreviated. {h} and {m}: numbers."
   },
   "duration.m": {
-    "message": "{m} min"
+    "message": "{m} min",
+    "description": "A length of time in minutes, abbreviated. {m}: a number."
+  },
+  "duration.ms": {
+    "message": "{m} min {s} s",
+    "description": "A length of time in minutes and seconds, abbreviated. {m} and {s}: numbers."
   },
   "duration.s": {
-    "message": "{s} s"
+    "message": "{s} s",
+    "description": "A length of time in seconds, abbreviated. {s}: a number."
   },
   "duration.unit": {
     "message": "Unit"
   },
   "duration.unit.days": {
-    "message": "{n, plural, one {day} other {days}}"
+    "message": "{n, plural, one {day} other {days}}",
+    "description": "A unit in the list next to a number field. {n}: the number in the field. {days}: a number of days."
   },
   "duration.unit.hours": {
-    "message": "{n, plural, one {hour} other {hours}}"
+    "message": "{n, plural, one {hour} other {hours}}",
+    "description": "A unit in the list next to a number field. {n}: the number in the field. {hours}: a number of hours."
   },
   "duration.unit.minutes": {
-    "message": "{n, plural, one {minute} other {minutes}}"
+    "message": "{n, plural, one {minute} other {minutes}}",
+    "description": "A unit in the list next to a number field. {n}: the number in the field. {minutes}: a number of minutes."
   },
   "duration.unit.seconds": {
-    "message": "{n, plural, one {second} other {seconds}}"
+    "message": "{n, plural, one {second} other {seconds}}",
+    "description": "A unit in the list next to a number field. {n}: the number in the field. {seconds}: a number of seconds."
   },
   "duration.unitOf": {
     "message": "{label}: unit",
-    "description": "Name of the unit list next to a number, e.g. \"Time allowed: unit\"."
+    "description": "Name of the unit list next to a number, e.g. “Time allowed: unit”. {label}: the label of the number field."
   },
   "editor.advanced": {
     "message": "Advanced options"
@@ -534,13 +633,15 @@
     "message": "Breaks"
   },
   "editor.change": {
-    "message": "Change"
+    "message": "Change",
+    "description": "Rule editor summary: the button that opens a part (a verb)."
   },
   "editor.color": {
     "message": "Colour"
   },
   "editor.colorN": {
-    "message": "Colour {n}"
+    "message": "Colour {n}",
+    "description": "Screen-reader name of a colour swatch. {n}: its number."
   },
   "editor.details.intro": {
     "message": "How you recognise this rule, and what you see when it stops you."
@@ -558,10 +659,12 @@
     "message": "When they are shown inside other sites."
   },
   "editor.errorsCount": {
-    "message": "{count, plural, one {# problem to fix} other {# problems to fix}}"
+    "message": "{count, plural, one {# problem to fix} other {# problems to fix}}",
+    "description": "Rule editor. {count}: a number."
   },
   "editor.exceptionsCount": {
-    "message": "{count, plural, one {# exception} other {# exceptions}}"
+    "message": "{count, plural, one {# exception} other {# exceptions}}",
+    "description": "Rule editor summary, after the number of sites. {count}: a number."
   },
   "editor.fixErrors": {
     "message": "Fix the problems listed to save."
@@ -582,7 +685,8 @@
     "message": "This rule is locked. You can make it stricter, but not looser."
   },
   "editor.lockedUntil": {
-    "message": "Locked until {when}."
+    "message": "Locked until {when}.",
+    "description": "Rule editor, Protection. {when}: a date and a time, such as “Thu, 15 Oct, 17:00”. If your language needs words between them, write {date} and {time} instead."
   },
   "editor.look": {
     "message": "Colour and icon"
@@ -645,16 +749,19 @@
     "message": "What you see when this rule stops you."
   },
   "editor.partOf": {
-    "message": "Part {n} of {total}"
+    "message": "Part {n} of {total}",
+    "description": "Rule editor, screen-reader text of the parts. {n}: a number. {total}: a number."
   },
   "editor.passwordHelp": {
     "message": "You’ll need it to loosen this rule. Give it to someone you trust, or keep it out of easy reach."
   },
   "editor.passwordTitle": {
-    "message": "Password of {name}"
+    "message": "Password of {name}",
+    "description": "Title of the dialog that sets a rule’s password. {name}: the name of a rule, such as “Social media”."
   },
   "editor.privacy": {
-    "message": "Windows"
+    "message": "Windows",
+    "description": "Rule editor › Advanced options: which browser windows the rule covers (normal, private)."
   },
   "editor.privacy.all": {
     "message": "Normal and private windows"
@@ -681,13 +788,15 @@
     "message": "Parts of the rule"
   },
   "editor.step.changed": {
-    "message": "changed"
+    "message": "changed",
+    "description": "Rule editor: screen-reader text after the name of a part that was changed."
   },
   "editor.step.details": {
     "message": "Details"
   },
   "editor.step.problem": {
-    "message": "has a problem to fix"
+    "message": "has a problem to fix",
+    "description": "Rule editor: screen-reader text after the name of a part with a problem."
   },
   "editor.step.summary": {
     "message": "Summary"
@@ -706,9 +815,6 @@
   },
   "editor.tabsHelp": {
     "message": "For tabs already open on these sites."
-  },
-  "editor.templatesHelp": {
-    "message": "Select a list to add its sites. Select it again to remove them."
   },
   "editor.timer": {
     "message": "Show the timer on these sites"
@@ -729,10 +835,12 @@
     "message": "Complete the emergency exit"
   },
   "emergency.confirmBody": {
-    "message": "In {hours} hours you can complete it by typing a sentence. Until then nothing changes, and you can cancel."
+    "message": "In {hours, plural, one {# hour} other {# hours}} you can complete it by typing a sentence. Until then nothing changes, and you can cancel.",
+    "description": "Protection › Emergency exit: confirmation of the request. {hours}: a number of hours."
   },
   "emergency.description": {
-    "message": "For when your rules turn out too strict. It needs nobody else: request it, wait {hours} hours, then type a sentence. Focus sessions end and every rule’s protection becomes Reminder. Your rules stay as they are."
+    "message": "For when your rules turn out too strict. It needs nobody else: request it, wait {hours, plural, one {# hour} other {# hours}}, then type a sentence. Focus sessions end and every rule’s protection becomes Reminder. Your rules stay as they are.",
+    "description": "Protection › Emergency exit. {hours}: a number of hours."
   },
   "emergency.done": {
     "message": "Emergency exit done. Every rule now has the Reminder protection."
@@ -744,7 +852,8 @@
     "message": "Request the emergency exit first."
   },
   "emergency.phrase": {
-    "message": "I understand that this removes my protections."
+    "message": "I understand that this removes my protections.",
+    "description": "A sentence the person types, letter by letter, to complete the emergency exit: write it so that it is easy to type on a keyboard of your language."
   },
   "emergency.ready": {
     "message": "The wait is over. Complete the exit or cancel it."
@@ -756,37 +865,46 @@
     "message": "Emergency exit"
   },
   "emergency.waiting": {
-    "message": "Requested. You can complete it from {when} (in {left})."
+    "message": "Requested. You can complete it from {when} (in {left}).",
+    "description": "Protection › Emergency exit, while it waits. {when}: a date and a time, such as “Thu, 15 Oct, 17:00”. If your language needs words between them, write {date} and {time} instead. {left}: a length of time, such as “3 h 20 min”."
   },
   "ext.name": {
-    "message": "WebHandbrake"
+    "message": "WebHandbrake",
+    "description": "Product name: not translated."
   },
   "filter.blur": {
-    "message": "Blur"
+    "message": "Blur",
+    "description": "A filter that makes a page less appealing: a choice in the rule editor, also inside the rule plan (wizard.then.filter)."
   },
   "filter.fade": {
-    "message": "Fade"
+    "message": "Fade",
+    "description": "A filter that makes a page less appealing: a choice in the rule editor, also inside the rule plan (wizard.then.filter)."
   },
   "filter.grayscale": {
-    "message": "Greyscale"
+    "message": "Greyscale",
+    "description": "A filter that makes a page less appealing: a choice in the rule editor, also inside the rule plan (wizard.then.filter)."
   },
   "filter.intensity": {
     "message": "Intensity"
   },
   "filter.invert": {
-    "message": "Invert colours"
+    "message": "Invert colours",
+    "description": "A filter that makes a page less appealing: a choice in the rule editor, also inside the rule plan (wizard.then.filter)."
   },
   "filter.label": {
     "message": "Filter"
   },
   "filter.sepia": {
-    "message": "Sepia"
+    "message": "Sepia",
+    "description": "A filter that makes a page less appealing: a choice in the rule editor, also inside the rule plan (wizard.then.filter)."
   },
   "focus.activeUntil": {
-    "message": "Focus session until {when}"
+    "message": "Focus session until {when}",
+    "description": "Focus page, a session running. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "focus.allowlistHelp": {
-    "message": "During the session only these sites can be opened. The list is kept for next time."
+    "message": "During the session only these sites can be opened: add the ones where you sign in too, such as accounts.google.com. The list is kept for next time.",
+    "description": "Help under the list of sites of a focus session of the “Everything except a few sites” kind. accounts.google.com is an example of a site where people sign in to other sites."
   },
   "focus.allowlistMode": {
     "message": "Only allowed sites"
@@ -796,7 +914,7 @@
   },
   "focus.blocklistMode": {
     "message": "{count, plural, one {Blocks # site} other {Blocks # sites}}",
-    "description": "What a running focus session of the “A few sites” kind blocks."
+    "description": "What a running focus session of the “A few sites” kind blocks. {count}: a number."
   },
   "focus.cancel": {
     "message": "Cancel"
@@ -818,10 +936,12 @@
     "message": "End the focus session early"
   },
   "focus.extend": {
-    "message": "+{duration}"
+    "message": "+{duration}",
+    "description": "Button that extends a focus session: “+15 min”. {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”."
   },
   "focus.extended": {
-    "message": "Session extended by {duration}."
+    "message": "Session extended by {duration}.",
+    "description": "Message after extending a focus session. {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”."
   },
   "focus.listCleared": {
     "message": "List cleared."
@@ -869,10 +989,12 @@
     "message": "No breaks during the session"
   },
   "focus.previewAllowlist": {
-    "message": "{count, plural, =0 {Every website will be blocked.} one {Every website except # site will be blocked.} other {Every website except # sites will be blocked.}}"
+    "message": "{count, plural, =0 {Every website will be blocked.} one {Every website except # site will be blocked.} other {Every website except # sites will be blocked.}}",
+    "description": "Focus page, before starting a session that blocks every site except a list. {count}: a number."
   },
   "focus.previewBody": {
-    "message": "The session will last until {end}."
+    "message": "The session will last until {when}.",
+    "description": "Focus page, before starting a session. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "focus.previewLocked": {
     "message": "You will not be able to end it early, except with the emergency exit. You can still extend it."
@@ -881,25 +1003,30 @@
     "message": "Before you start"
   },
   "focus.shortcutHelp": {
-    "message": "On a computer, the focus shortcut starts a {minutes}-minute quick session. Its key is in Help › Keyboard shortcuts."
+    "message": "On a computer, the focus shortcut starts a {minutes, plural, one {#-minute} other {#-minute}} quick session. Its key is in Help › Keyboard shortcuts.",
+    "description": "Focus page. {minutes}: a number of minutes."
   },
   "focus.start": {
     "message": "Start focus session"
   },
   "focus.startIn": {
-    "message": "Start"
+    "message": "Start",
+    "description": "Focus page: label of the choice of when the session starts (Now, In 15 min…)."
   },
   "focus.startInN": {
-    "message": "In {duration}"
+    "message": "In {duration}",
+    "description": "Focus page: a choice of when the session starts, such as “In 15 min”. {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”."
   },
   "focus.startNow": {
-    "message": "Now"
+    "message": "Now",
+    "description": "Focus page: a choice of when the session starts."
   },
   "focus.startedToast": {
     "message": "Focus session started."
   },
   "focus.startsAt": {
-    "message": "Starts {when}"
+    "message": "{day, select, today {Starts at {time}} tomorrow {Starts tomorrow at {time}} other {Starts {when}}}",
+    "description": "Focus page, a session planned for later. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "focus.subtitle": {
     "message": "Block your distractions for a while, now or a bit later."
@@ -911,7 +1038,8 @@
     "message": "Until a time"
   },
   "focus.untilTime": {
-    "message": "Until"
+    "message": "Until",
+    "description": "Focus page: label of the time field of a session that lasts until a time."
   },
   "focus.whichGroups": {
     "message": "Rules to include"
@@ -920,7 +1048,8 @@
     "message": "Once you’re through, open"
   },
   "grant.minutes": {
-    "message": "How long"
+    "message": "How long",
+    "description": "Rule editor: label of the field with how long access lasts."
   },
   "grant.mode": {
     "message": "For how long"
@@ -944,16 +1073,19 @@
     "message": "This site"
   },
   "groups.actions": {
-    "message": "More actions for {name}"
+    "message": "More actions for {name}",
+    "description": "Screen-reader name of the menu button of a rule. {name}: the name of a rule, such as “Social media”."
   },
   "groups.archive": {
-    "message": "Archive"
+    "message": "Archive",
+    "description": "Menu of a rule: archive it (a verb)."
   },
   "groups.archived": {
     "message": "Archived"
   },
   "groups.copyName": {
-    "message": "{name} (copy)"
+    "message": "{name} (copy)",
+    "description": "Name of a duplicated rule. {name}: the name of a rule, such as “Social media”."
   },
   "groups.delete": {
     "message": "Delete rule"
@@ -962,10 +1094,12 @@
     "message": "The rule will be removed. If it restricts sites, deleting it follows its protection."
   },
   "groups.deleteTitle": {
-    "message": "Delete “{name}”?"
+    "message": "Delete “{name}”?",
+    "description": "Title of the dialog that deletes a rule. {name}: the name of a rule, such as “Social media”."
   },
   "groups.disabled": {
-    "message": "Off"
+    "message": "Off",
+    "description": "State of a rule: off."
   },
   "groups.dragHint": {
     "message": "Drag to reorder"
@@ -977,16 +1111,20 @@
     "message": "No rules yet. Choose the sites to block or slow down. It takes a minute."
   },
   "groups.enable": {
-    "message": "Turn {name} on or off"
+    "message": "Turn {name} on or off",
+    "description": "Screen-reader name of a rule’s on/off switch. {name}: the name of a rule, such as “Social media”."
   },
   "groups.enabled": {
-    "message": "On"
+    "message": "On",
+    "description": "State of a rule: on."
   },
   "groups.export": {
-    "message": "Share"
+    "message": "Share",
+    "description": "Menu of a rule: saves the rule to a file, to share it."
   },
   "groups.filter": {
-    "message": "Show"
+    "message": "Show",
+    "description": "Rules list: label of the filter (All, Active, Off, Archived)."
   },
   "groups.filter.active": {
     "message": "Active"
@@ -998,7 +1136,8 @@
     "message": "Archived"
   },
   "groups.filter.disabled": {
-    "message": "Off"
+    "message": "Off",
+    "description": "Rules list filter: the rules that are off."
   },
   "groups.moveDown": {
     "message": "Move down"
@@ -1019,10 +1158,12 @@
     "message": "Search rules and sites"
   },
   "groups.sites": {
-    "message": "{count, plural, one {# site} other {# sites}}"
+    "message": "{count, plural, one {# site} other {# sites}}",
+    "description": "Rules list: how many sites a rule has. {count}: a number."
   },
   "groups.sitesMore": {
-    "message": "{sites} and {count} more"
+    "message": "{count, plural, one {{sites} and # more} other {{sites} and # more}}",
+    "description": "Rules list: the first sites of a rule and how many more. {count}: a number. {sites}: one or more sites, joined, such as “youtube.com, reddit.com”."
   },
   "groups.subtitle": {
     "message": "Block, limit or slow down the sites you choose."
@@ -1031,13 +1172,15 @@
     "message": "Rules"
   },
   "groups.unarchive": {
-    "message": "Restore"
+    "message": "Restore",
+    "description": "Menu of an archived rule: bring it back (a verb)."
   },
   "help.about": {
     "message": "About"
   },
   "help.aboutBody": {
-    "message": "WebHandbrake {version} — free and open-source software."
+    "message": "WebHandbrake {version} — free and open-source software.",
+    "description": "Help › About. {version}: a version number, such as 1.2.0."
   },
   "help.accessibility.p1": {
     "message": "Settings › General has light and dark themes and High contrast. Animations follow your system’s reduced-motion setting. Every page works with a keyboard and a screen reader."
@@ -1077,11 +1220,12 @@
     "message": "Export (Settings › Data) saves your rules and settings to a file. Statistics, passwords and partner codes are included only if you tick them. Insights can also export statistics as CSV or JSON."
   },
   "help.data.p2": {
-    "message": "Import accepts a WebHandbrake file, a shared rule or a list of sites, including lists from other blockers. It shows a preview, then adds to your rules or replaces everything. Statistics are never imported.",
-    "description": "Help, Your data. uBlock Origin, AdGuard and uBlacklist are product names."
+    "message": "Import accepts a WebHandbrake file, a shared rule or a list of sites, including lists from other blockers. It shows a preview, then adds to your rules, except those you already have, or replaces everything. Statistics are never imported.",
+    "description": "Help, Your data. “a shared rule” is a file with one rule, made with Share in the menu of a rule."
   },
   "help.data.p3": {
-    "message": "Automatic backups keep your rules and settings before each of the last {recent} changes and once a day for {daily} days. Only newer copies or uninstalling remove them."
+    "message": "Automatic backups keep your rules and settings as they were before each of the last {recent, plural, one {# change} other {# changes}}, and once a day for {daily, plural, one {# day} other {# days}}. Only newer copies or uninstalling remove them.",
+    "description": "Help. {recent} and {daily}: numbers."
   },
   "help.data.p4": {
     "message": "Reset brings back the default rules and settings. If an import, a restore or a reset loosens an active rule, it waits as long as the emergency exit, then you confirm it in Protection. Uninstalling deletes everything, so export first."
@@ -1090,7 +1234,8 @@
     "message": "Your data"
   },
   "help.emergency.p1": {
-    "message": "For when your rules turn out too strict. It always works and needs nobody else: request it in Protection, wait {hours} hours, then type a sentence. You can cancel during the wait."
+    "message": "For when your rules turn out too strict. It always works and needs nobody else: request it in Protection, wait {hours, plural, one {# hour} other {# hours}}, then type a sentence. You can cancel during the wait.",
+    "description": "Help. {hours}: a number of hours."
   },
   "help.emergency.p2": {
     "message": "It ends every focus session, even one that cannot be interrupted. Every rule’s protection becomes Reminder, so passwords, partner codes and lock dates go away. Your rules and pending changes stay as they are."
@@ -1130,7 +1275,8 @@
     "message": "Why is a site not restricted?"
   },
   "help.faq.notCounted.a": {
-    "message": "Time counts while the page is on screen and you are using it. After {seconds} seconds without input you count as inactive, unless audio or video is playing. Background tabs and background media count only if you turn that on in Settings › Time."
+    "message": "Time counts while the page is on screen and you are using it. After {seconds, plural, one {# second} other {# seconds}} without input you count as inactive, unless audio or video is playing. Background tabs and background media count only if you turn that on in Settings › Time.",
+    "description": "Help. {seconds}: a number of seconds."
   },
   "help.faq.notCounted.q": {
     "message": "Why was my time not counted?"
@@ -1142,14 +1288,14 @@
     "message": "Why is a site not blocked in private windows?"
   },
   "help.faq.reset.a": {
-    "message": "Hourly limits start again every hour, and daily limits when your day starts ({dayStart} by default, see Settings › General). Weekly limits start again on the first day of your week, monthly limits on the 1st. Limits “in any” number of hours give time back gradually.",
+    "message": "Hourly limits start again every hour, and daily limits when your day starts ({dayStart} by default, see Settings › General). Weekly limits start again on the first day of your week, set there too, and monthly limits on the 1st. Limits every so many days count from the day you set them or changed how often they start again; limits every so many hours or minutes count from the start of your day.",
     "description": "Help question. {dayStart} is a time of day such as 00:00."
   },
   "help.faq.reset.q": {
     "message": "When do limits start again?"
   },
   "help.faq.restored.a": {
-    "message": "When the saved rules are damaged, WebHandbrake restores the latest good backup, or the defaults, and notes it under Events. Check your rules: changes made after that backup are missing."
+    "message": "When the saved rules are damaged, WebHandbrake restores the copy it keeps of them as last saved, or else the latest good backup or the defaults. It notes it under Events. Check your rules: after a backup, the changes made since are missing."
   },
   "help.faq.restored.q": {
     "message": "Why does Today say that my settings were restored from a backup?"
@@ -1172,6 +1318,10 @@
   },
   "help.focus.p2": {
     "message": "You can always extend a session. Ending it early asks you to confirm. A session that cannot be interrupted ends early only through the emergency exit."
+  },
+  "help.focus.p3": {
+    "message": "“Everything except a few sites” also blocks the pages where you sign in and the servers on your computer (localhost), unless they are on its list. Its block page names the site that is missing.",
+    "description": "Help, Focus sessions. “Everything except a few sites” is the label of a kind of focus session."
   },
   "help.focus.title": {
     "message": "Focus sessions"
@@ -1201,13 +1351,15 @@
     "message": "On every block page you can close the tab or go back. You can also save the page for later: you find it in Later once it opens again."
   },
   "help.interventions.p3": {
-    "message": "If a site is about to be blocked while you are typing, you get {seconds} seconds to finish or copy your text. A page that asks you to stay on it (“Leave site?”) is covered, with its videos and sounds paused, until you leave it."
+    "message": "If a site is about to be blocked while you are typing, you get {seconds, plural, one {# second} other {# seconds}} to finish or copy your text. A page that asks you to stay on it (“Leave site?”) is covered, with its videos and sounds paused, until you leave it.",
+    "description": "Help. {seconds}: a number of seconds."
   },
   "help.interventions.title": {
     "message": "What can happen on a site"
   },
   "help.interventions.visit": {
-    "message": "After a wait or a challenge, you usually get in for the rest of the visit. The visit ends when you close those pages, stay away from them for {returnMinutes} minutes (time enough to sign in on another site and come back) or stop using them for {minutes} minutes. When several rules apply to a page, each one asks in turn."
+    "message": "After a wait or a challenge, you usually get in for the rest of the visit. The visit ends when you close those pages, stay away from them for {returnMinutes, plural, one {# minute} other {# minutes}} (time enough to sign in on another site and come back) or stop using them for {minutes, plural, one {# minute} other {# minutes}}. When several rules apply to a page, each one asks in turn.",
+    "description": "Help. {returnMinutes}: a number of minutes. {minutes}: a number of minutes."
   },
   "help.issue": {
     "message": "Report a problem or suggest an idea"
@@ -1249,10 +1401,10 @@
     "message": "What WebHandbrake cannot do"
   },
   "help.mobile.p1": {
-    "message": "WebHandbrake works on Firefox for Android, without the popup: WebHandbrake in the Extensions menu opens the dashboard."
+    "message": "WebHandbrake works on Firefox for Android. Open the popup from the Extensions menu, and the dashboard from the add-on’s settings."
   },
   "help.mobile.p2": {
-    "message": "Android has no keyboard shortcuts or right-click menu, and the browser’s extension pages cannot be blocked there. Time counts only while Firefox is open on screen."
+    "message": "Android has no keyboard shortcuts or right-click menu, and the browser’s extension pages cannot be blocked there. Time counts only while Firefox is open on screen, except in Reader View and on websites WebHandbrake has no access to: there the tab shown counts even while another app is in front."
   },
   "help.mobile.title": {
     "message": "Firefox for Android"
@@ -1270,7 +1422,8 @@
     "message": "No account, no server, no tracking. WebHandbrake makes no network requests of its own. Your rules, settings and statistics stay in your browser."
   },
   "help.privacy.p2": {
-    "message": "Statistics are daily totals per rule and per site, plus the time per hour on limited sites and per site, never full addresses. In private windows, only what your limits need is kept. Statistics are kept for {days} days; limits keep their totals for {keepDays} days even if you delete them."
+    "message": "Statistics are daily totals per rule and per site, plus the time per hour on limited sites and per site, never full addresses. In private windows, only what your limits need is kept. Statistics are kept for {days, plural, one {# day} other {# days}}; limits keep their totals for {keepDays, plural, one {# day} other {# days}} even if you delete them.",
+    "description": "Help. {keepDays}: a number of days. {days}: a number of days."
   },
   "help.privacy.p3": {
     "message": "A small script runs on the sites of your rules to show the timer and filters and to notice whether you are active. With “Track time on all sites” or some advanced entries, it runs on every site. Nothing it reads is stored, apart from the time."
@@ -1288,7 +1441,8 @@
     "message": "Reminder: you confirm the change."
   },
   "help.protection.item2": {
-    "message": "Wait: you wait the time you chose. A wait over {minutes} min runs in the background, then you confirm the change in Protection within {confirmHours} hours."
+    "message": "Wait: you wait the time you chose. A wait over {minutes} min runs in the background, then you confirm the change in Protection within {confirmHours, plural, one {# hour} other {# hours}}.",
+    "description": "Help. {confirmHours}: a number of hours. {minutes}: a number of minutes."
   },
   "help.protection.item3": {
     "message": "Password: you type the rule’s password."
@@ -1327,13 +1481,16 @@
     "message": "Protecting your rules"
   },
   "help.rules.p1": {
-    "message": "A rule has one condition, such as “Mon–Fri 09:00–17:00 → Block” or “Always, after 45 min a day → Wait 30 s”. When it does not apply, the sites open normally."
+    "message": "A rule has one condition, such as “Mon–Fri {start}–{end} → Block” or “Always, after 45 min a day → Wait 30 s”. When it does not apply, the sites open normally.",
+    "description": "Help. The examples in quotes are rule summaries as the app writes them; translate them the way your translation of the summaries reads. {start}: a time, such as “09:00” or “9:00 AM”. {end}: a time, such as “17:00” or “5:00 PM”."
   },
   "help.rules.p2": {
-    "message": "A condition can use times of day, even overnight like 22:00–02:00. Or it can be a limit of time or visits that starts again every so often, such as every day or every 2 hours."
+    "message": "A condition can use times of day, even overnight like {start}–{end}. Or it can be a limit of time or visits that starts again every so often, such as every day or every 2 hours.",
+    "description": "Help. {start}–{end}: an example of times that run past midnight."
   },
   "help.rules.p3": {
-    "message": "Time counts only while the page is on screen and you are using it, or media is playing. Several tabs never count twice. A new visit starts when you come back after {minutes} minutes away."
+    "message": "Time counts only while the page is on screen and you are using it, or media is playing. Several tabs never count twice. A new visit starts when you come back after {minutes, plural, one {# minute} other {# minutes}} away.",
+    "description": "Help. {minutes}: a number of minutes."
   },
   "help.rules.p4": {
     "message": "When several rules cover a site, all of them apply, the strictest first, and the page opens only when every rule lets you in. To see which rules apply and until when, use “Why?” in the popup or “Test an address” in the rule editor."
@@ -1342,16 +1499,20 @@
     "message": "When a rule applies"
   },
   "help.shortcut.block": {
-    "message": "choose how to block the current site"
+    "message": "choose how to block the current site",
+    "description": "Help › Keyboard shortcuts, after the key. Starts in lower case."
   },
   "help.shortcut.dashboard": {
-    "message": "open the dashboard"
+    "message": "open the dashboard",
+    "description": "Help › Keyboard shortcuts, after the key. Starts in lower case."
   },
   "help.shortcut.focus": {
-    "message": "start a {minutes}-minute focus session"
+    "message": "start a {minutes, plural, one {#-minute} other {#-minute}} focus session",
+    "description": "Help › Keyboard shortcuts, after the key: “Alt+Shift+2 — start a focus session of 25 minutes”. {minutes}: a number of minutes."
   },
   "help.shortcut.popup": {
-    "message": "open the popup"
+    "message": "open the popup",
+    "description": "Help › Keyboard shortcuts, after the key: “Alt+Shift+1 — open the popup”. Starts in lower case."
   },
   "help.shortcutNone": {
     "message": "No key"
@@ -1409,7 +1570,8 @@
     "message": "** stands for any text, slashes included."
   },
   "help.syntax.entry": {
-    "message": "Entry"
+    "message": "Entry",
+    "description": "Help: a column of the table of address forms."
   },
   "help.syntax.exception": {
     "message": "An exception: stays open even if the site is blocked."
@@ -1424,7 +1586,8 @@
     "message": "Imported formats from uBlock Origin, AdGuard and uBlacklist are converted automatically."
   },
   "help.syntax.meaning": {
-    "message": "Meaning"
+    "message": "Meaning",
+    "description": "Help: a column of the table of address forms."
   },
   "help.syntax.page": {
     "message": "Exactly this page."
@@ -1454,46 +1617,60 @@
     "message": "Troubleshooting"
   },
   "icon.cart": {
-    "message": "Shopping"
+    "message": "Shopping",
+    "description": "Name of an icon that a rule can show, for screen readers."
   },
   "icon.chat": {
-    "message": "Chat"
+    "message": "Chat",
+    "description": "Name of an icon that a rule can show, for screen readers."
   },
   "icon.circle": {
-    "message": "Circle"
+    "message": "Circle",
+    "description": "Name of an icon that a rule can show, for screen readers."
   },
   "icon.dice": {
-    "message": "Chance"
+    "message": "Chance",
+    "description": "Name of an icon that a rule can show, for screen readers."
   },
   "icon.eye-off": {
-    "message": "Hidden"
+    "message": "Hidden",
+    "description": "Name of an icon that a rule can show, for screen readers."
   },
   "icon.gamepad": {
-    "message": "Games"
+    "message": "Games",
+    "description": "Name of an icon that a rule can show, for screen readers."
   },
   "icon.globe": {
-    "message": "Web"
+    "message": "Web",
+    "description": "Name of an icon that a rule can show, for screen readers."
   },
   "icon.heart": {
-    "message": "Heart"
+    "message": "Heart",
+    "description": "Name of an icon that a rule can show, for screen readers."
   },
   "icon.newspaper": {
-    "message": "News"
+    "message": "News",
+    "description": "Name of an icon that a rule can show, for screen readers."
   },
   "icon.play": {
-    "message": "Video"
+    "message": "Video",
+    "description": "Name of an icon that a rule can show, for screen readers."
   },
   "icon.users": {
-    "message": "People"
+    "message": "People",
+    "description": "Name of an icon that a rule can show, for screen readers."
   },
   "icon.zap": {
-    "message": "Energy"
+    "message": "Energy",
+    "description": "Name of an icon that a rule can show, for screen readers."
   },
   "import.apply": {
-    "message": "Import"
+    "message": "Import",
+    "description": "Settings › Data › Import: the button (a verb)."
   },
   "import.changes": {
-    "message": "{count, plural, one {# change} other {# changes}} · {weakening, plural, =0 {none loosens your rules} one {# loosens your rules} other {# loosen your rules}}"
+    "message": "{count, plural, one {# change} other {# changes}} · {weakening, plural, =0 {none loosens your rules} one {# loosens your rules} other {# loosen your rules}}",
+    "description": "Settings › Data › Import preview. {weakening}: how many of the changes loosen the rules. {count}: a number."
   },
   "import.chooseFile": {
     "message": "Choose a file…"
@@ -1511,25 +1688,39 @@
     "message": "No sites were found."
   },
   "import.error.tooLarge": {
-    "message": "The file is too large ({mb} MB at most)."
+    "message": "The file is too large ({mb} MB at most).",
+    "description": "Settings › Data › Import. {mb}: a number of megabytes."
   },
   "import.format": {
-    "message": "Detected format: {format}"
+    "message": "Detected format: {format}",
+    "description": "Settings › Data › Import preview. {format}: import.format.* messages."
   },
   "import.format.list": {
-    "message": "list of sites"
+    "message": "list of sites",
+    "description": "Inside import.format: “Detected format: …”."
   },
   "import.format.unknown": {
-    "message": "unknown"
+    "message": "unknown",
+    "description": "Inside import.format: “Detected format: …”."
   },
   "import.format.webhandbrake": {
-    "message": "WebHandbrake"
+    "message": "WebHandbrake",
+    "description": "Inside import.format: “Detected format: …”."
   },
   "import.groupLine": {
-    "message": "{name}: {sites, plural, one {# site} other {# sites}}"
+    "message": "{name}: {sites, plural, one {# site} other {# sites}}",
+    "description": "Settings › Data › Import preview: a rule of the file and its number of sites. {sites}: a number. {name}: the name of a rule, such as “Social media”."
+  },
+  "import.groupPresent": {
+    "message": "{name}: {sites, plural, one {# site} other {# sites}}, already present",
+    "description": "A rule of the file that adding to your rules leaves out, because the same rule is already among them. {name}: the name of a rule, such as “Social media”. {sites}: one or more sites, joined, such as “youtube.com, reddit.com”."
   },
   "import.help": {
-    "message": "Choose a file or paste its content. If the import loosens an active rule, it waits {hours} hours, then you confirm it in Protection."
+    "message": "Choose a file or paste its content. If the import loosens an active rule, it waits {hours, plural, one {# hour} other {# hours}}, then you confirm it in Protection.",
+    "description": "Settings › Data › Import. {hours}: a number of hours."
+  },
+  "import.listName": {
+    "message": "Imported list"
   },
   "import.merge": {
     "message": "Add to my rules"
@@ -1552,11 +1743,20 @@
   "import.title": {
     "message": "Import"
   },
+  "import.warn.entry": {
+    "message": "An entry of “{rule}” could not be read and was left out: {entry}",
+    "description": "Settings › Data › Import report. {entry}: the entry as it is in the file (code, not translated). {rule}: the name of a rule, such as “Social media”."
+  },
   "import.warn.line": {
-    "message": "Line {line} ignored: {text}"
+    "message": "Line {line} ignored: {text}",
+    "description": "Settings › Data › Import report. {text}: the line of the file. {line}: a line number."
+  },
+  "import.warn.rule": {
+    "message": "A rule that could not be read was left out."
   },
   "import.weakening": {
-    "message": "loosens"
+    "message": "loosens",
+    "description": "Settings › Data › Import preview: a tag after a change that loosens the rules (third person, like “it loosens”)."
   },
   "insights.byGroup": {
     "message": "By rule"
@@ -1571,7 +1771,8 @@
     "message": "Export or delete data"
   },
   "insights.day": {
-    "message": "Day"
+    "message": "Day",
+    "description": "Insights: column of the table of days."
   },
   "insights.delete": {
     "message": "Delete data"
@@ -1586,7 +1787,8 @@
     "message": "One site"
   },
   "insights.deleteNote": {
-    "message": "Deleting never resets a limit: limits keep their totals for {days} days. Your reasons are deleted only with “Everything”."
+    "message": "Deleting never resets a limit: limits keep their totals for {days, plural, one {# day} other {# days}}. Your reasons are deleted only with “Everything”.",
+    "description": "Insights › Delete statistics. {days}: a number of days."
   },
   "insights.deleteTitle": {
     "message": "Delete statistics"
@@ -1610,7 +1812,8 @@
     "message": "Export as JSON"
   },
   "insights.hour": {
-    "message": "Hour"
+    "message": "Hour",
+    "description": "Insights: column of the table of hours."
   },
   "insights.hours": {
     "message": "Hour by hour"
@@ -1625,7 +1828,8 @@
     "message": "Time per site per hour"
   },
   "insights.impulses": {
-    "message": "{count, plural, one {time you chose not to go in} other {times you chose not to go in}}"
+    "message": "{count, plural, one {time you chose not to go in} other {times you chose not to go in}}",
+    "description": "Insights: a label under a big number. The number is shown separately: write only the words. {count}: a number."
   },
   "insights.intentions": {
     "message": "Reasons for going in"
@@ -1637,7 +1841,8 @@
     "message": "Limited sites"
   },
   "insights.mode": {
-    "message": "Show"
+    "message": "Show",
+    "description": "Insights: label of the choice Total / By site."
   },
   "insights.mode.sites": {
     "message": "By site"
@@ -1646,10 +1851,12 @@
     "message": "Total"
   },
   "insights.month": {
-    "message": "Month"
+    "message": "Month",
+    "description": "Insights: column of the table of months."
   },
   "insights.moreSites": {
-    "message": "{count, plural, one {# other site} other {# other sites}}"
+    "message": "{count, plural, one {# other site} other {# other sites}}",
+    "description": "Insights › By site: the row of the sites not listed. {count}: a number."
   },
   "insights.next": {
     "message": "Next period"
@@ -1677,7 +1884,8 @@
     "description": "Time on sites that no rule limits, counted with Track time on all sites"
   },
   "insights.pauses": {
-    "message": "{count, plural, one {break} other {breaks}} ({minutes} min)"
+    "message": "{count, plural, one {break} other {breaks}} ({minutes} min)",
+    "description": "Insights: a label under a big number of breaks, shown separately; {minutes}: the total minutes of those breaks. {count}: a number."
   },
   "insights.pausesLog": {
     "message": "Breaks"
@@ -1698,7 +1906,8 @@
     "message": "Their sites are not recorded."
   },
   "insights.sessions": {
-    "message": "{count, plural, one {focus session} other {focus sessions}}"
+    "message": "{count, plural, one {focus session} other {focus sessions}}",
+    "description": "Insights: a label under a big number, shown separately: write only the words. {count}: a number."
   },
   "insights.showChart": {
     "message": "Show as chart"
@@ -1707,19 +1916,24 @@
     "message": "Show as table"
   },
   "insights.shown": {
-    "message": "{count, plural, one {time WebHandbrake stepped in} other {times WebHandbrake stepped in}}"
+    "message": "{count, plural, one {time WebHandbrake stepped in} other {times WebHandbrake stepped in}}",
+    "description": "Insights: a label under a big number, shown separately: write only the words. {count}: a number."
   },
   "insights.span.day": {
-    "message": "Day"
+    "message": "Day",
+    "description": "Insights: the length of the period shown."
   },
   "insights.span.month": {
-    "message": "Month"
+    "message": "Month",
+    "description": "Insights: the length of the period shown."
   },
   "insights.span.week": {
-    "message": "Week"
+    "message": "Week",
+    "description": "Insights: the length of the period shown."
   },
   "insights.span.year": {
-    "message": "Year"
+    "message": "Year",
+    "description": "Insights: the length of the period shown."
   },
   "insights.subtitle": {
     "message": "How you spent time on your limited sites. No judgement, just numbers."
@@ -1761,28 +1975,35 @@
     "message": "Time per site per month"
   },
   "insights.visits": {
-    "message": "{count, plural, one {# visit} other {# visits}}"
+    "message": "{count, plural, one {# visit} other {# visits}}",
+    "description": "Insights. {count}: a number."
   },
   "insights.vsPrevious": {
-    "message": "{change} compared with the previous period"
+    "message": "{change} compared with the previous period",
+    "description": "Insights. {change}: a percentage with its sign, such as “+25%”."
   },
   "intervention.allow": {
-    "message": "Don’t count"
+    "message": "Don’t count",
+    "description": "Name of what happens on a site (an intervention), chosen in the rule editor. Used as a title and inside sentences, as a noun (“Next: Block from 17:00”): keep it short."
   },
   "intervention.allow.summary": {
     "message": "Allowed, time not counted"
   },
   "intervention.ask": {
-    "message": "Ask first"
+    "message": "Ask first",
+    "description": "Name of what happens on a site (an intervention), chosen in the rule editor. Used as a title and inside sentences, as a noun (“Next: Block from 17:00”): keep it short."
   },
   "intervention.ask.summary": {
-    "message": "Ask first (up to {max})"
+    "message": "Ask first (up to {max})",
+    "description": "Rule summary of Ask first. {max}: a length of time, such as “15 min”."
   },
   "intervention.block": {
-    "message": "Block"
+    "message": "Block",
+    "description": "Name of what happens on a site (an intervention), chosen in the rule editor. Used as a title and inside sentences, as a noun (“Next: Block from 17:00”): keep it short."
   },
   "intervention.challenge": {
-    "message": "Challenge"
+    "message": "Challenge",
+    "description": "Name of what happens on a site (an intervention), chosen in the rule editor. Used as a title and inside sentences, as a noun (“Next: Block from 17:00”): keep it short."
   },
   "intervention.challenge.math": {
     "message": "Solve a small calculation"
@@ -1791,22 +2012,28 @@
     "message": "Type your phrase"
   },
   "intervention.challenge.random": {
-    "message": "Type {length} random characters"
+    "message": "Type {length, plural, one {# random character} other {# random characters}}",
+    "description": "Rule summary of a challenge. {length}: a number of characters."
   },
   "intervention.close": {
-    "message": "Close the tab"
+    "message": "Close the tab",
+    "description": "Name of what happens on a site (an intervention), chosen in the rule editor. Used as a title and inside sentences, as a noun (“Next: Block from 17:00”): keep it short."
   },
   "intervention.delay": {
-    "message": "Wait"
+    "message": "Wait",
+    "description": "Name of what happens on a site (an intervention), chosen in the rule editor. Used as a title and inside sentences, as a noun (“Next: Block from 17:00”): keep it short."
   },
   "intervention.delay.growingSummary": {
-    "message": "Wait {seconds} s, {increase} s more each time{hidden, select, yes { (countdown hidden)} other {}}"
+    "message": "Wait {seconds} s, {increase} s more each time{hidden, select, yes { (countdown hidden)} other {}}",
+    "description": "Rule summary of a wait. {increase}: a number of seconds; {hidden}: yes when the countdown is hidden. {seconds}: a number of seconds."
   },
   "intervention.delay.summary": {
-    "message": "Wait {seconds} s{hidden, select, yes { (countdown hidden)} other {}}"
+    "message": "Wait {seconds} s{hidden, select, yes { (countdown hidden)} other {}}",
+    "description": "Rule summary of a wait. {seconds}: a number of seconds, or a range such as “5–30”; {hidden}: yes when the countdown is hidden."
   },
   "intervention.filter": {
-    "message": "Filter"
+    "message": "Filter",
+    "description": "Name of what happens on a site (an intervention), chosen in the rule editor. Used as a title and inside sentences, as a noun (“Next: Block from 17:00”): keep it short."
   },
   "intervention.help.allow": {
     "message": "The sites open and their time is not counted."
@@ -1839,55 +2066,71 @@
     "message": "What happens"
   },
   "intervention.redirect": {
-    "message": "Redirect"
+    "message": "Redirect",
+    "description": "Name of what happens on a site (an intervention), chosen in the rule editor. Used as a title and inside sentences, as a noun (“Next: Block from 17:00”): keep it short."
   },
   "intervention.redirect.summary": {
-    "message": "Go to {url}"
+    "message": "Go to {url}",
+    "description": "Rule summary of a redirect. {url}: a web address, such as https://example.com/todo."
   },
   "intervention.short.allow": {
-    "message": "Don’t count"
+    "message": "Don’t count",
+    "description": "Short name of what happens on a site, in tags and pills. Same meaning as the intervention.* message."
   },
   "intervention.short.ask": {
-    "message": "Ask first"
+    "message": "Ask first",
+    "description": "Short name of what happens on a site, in tags and pills. Same meaning as the intervention.* message."
   },
   "intervention.short.block": {
-    "message": "Block"
+    "message": "Block",
+    "description": "Short name of what happens on a site, in tags and pills. Same meaning as the intervention.* message."
   },
   "intervention.short.challenge": {
-    "message": "Challenge"
+    "message": "Challenge",
+    "description": "Short name of what happens on a site, in tags and pills. Same meaning as the intervention.* message."
   },
   "intervention.short.close": {
-    "message": "Close tab"
+    "message": "Close tab",
+    "description": "Short name of what happens on a site, in tags and pills. Same meaning as the intervention.* message."
   },
   "intervention.short.delay": {
-    "message": "Wait"
+    "message": "Wait",
+    "description": "Short name of what happens on a site, in tags and pills. Same meaning as the intervention.* message."
   },
   "intervention.short.filter": {
-    "message": "Filter"
+    "message": "Filter",
+    "description": "Short name of what happens on a site, in tags and pills. Same meaning as the intervention.* message."
   },
   "intervention.short.redirect": {
-    "message": "Redirect"
+    "message": "Redirect",
+    "description": "Short name of what happens on a site, in tags and pills. Same meaning as the intervention.* message."
   },
   "intervention.short.track": {
-    "message": "Count only"
+    "message": "Count only",
+    "description": "Short name of what happens on a site, in tags and pills. Same meaning as the intervention.* message."
   },
   "intervention.track": {
-    "message": "Count only"
+    "message": "Count only",
+    "description": "Name of what happens on a site (an intervention), chosen in the rule editor. Used as a title and inside sentences, as a noun (“Next: Block from 17:00”): keep it short."
   },
   "iv.ask": {
-    "message": "What do you want to do on {host}?"
+    "message": "What do you want to do on {host}?",
+    "description": "Block page of Ask first: the headline. {host} can also be a rule’s name, when the address is hidden."
   },
   "iv.ask.continue": {
-    "message": "Continue for {minutes} min"
+    "message": "Continue for {minutes} min",
+    "description": "Block page of Ask first: the button. {minutes}: a number of minutes."
   },
   "iv.ask.custom": {
-    "message": "How long?"
+    "message": "How long?",
+    "description": "Block page of Ask first: label of the field for another number of minutes."
   },
   "iv.ask.howLong": {
     "message": "For how long?"
   },
   "iv.ask.minLength": {
-    "message": "At least {n} characters."
+    "message": "At least {n, plural, one {# character} other {# characters}}.",
+    "description": "Block page of Ask first: under the reason field. {n}: a number."
   },
   "iv.ask.other": {
     "message": "Other",
@@ -1900,10 +2143,12 @@
     "message": "Your reason"
   },
   "iv.ask.upTo": {
-    "message": "Up to {duration}."
+    "message": "Up to {duration}.",
+    "description": "Block page of Ask first: the longest time that can be chosen. {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”."
   },
   "iv.ask.wait": {
-    "message": "You can continue in {seconds} s."
+    "message": "You can continue in {seconds} s.",
+    "description": "Block page of Ask first: the countdown before the button works. {seconds}: a number of seconds."
   },
   "iv.back": {
     "message": "Go back"
@@ -1912,13 +2157,15 @@
     "message": "This page is blocked right now."
   },
   "iv.block.until": {
-    "message": "This page is blocked until {when}."
+    "message": "This page is blocked until {when}.",
+    "description": "Block page: the headline. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "iv.challenge": {
     "message": "Type to continue"
   },
   "iv.challenge.body": {
-    "message": "To continue, type the {length} characters below."
+    "message": "To continue, type the {length, plural, one {character} other {# characters}} below.",
+    "description": "Block page of a challenge. {length}: a number of characters."
   },
   "iv.close": {
     "message": "Closing this tab…"
@@ -1939,7 +2186,8 @@
     "message": "You can continue when the circle closes."
   },
   "iv.delay.left": {
-    "message": "You can continue in {seconds} s."
+    "message": "You can continue in {seconds} s.",
+    "description": "Block page of a wait: the countdown. {seconds}: a number of seconds."
   },
   "iv.delay.ready": {
     "message": "You can continue now — or close the tab."
@@ -1951,7 +2199,8 @@
     "message": "Go back"
   },
   "iv.group": {
-    "message": "{group}"
+    "message": "{group}",
+    "description": "Block page: the rule that applies, next to its colour. {group}: the name of a rule, such as “Social media”."
   },
   "iv.internal": {
     "message": "The browser’s extension and settings pages are blocked right now."
@@ -1970,13 +2219,14 @@
   },
   "iv.internal.rule": {
     "message": "“{rule}” applies and is firmly protected ({protection})",
-    "description": "A reason why the browser's pages are blocked; protection is e.g. Password or Wait · 1 h"
+    "description": "A reason why the browser’s pages are blocked. {rule}: the name of a rule; {protection}: its protection, such as “Password” or “Wait · 1 h”."
   },
   "iv.internal.session": {
     "message": "a focus session that cannot be interrupted is running"
   },
   "iv.internal.until": {
-    "message": "The browser’s extension and settings pages are blocked until {when}."
+    "message": "The browser’s extension and settings pages are blocked until {when}.",
+    "description": "Block page of the browser’s extension and settings pages: the headline. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "iv.loop": {
     "message": "This page keeps redirecting. Check Settings › Diagnostics in WebHandbrake."
@@ -1989,11 +2239,22 @@
   },
   "iv.others": {
     "message": "{count, plural, one {Another rule applies here too: {rules}.} other {Other rules apply here too: {rules}.}}",
-    "description": "On the intervention page, under the rule shown. {rules} is a list of rule names."
+    "description": "On the intervention page, under the rule shown. {rules} is a list of rule names. {count}: a number."
   },
   "iv.othersNext": {
     "message": "{count, plural, one {It asks next: the page opens once both rules let you through.} other {They ask next: the page opens once every rule lets you through.}}",
-    "description": "After iv.others, when the rule shown can be passed (wait, question, challenge)."
+    "description": "After iv.others, when the rule shown can be passed (wait, question, challenge). {count}: a number."
+  },
+  "iv.pending.open": {
+    "message": "Open Protection"
+  },
+  "iv.pending.ready": {
+    "message": "{count, plural, =0 {Your change to the protection settings is ready to confirm. Until you confirm it, nothing changes.} one {Your change to {rules} is ready to confirm. Until you confirm it, the rule stays as it was.} other {Your changes to {rules} are ready to confirm. Until you confirm them, the rules stay as they were.}}",
+    "description": "On the block page. {rules} is a list of rule names in quotes; count is how many (0: a setting of the protection). {count}: a number."
+  },
+  "iv.pending.waiting": {
+    "message": "{count, plural, =0 {Your change to the protection settings can be confirmed from {when}. Until then, nothing changes.} one {Your change to {rules} can be confirmed from {when}. Until then, the rule stays as it was.} other {Your changes to {rules} can be confirmed from {when}. Until then, the rules stay as they were.}}",
+    "description": "On the block page. {when} is a time, e.g. 14:00 or tomorrow at 14:00; {rules} and count as in iv.pending.ready. {count}: a number."
   },
   "iv.redirect": {
     "message": "Taking you to the page you chose instead…"
@@ -2008,7 +2269,8 @@
     "message": "Saved in Later. You will find it there when the page opens again."
   },
   "iv.savedShort": {
-    "message": "Saved"
+    "message": "Saved",
+    "description": "Block page: the button after the page was saved for later."
   },
   "iv.selftest": {
     "message": "Self-test passed"
@@ -2022,8 +2284,13 @@
   "iv.session.locked": {
     "message": "This session cannot be interrupted."
   },
+  "iv.session.notListed": {
+    "message": "{host} is not on this session’s list.",
+    "description": "Block page of a focus session that blocks every site except those on its list. {host} is the blocked site, such as accounts.google.com."
+  },
   "iv.session.until": {
-    "message": "You are in a focus session until {when}."
+    "message": "You are in a focus session until {when}.",
+    "description": "Block page during a focus session: the headline. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "iv.takeBreak": {
     "message": "Take a break"
@@ -2032,17 +2299,24 @@
     "message": "A moment of pause",
     "description": "Title of the intervention page (browser tab)"
   },
+  "iv.title.site": {
+    "message": "{host} — A moment of pause",
+    "description": "Title of the block page (browser tab). Keep it short: the tab shows its start. {host}: a site, such as youtube.com."
+  },
   "iv.why": {
-    "message": "Why?"
+    "message": "Why?",
+    "description": "Block page: the button that explains which rules apply."
   },
   "iv.yourNote": {
-    "message": "your reason for this rule"
+    "message": "— your reason for this rule"
   },
   "later.available": {
-    "message": "available now"
+    "message": "available now",
+    "description": "Later page, after a saved page: it can be opened now."
   },
   "later.availableAt": {
-    "message": "available from {when}"
+    "message": "available from {when}",
+    "description": "Later page: when a saved page can be opened. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "later.empty": {
     "message": "Nothing saved for later."
@@ -2060,19 +2334,23 @@
     "message": "Needs notifications on (Settings › Feedback)."
   },
   "later.open": {
-    "message": "Open"
+    "message": "Open",
+    "description": "Later page: the button that opens a saved page (a verb)."
   },
   "later.openAll": {
-    "message": "Open {count, plural, one {the available page} other {# available pages}}"
+    "message": "Open {count, plural, one {the available page} other {# available pages}}",
+    "description": "Later page: the button. {count}: a number."
   },
   "later.opened": {
-    "message": "{count, plural, one {# page opened.} other {# pages opened.}}"
+    "message": "{count, plural, one {# page opened.} other {# pages opened.}}",
+    "description": "Later page: message after opening pages. {count}: a number."
   },
   "later.remove": {
     "message": "Remove"
   },
   "later.saved": {
-    "message": "saved {when}"
+    "message": "saved {when}",
+    "description": "Later page: when a page was saved. {when}: a date and a time, such as “Thu, 15 Oct, 17:00”. If your language needs words between them, write {date} and {time} instead."
   },
   "later.subtitle": {
     "message": "Pages you saved instead of opening them."
@@ -2081,22 +2359,26 @@
     "message": "Later"
   },
   "level.firm.browserPages": {
-    "message": "While this rule applies, the browser’s extension pages are blocked too, so WebHandbrake cannot be turned off on impulse. You can change this in Protection."
+    "message": "While this rule applies, the browser’s extension pages are blocked too, so WebHandbrake cannot be turned off on impulse. You can change this in Protection.",
+    "description": "Rule editor, Protection: a note under a firm protection."
   },
   "level.locked": {
-    "message": "Locked"
+    "message": "Locked",
+    "description": "Name of one of the six protections of a rule: what loosening the rule takes. Also inside sentences and tags (“Wait · 1 h”)."
   },
   "level.locked.desc": {
     "message": "Not possible until a date you choose."
   },
   "level.locked.tag": {
-    "message": "Locked until {when}"
+    "message": "Locked until {when}",
+    "description": "Protection tag of a rule. {when}: a date and a time, such as “Thu, 15 Oct, 17:00”. If your language needs words between them, write {date} and {time} instead."
   },
   "level.locked.weaken": {
     "message": "No loosening until the date. After it, a confirmation is enough."
   },
   "level.partner": {
-    "message": "Partner code"
+    "message": "Partner code",
+    "description": "Name of one of the six protections of a rule: what loosening the rule takes. Also inside sentences and tags (“Wait · 1 h”)."
   },
   "level.partner.desc": {
     "message": "A code from someone you trust."
@@ -2105,7 +2387,8 @@
     "message": "Loosening the rule needs a code from your partner’s phone. Each code works once."
   },
   "level.password": {
-    "message": "Password"
+    "message": "Password",
+    "description": "Name of one of the six protections of a rule: what loosening the rule takes. Also inside sentences and tags (“Wait · 1 h”)."
   },
   "level.password.desc": {
     "message": "The rule’s password."
@@ -2114,7 +2397,8 @@
     "message": "Loosening the rule needs its password. Give it to someone you trust, or keep it out of easy reach."
   },
   "level.permanent": {
-    "message": "Permanent"
+    "message": "Permanent",
+    "description": "Name of one of the six protections of a rule: what loosening the rule takes. Also inside sentences and tags (“Wait · 1 h”)."
   },
   "level.permanent.desc": {
     "message": "Not possible, with no end date."
@@ -2123,7 +2407,8 @@
     "message": "No loosening, with no end date. Only the emergency exit removes this protection."
   },
   "level.reminder": {
-    "message": "Reminder"
+    "message": "Reminder",
+    "description": "Name of one of the six protections of a rule: what loosening the rule takes. Also inside sentences and tags (“Wait · 1 h”)."
   },
   "level.reminder.desc": {
     "message": "Just a confirmation."
@@ -2132,22 +2417,26 @@
     "message": "Loosening the rule asks for a confirmation."
   },
   "level.wait": {
-    "message": "Wait"
+    "message": "Wait",
+    "description": "Name of one of the six protections of a rule: what loosening the rule takes. Also inside sentences and tags (“Wait · 1 h”)."
   },
   "level.wait.desc": {
     "message": "A wait of your choice."
   },
   "level.wait.tag": {
-    "message": "Wait · {duration}"
+    "message": "Wait · {duration}",
+    "description": "Protection tag of a rule: “Wait · 1 h”. {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”."
   },
   "level.wait.weaken": {
     "message": "Loosening the rule makes you wait. A long wait runs in the background, then you confirm the change in Protection."
   },
   "level.wait.weakenLong": {
-    "message": "Loosening the rule waits {duration}, then you confirm it in Protection."
+    "message": "Loosening the rule waits {duration}, then you confirm it in Protection.",
+    "description": "Protection: what loosening a rule takes. {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”."
   },
   "level.wait.weakenShort": {
-    "message": "Loosening the rule makes you wait {duration} first."
+    "message": "Loosening the rule makes you wait {duration} first.",
+    "description": "Protection: what loosening a rule takes. {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”."
   },
   "locked.ack": {
     "message": "I understand and want to lock this rule."
@@ -2174,22 +2463,27 @@
     "message": "Locked until"
   },
   "menu.blockLink": {
-    "message": "Block the link’s site in"
+    "message": "Block the link’s site in",
+    "description": "Right-click menu on a link: the item that opens a submenu of rules, “Block the link’s site in › Social”."
   },
   "menu.blockPage": {
-    "message": "Block this page in"
+    "message": "Block this page in",
+    "description": "Right-click menu: the item that opens a submenu of rules, “Block this page in › Social”."
   },
   "menu.blockSite": {
-    "message": "Block this site in"
+    "message": "Block this site in",
+    "description": "Right-click menu: the item that opens a submenu of rules, “Block this site in › Social”."
   },
   "menu.focus": {
     "message": "Start a focus session"
   },
   "menu.focusMinutes": {
-    "message": "{minutes} minutes"
+    "message": "{minutes, plural, one {# minute} other {# minutes}}",
+    "description": "Right-click menu › Start a focus session › (this item). {minutes}: a number of minutes."
   },
   "menu.newGroup": {
-    "message": "New rule…"
+    "message": "New rule…",
+    "description": "Right-click menu: the last item of the submenu of rules."
   },
   "nav.focus": {
     "message": "Focus"
@@ -2213,7 +2507,8 @@
     "message": "More"
   },
   "nav.pendingCount": {
-    "message": "{count, plural, one {# pending change} other {# pending changes}}"
+    "message": "{count, plural, one {# pending change} other {# pending changes}}",
+    "description": "Sidebar, next to Protection: a badge for screen readers. {count}: a number."
   },
   "nav.protection": {
     "message": "Protection"
@@ -2228,7 +2523,8 @@
     "message": "Skip to content"
   },
   "nav.status.session": {
-    "message": "Focus until {when}"
+    "message": "Focus until {when}",
+    "description": "Sidebar: a focus session running. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "nav.today": {
     "message": "Today"
@@ -2237,19 +2533,22 @@
     "message": "Welcome"
   },
   "notify.later.body": {
-    "message": "{count, plural, one {A page you saved is available now.} other {# pages you saved are available now.}}"
+    "message": "{count, plural, one {A page you saved is available now.} other {# pages you saved are available now.}}",
+    "description": "System notification. {count}: a number."
   },
   "notify.later.title": {
     "message": "Saved pages available"
   },
   "notify.pending.body": {
-    "message": "{count, plural, one {Confirm your change in Protection, or it expires.} other {Confirm your # changes in Protection, or they expire.}}"
+    "message": "{count, plural, one {Confirm your change in Protection, or it expires.} other {Confirm your # changes in Protection, or they expire.}}",
+    "description": "System notification. {count}: a number."
   },
   "notify.pending.title": {
     "message": "Ready to confirm"
   },
   "notify.sessionEnd.body": {
-    "message": "{duration} of focus. {stopped, plural, =0 {WebHandbrake did not need to step in.} one {WebHandbrake stepped in once.} other {WebHandbrake stepped in # times.}}"
+    "message": "{duration} of focus. {stopped, plural, =0 {WebHandbrake did not need to step in.} one {WebHandbrake stepped in once.} other {WebHandbrake stepped in # times.}}",
+    "description": "System notification at the end of a focus session. {stopped}: how many times WebHandbrake showed a block page. {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”."
   },
   "notify.sessionEnd.title": {
     "message": "Focus session over"
@@ -2265,13 +2564,15 @@
     "message": "Time is up for this site."
   },
   "overlay.dismiss": {
-    "message": "OK"
+    "message": "OK",
+    "description": "On a web page: the button that closes a message."
   },
   "overlay.drag": {
     "message": "Move the timer (arrow keys)"
   },
   "overlay.grace.body": {
-    "message": "The page will be replaced in {seconds} s."
+    "message": "The page will be replaced in {seconds} s.",
+    "description": "On a web page, before it is blocked while the person types. {seconds}: a number of seconds."
   },
   "overlay.grace.copied": {
     "message": "Copied"
@@ -2289,19 +2590,24 @@
     "message": "Your reason"
   },
   "overlay.passLeft": {
-    "message": "access · {group}"
+    "message": "access · {group}",
+    "description": "On a web page, in the small timer after the time left: “4:59 access · Social”. {group}: the name of a rule, such as “Social media”."
   },
   "overlay.pauseLeft": {
-    "message": "break · {group}"
+    "message": "break · {group}",
+    "description": "On a web page, in the small timer after the time left: “4:59 break · Social”. {group}: the name of a rule, such as “Social media”."
   },
   "overlay.timer.aria": {
-    "message": "{group}: {time} left"
+    "message": "{group}: {time} left",
+    "description": "On a web page: what screen readers say for the timer. {time}: the time left, such as “4:59”. {group}: the name of a rule, such as “Social media”."
   },
   "overlay.timerLeft": {
-    "message": "left · {group}"
+    "message": "left · {group}",
+    "description": "On a web page, in the small timer after the time left: “4:59 left · Social”. {group}: the name of a rule, such as “Social media”."
   },
   "partner.account": {
-    "message": "Partner code"
+    "message": "Partner code",
+    "description": "Name of the account in the partner’s authenticator app when the rule has no name."
   },
   "partner.breaks": {
     "message": "Breaks also need the partner’s code"
@@ -2319,7 +2625,8 @@
     "message": "Confirm"
   },
   "partner.dialogTitle": {
-    "message": "Set up a partner code for {name}"
+    "message": "Set up a partner code for {name}",
+    "description": "Title of the dialog that sets up a partner code. {name}: the name of a rule, such as “Social media”."
   },
   "partner.done": {
     "message": "Partner code set."
@@ -2343,66 +2650,73 @@
     "message": "Ask your partner to scan this QR code with an authenticator app on their phone, or to type the key below."
   },
   "pause.cancel": {
-    "message": "Not now"
-  },
-  "pause.cost": {
-    "message": "Cost"
+    "message": "Not now",
+    "description": "Break dialog: the button that closes it without a break."
   },
   "pause.covers": {
     "message": "Opens all the sites of {rules} for {duration}. You can end it sooner.",
-    "description": "rules: the names of the rules, e.g. \"Social and News\"; duration: e.g. \"15 min\""
+    "description": "rules: the names of the rules, e.g. \"Social and News\"; duration: e.g. \"15 min\" {rules}: the names of one or more rules, joined, such as “Social” or “Social and News”. {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”."
   },
   "pause.error.duration": {
     "message": "This length is not allowed."
   },
   "pause.left.both": {
     "message": "{count, plural, =0 {no breaks} one {# break} other {# breaks}} left {period}, {minutes} min in total",
-    "description": "period: pause.period.*, e.g. \"3 breaks left today, 30 min in total\""
+    "description": "Breaks left, e.g. “3 breaks left today, 30 min in total”. {period}: pause.period.*, such as “today” or “this week”; {minutes}: a number of minutes. {count}: a number of breaks."
   },
   "pause.left.count": {
     "message": "{count, plural, =0 {no breaks left} one {# break left} other {# breaks left}} {period}",
-    "description": "period: pause.period.*, e.g. \"3 breaks left today\""
+    "description": "Breaks left, e.g. “3 breaks left today”. {period}: pause.period.*, such as “today” or “this week”. {count}: a number of breaks."
   },
   "pause.left.minutes": {
     "message": "{minutes} min of breaks left {period}",
-    "description": "period: pause.period.*, e.g. \"30 min of breaks left this week\""
+    "description": "Break time left, e.g. “30 min of breaks left this week”. {period}: pause.period.*, such as “today” or “this week”; {minutes}: a number of minutes."
   },
   "pause.leftUntil": {
-    "message": "Until {when}"
+    "message": "Until {when}",
+    "description": "Popup and Today: a break running. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "pause.period.day": {
-    "message": "today"
+    "message": "today",
+    "description": "Inside pause.left.*: “3 breaks left today”, “30 min of breaks left this week”."
   },
   "pause.period.hour": {
-    "message": "this hour"
+    "message": "this hour",
+    "description": "Inside pause.left.*: “3 breaks left today”, “30 min of breaks left this week”."
   },
   "pause.period.month": {
-    "message": "this month"
+    "message": "this month",
+    "description": "Inside pause.left.*: “3 breaks left today”, “30 min of breaks left this week”."
   },
   "pause.period.other": {
-    "message": "in this period"
+    "message": "in this period",
+    "description": "Inside pause.left.*: “3 breaks left today”, “30 min of breaks left this week”."
   },
   "pause.period.week": {
-    "message": "this week"
+    "message": "this week",
+    "description": "Inside pause.left.*: “3 breaks left today”, “30 min of breaks left this week”."
   },
   "pause.start": {
     "message": "Start the break"
   },
   "pause.started": {
-    "message": "Break started for {minutes} minutes."
+    "message": "Break started for {minutes, plural, one {# minute} other {# minutes}}.",
+    "description": "Message after starting a break. {minutes}: a number of minutes."
   },
   "pause.subject.all": {
     "message": "All rules"
   },
   "pause.subject.page": {
-    "message": "{page} · {rules}"
+    "message": "{page} · {rules}",
+    "description": "What a break opens: a page and its rules. {page}: a page address. {rules}: the names of one or more rules, joined, such as “Social” or “Social and News”."
   },
   "pause.subject.site": {
-    "message": "{site} · {rules}"
+    "message": "{site} · {rules}",
+    "description": "What a break opens: a site and its rules. {site}: a site, such as youtube.com. {rules}: the names of one or more rules, joined, such as “Social” or “Social and News”."
   },
   "pause.summary.cost": {
     "message": "Cost: {cost}",
-    "description": "cost: cost.*, e.g. \"Cost: a 30 s wait\""
+    "description": "cost: cost.*, e.g. \"Cost: a 30 s wait\" {cost}: what it costs, such as “a confirmation” or “a 30 s wait” (cost.* messages)."
   },
   "pause.summary.free": {
     "message": "No cost"
@@ -2438,25 +2752,32 @@
     "message": "A break opens all the rule’s sites for a while."
   },
   "pauseRules.costKind.confirm": {
-    "message": "Confirm it"
+    "message": "Confirm it",
+    "description": "Rule editor › Breaks: a choice of what taking a break costs."
   },
   "pauseRules.costKind.delay": {
-    "message": "Wait"
+    "message": "Wait",
+    "description": "Rule editor › Breaks: a choice of what taking a break costs."
   },
   "pauseRules.costKind.math": {
-    "message": "Solve a small calculation"
+    "message": "Solve a small calculation",
+    "description": "Rule editor › Breaks: a choice of what taking a break costs."
   },
   "pauseRules.costKind.none": {
-    "message": "Nothing"
+    "message": "Nothing",
+    "description": "Rule editor › Breaks: a choice of what taking a break costs."
   },
   "pauseRules.costKind.password": {
-    "message": "Enter the rule’s password"
+    "message": "Enter the rule’s password",
+    "description": "Rule editor › Breaks: a choice of what taking a break costs."
   },
   "pauseRules.costKind.phrase": {
-    "message": "Type a phrase"
+    "message": "Type a phrase",
+    "description": "Rule editor › Breaks: a choice of what taking a break costs."
   },
   "pauseRules.costKind.random": {
-    "message": "Type random characters"
+    "message": "Type random characters",
+    "description": "Rule editor › Breaks: a choice of what taking a break costs."
   },
   "pauseRules.durationHelp": {
     "message": "A break lasts this long unless you end it sooner."
@@ -2468,7 +2789,12 @@
     "message": "At most this much time"
   },
   "pauseRules.minutes": {
-    "message": "At most"
+    "message": "At most",
+    "description": "Rule editor › Breaks: screen-reader label of the field with the longest break."
+  },
+  "pauseRules.minutesFields": {
+    "message": "At most {duration}",
+    "description": "Rule editor › Breaks: a sentence around a field. {duration} is the length field (number and unit); move it where your sentence needs it."
   },
   "pauseRules.noPassword": {
     "message": "This rule has no password, so a break asks you to type 32 random characters instead."
@@ -2483,14 +2809,15 @@
     "message": "How many breaks?"
   },
   "pauseRules.summary.free": {
-    "message": "Breaks: up to {duration} each, free."
+    "message": "Breaks: up to {duration} each, free.",
+    "description": "Rule summary of breaks. {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”."
   },
   "pauseRules.summary.off": {
     "message": "No breaks."
   },
   "pauseRules.summary.on": {
     "message": "Breaks: up to {duration} each. Cost: {cost}.",
-    "description": "cost: cost.*, e.g. \"a 30 s wait\""
+    "description": "cost: cost.*, e.g. \"a 30 s wait\" {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”. {cost}: what it costs, such as “a confirmation” or “a 30 s wait” (cost.* messages)."
   },
   "pending.applied": {
     "message": "Change applied."
@@ -2526,55 +2853,75 @@
     "message": "A rule this change loosens is now permanent, so it cannot be applied."
   },
   "pending.phrase": {
-    "message": "I understand that this change loosens my protection."
+    "message": "I understand that this change loosens my protection.",
+    "description": "A sentence the person types, letter by letter, to confirm a change: write it so that it is easy to type on a keyboard of your language."
   },
   "pending.readyIn": {
-    "message": "can be confirmed in {duration}"
+    "message": "can be confirmed in {duration}",
+    "description": "Protection › Pending changes, after “requested …”. {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”."
   },
   "pending.readyUntil": {
-    "message": "ready: confirm it before {when} or it expires"
+    "message": "ready: confirm it before {when} or it expires",
+    "description": "Protection › Pending changes. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "pending.requested": {
-    "message": "requested {when}"
+    "message": "requested {when}",
+    "description": "Protection › Pending changes. {when}: a date and a time, such as “Thu, 15 Oct, 17:00”. If your language needs words between them, write {date} and {time} instead."
   },
   "period.every": {
     "message": "Starts again every"
   },
   "period.everyDays": {
-    "message": "every {n, plural, one {day} other {# days}}"
+    "message": "every {n, plural, one {day} other {# days}}",
+    "description": "How often a limit starts again, inside budget.* and wizard.cond.*: “after 45 min every 3 days”. {n}: a number."
   },
   "period.everyMinutes": {
-    "message": "every {duration}"
+    "message": "every {duration}",
+    "description": "How often a limit starts again, inside budget.* and wizard.cond.*: “after 10 min every 2 h”. {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”."
   },
   "period.kind.day": {
-    "message": "Day"
+    "message": "Day",
+    "description": "A choice of how often a limit or the breaks start again."
   },
   "period.kind.hour": {
-    "message": "Hour"
+    "message": "Hour",
+    "description": "A choice of how often a limit or the breaks start again."
   },
   "period.kind.month": {
-    "message": "Month"
+    "message": "Month",
+    "description": "A choice of how often a limit or the breaks start again."
   },
   "period.kind.other": {
-    "message": "Other"
+    "message": "Other",
+    "description": "A choice of how often a limit or the breaks start again."
   },
   "period.kind.week": {
-    "message": "Week"
+    "message": "Week",
+    "description": "A choice of how often a limit or the breaks start again."
+  },
+  "period.next": {
+    "message": "Next start: {when}",
+    "description": "Under how often a limit starts again: when it starts again next. {when} is a time such as “17:00”, “tomorrow 00:00”, “Mon 00:00” or “12 Nov 00:00”."
   },
   "period.perDay": {
-    "message": "per day"
+    "message": "per day",
+    "description": "Inside a rule summary (budget.time, budget.visits): “after 45 min per day”."
   },
   "period.perHour": {
-    "message": "per hour"
+    "message": "per hour",
+    "description": "Inside a rule summary (budget.time, budget.visits): “after 45 min per day”."
   },
   "period.perMonth": {
-    "message": "per month"
+    "message": "per month",
+    "description": "Inside a rule summary (budget.time, budget.visits): “after 45 min per day”."
   },
   "period.perWeek": {
-    "message": "per week"
+    "message": "per week",
+    "description": "Inside a rule summary (budget.time, budget.visits): “after 45 min per day”."
   },
   "period.rolling": {
-    "message": "in any {duration}"
+    "message": "in any {duration}",
+    "description": "How often a limit starts again, inside budget.*: “after 30 min in any 2 h”. {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”."
   },
   "permanent.ack": {
     "message": "I understand that only the emergency exit can loosen this rule."
@@ -2595,7 +2942,8 @@
     "message": "Quick actions"
   },
   "popup.add.action": {
-    "message": "Block"
+    "message": "Block",
+    "description": "Popup › Block this site: the button (a verb)."
   },
   "popup.add.continue": {
     "message": "Continue in the editor",
@@ -2620,10 +2968,12 @@
     "message": "New rule…"
   },
   "popup.add.outcomeLater": {
-    "message": "“{rule}” blocks it from {when}. Until then it stays open."
+    "message": "“{rule}” blocks it from {when}. Until then it stays open.",
+    "description": "Popup › Block this site: what adding the site to the rule does. {rule}: the name of a rule, such as “Social media”. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "popup.add.outcomeNever": {
-    "message": "“{rule}” does not block. The site gets what this rule does instead."
+    "message": "“{rule}” does not block. The site gets what this rule does instead.",
+    "description": "Popup › Block this site: what adding the site to the rule does, when the rule does not block. {rule}: the name of a rule, such as “Social media”."
   },
   "popup.add.outcomeNew": {
     "message": "A new rule that blocks it at all times, set up in the rule editor."
@@ -2632,7 +2982,8 @@
     "message": "Blocked right away, at all times."
   },
   "popup.add.outcomeUntil": {
-    "message": "Blocked right away, until {when}."
+    "message": "Blocked right away, until {when}.",
+    "description": "Popup › Block this site: what adding the site to the rule does. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "popup.add.page": {
     "message": "This page"
@@ -2653,7 +3004,8 @@
     "message": "What to block"
   },
   "popup.blockSite": {
-    "message": "Block site"
+    "message": "Block site",
+    "description": "Popup: the button that opens “Block this site” (a verb)."
   },
   "popup.currentSite": {
     "message": "Current site"
@@ -2669,7 +3021,8 @@
     "description": "Popup link under a limit: gives up the time left in the current period of the limit (the limit counts as used up)."
   },
   "popup.forfeitConfirm": {
-    "message": "Give up the time left on {group} for this period?"
+    "message": "Give up the time left on {group} for this period?",
+    "description": "Popup: confirmation of “Stop now” under a limit. {group}: the name of a rule, such as “Social media”."
   },
   "popup.forfeitDone": {
     "message": "Done. The limit is used up for this period."
@@ -2678,13 +3031,15 @@
     "message": "Yes, stop now"
   },
   "popup.impulses": {
-    "message": "{count, plural, one {You chose not to go in once} other {You chose not to go in # times}}"
+    "message": "{count, plural, one {You chose not to go in once} other {You chose not to go in # times}}",
+    "description": "Popup. {count}: a number."
   },
   "popup.later": {
     "message": "Save for later"
   },
   "popup.laterCount": {
-    "message": "{count, plural, one {# page saved for later} other {# pages saved for later}}"
+    "message": "{count, plural, one {# page saved for later} other {# pages saved for later}}",
+    "description": "Popup. {count}: a number."
   },
   "popup.notSetUp": {
     "message": "WebHandbrake is not set up yet."
@@ -2693,16 +3048,20 @@
     "message": "Take a break"
   },
   "popup.pendingReady": {
-    "message": "{count, plural, one {A change is ready to confirm} other {# changes are ready to confirm}}"
+    "message": "{count, plural, one {A change is ready to confirm} other {# changes are ready to confirm}}",
+    "description": "Popup. {count}: a number."
   },
   "popup.private": {
-    "message": "private"
+    "message": "private",
+    "description": "Popup: a tag after the site when the tab is in a private window."
   },
   "popup.reopen": {
-    "message": "{count, plural, one {Reopen # tab that is available again} other {Reopen # tabs that are available again}}"
+    "message": "{count, plural, one {Reopen # tab that is available again} other {Reopen # tabs that are available again}}",
+    "description": "Popup: the button. {count}: a number."
   },
   "popup.reopened": {
-    "message": "{count, plural, one {# tab reopened.} other {# tabs reopened.}}"
+    "message": "{count, plural, one {# tab reopened.} other {# tabs reopened.}}",
+    "description": "Popup: message after reopening tabs. {count}: a number."
   },
   "popup.savedLater": {
     "message": "Saved for later."
@@ -2711,52 +3070,66 @@
     "message": "Set up"
   },
   "popup.status": {
-    "message": "In progress"
+    "message": "In progress",
+    "description": "Popup: screen-reader name of the section with the breaks running, the tabs to reopen and the changes to confirm."
   },
   "popup.why": {
-    "message": "Why?"
+    "message": "Why?",
+    "description": "Popup: the button that explains which rules apply."
   },
   "privacy.deleteAll": {
     "message": "Delete your data"
   },
   "privacy.deleteAllHelp": {
-    "message": "Deletes your statistics and reasons. Limits keep their totals for {days} days."
+    "message": "Deletes your statistics and reasons. Limits keep their totals for {days, plural, one {# day} other {# days}}.",
+    "description": "Settings › Privacy. {days}: a number of days."
   },
   "privacy.deleteStats": {
     "message": "Delete all statistics"
   },
   "privacy.deleteStatsBody": {
-    "message": "Your statistics and reasons will be deleted. Limits keep their totals for {days} days. This cannot be undone."
+    "message": "Your statistics and reasons will be deleted. Limits keep their totals for {days, plural, one {# day} other {# days}}. This cannot be undone.",
+    "description": "Settings › Privacy: confirmation. {days}: a number of days."
   },
   "privacy.key.activity": {
-    "message": "Visit tracking"
+    "message": "Visit tracking",
+    "description": "Settings › Privacy › What is stored: a kind of data."
   },
   "privacy.key.backups": {
-    "message": "Automatic backups"
+    "message": "Automatic backups",
+    "description": "Settings › Privacy › What is stored: a kind of data."
   },
   "privacy.key.config": {
-    "message": "Rules and settings"
+    "message": "Rules and settings",
+    "description": "Settings › Privacy › What is stored: a kind of data."
   },
   "privacy.key.focus": {
-    "message": "Sites for focus sessions"
+    "message": "Sites for focus sessions",
+    "description": "Settings › Privacy › What is stored: a kind of data."
   },
   "privacy.key.intentions": {
-    "message": "Reasons for going in"
+    "message": "Reasons for going in",
+    "description": "Settings › Privacy › What is stored: a kind of data."
   },
   "privacy.key.later": {
-    "message": "Pages saved for later"
+    "message": "Pages saved for later",
+    "description": "Settings › Privacy › What is stored: a kind of data."
   },
   "privacy.key.meta": {
-    "message": "Technical information"
+    "message": "Technical information",
+    "description": "Settings › Privacy › What is stored: a kind of data."
   },
   "privacy.key.state": {
-    "message": "Breaks, sessions, pending changes and protection events"
+    "message": "Breaks, sessions, pending changes and protection events",
+    "description": "Settings › Privacy › What is stored: a kind of data."
   },
   "privacy.key.u:min": {
-    "message": "Minute-by-minute time"
+    "message": "Minute-by-minute time",
+    "description": "Settings › Privacy › What is stored: a kind of data."
   },
   "privacy.key.usage": {
-    "message": "Daily statistics"
+    "message": "Daily statistics",
+    "description": "Settings › Privacy › What is stored: a kind of data."
   },
   "privacy.network": {
     "message": "Network connections"
@@ -2783,7 +3156,8 @@
     "message": "Reset rules and settings…"
   },
   "privacy.retention": {
-    "message": "Daily statistics: as set in Settings › Time. Minute-by-minute time: {hours} hours. Backups: the last {recent} changes and one a day for {daily} days."
+    "message": "Daily statistics: as set in Settings › Time. Minute-by-minute time: {hours, plural, one {# hour} other {# hours}}. Backups: the last {recent, plural, one {# change} other {# changes}} and one a day for {daily, plural, one {# day} other {# days}}.",
+    "description": "Settings › Privacy. {recent} and {daily}: numbers. {hours}: a number of hours."
   },
   "privacy.stored": {
     "message": "What is stored"
@@ -2798,10 +3172,12 @@
     "message": "Total"
   },
   "protection.change": {
-    "message": "Change"
+    "message": "Change",
+    "description": "Protection: the button that changes a rule’s protection (a verb)."
   },
   "protection.changeLevel": {
-    "message": "Change the protection of {name}"
+    "message": "Change the protection of {name}",
+    "description": "Title of the dialog that changes a rule’s protection. {name}: the name of a rule, such as “Social media”."
   },
   "protection.checklist": {
     "message": "How solid is your protection?"
@@ -2813,10 +3189,12 @@
     "message": "Waiting time"
   },
   "protection.emergencyWaitHelp": {
-    "message": "To shorten it, you first wait the current {hours} hours, then type a sentence."
+    "message": "To shorten it, you first wait the current {hours, plural, one {# hour} other {# hours}}, then type a sentence.",
+    "description": "Protection › Emergency exit. {hours}: a number of hours."
   },
   "protection.guardNote": {
-    "message": "Loosening these settings waits {hours} hours, like the emergency exit."
+    "message": "Loosening these settings waits {hours, plural, one {# hour} other {# hours}}, like the emergency exit.",
+    "description": "Protection. {hours}: a number of hours."
   },
   "protection.hardeningNote": {
     "message": "Need more? Your browser’s enterprise policies can stop WebHandbrake being removed. See Help › What WebHandbrake cannot do."
@@ -2837,7 +3215,8 @@
     "message": "Block the browser’s extension and settings pages"
   },
   "protection.internalPagesHelp": {
-    "message": "Stops the easiest way around WebHandbrake: turning it off. The rest of the browser settings stay open. Firmly protected means a password, a partner code, Locked, Permanent or a wait over {minutes} min. Not on Android."
+    "message": "Stops the easiest way around WebHandbrake: turning it off. The rest of the browser settings stay open. Firmly protected means a password, a partner code, Locked, Permanent or a wait over {minutes} min. Not on Android.",
+    "description": "Protection. Password, Partner code, Locked and Permanent are names of protections (level.*). {minutes}: a number of minutes."
   },
   "protection.level": {
     "message": "Protection"
@@ -2885,7 +3264,8 @@
     "message": "Length of the wait"
   },
   "protection.waitHelp": {
-    "message": "Up to {duration}, you wait on the spot. A longer wait runs in the background, then you confirm the change in Protection."
+    "message": "Up to {duration}, you wait on the spot. A longer wait runs in the background, then you confirm the change in Protection.",
+    "description": "Protection, choosing a Wait protection. {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”."
   },
   "protection.waitLabel": {
     "message": "How long to wait"
@@ -2898,13 +3278,15 @@
     "message": "Address"
   },
   "save.applied": {
-    "message": "{count, plural, one {Change applied.} other {# changes applied.}}"
+    "message": "{count, plural, one {Change applied.} other {# changes applied.}}",
+    "description": "Message after saving. {count}: a number."
   },
   "save.appliedAfterCost": {
     "message": "Done: your change is applied."
   },
   "save.appliedNow": {
-    "message": "{count, plural, one {Applied now:} other {# changes applied now:}}"
+    "message": "{count, plural, one {Applied now:} other {# changes applied now:}}",
+    "description": "Dialog after saving, before the list of the changes applied. {count}: a number."
   },
   "save.costIntro": {
     "message": "This loosens your rules. Take a moment before going ahead."
@@ -2919,10 +3301,12 @@
     "message": "Nothing changed."
   },
   "save.pendingBody": {
-    "message": "This loosens your rules, so it waits {wait}. Confirm it in Protection from {when}. Until then, nothing changes."
+    "message": "This loosens your rules, so it waits {wait}. Confirm it in Protection from {when}. Until then, nothing changes.",
+    "description": "Dialog after saving a change that waits. {wait}: a length of time, such as “30 min” or “24 h”. {when}: a date and a time, such as “Thu, 15 Oct, 17:00”. If your language needs words between them, write {date} and {time} instead."
   },
   "save.pendingEmergencyBody": {
-    "message": "This loosens your protection, so it waits {wait}, like the emergency exit. Confirm it in Protection from {when} by typing a sentence. Until then, nothing changes."
+    "message": "This loosens your protection, so it waits {wait}, like the emergency exit. Confirm it in Protection from {when} by typing a sentence. Until then, nothing changes.",
+    "description": "Dialog after saving a change that waits as long as the emergency exit. {wait}: a length of time, such as “30 min” or “24 h”. {when}: a date and a time, such as “Thu, 15 Oct, 17:00”. If your language needs words between them, write {date} and {time} instead."
   },
   "save.pendingTitle": {
     "message": "Waiting for confirmation"
@@ -2931,7 +3315,8 @@
     "message": "A rule this change loosens is locked, so it cannot be loosened now."
   },
   "save.refused.lockedUntil": {
-    "message": "A rule this change loosens is locked until {until}."
+    "message": "A rule this change loosens is locked until {when}.",
+    "description": "Dialog after a refused change. {when}: a date and a time, such as “Thu, 15 Oct, 17:00”. If your language needs words between them, write {date} and {time} instead."
   },
   "save.refused.permanent": {
     "message": "A rule this change loosens is permanent. Only the emergency exit can remove its protection."
@@ -2952,7 +3337,8 @@
     "message": "Days"
   },
   "schedule.from": {
-    "message": "From"
+    "message": "From",
+    "description": "Rule editor, a time window: label of the start time field (“From [09:00] to [17:00]”)."
   },
   "schedule.gridHelp": {
     "message": "Click or drag to add time. Drag over coloured cells to remove it."
@@ -2964,22 +3350,28 @@
     "message": "Runs past midnight into the next day."
   },
   "schedule.preset.allDay": {
-    "message": "All day"
+    "message": "All day",
+    "description": "Rule editor, a time window: a ready-made choice of days and times."
   },
   "schedule.preset.evenings": {
-    "message": "Evenings"
+    "message": "Evenings",
+    "description": "Rule editor, a time window: a ready-made choice of days and times."
   },
   "schedule.preset.nights": {
-    "message": "Nights"
+    "message": "Nights",
+    "description": "Rule editor, a time window: a ready-made choice of days and times."
   },
   "schedule.preset.office": {
-    "message": "Office hours"
+    "message": "Office hours",
+    "description": "Rule editor, a time window: a ready-made choice of days and times."
   },
   "schedule.preset.weekdays": {
-    "message": "Weekdays"
+    "message": "Weekdays",
+    "description": "Rule editor, a time window: a ready-made choice of days and times."
   },
   "schedule.presets": {
-    "message": "Presets"
+    "message": "Presets:",
+    "description": "Rule editor, a time window: before the ready-made choices (schedule.preset.*)."
   },
   "schedule.removeWindow": {
     "message": "Remove this time window"
@@ -2988,7 +3380,8 @@
     "message": "Show the week grid"
   },
   "schedule.to": {
-    "message": "to"
+    "message": "to",
+    "description": "Rule editor, a time window: label of the end time field (“From [09:00] to [17:00]”)."
   },
   "session.error.locked": {
     "message": "This session cannot be interrupted. Only the emergency exit can end it early."
@@ -2997,127 +3390,168 @@
     "message": "This session no longer exists."
   },
   "setting.badge.enabled": {
-    "message": "Toolbar badge"
+    "message": "Toolbar badge",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.badge.thresholdMinutes": {
-    "message": "Badge threshold"
+    "message": "Badge threshold",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.clock.useDateHeaders": {
-    "message": "Detect a manipulated system clock"
+    "message": "Detect a manipulated system clock",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.contextMenu": {
-    "message": "Context menu"
+    "message": "Context menu",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.dateFormat": {
-    "message": "Date format"
+    "message": "Date format",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.dayStart": {
-    "message": "Days start at"
+    "message": "Days start at",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.diagnostics.decisionLog": {
-    "message": "Decision log"
+    "message": "Decision log",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.highContrast": {
-    "message": "High contrast"
+    "message": "High contrast",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.hour12": {
-    "message": "Clock"
+    "message": "Clock",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.interventions.autoReopen": {
-    "message": "Reopen pages when they become available"
+    "message": "Reopen pages when they become available",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.interventions.customCss": {
-    "message": "Custom style for block pages"
+    "message": "Custom style for block pages",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.interventions.graceSeconds": {
-    "message": "Time to finish typing"
+    "message": "Time to finish typing",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.interventions.hideUrl": {
-    "message": "Hide the address of blocked pages"
+    "message": "Hide the address of blocked pages",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.language": {
-    "message": "Language"
+    "message": "Language",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.later.notify": {
-    "message": "Saved pages notifications"
+    "message": "Saved pages notifications",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.notifications.enabled": {
-    "message": "Notifications"
+    "message": "Notifications",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.notifications.pendingReady": {
-    "message": "Pending change notifications"
+    "message": "Pending change notifications",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.notifications.sessionEnd": {
-    "message": "End-of-session notifications"
+    "message": "End-of-session notifications",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.notifications.warning": {
-    "message": "Warning notifications"
+    "message": "Warning notifications",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.onboarded": {
-    "message": "Setup completed"
+    "message": "Setup completed",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.pauseLimit": {
-    "message": "Breaks across all rules"
+    "message": "Breaks across all rules",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.protection.confirmHours": {
-    "message": "Time to confirm pending changes"
+    "message": "Time to confirm pending changes",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.protection.emergencyHours": {
-    "message": "Emergency exit waiting time"
+    "message": "Emergency exit waiting time",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.protection.internalPages": {
-    "message": "Block the browser’s extension and settings pages"
+    "message": "Block the browser’s extension and settings pages",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.protection.internalPagesFollowPause": {
-    "message": "Breaks also unlock the browser’s extension and settings pages"
+    "message": "Breaks also unlock the browser’s extension and settings pages",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.sound": {
-    "message": "Sound at the end of a break"
+    "message": "Sound at the end of a break",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.theme": {
-    "message": "Theme"
+    "message": "Theme",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.timer.corner": {
-    "message": "Timer position"
+    "message": "Timer position",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.timer.enabled": {
-    "message": "On-page timer"
+    "message": "On-page timer",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.timer.opacity": {
-    "message": "Timer opacity"
+    "message": "Timer opacity",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.timer.size": {
-    "message": "Timer size"
+    "message": "Timer size",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.timer.thresholdMinutes": {
-    "message": "Timer threshold"
+    "message": "Timer threshold",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.tracking.allSites": {
-    "message": "Track time on all sites"
+    "message": "Track time on all sites",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.tracking.countAudio": {
-    "message": "Count background audio and video"
+    "message": "Count background audio and video",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.tracking.countInactive": {
-    "message": "Count tabs that are open but not active"
+    "message": "Count tabs that are open but not active",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.tracking.idleEnabled": {
-    "message": "Stop counting when I’m inactive"
+    "message": "Stop counting when I’m inactive",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.tracking.idleSeconds": {
-    "message": "Inactive after"
+    "message": "Inactive after",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.tracking.retentionDays": {
-    "message": "Keep daily statistics for"
+    "message": "Keep daily statistics for",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.tracking.visitGapMinutes": {
-    "message": "A new visit starts after"
+    "message": "A new visit starts after",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.warningSeconds": {
-    "message": "Warn before a restriction starts"
+    "message": "Warn before a restriction starts",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "setting.weekStart": {
-    "message": "Weeks start on"
+    "message": "Weeks start on",
+    "description": "The label of a setting, inside unit.setting: “Change the setting “{setting}””. Keep it as the label shown in Settings."
   },
   "settings.allSites": {
     "message": "Track time on all sites"
@@ -3156,16 +3590,20 @@
     "message": "“Block this site” and “Start a focus session” in the right-click menu (desktop only)."
   },
   "settings.corner.bottom-left": {
-    "message": "Bottom left"
+    "message": "Bottom left",
+    "description": "Settings › Feedback: where the on-page timer appears."
   },
   "settings.corner.bottom-right": {
-    "message": "Bottom right"
+    "message": "Bottom right",
+    "description": "Settings › Feedback: where the on-page timer appears."
   },
   "settings.corner.top-left": {
-    "message": "Top left"
+    "message": "Top left",
+    "description": "Settings › Feedback: where the on-page timer appears."
   },
   "settings.corner.top-right": {
-    "message": "Top right"
+    "message": "Top right",
+    "description": "Settings › Feedback: where the on-page timer appears."
   },
   "settings.countAudio": {
     "message": "Count background audio and video"
@@ -3192,13 +3630,15 @@
     "message": "Detect a manipulated system clock"
   },
   "settings.dateHeadersHelp": {
-    "message": "Compares your clock with the time websites send. No extra requests. Turning it off waits {hours} hours, like the emergency exit."
+    "message": "Compares your clock with the time websites send. No extra requests. Turning it off waits {hours, plural, one {# hour} other {# hours}}, like the emergency exit.",
+    "description": "Settings › Time. {hours}: a number of hours."
   },
   "settings.dayStart": {
     "message": "Days start at"
   },
   "settings.dayStartHelp": {
-    "message": "For night owls: with {time}, the time until {time} still counts as the day before."
+    "message": "For night owls: with {time}, the time until {time} still counts as the day before.",
+    "description": "Settings › General, under “Days start at”. {time}: a time, such as “17:00” or “5:00 PM”."
   },
   "settings.formats": {
     "message": "Dates and times"
@@ -3252,7 +3692,8 @@
     "message": "The page reloads after a change."
   },
   "settings.mode": {
-    "message": "Interface"
+    "message": "Interface",
+    "description": "Settings › General: a section title (theme, contrast)."
   },
   "settings.notifications": {
     "message": "System notifications"
@@ -3288,13 +3729,16 @@
     "message": "Keyboard shortcuts are in Help › Keyboard shortcuts."
   },
   "settings.size.large": {
-    "message": "Large"
+    "message": "Large",
+    "description": "Settings › Feedback: size of the on-page timer."
   },
   "settings.size.medium": {
-    "message": "Medium"
+    "message": "Medium",
+    "description": "Settings › Feedback: size of the on-page timer."
   },
   "settings.size.small": {
-    "message": "Small"
+    "message": "Small",
+    "description": "Settings › Feedback: size of the on-page timer."
   },
   "settings.sound": {
     "message": "Sound at the end of a break"
@@ -3390,19 +3834,22 @@
     "message": "Allowed"
   },
   "status.freeUntil": {
-    "message": "Allowed until {when}"
+    "message": "Allowed until {when}",
+    "description": "State of a rule or site. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "status.paused": {
     "message": "On a break"
   },
   "status.pausedUntil": {
-    "message": "On a break until {when}"
+    "message": "On a break until {when}",
+    "description": "State of a rule or site. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "status.session": {
     "message": "Focus session"
   },
   "status.sessionUntil": {
-    "message": "Focus session until {when}"
+    "message": "Focus session until {when}",
+    "description": "State of a rule or site. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "status.site.excepted": {
     "message": "Allowed by an exception"
@@ -3414,87 +3861,109 @@
     "message": "Allowed"
   },
   "status.site.freeUntil": {
-    "message": "Allowed until {when}"
+    "message": "Allowed until {when}",
+    "description": "Popup: state of the current site. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "status.site.gentle": {
-    "message": "Allowed · {what}"
+    "message": "Allowed · {what}",
+    "description": "Popup: state of the current site. {what}: what happens, such as “Filtered” or “Time counted” (status.type.*)."
   },
   "status.site.noRules": {
     "message": "No rules on this site"
   },
   "status.site.passUntil": {
-    "message": "Access granted until {when}"
+    "message": "Access granted until {when}",
+    "description": "Popup: state of the current site. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "status.site.passVisit": {
     "message": "Access granted for this visit"
   },
   "status.site.session": {
-    "message": "Focus session until {when}"
+    "message": "Focus session until {when}",
+    "description": "Popup: state of the current site. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "status.site.timeLeft": {
-    "message": "{duration} left"
+    "message": "{duration} left",
+    "description": "Popup: time left under a limit. {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”."
   },
   "status.site.visitsLeft": {
-    "message": "{count, plural, =0 {No visits left} one {# visit left} other {# visits left}}"
+    "message": "{count, plural, =0 {No visits left} one {# visit left} other {# visits left}}",
+    "description": "Popup: visits left under a limit. {count}: a number."
   },
   "status.type.allow": {
-    "message": "Allowed"
+    "message": "Allowed",
+    "description": "A state of a site, as a short label (popup, “Why?”): what happens there now. Also inside other messages, such as “{what} until 17:00”."
   },
   "status.type.ask": {
-    "message": "Asks first"
+    "message": "Asks first",
+    "description": "A state of a site, as a short label (popup, “Why?”): what happens there now. Also inside other messages, such as “{what} until 17:00”."
   },
   "status.type.block": {
-    "message": "Blocked"
+    "message": "Blocked",
+    "description": "A state of a site, as a short label (popup, “Why?”): what happens there now. Also inside other messages, such as “{what} until 17:00”."
   },
   "status.type.challenge": {
-    "message": "Challenge first"
+    "message": "Challenge first",
+    "description": "A state of a site, as a short label (popup, “Why?”): what happens there now. Also inside other messages, such as “{what} until 17:00”."
   },
   "status.type.close": {
-    "message": "Closes the tab"
+    "message": "Closes the tab",
+    "description": "A state of a site, as a short label (popup, “Why?”): what happens there now. Also inside other messages, such as “{what} until 17:00”."
   },
   "status.type.delay": {
-    "message": "Wait {seconds} s"
+    "message": "Wait {seconds} s",
+    "description": "A state, next to Blocked, Asks first…: the site makes you wait. {seconds}: a number of seconds."
   },
   "status.type.filter": {
-    "message": "Filtered"
+    "message": "Filtered",
+    "description": "A state of a site, as a short label (popup, “Why?”): what happens there now. Also inside other messages, such as “{what} until 17:00”."
   },
   "status.type.redirect": {
-    "message": "Redirected"
+    "message": "Redirected",
+    "description": "A state of a site, as a short label (popup, “Why?”): what happens there now. Also inside other messages, such as “{what} until 17:00”."
   },
   "status.type.track": {
-    "message": "Time counted"
+    "message": "Time counted",
+    "description": "A state of a site, as a short label (popup, “Why?”): what happens there now. Also inside other messages, such as “{what} until 17:00”."
   },
   "status.until": {
-    "message": "{what} until {when}"
+    "message": "{what} until {when}",
+    "description": "State of a site until a moment. {what}: a state, such as “Blocked” (status.type.*). {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "summary.always": {
-    "message": "Always"
+    "message": "Always",
+    "description": "A rule summary when the rule applies at all times."
   },
   "summary.condition": {
     "message": "{schedule}, {budget}",
-    "description": "e.g. \"Mon–Fri 09:00–17:00, after 30 min per day\""
+    "description": "A rule summary, e.g. “Mon–Fri 09:00–17:00, after 30 min per day”. {schedule}: days and times, or “Always”; {budget}: the limit (budget.time, budget.visits)."
   },
   "summary.noWindows": {
-    "message": "no time set"
+    "message": "no time set",
+    "description": "Inside a rule summary when no time is set."
   },
   "tamper.clock-backward": {
-    "message": "The system clock went back about {detail} min. WebHandbrake ignored it."
+    "message": "The system clock went back about {detail} min. WebHandbrake ignored it.",
+    "description": "Protection › Events. {detail}: a number of minutes."
   },
   "tamper.clock-realigned": {
     "message": "WebHandbrake’s time was about {detail} min ahead. Websites confirmed the right time, so it went back to it.",
-    "description": "In Protection › Events. The system clock was ahead (for example before it synchronized) and was put right; the time sent by several websites confirmed it."
+    "description": "In Protection › Events. The system clock was ahead (for example before it synchronized) and was put right; the time sent by several websites confirmed it. {detail}: a number of minutes."
   },
   "tamper.clock-skew": {
-    "message": "The system clock is off by about {detail} min. WebHandbrake uses the correct time."
+    "message": "The system clock is off by about {detail} min. WebHandbrake uses the correct time.",
+    "description": "Protection › Events. {detail}: a number of minutes."
   },
   "tamper.emergency": {
-    "message": "Emergency exit: {detail, select, requested {requested} cancelled {cancelled} completed {completed} other {{detail}}}."
+    "message": "Emergency exit: {detail, select, requested {requested} cancelled {cancelled} completed {completed} other {{detail}}}.",
+    "description": "Protection › Events. {detail}: requested, cancelled or completed; translate the three words in the select."
   },
   "tamper.host-permission": {
     "message": "Access to all sites was removed."
   },
   "tamper.inactive-gap": {
-    "message": "WebHandbrake was off for about {detail} min while the browser was open."
+    "message": "WebHandbrake was off for about {detail} min while the browser was open.",
+    "description": "Protection › Events. {detail}: a number of minutes."
   },
   "tamper.private-access": {
     "message": "Access to private windows was removed."
@@ -3506,31 +3975,40 @@
     "message": "The settings were damaged and were restored from a backup."
   },
   "target.exceptionOf": {
-    "message": "except {value}"
+    "message": "except {value}",
+    "description": "An exception of a rule, in lists. {value}: an address as written in a rule, such as youtube.com or +reddit.com/r/*/comments/*."
   },
   "targetType.domain": {
-    "message": "Whole site"
+    "message": "Whole site",
+    "description": "A kind of address in a rule, in “Why?” and in the address guide."
   },
   "targetType.homepage": {
-    "message": "Home page"
+    "message": "Home page",
+    "description": "A kind of address in a rule, in “Why?” and in the address guide."
   },
   "targetType.host": {
-    "message": "Site without subdomains"
+    "message": "Site without subdomains",
+    "description": "A kind of address in a rule, in “Why?” and in the address guide."
   },
   "targetType.page": {
-    "message": "Page"
+    "message": "Page",
+    "description": "A kind of address in a rule, in “Why?” and in the address guide."
   },
   "targetType.path": {
-    "message": "Section"
+    "message": "Section",
+    "description": "A kind of address in a rule, in “Why?” and in the address guide."
   },
   "targetType.regex": {
-    "message": "Pattern"
+    "message": "Pattern",
+    "description": "A kind of address in a rule, in “Why?” and in the address guide."
   },
   "targetType.wildcard": {
-    "message": "Wildcard"
+    "message": "Wildcard",
+    "description": "A kind of address in a rule, in “Why?” and in the address guide."
   },
   "targets.add": {
-    "message": "Add"
+    "message": "Add",
+    "description": "Rule editor › Sites: the button (a verb)."
   },
   "targets.addPlaceholder": {
     "message": "Add a site, or paste a list…"
@@ -3539,19 +4017,22 @@
     "message": "Address"
   },
   "targets.allSites": {
-    "message": "Every website"
+    "message": "Every website",
+    "description": "The entry * of a rule: every website."
   },
   "targets.clear": {
     "message": "Clear the list"
   },
   "targets.count": {
-    "message": "{sites, plural, one {# site} other {# sites}}, {exceptions, plural, one {# exception} other {# exceptions}}"
+    "message": "{sites, plural, one {# site} other {# sites}}, {exceptions, plural, one {# exception} other {# exceptions}}",
+    "description": "Rule editor: how many sites and exceptions. {exceptions}: a number. {sites}: one or more sites, joined, such as “youtube.com, reddit.com”."
   },
   "targets.discardText": {
     "message": "Discard text changes"
   },
   "targets.edit": {
-    "message": "Edit {value}"
+    "message": "Edit {value}",
+    "description": "Screen-reader name of the button that edits an address. {value}: an address as written in a rule, such as youtube.com or +reddit.com/r/*/comments/*."
   },
   "targets.error.empty": {
     "message": "Empty entry."
@@ -3569,7 +4050,8 @@
     "message": "Back-references are not allowed in patterns."
   },
   "targets.error.regexComplex": {
-    "message": "This pattern is too complex to check quickly. Use fewer *, + or '{n,}'."
+    "message": "This pattern is too complex to check quickly. Use fewer *, + or '{n,}'.",
+    "description": "Error under an address. '{n,}' is regular-expression syntax, quoted with ASCII apostrophes so that it is not a placeholder: keep it as it is."
   },
   "targets.error.regexInvalid": {
     "message": "This regular expression is not valid."
@@ -3587,7 +4069,8 @@
     "message": "Only web pages, local files and browser pages can be added."
   },
   "targets.errors": {
-    "message": "{count, plural, one {# line was not added:} other {# lines were not added:}}"
+    "message": "{count, plural, one {# line was not added:} other {# lines were not added:}}",
+    "description": "Rule editor, above the lines that could not be added. {count}: a number."
   },
   "targets.exception": {
     "message": "Exception"
@@ -3602,7 +4085,8 @@
     "message": "An exception: + keeps these pages open."
   },
   "targets.guide.more": {
-    "message": "More ways to write an address are in"
+    "message": "More ways to write an address are in {help}.",
+    "description": "Address guide in the rule editor. {help} is a link whose text is targets.guide.moreLink (“Help”); move it where your sentence needs it."
   },
   "targets.guide.moreLink": {
     "message": "Help"
@@ -3620,25 +4104,29 @@
     "message": "Use this example"
   },
   "targets.guide.useExample": {
-    "message": "Use the example {example}"
+    "message": "Use the example {example}",
+    "description": "Screen-reader name of a button that puts an example in the field. {example}: an address, such as youtube.com."
   },
   "targets.guide.wildcard": {
     "message": "* stands for any text: here, any address containing “news”."
   },
   "targets.lineError": {
-    "message": "Line {line} “{text}”: {error}"
+    "message": "Line {line} “{text}”: {error}",
+    "description": "Rule editor: a line that could not be added. {text}: the line; {error}: what is wrong (targets.error.*). {line}: a line number."
   },
   "targets.listMode": {
     "message": "Edit as list"
   },
   "targets.remove": {
-    "message": "Remove {value}"
+    "message": "Remove {value}",
+    "description": "Screen-reader name of the button that removes an address. {value}: an address as written in a rule, such as youtube.com or +reddit.com/r/*/comments/*."
   },
   "targets.sites": {
     "message": "Sites"
   },
   "targets.sort": {
-    "message": "Sort"
+    "message": "Sort",
+    "description": "Rule editor › Sites: the button that sorts the list (a verb)."
   },
   "targets.textHelp": {
     "message": "One entry per line. “+” for exceptions, “#” for comments. See Help for the full syntax."
@@ -3647,28 +4135,35 @@
     "message": "Edit as text"
   },
   "template.forums": {
-    "message": "Forums"
+    "message": "Forums",
+    "description": "Name of a ready-made list of sites. A rule made from it takes this name."
   },
   "template.games": {
-    "message": "Games"
+    "message": "Games",
+    "description": "Name of a ready-made list of sites. A rule made from it takes this name."
   },
   "template.news": {
-    "message": "News"
+    "message": "News",
+    "description": "Name of a ready-made list of sites. A rule made from it takes this name."
   },
   "template.shopping": {
-    "message": "Shopping"
+    "message": "Shopping",
+    "description": "Name of a ready-made list of sites. A rule made from it takes this name."
   },
   "template.social": {
-    "message": "Social media"
+    "message": "Social media",
+    "description": "Name of a ready-made list of sites. A rule made from it takes this name."
   },
   "template.video": {
-    "message": "Video"
+    "message": "Video",
+    "description": "Name of a ready-made list of sites. A rule made from it takes this name."
   },
   "test.private": {
     "message": "As in a private window"
   },
   "test.run": {
-    "message": "Test"
+    "message": "Test",
+    "description": "Rule editor › Test an address: the button (a verb)."
   },
   "test.title": {
     "message": "Test an address"
@@ -3737,7 +4232,8 @@
     "message": "Result"
   },
   "ticket.partner.body": {
-    "message": "{count, plural, one {Ask the partner of the rule {names} for the code their app shows now.} other {Ask the partner of the rules {names} for the code their app shows now.}}"
+    "message": "{count, plural, one {Ask the partner of the rule {names} for the code their app shows now.} other {Ask the partner of the rules {names} for the code their app shows now.}}",
+    "description": "Dialog asking for the partner code. {count}: a number. {names}: the names of one or more rules, joined, such as “Social” or “Social and News”."
   },
   "ticket.partner.input": {
     "message": "Code from your partner’s app"
@@ -3749,34 +4245,42 @@
     "message": "Sentence"
   },
   "ticket.rulePassword.body": {
-    "message": "{count, plural, one {Type the password of the rule {names}.} other {Type the password shared by the rules {names}.}}"
+    "message": "{count, plural, one {Type the password of the rule {names}.} other {Type the password shared by the rules {names}.}}",
+    "description": "Dialog asking for a rule’s password. {count}: a number. {names}: the names of one or more rules, joined, such as “Social” or “Social and News”."
   },
   "ticket.rulePassword.input": {
-    "message": "Password of {names}"
+    "message": "Password of {names}",
+    "description": "Label of the password field. {names}: the names of one or more rules, joined, such as “Social” or “Social and News”."
   },
   "ticket.step": {
-    "message": "Step {n} of {total}"
+    "message": "Step {n} of {total}",
+    "description": "Dialog with several steps. {n}: a number. {total}: a number."
   },
   "ticket.text.body": {
-    "message": "Type the {length} characters shown below."
+    "message": "Type the {length, plural, one {character} other {# characters}} shown below.",
+    "description": "Dialog asking to type random characters. {length}: a number of characters."
   },
   "ticket.text.input": {
     "message": "Characters"
   },
   "ticket.wait.body": {
-    "message": "Wait {seconds} seconds to think it over."
+    "message": "Wait {seconds, plural, one {# second} other {# seconds}} to think it over.",
+    "description": "Dialog with a wait. {seconds}: a number of seconds."
   },
   "ticket.wait.left": {
-    "message": "{seconds} s left"
+    "message": "{seconds} s left",
+    "description": "Dialog with a wait: the countdown. {seconds}: a number of seconds."
   },
   "ticket.wait.ready": {
     "message": "You can continue now."
   },
   "time.allDay": {
-    "message": "all day"
+    "message": "all day",
+    "description": "Inside a rule summary instead of times: “Weekends all day”."
   },
   "time.tomorrowAt": {
-    "message": "tomorrow {time}"
+    "message": "tomorrow {time}",
+    "description": "A moment tomorrow, inside messages with {when}. {time}: a time, such as “17:00” or “5:00 PM”."
   },
   "today.activePauses": {
     "message": "Breaks in progress"
@@ -3786,7 +4290,7 @@
   },
   "today.applies.from": {
     "message": "{what} from {when}",
-    "description": "The rule's next type and when it starts, e.g. \"Block from 5:46 PM\""
+    "description": "Today: the rule’s next type and when it starts, e.g. “Block from 5:46 PM”. {what}: the type, such as “Block” (intervention.short.*). {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "today.applies.not": {
     "message": "Does not apply now"
@@ -3795,22 +4299,28 @@
     "message": "Applies now"
   },
   "today.applies.until": {
-    "message": "Applies until {when}"
+    "message": "Applies until {when}",
+    "description": "Today: a rule that applies now. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "today.changeEnds": {
-    "message": "{group}: back to normal ({what})"
+    "message": "{group}: back to normal ({what})",
+    "description": "Today › Coming up. {what}: the rule’s type, such as “Block”. {group}: the name of a rule, such as “Social media”."
   },
   "today.changeStarts": {
-    "message": "{group}: {what} starts"
+    "message": "{group}: {what} starts",
+    "description": "Today › Coming up. {what}: the rule’s type, such as “Block”. {group}: the name of a rule, such as “Social media”."
   },
   "today.impulses": {
-    "message": "{count, plural, one {time you chose not to go in} other {times you chose not to go in}}"
+    "message": "{count, plural, one {time you chose not to go in} other {times you chose not to go in}}",
+    "description": "Today: a label under a big number, shown separately: write only the words. {count}: a number."
   },
   "today.later": {
-    "message": "{count, plural, one {page saved for later} other {pages saved for later}}"
+    "message": "{count, plural, one {page saved for later} other {pages saved for later}}",
+    "description": "Today: a label under a big number, shown separately: write only the words. {count}: a number."
   },
   "today.left": {
-    "message": "{duration} left"
+    "message": "{duration} left",
+    "description": "Today: the time left under a limit. {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”."
   },
   "today.noGroups": {
     "message": "No rules yet."
@@ -3825,16 +4335,19 @@
     "message": "Today’s numbers"
   },
   "today.pauses": {
-    "message": "{count, plural, one {break taken} other {breaks taken}}"
+    "message": "{count, plural, one {break taken} other {breaks taken}}",
+    "description": "Today: a label under a big number, shown separately: write only the words. {count}: a number."
   },
   "today.pending": {
-    "message": "{count, plural, one {pending change} other {pending changes}}"
+    "message": "{count, plural, one {pending change} other {pending changes}}",
+    "description": "Today: a label under a big number, shown separately: write only the words. {count}: a number."
   },
   "today.reopen": {
     "message": "Reopen"
   },
   "today.restorable": {
-    "message": "{count, plural, one {# tab can be reopened now.} other {# tabs can be reopened now.}}"
+    "message": "{count, plural, one {# tab can be reopened now.} other {# tabs can be reopened now.}}",
+    "description": "Today. {count}: a number."
   },
   "today.sessionEnds": {
     "message": "Focus session ends"
@@ -3849,13 +4362,16 @@
     "message": "Check how solid your protection is"
   },
   "today.summary.groups": {
-    "message": "{count, plural, =0 {No active rules} one {# active rule} other {# active rules}}"
+    "message": "{count, plural, =0 {No active rules} one {# active rule} other {# active rules}}",
+    "description": "Today: the summary at the top. {count}: a number."
   },
   "today.summary.next": {
-    "message": "next change {when}"
+    "message": "next change {day, select, today {at {time}} tomorrow {tomorrow at {time}} other {{when}}}",
+    "description": "Today: the summary at the top, after the number of rules. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "today.summary.restricted": {
-    "message": "{count, plural, =0 {nothing restricted right now} one {# restricted right now} other {# restricted right now}}"
+    "message": "{count, plural, =0 {nothing restricted right now} one {# restricted right now} other {# restricted right now}}",
+    "description": "Today: the summary at the top, after the number of rules: how many sites are restricted. {count}: a number."
   },
   "today.timeOnLimited": {
     "message": "on limited sites today"
@@ -3864,55 +4380,71 @@
     "message": "Coming up"
   },
   "unit.exceptionAdd": {
-    "message": "Allow {value} in {owner}"
+    "message": "Allow {value} in {owner}",
+    "description": "A change in a list of changes (save, pending changes, import). {value}: an address as written in a rule, such as youtube.com or +reddit.com/r/*/comments/*. {owner}: the name of a rule, such as “Social media”."
   },
   "unit.exceptionRemove": {
-    "message": "Remove the exception {value} from {owner}"
+    "message": "Remove the exception {value} from {owner}",
+    "description": "A change in a list of changes (save, pending changes, import). {value}: an address as written in a rule, such as youtube.com or +reddit.com/r/*/comments/*. {owner}: the name of a rule, such as “Social media”."
   },
   "unit.field.archived": {
-    "message": "Archive or restore {name}"
+    "message": "Archive or restore {name}",
+    "description": "A change in a list of changes (save, pending changes, import). {name}: the name of a rule, such as “Social media”."
   },
   "unit.field.enabled": {
-    "message": "Turn {name} on or off"
+    "message": "Turn {name} on or off",
+    "description": "A change in a list of changes (save, pending changes, import). {name}: the name of a rule, such as “Social media”."
   },
   "unit.field.message": {
-    "message": "Change the block page message of {name}"
+    "message": "Change the block page message of {name}",
+    "description": "A change in a list of changes (save, pending changes, import). {name}: the name of a rule, such as “Social media”."
   },
   "unit.field.meta": {
-    "message": "Rename or restyle {name}"
+    "message": "Rename or restyle {name}",
+    "description": "A change in a list of changes (save, pending changes, import): name, colour or icon. {name}: the name of a rule, such as “Social media”."
   },
   "unit.field.note": {
-    "message": "Change the personal reason of {name}"
+    "message": "Change the personal reason of {name}",
+    "description": "A change in a list of changes (save, pending changes, import). {name}: the name of a rule, such as “Social media”."
   },
   "unit.field.options": {
-    "message": "Change the options of {name}"
+    "message": "Change the options of {name}",
+    "description": "A change in a list of changes (save, pending changes, import). {name}: the name of a rule, such as “Social media”."
   },
   "unit.field.pause": {
-    "message": "Change the break rules of {name}"
+    "message": "Change the break rules of {name}",
+    "description": "A change in a list of changes (save, pending changes, import). {name}: the name of a rule, such as “Social media”."
   },
   "unit.field.policies": {
-    "message": "Change when {name} applies"
+    "message": "Change when {name} applies",
+    "description": "A change in a list of changes (save, pending changes, import). {name}: the name of a rule, such as “Social media”."
   },
   "unit.field.protection": {
-    "message": "Change the protection of {name}"
+    "message": "Change the protection of {name}",
+    "description": "A change in a list of changes (save, pending changes, import). {name}: the name of a rule, such as “Social media”."
   },
   "unit.groupAdd": {
-    "message": "Create the rule {name}"
+    "message": "Create the rule {name}",
+    "description": "A change in a list of changes (save, pending changes, import). {name}: the name of a rule, such as “Social media”."
   },
   "unit.groupRemove": {
-    "message": "Delete the rule {name}"
+    "message": "Delete the rule {name}",
+    "description": "A change in a list of changes (save, pending changes, import). {name}: the name of a rule, such as “Social media”."
   },
   "unit.order": {
     "message": "Reorder rules"
   },
   "unit.setting": {
-    "message": "Change the setting “{setting}”"
+    "message": "Change the setting “{setting}”",
+    "description": "A change in a list of changes. {setting}: the label of a setting (setting.* messages)."
   },
   "unit.targetAdd": {
-    "message": "Add {value} to {owner}"
+    "message": "Add {value} to {owner}",
+    "description": "A change in a list of changes (save, pending changes, import). {value}: an address as written in a rule, such as youtube.com or +reddit.com/r/*/comments/*. {owner}: the name of a rule, such as “Social media”."
   },
   "unit.targetRemove": {
-    "message": "Remove {value} from {owner}"
+    "message": "Remove {value} from {owner}",
+    "description": "A change in a list of changes (save, pending changes, import). {value}: an address as written in a rule, such as youtube.com or +reddit.com/r/*/comments/*. {owner}: the name of a rule, such as “Social media”."
   },
   "validate.allSites": {
     "message": "This rule applies to every website. Add exceptions for the sites you need."
@@ -3948,7 +4480,8 @@
     "message": "The redirect address must start with http:// or https://."
   },
   "validate.unusedException": {
-    "message": "The exception {value} is not inside any site of this rule."
+    "message": "The exception {value} is not inside any site of this rule.",
+    "description": "Rule editor: a problem to fix. {value}: an address as written in a rule, such as youtube.com or +reddit.com/r/*/comments/*."
   },
   "validate.zeroBudget": {
     "message": "A limit of zero applies immediately."
@@ -3957,31 +4490,36 @@
     "message": "Zero visits means it applies immediately."
   },
   "warning.clock": {
-    "message": "Your system clock seems off by {detail} minutes. WebHandbrake uses the corrected time."
+    "message": "Your system clock seems off by {detail, plural, one {# minute} other {# minutes}}. WebHandbrake uses the corrected time.",
+    "description": "Today: a warning. {detail}: a number of minutes."
   },
   "warning.diagnostics": {
     "message": "Diagnostics"
   },
   "warning.dnr-error": {
-    "message": "Blocking could not be set up for some sites ({detail}). The other sites are still blocked."
+    "message": "Blocking could not be set up for some sites ({detail}). The other sites are still blocked.",
+    "description": "Today: a warning. {detail}: the error message of the browser, in English."
   },
   "warning.dnr-error.short": {
     "message": "Blocking could not be set up for some sites."
   },
   "warning.dnr-overflow": {
-    "message": "{detail, plural, one {# entry is} other {# entries are}} checked more slowly: their pages may appear for a moment."
+    "message": "{detail, plural, one {# entry is} other {# entries are}} checked more slowly: their pages may appear for a moment.",
+    "description": "Today: a warning. {detail}: a number of entries."
   },
   "warning.fix": {
-    "message": "Fix"
+    "message": "Fix",
+    "description": "Today: the button of a warning (a verb)."
   },
   "warning.host-permission": {
-    "message": "WebHandbrake has no access to websites: blocked pages show a browser error instead."
+    "message": "WebHandbrake has no access to websites: blocked pages show a browser error first, and filters, timers, warnings and the grace period do not work."
   },
   "warning.host-permission.short": {
     "message": "No access to websites."
   },
   "warning.howTo": {
-    "message": "How to"
+    "message": "How to",
+    "description": "Today: the button of a warning that shows how to fix it."
   },
   "warning.incognito": {
     "message": "WebHandbrake is not active in private windows."
@@ -3990,19 +4528,23 @@
     "message": "Some settings are locked right now."
   },
   "warning.pending-ready": {
-    "message": "{detail, plural, one {A pending change is ready to confirm.} other {# pending changes are ready to confirm.}}"
+    "message": "{detail, plural, one {A pending change is ready to confirm.} other {# pending changes are ready to confirm.}}",
+    "description": "Today: a warning. {detail}: a number of changes."
   },
   "warning.restored": {
-    "message": "Your settings were damaged and were restored from the backup of {when}. Check your rules."
+    "message": "Your settings were damaged and were restored from the backup of {when}. Check your rules.",
+    "description": "Today: a warning. {detail} is not shown. {when}: a date and a time, such as “Thu, 15 Oct, 17:00”. If your language needs words between them, write {date} and {time} instead."
   },
   "warning.restored.defaults": {
     "message": "Your settings were damaged and no backup could be used, so the defaults were restored."
   },
   "warning.review": {
-    "message": "Review"
+    "message": "Review",
+    "description": "Today: the button of a warning (a verb)."
   },
   "warning.soon": {
-    "message": "{group} will be restricted in {seconds} s."
+    "message": "{group} will be restricted in {seconds} s.",
+    "description": "On a web page: a warning before it is restricted. {seconds}: a number of seconds. {group}: the name of a rule, such as “Social media”."
   },
   "warning.tamper": {
     "message": "Something unusual happened recently (for example a clock change). See Protection."
@@ -4011,7 +4553,8 @@
     "message": "Set up in about a minute"
   },
   "welcome.done.body": {
-    "message": "“{name}” is active. WebHandbrake will step in as planned."
+    "message": "“{name}” is active. WebHandbrake will step in as planned.",
+    "description": "First run, last screen. {name}: the name of a rule, such as “Social media”."
   },
   "welcome.done.go": {
     "message": "Go to Today"
@@ -4026,7 +4569,8 @@
     "message": "Your first rule"
   },
   "welcome.installed": {
-    "message": "Installed"
+    "message": "Installed",
+    "description": "First run: the step bar, the step already done."
   },
   "welcome.lead": {
     "message": "A gentle handbrake for the sites that pull you in."
@@ -4058,9 +4602,6 @@
   "welcome.pin.why": {
     "message": "One tap to see the status of a site, take a break or block the site."
   },
-  "welcome.pin.whyAndroid": {
-    "message": "One tap to open the dashboard."
-  },
   "welcome.private.title": {
     "message": "Also in private windows"
   },
@@ -4077,19 +4618,23 @@
     "message": "Try it"
   },
   "welcome.try.afterLimit": {
-    "message": "Right now {site} opens normally. WebHandbrake steps in once your limit is used up."
+    "message": "Right now {site} opens normally. WebHandbrake steps in once your limit is used up.",
+    "description": "First run, last screen. {site}: a site, such as youtube.com."
   },
   "welcome.try.body": {
-    "message": "Open {site} to see what WebHandbrake shows instead."
+    "message": "Open {site} to see what WebHandbrake shows instead.",
+    "description": "First run, last screen. {site}: a site, such as youtube.com."
   },
   "welcome.try.later": {
-    "message": "Right now {site} opens normally. WebHandbrake steps in from {when}."
+    "message": "Right now {site} opens normally. WebHandbrake steps in from {when}.",
+    "description": "First run, last screen. {site}: a site, such as youtube.com. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "welcome.try.laterTitle": {
     "message": "When it steps in"
   },
   "welcome.try.notNow": {
-    "message": "Right now {site} opens normally: the rule does not apply at the moment."
+    "message": "Right now {site} opens normally: the rule does not apply at the moment.",
+    "description": "First run, last screen. {site}: a site, such as youtube.com."
   },
   "welcome.try.title": {
     "message": "See it in action"
@@ -4116,10 +4661,12 @@
     "message": "Allowed."
   },
   "why.allowedUntil": {
-    "message": "Allowed; then {what} · {when}."
+    "message": "Allowed until {when}.",
+    "description": "“Why?” in the popup: the state of the site. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "why.applies": {
-    "message": "applies now"
+    "message": "applies now",
+    "description": "“Why?”: next to the condition of a rule that applies now."
   },
   "why.bySession": {
     "message": "Blocked by a focus session."
@@ -4128,16 +4675,19 @@
     "message": "Allowed by an exception."
   },
   "why.exceptionIn": {
-    "message": "Exception in {group}: {value}."
+    "message": "Exception in {group}: {value}.",
+    "description": "“Why?” in the popup. {group}: the name of a rule, such as “Social media”. {value}: an address as written in a rule, such as youtube.com or +reddit.com/r/*/comments/*."
   },
   "why.exempt": {
     "message": "WebHandbrake does not act on this page."
   },
   "why.matchedBy": {
-    "message": "{type}: {value}"
+    "message": "{type}: {value}",
+    "description": "“Why?” in the popup: the entry of the rule that covers the site. {type}: its kind, such as “Whole site” (targetType.*). {value}: an address as written in a rule, such as youtube.com or +reddit.com/r/*/comments/*."
   },
   "why.nextChange": {
-    "message": "Next change: {what} · {when}."
+    "message": "Next: {what} from {when}.",
+    "description": "“Why?” and the popup: what comes next. {what}: a state or what happens, such as “Allowed”, “Blocked” or “Wait 30 s”. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "why.noEnd": {
     "message": "No end planned with the current rules."
@@ -4146,10 +4696,12 @@
     "message": "No rule includes this site."
   },
   "why.notNow": {
-    "message": "does not apply now"
+    "message": "does not apply now",
+    "description": "“Why?”: next to the condition of a rule that does not apply now."
   },
   "why.passUntil": {
-    "message": "Access granted until {when}"
+    "message": "Access granted until {when}",
+    "description": "“Why?” in the popup. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "why.passVisit": {
     "message": "Access granted for this visit"
@@ -4158,7 +4710,8 @@
     "message": "Access granted."
   },
   "why.pause": {
-    "message": "On a break until {when}."
+    "message": "On a break until {when}.",
+    "description": "“Why?” in the popup. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "why.paused": {
     "message": "On a break."
@@ -4167,77 +4720,90 @@
     "message": "When the rule applies"
   },
   "why.restricted": {
-    "message": "{what}."
+    "message": "{what}.",
+    "description": "“Why?” in the popup: the state of the site. {what}: a state, such as “Blocked” (status.type.*)."
   },
   "why.restrictedUntil": {
-    "message": "{what} until {when}."
+    "message": "{what} until {when}.",
+    "description": "“Why?” in the popup: the state of the site. {what}: a state, such as “Blocked” (status.type.*). {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "why.restriction.budget": {
-    "message": "With continuous use: {what} · {when}."
+    "message": "If you keep using the site: {what} from {when}.",
+    "description": "“Why?” and the popup: when a limit runs out if the person keeps using the site. {what}: what happens then, such as “Block” or “Wait 30 s”. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "why.restriction.pass": {
-    "message": "Your access lasts until {when}. After that: {what}."
+    "message": "Your access lasts until {when}. After that: {what}.",
+    "description": "“Why?” and the popup. {what}: what happens then, such as “Block” or “Wait 30 s”. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "why.restriction.pause": {
-    "message": "Your break lasts until {when}. After that: {what}."
+    "message": "Your break lasts until {when}. After that: {what}.",
+    "description": "“Why?” and the popup. {what}: what happens then, such as “Block” or “Wait 30 s”. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "why.restriction.schedule": {
-    "message": "{what} · {when}."
+    "message": "Next: {what} from {when}.",
+    "description": "“Why?” and the popup: what comes next. {what}: what happens then, such as “Block” or “Wait 30 s”. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "why.restriction.session": {
-    "message": "A focus session starts: {when}."
+    "message": "Focus session from {when}.",
+    "description": "“Why?” and the popup: a focus session will start. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "why.session": {
-    "message": "Focus session until {when}."
-  },
-  "why.whileOnSite": {
-    "message": "the remaining minutes are used"
+    "message": "Focus session until {when}.",
+    "description": "“Why?” in the popup. {when}: a moment, such as “17:00”, “tomorrow 17:00”, “Thu 17:00” or “15 Oct, 17:00”. If the words around it change with the day in your language, write {day, select, today {…{time}…} tomorrow {…{time}…} other {…{date}…{time}…}} instead ({day} is today, tomorrow, week or date; {date} is the weekday within a week, else the date)."
   },
   "wizard.back": {
     "message": "Back"
   },
   "wizard.cond.always": {
-    "message": "Every time you open {sites}"
+    "message": "Every time you open {sites}",
+    "description": "Rule plan, first half of wizard.review.plan. {sites}: one or more sites, joined, such as “youtube.com, reddit.com”."
   },
   "wizard.cond.daily": {
     "message": "After {duration} {period} on {sites}",
-    "description": "e.g. \"After 30 min a day on youtube.com\", \"After 2 h every 3 days on youtube.com\"."
+    "description": "e.g. \"After 30 min a day on youtube.com\", \"After 2 h every 3 days on youtube.com\". {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”. {sites}: one or more sites, joined, such as “youtube.com, reddit.com”. Rule plan, first half of wizard.review.plan. {period}: how often the limit starts again, such as “a day” (wizard.period.*) or “every 3 days” (period.*)."
   },
   "wizard.cond.daily.each": {
     "message": "After {duration} {period} on each of {sites}",
-    "description": "e.g. \"After 30 min a day on each of youtube.com, reddit.com and 2 more sites\""
+    "description": "e.g. \"After 30 min a day on each of youtube.com, reddit.com and 2 more sites\" {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”. {sites}: one or more sites, joined, such as “youtube.com, reddit.com”. Rule plan, first half of wizard.review.plan. {period}: how often the limit starts again, such as “a day” (wizard.period.*) or “every 3 days” (period.*)."
   },
   "wizard.cond.daily.shared": {
     "message": "After {duration} {period} in total on {sites}",
-    "description": "e.g. \"After 30 min a day in total on youtube.com, reddit.com and 2 more sites\""
+    "description": "e.g. \"After 30 min a day in total on youtube.com, reddit.com and 2 more sites\" {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”. {sites}: one or more sites, joined, such as “youtube.com, reddit.com”. Rule plan, first half of wizard.review.plan. {period}: how often the limit starts again, such as “a day” (wizard.period.*) or “every 3 days” (period.*)."
   },
   "wizard.cond.schedule": {
-    "message": "When you open {sites} ({windows})"
+    "message": "When you open {sites} ({windows})",
+    "description": "Rule plan, first half of wizard.review.plan. {windows}: days and times, such as “Mon–Fri 09:00–17:00”. {sites}: one or more sites, joined, such as “youtube.com, reddit.com”."
   },
   "wizard.cond.visits": {
     "message": "After {count, plural, one {# visit} other {# visits}} {period} to {sites}",
-    "description": "e.g. \"After 3 visits a day to youtube.com\", \"After 5 visits every 2 hours to youtube.com\"."
+    "description": "e.g. \"After 3 visits a day to youtube.com\", \"After 5 visits every 2 hours to youtube.com\". {count}: a number. {sites}: one or more sites, joined, such as “youtube.com, reddit.com”. Rule plan, first half of wizard.review.plan. {period}: how often the limit starts again, such as “a day” (wizard.period.*) or “every 3 days” (period.*)."
   },
   "wizard.cond.visits.each": {
     "message": "After {count, plural, one {# visit} other {# visits}} {period} to each of {sites}",
-    "description": "e.g. \"After 3 visits a day to each of youtube.com, reddit.com and 2 more sites\""
+    "description": "e.g. \"After 3 visits a day to each of youtube.com, reddit.com and 2 more sites\" {count}: a number. {sites}: one or more sites, joined, such as “youtube.com, reddit.com”. Rule plan, first half of wizard.review.plan. {period}: how often the limit starts again, such as “a day” (wizard.period.*) or “every 3 days” (period.*)."
   },
   "wizard.cond.visits.shared": {
     "message": "After {count, plural, one {# visit} other {# visits}} {period} in total to {sites}",
-    "description": "e.g. \"After 3 visits a day in total to youtube.com, reddit.com and 2 more sites\""
+    "description": "e.g. \"After 3 visits a day in total to youtube.com, reddit.com and 2 more sites\" {count}: a number. {sites}: one or more sites, joined, such as “youtube.com, reddit.com”. Rule plan, first half of wizard.review.plan. {period}: how often the limit starts again, such as “a day” (wizard.period.*) or “every 3 days” (period.*)."
   },
   "wizard.create": {
     "message": "Create rule"
   },
   "wizard.created": {
-    "message": "Rule “{name}” created."
+    "message": "Rule “{name}” created.",
+    "description": "Message after creating a rule. {name}: the name of a rule, such as “Social media”."
   },
   "wizard.done": {
-    "message": "done, go back to this step"
+    "message": "done, go back to this step",
+    "description": "New rule: screen-reader text after a step already done."
   },
   "wizard.how.askMax": {
     "message": "Allowed for at most",
     "description": "Followed by a number and a unit: the longest time the person can choose after the question."
+  },
+  "wizard.how.askMaxFields": {
+    "message": "Allowed for at most {duration}",
+    "description": "Rule editor, Ask first: a sentence around a field. {duration} is the length field (number and unit); move it where your sentence needs it."
   },
   "wizard.how.redirectHelp": {
     "message": "It must start with http:// or https://."
@@ -4255,7 +4821,8 @@
     "message": "Next: when"
   },
   "wizard.open": {
-    "message": "Open"
+    "message": "Open",
+    "description": "Button in the message after creating a rule: opens the rule (a verb)."
   },
   "wizard.period.day": {
     "message": "a day",
@@ -4264,6 +4831,14 @@
   "wizard.period.hour": {
     "message": "an hour",
     "description": "Inside \"After 10 min an hour on …\"."
+  },
+  "wizard.period.month": {
+    "message": "a month",
+    "description": "Inside \"After 10 h a month on …\"."
+  },
+  "wizard.period.week": {
+    "message": "a week",
+    "description": "Inside \"After 3 h a week on …\"."
   },
   "wizard.protection.intro": {
     "message": "Making the rule stricter always works at once. Choose what loosening it takes."
@@ -4278,7 +4853,8 @@
     "message": "Check the rule before you create it. Choose Change to edit a part."
   },
   "wizard.review.plan": {
-    "message": "{cond}, {outcome}"
+    "message": "{cond}, {outcome}",
+    "description": "Rule plan: one sentence. {cond}: when it applies (wizard.cond.*); {outcome}: what happens (wizard.then.*)."
   },
   "wizard.review.title": {
     "message": "Check and create"
@@ -4303,7 +4879,8 @@
     "description": "Inside a sentence: \"Every time you open any website\"."
   },
   "wizard.sitesList": {
-    "message": "{first}{count, plural, =0 {} one { and # more site} other { and # more sites}}"
+    "message": "{first}{count, plural, =0 {} one { and # more site} other { and # more sites}}",
+    "description": "Inside wizard.cond.*: the first sites and how many more. {first}: one or two sites, joined; {count}: a number."
   },
   "wizard.startOver": {
     "message": "Start over"
@@ -4321,19 +4898,22 @@
     "message": "When"
   },
   "wizard.stepOf": {
-    "message": "Step {n} of {total}"
+    "message": "Step {n} of {total}",
+    "description": "New rule: the step bar. {n}: a number. {total}: a number."
   },
   "wizard.steps": {
     "message": "Steps"
   },
   "wizard.then.ask": {
-    "message": "WebHandbrake first asks what you want to do (for {max} at most), then lets you in after {seconds, plural, one {# second} other {# seconds}}."
+    "message": "WebHandbrake first asks what you want to do (for {max} at most), then lets you in after {seconds, plural, one {# second} other {# seconds}}.",
+    "description": "Rule plan, second half of wizard.review.plan. {max}: a length of time, such as “15 min”. {seconds}: a number of seconds."
   },
   "wizard.then.block": {
     "message": "WebHandbrake blocks the page."
   },
   "wizard.then.challenge": {
-    "message": "WebHandbrake asks you to type {length} random characters before going in."
+    "message": "WebHandbrake asks you to type {length, plural, one {# random character} other {# random characters}} before going in.",
+    "description": "Rule plan, second half of wizard.review.plan. {length}: a number of characters."
   },
   "wizard.then.challengeMath": {
     "message": "WebHandbrake asks you to solve a small calculation before going in."
@@ -4345,19 +4925,24 @@
     "message": "WebHandbrake closes the tab."
   },
   "wizard.then.delay": {
-    "message": "WebHandbrake makes you wait {seconds} seconds."
+    "message": "WebHandbrake makes you wait {seconds, plural, one {# second} other {# seconds}}.",
+    "description": "Rule plan, second half of wizard.review.plan. {seconds}: a number of seconds."
   },
   "wizard.then.delayGrowing": {
-    "message": "WebHandbrake makes you wait {seconds} seconds, {increase} more each time you go in that day."
+    "message": "WebHandbrake makes you wait {seconds, plural, one {# second} other {# seconds}}, then {increase, plural, one {# second} other {# seconds}} more each time you go in that day.",
+    "description": "Rule plan, second half of wizard.review.plan. {increase}: a number of seconds. {seconds}: a number of seconds."
   },
   "wizard.then.delayRandom": {
-    "message": "WebHandbrake makes you wait between {from} and {to} seconds."
+    "message": "WebHandbrake makes you wait between {from} and {to, plural, one {# second} other {# seconds}}.",
+    "description": "Rule plan, second half of wizard.review.plan. {from} and {to}: numbers of seconds."
   },
   "wizard.then.filter": {
-    "message": "WebHandbrake makes the page less appealing ({filter})."
+    "message": "WebHandbrake makes the page less appealing ({filter}).",
+    "description": "Rule plan, second half of wizard.review.plan. {filter}: a filter, such as “Greyscale” (filter.*)."
   },
   "wizard.then.redirect": {
-    "message": "WebHandbrake opens {url} instead."
+    "message": "WebHandbrake opens {url} instead.",
+    "description": "Rule plan, second half of wizard.review.plan. {url}: a web address, such as https://example.com/todo."
   },
   "wizard.then.track": {
     "message": "WebHandbrake only counts the time."
@@ -4380,12 +4965,6 @@
   "wizard.when.daily.desc": {
     "message": "Up to a set time, then what you choose next."
   },
-  "wizard.when.every": {
-    "message": "Starts again every"
-  },
-  "wizard.when.everyHelp": {
-    "message": "For example 30 min a day, or 2 hours every 3 days."
-  },
   "wizard.when.intro": {
     "message": "Pick the moment that matters most."
   },
@@ -4393,16 +4972,19 @@
     "message": "How much time?"
   },
   "wizard.when.perSiteOff": {
-    "message": "{duration} in total, shared by all the sites."
+    "message": "{duration} in total, shared by all the sites.",
+    "description": "Rule editor, When: a limit shared by the sites. {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”."
   },
   "wizard.when.perSiteOn": {
-    "message": "Each site gets its own {duration}."
+    "message": "Each site gets its own {duration}.",
+    "description": "Rule editor, When: a limit for each site. {duration}: a length of time, such as “45 min”, “1 h 30 min” or “2 days”."
   },
   "wizard.when.schedule": {
     "message": "At certain times"
   },
   "wizard.when.schedule.desc": {
-    "message": "For example on weekdays from 9 to 5."
+    "message": "For example on weekdays from {start} to {end}.",
+    "description": "Rule editor, When: a choice card. {start}: a time, such as “09:00” or “9:00 AM”. {end}: a time, such as “17:00” or “5:00 PM”."
   },
   "wizard.when.title": {
     "message": "When should it apply?"
@@ -4417,9 +4999,11 @@
     "message": "Up to a set number of visits, then what you choose next."
   },
   "wizard.when.visitsPerSiteOff": {
-    "message": "{count, plural, one {# visit} other {# visits}} in total, shared by all the sites."
+    "message": "{count, plural, one {# visit} other {# visits}} in total, shared by all the sites.",
+    "description": "Rule editor, When: a visit limit shared by the sites. {count}: a number."
   },
   "wizard.when.visitsPerSiteOn": {
-    "message": "Each site gets its own {count, plural, one {visit} other {# visits}}."
+    "message": "Each site gets its own {count, plural, one {visit} other {# visits}}.",
+    "description": "Rule editor, When: a visit limit for each site. {count}: a number."
   }
 }

@@ -12,8 +12,20 @@ All notable changes to WebHandbrake are documented here. The format follows
   and both charts keep the choice. With **Track time on all sites**, its **Total** has the time
   outside your rules too, as a part of its own. The hours by site are kept from this version on:
   days recorded earlier have them in total only.
+- A limit of time or visits can start again every **Week**, on the first day of your week
+  (Settings › General), or every **Month**, on the 1st, as the limits of breaks can: **Starts
+  again every** is a choice of **Hour**, **Day**, **Week**, **Month** or any other length
+  (**Other**). Under it, the editor says when the limit starts again next. A **Day** that becomes a
+  **Week** or a **Month**, with no more time, visits or breaks allowed, makes the rule stricter:
+  it applies at once, without its protection.
 
 ### Changed
+
+- A limit that starts again every so many days, for time, visits or breaks, now starts on the day
+  you set it or change its length: before, its days were counted from a fixed Monday, so “every 30
+  days” could have started weeks earlier. Limits set before keep their days. The weeks and months
+  that 1.1.0 turned into 7 and 30 days stay so: choose **Week** or **Month** to have them back,
+  which loosens the rule and takes its protection.
 
 - **Block this site** › **New rule…**, in the popup and in the right-click menu, no longer creates
   a rule called “Blocked sites” at once: it opens the rule editor with the site in a new rule that
@@ -24,15 +36,35 @@ All notable changes to WebHandbrake are documented here. The format follows
   browser cannot open the popup (Chrome before version 127, or a window not in front), it adds the
   site to the rule that blocks it now and keeps blocking it, as before, or else opens the rule
   editor for a new rule.
-- On Firefox for Android, WebHandbrake in the Extensions menu opens the dashboard instead of the
-  popup, in its tab when it is already open.
 - The editor of a rule that exists lists **Summary** first among its parts, since the rule opens
   on it. Like every part it leads to the next one (**Next: sites**), and **Details**, the last
   part, leads back to it.
 - The text under the countdown of a wait no longer tells you to breathe slowly: it says when you
   can continue.
+- Focus › **Everything except a few sites** says that the pages where you sign in, such as
+  accounts.google.com, are blocked too unless you add them to the list, as are the servers on your
+  computer (localhost). During such a session, the block page names the site that is not on the
+  list, so you know what to add, unless the addresses of blocked pages are hidden.
+- In a rule's **Sites**, the ready-made lists come right under the question, without a title and
+  an explanation of their own. **How to write an address** is now a help button next to **Sites in
+  this rule**, and next to the list of a focus session: its examples open above the box where you
+  add a site, which stays next to its list.
+- Dates and times follow the region of your browser's language: with British English, times read
+  17:00 and dates 12 Oct, where they read 5:00 PM and Oct 12 before. Sizes, times in the log and
+  percentages are written as your language writes them.
+- A sentence to type, such as the one that completes the emergency exit, matches with straight or
+  curly apostrophes and quotes, and with or without a space before ! ? : and ;.
+- Long labels on buttons wrap to a second line instead of going past the edge of their card.
+- Ready for translations: every text can be translated whole, with the plurals and word order
+  of each language. [CONTRIBUTING](CONTRIBUTING.md#translate) explains how to add a language.
 
 ### Fixed
+
+- **Why?** and the popup said “Next change: Don’t count” (or “Allowed, time not counted”) when a
+  block was about to end: they now say “Next: Allowed from 17:00”. When a limit runs out with use,
+  they say “If you keep using the site: Block from 17:45”.
+- A change of language or clock format reached the right-click menu, the notifications and the
+  sentences to type only after the browser restarted.
 
 - A wait that pauses or starts again when you switch to another tab is now timed by WebHandbrake
   itself, not by the block page: switching tabs or minimising the window adds to the wait even if
@@ -59,6 +91,43 @@ All notable changes to WebHandbrake are documented here. The format follows
 - Going in from the block page, after a wait, a question or a challenge or with a break, leads
   straight to the site: the page no longer shows “This page is available again.” for a moment on
   the way.
+- A short link to another site of the same rule, such as youtu.be to youtube.com, no longer asks
+  twice: the wait, the question or the challenge answered for the link also lets you into the site
+  it sends you to, for as long. Opening another site of the rule yourself still asks.
+- A **Filter** now also applies to what a page shows in full screen, such as a video, also one
+  embedded from another site: Chrome showed it without the filter.
+- Importing the same file or list twice with **Add to my rules** no longer adds its rules twice,
+  which then took the protection of each copy to remove: a rule the same as one of yours, apart
+  from the order of its sites, is left out, and the preview says it is already present. A rule
+  that differs in anything, even one site, is added as before.
+- Rules and settings found damaged are now restored as you last saved them. Before, WebHandbrake
+  went back to the backup taken before your last change, and that change was lost.
+- With a rule that lists many sites, such as a hosts file of 50,000 sites, the automatic backups no
+  longer take hundreds of MB: each backup had a whole copy of every rule, while a rule that did not
+  change is now stored once for all of them. The backups taken before stay until newer ones
+  replace them. Exporting and deleting statistics, the daily removal of old statistics and
+  Settings › Privacy › **What is stored** no longer read everything WebHandbrake stores.
+- Firefox: the time you spend on a page in **Reader View** now counts for the rules of its site, and
+  a limit that runs out there applies at once. Before, Reader View counted nothing. No page script
+  runs there, so WebHandbrake counts that time while Reader View is the tab shown in the window in
+  front and the computer is in use (or while it is open, with **Count tabs that are open but not
+  active**), and shows no timer, warning or filter on it.
+- Limits of time and visits now count on the websites WebHandbrake has no access to, as when
+  Chrome's site access is set to **On click** or Firefox no longer lets it access your data for all
+  websites. Before, they counted nothing there, so a rule that applies after some time or some
+  visits never applied. Without access, WebHandbrake counts the time of the tab shown in the window
+  in front while the computer is in use (or of every open tab, with **Count tabs that are open but
+  not active**), and a limit that runs out applies at once; there is still no timer, warning, filter
+  or grace period on those sites, which the warning about the missing access now says.
+- With **Count tabs that are open but not active**, a tab in the background now counts all its
+  time. Chrome slows a page down once it has been in the background for a minute or so, and such a
+  tab counted about one second a minute. WebHandbrake now counts the tabs that are not in view
+  itself: their time shows within a minute, and a limit that runs out applies at once.
+- Chrome: Help › **Change shortcuts** opens the browser’s keyboard shortcuts also while **Block the
+  browser’s extension and settings pages** applies. Before, the button was turned off then, and
+  the page of shortcuts, opened by its address, showed the block page. The list of extensions, also
+  from that page’s side menu, stays blocked. In Firefox the shortcuts are in the add-ons page, which
+  stays blocked.
 - A phone’s keyboard no longer corrects the addresses typed in a rule’s sites, in the list of a
   focus session or in **Test an address**.
 - Chrome: in private windows, a restricted page shows the intervention page instead of Chrome's
@@ -81,6 +150,9 @@ All notable changes to WebHandbrake are documented here. The format follows
   name wraps, and the time and the visits stay on one line.
 - The charts of Insights no longer list a part of "0 min" (such as **Other sites**) that was only
   the rounding of the time.
+- Help › **When do limits start again?** no longer says that limits give time back gradually, nor
+  that weeks and months start on their first day while they could not be chosen: it says when each
+  kind of limit starts again.
 
 ## [1.1.0] - 2026-10-25
 

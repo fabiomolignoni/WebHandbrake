@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ChangeUnit } from '../../src/engine/changes';
 import { compileConfig } from '../../src/engine/compile';
 import { delayIntervention } from '../../src/engine/defaults';
-import type { Config, FocusSession, Group, Intervention } from '../../src/engine/types';
+import { REDIRECT_PASS_MS } from '../../src/engine/limits';
+import type { Config, FocusSession, Group, Intervention, PendingChange } from '../../src/engine/types';
 import { type FakeBrowser, installFakeBrowser } from './fake-browser';
-import { BLOCK, group, REMINDER } from './helpers';
+import { BLOCK, group, REMINDER, wait } from './helpers';
 
 const T0 = new Date(2026, 9, 5, 10).getTime();
 const PAGE = 'chrome-extension://test/intervention.html';
@@ -238,6 +240,83 @@ describe('the intervention page', () => {
     expect(t.store.meta.selftest?.ok).toBe(true);
   });
 
+  it('says when a change to the rules of the page waits to be confirmed, which keeps the page as it was', async () => {
+    const DAY = 86_400_000;
+    const ask: Intervention = { type: 'ask', maxMinutes: 9, minReasonLength: 12 };
+    const t = await setup([
+      group('Ask', ['a.test'], [{ intervention: ask }], { protection: wait(86_400) }),
+      group('Elsewhere', ['b.test'], [{ intervention: BLOCK }], { protection: wait(86_400) }),
+    ]);
+    const protection = await import('../../src/background/protection');
+    expect((await t.model('https://a.test/')).pending).toBeNull();
+    // a.test leaves "Ask": a change that waits a day, then has to be confirmed.
+    const next = structuredClone(t.store.config);
+    next.groups[0].targets = [];
+    expect((await protection.proposeConfig(next, 'test')).pending).not.toBeNull();
+    expect(await t.model('https://a.test/')).toMatchObject({
+      kind: 'ask',
+      pending: { rules: ['Ask'], readyAt: T0 + DAY },
+    });
+    vi.setSystemTime(T0 + DAY + 1000);
+    expect(await t.model('https://a.test/')).toMatchObject({
+      kind: 'ask',
+      pending: { rules: ['Ask'], readyAt: T0 + DAY },
+    });
+    // The other rules of the page count, from the first change that can be confirmed; the rules
+    // of other pages, settings and changes overtaken since do not.
+    t.store.config.groups.splice(1, 0, group('Also', ['a.test'], [{ intervention: BLOCK }]));
+    t.store.cc = compileConfig(t.store.config);
+    const change = (units: ChangeUnit[], readyAt: number): PendingChange => ({
+      id: crypto.randomUUID(),
+      createdAt: T0,
+      readyAt,
+      expiresAt: readyAt + 2 * DAY,
+      units,
+    });
+    const off = (id: string, base: boolean): ChangeUnit => ({
+      kind: 'group.field',
+      groupId: id,
+      name: id,
+      field: 'enabled',
+      value: !base,
+      base,
+    });
+    const dayStart: ChangeUnit = { kind: 'setting', path: 'dayStart', value: 240, base: 0 };
+    t.store.state.pending.push(
+      change([off('Also', true)], T0 + 2 * DAY),
+      change([off('Elsewhere', true), dayStart], T0),
+      change([off('Also', false)], T0),
+    );
+    expect((await t.model('https://a.test/')).pending).toEqual({ rules: ['Ask', 'Also'], readyAt: T0 + DAY });
+    expect((await t.model('https://b.test/')).pending).toEqual({ rules: ['Elsewhere'], readyAt: T0 });
+    // A focus session blocks the page whatever its rules say.
+    t.store.state.sessions.push(session({ groups: ['Ask'], endAt: T0 + 2 * DAY }));
+    expect((await t.model('https://a.test/')).pending).toBeNull();
+  });
+
+  it('on the browser’s pages, a change to their rules or to the setting that blocks them is named', async () => {
+    const t = await setup([group('A', ['a.test'], [{ intervention: BLOCK }], { protection: wait(86_400) })]);
+    t.store.config.settings.protection.internalPages = 'auto';
+    t.store.cc = compileConfig(t.store.config);
+    expect((await t.model('chrome://extensions')).pending).toBeNull();
+    t.store.state.pending.push({
+      id: 'p',
+      createdAt: T0,
+      readyAt: T0 + 3_600_000,
+      expiresAt: T0 + 7_200_000,
+      emergency: true,
+      units: [{ kind: 'setting', path: 'protection.internalPages', value: 'never', base: 'auto' }],
+    });
+    expect((await t.model('chrome://extensions')).pending).toEqual({ rules: [], readyAt: T0 + 3_600_000 });
+    t.store.state.pending[0].units.push({
+      kind: 'target.remove',
+      owner: { kind: 'group', id: 'A' },
+      ownerName: 'A',
+      target: t.store.config.groups[0].targets[0],
+    });
+    expect((await t.model('chrome://extensions')).pending).toEqual({ rules: ['A'], readyAt: T0 + 3_600_000 });
+  });
+
   it('settings of the page: the address hidden, custom CSS that cannot load anything', async () => {
     const t = await setup([group('A', ['a.test'], [{ intervention: BLOCK }])], (c) => {
       c.settings.interventions.hideUrl = true;
@@ -277,6 +356,59 @@ describe('the intervention page', () => {
     expect(t.store.intentions).toMatchObject([{ groupId: 'Q', text: 'one answer', minutes: 7 }]);
     expect(t.store.usage.counterSum('proceeded:Q', ['2026-10-05'])).toBe(1);
     expect((await t.model('https://q.test/page')).kind).toBe('allow');
+  });
+
+  it('a redirect of the server on the way in from the block page carries the access just given', async () => {
+    const t = await setup([
+      group('W', ['short.test', 'video.test'], [{ intervention: delayIntervention(10) }]),
+    ]);
+    t.intervention.registerRedirectListener();
+    fake.tabs[0].url = `${PAGE}#https://short.test/abc`;
+    const m = await t.model('https://short.test/abc');
+    vi.setSystemTime(T0 + 10_000);
+    expect(await t.tickets.answerTicket(m.ticket!.id, '')).toMatchObject({ status: 'done' });
+    const passes = () => t.store.state.grants.filter((g) => g.kind === 'pass').map((g) => g.site);
+    // A link to another site of the rule: the block page it leads to waits for it, and lets it through.
+    fake.events.onBeforeRedirect.fire({
+      tabId: 1,
+      url: 'https://short.test/abc',
+      redirectUrl: 'https://video.test/watch?v=1',
+    });
+    expect((await t.model('https://video.test/watch?v=1')).kind).toBe('allow');
+    expect(passes()).toEqual(['short.test', 'video.test']);
+    // Going in once, counted once.
+    expect(t.store.usage.counterSum('proceeded:W', ['2026-10-05'])).toBe(1);
+    // Only redirects to web pages, in a tab.
+    fake.events.onBeforeRedirect.fire({
+      tabId: -1,
+      url: 'https://short.test/',
+      redirectUrl: 'https://x.test/',
+    });
+    fake.events.onBeforeRedirect.fire({
+      tabId: 1,
+      url: 'https://short.test/',
+      redirectUrl: 'chrome-extension://test/intervention.html#https://short.test/',
+    });
+    expect(passes()).toEqual(['short.test', 'video.test']);
+  });
+
+  it('a redirect carries nothing once a page was opened in the tab, or long after going in', async () => {
+    const t = await setup([
+      group('W', ['short.test', 'video.test', 'other.test'], [{ intervention: delayIntervention(10) }]),
+    ]);
+    const m = await t.model('https://short.test/abc');
+    vi.setSystemTime(T0 + 10_000);
+    expect(await t.tickets.answerTicket(m.ticket!.id, '')).toMatchObject({ status: 'done' });
+    // The tab shows the site now: a redirect there is a page the person opened.
+    fake.tabs[0].url = 'https://short.test/abc';
+    t.intervention.followRedirect(1, 'https://short.test/abc', 'https://video.test/');
+    expect((await t.model('https://video.test/')).kind).toBe('delay');
+    // On a block page again, but long after the access was given.
+    fake.tabs[0].url = `${PAGE}#https://short.test/abc`;
+    vi.setSystemTime(T0 + 10_000 + REDIRECT_PASS_MS + 1);
+    t.intervention.followRedirect(1, 'https://short.test/abc', 'https://other.test/');
+    expect((await t.model('https://other.test/')).kind).toBe('delay');
+    expect(t.store.state.grants.filter((g) => g.kind === 'pass')).toHaveLength(1);
   });
 
   it('leaving without going in is an impulse resisted, counted once', async () => {

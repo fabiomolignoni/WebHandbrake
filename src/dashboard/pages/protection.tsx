@@ -9,7 +9,7 @@ import { WAIT_IN_DIALOG_SECONDS } from '../../engine/limits';
 import type { Group, PendingChange, Protection, TamperEvent } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { api, browserName } from '../../platform/api';
-import { formatDateTime, formatDuration, formatWhen } from '../../shared/format';
+import { dateTimeParams, formatDateTime, formatDuration, whenParams } from '../../shared/format';
 import type { TicketView } from '../../shared/models';
 import { call } from '../../shared/rpc';
 import { describeUnit } from '../../shared/summary';
@@ -44,9 +44,9 @@ function PendingItem({ p, onChange }: { p: PendingChange; onChange: () => void }
         ))}
       </ul>
       <p class="tiny muted">
-        {t('pending.requested', { when: formatDateTime(p.createdAt) })} ·{' '}
+        {t('pending.requested', dateTimeParams(p.createdAt))} ·{' '}
         {ready
-          ? t('pending.readyUntil', { when: formatWhen(p.expiresAt, now) })
+          ? t('pending.readyUntil', whenParams(p.expiresAt, now))
           : t('pending.readyIn', { duration: formatDuration((p.readyAt - now) / 1000) })}
         {p.emergency && <> · {t('pending.emergencyNote')}</>}
       </p>
@@ -250,7 +250,7 @@ function EmergencySection() {
           }
         >
           {t('emergency.waiting', {
-            when: formatDateTime(e.readyAt),
+            ...dateTimeParams(e.readyAt),
             left: formatDuration((e.readyAt - now) / 1000),
           })}
         </Banner>

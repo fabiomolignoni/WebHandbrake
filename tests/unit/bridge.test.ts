@@ -74,6 +74,7 @@ describe("Chrome's private windows: one background decides, the private one rela
       'windows.onFocusChanged',
       'webNavigation.onCommitted',
       'webRequest.onHeadersReceived',
+      'webRequest.onBeforeRedirect',
       'contextMenus.onClicked',
       'commands.onCommand',
     ] as const)
@@ -95,6 +96,18 @@ describe("Chrome's private windows: one background decides, the private one rela
         { name: 'Set-Cookie', value: 'secret' },
       ],
     });
+    priv.events.onBeforeRedirect.fire({
+      tabId: 7,
+      url: 'https://s.test/x',
+      redirectUrl: 'https://p.test/x',
+      statusCode: 301,
+      responseHeaders: [{ name: 'Set-Cookie', value: 'secret' }],
+    });
+    priv.events.onBeforeRedirect.fire({
+      tabId: 7,
+      url: 'https://p.test/x',
+      redirectUrl: 'chrome-extension://test/intervention.html#https://p.test/x',
+    });
     priv.events.onMenuClicked.fire({ menuItemId: 'site|g1', pageUrl: 'https://p.test/b' }, privateTab);
     priv.events.onCommand.fire('block-site', privateTab);
     await settle();
@@ -115,6 +128,11 @@ describe("Chrome's private windows: one background decides, the private one rela
             responseHeaders: [{ name: 'Date', value: 'Mon, 26 Oct 2026 10:00:00 GMT' }],
           },
         ],
+      ],
+      // Only where a redirect to a web page comes from and goes to.
+      [
+        'webRequest.onBeforeRedirect',
+        [{ tabId: 7, url: 'https://s.test/x', redirectUrl: 'https://p.test/x' }],
       ],
       ['contextMenus.onClicked', [{ menuItemId: 'site|g1', pageUrl: 'https://p.test/b' }, privateTab]],
       ['commands.onCommand', ['block-site', privateTab]],
@@ -202,6 +220,13 @@ describe("Chrome's private windows: one background decides, the private one rela
     priv.windows.set(2, 'minimized');
     expect(await tabs.getWindow(7, 2)).toEqual({ id: 2, state: 'minimized' });
     expect(await tabs.getWindow(1, 2)).toEqual({ id: 2, state: 'normal' });
+    // The private window in front, which the main background does not see.
+    priv.focus.windowId = 2;
+    expect(await bridge.callPrivate('windows.getLastFocused')).toEqual({
+      id: 2,
+      focused: true,
+      state: 'minimized',
+    });
 
     await tabs.updateTab(7, { url: PAGE });
     expect(priv.tabs[0].url).toBe(PAGE);

@@ -4,14 +4,13 @@
  * time is up.
  */
 
-import { useId, useState } from 'preact/hooks';
-import { DAY_MINUTES, everyPeriod, periodMinutes } from '../../engine/defaults';
+import { useId } from 'preact/hooks';
 import type { Cost, PausePolicy, Period } from '../../engine/types';
-import { t } from '../../i18n/i18n';
+import { parts, t } from '../../i18n/i18n';
 import { formatDuration } from '../../shared/format';
-import { describePeriod } from '../../shared/summary';
-import { DurationInput, NumberInput, Segmented, Select, Toggle } from '../../ui/components';
+import { DurationInput, Fields, NumberInput, Select, Toggle } from '../../ui/components';
 import { costLabel } from '../../ui/pause';
+import { PeriodPicker } from './period-picker';
 
 type CostKind = 'none' | 'confirm' | 'delay' | 'random' | 'phrase' | 'math' | 'password';
 
@@ -58,11 +57,14 @@ export function PauseEditor({
   value,
   onChange,
   hasPassword,
+  saved,
 }: {
   value: PausePolicy;
   onChange: (p: PausePolicy) => void;
   /** A break can cost the rule's password only when the rule has one. */
   hasPassword: boolean;
+  /** The breaks as saved, for a rule that exists. */
+  saved?: PausePolicy;
 }) {
   const p = value;
   const id = useId();
@@ -82,18 +84,21 @@ export function PauseEditor({
           <div class="question">
             <h3>{t('pauseRules.q.duration')}</h3>
             <div class="row">
-              <span class="label" aria-hidden="true">
-                {t('pauseRules.minutes')}
-              </span>
-              <DurationInput
-                units={['minutes', 'hours']}
-                value={p.maxMinutes}
-                min={1}
-                max={1440}
-                label={t('pauseRules.minutes')}
-                describedBy={`${id}-duration-help`}
-                onChange={(maxMinutes) => set({ maxMinutes })}
-              />
+              <Fields>
+                {parts('pauseRules.minutesFields', {
+                  duration: (
+                    <DurationInput
+                      units={['minutes', 'hours']}
+                      value={p.maxMinutes}
+                      min={1}
+                      max={1440}
+                      label={t('pauseRules.minutes')}
+                      describedBy={`${id}-duration-help`}
+                      onChange={(maxMinutes) => set({ maxMinutes })}
+                    />
+                  ),
+                })}
+              </Fields>
             </div>
             <span class="help" id={`${id}-duration-help`}>
               {t('pauseRules.durationHelp')}
@@ -128,7 +133,7 @@ export function PauseEditor({
                   min={4}
                   max={500}
                   label={t('challenge.length')}
-                  suffix={t('challenge.chars')}
+                  suffix={t('challenge.chars', { n: p.cost.length ?? 24 })}
                   onChange={(length) => set({ cost: { type: 'challenge', kind: 'random', length } })}
                 />
               )}
@@ -162,6 +167,7 @@ export function PauseEditor({
               value={p.limit}
               onChange={(limit) => set({ limit })}
               defaults={{ count: 3, minutes: 30 }}
+              savedPeriod={saved?.limit.period}
             />
           </div>
         </>
@@ -181,12 +187,15 @@ export function BreakLimits({
   onChange,
   defaults,
   commitOnBlur,
+  savedPeriod,
 }: {
   value: BreakLimit;
   onChange: (l: BreakLimit) => void;
   /** What a limit starts from when it is turned on. */
   defaults: { count: number; minutes: number };
   commitOnBlur?: boolean;
+  /** How often the limits start again, as saved. */
+  savedPeriod?: Period;
 }) {
   return (
     <div class="stack stack-sm">
@@ -242,66 +251,14 @@ export function BreakLimits({
         )}
       </div>
       {(limit.count !== undefined || limit.minutes !== undefined) && (
-        <PeriodPicker period={limit.period} onChange={(period) => onChange({ ...limit, period })} />
-      )}
-    </div>
-  );
-}
-
-/** The periods that are choices of their own; any other is typed as a length ("Other"). */
-const PERIODS = ['hour', 'day', 'week', 'month'] as const;
-type PeriodChoice = (typeof PERIODS)[number] | 'other';
-const usualPeriod = (p: Period) => (PERIODS as readonly string[]).includes(p.kind);
-
-/**
- * How often a limit of breaks starts again: every hour, day, week or month (a week from the day
- * weeks start on, a month from its first day), or every so many minutes, hours or days.
- */
-function PeriodPicker({ period, onChange }: { period: Period; onChange: (p: Period) => void }) {
-  const id = useId();
-  // "Other" is chosen, even when the length typed is a usual period (24 hours: a day).
-  const [custom, setCustom] = useState(false);
-  const choice: PeriodChoice = custom || !usualPeriod(period) ? 'other' : (period.kind as PeriodChoice);
-  return (
-    <div class="stack stack-xs">
-      <span class="label small" id={`${id}-every`}>
-        {t('period.every')}
-      </span>
-      <div class="row">
-        <Segmented<PeriodChoice>
-          value={choice}
-          labelledBy={`${id}-every`}
-          onChange={(c) => {
-            setCustom(c === 'other');
-            if (c !== 'other') onChange({ kind: c });
-            // A week or a month becomes as many days: the field shows the period that applies.
-            else if (period.kind === 'week' || period.kind === 'month')
-              onChange({ kind: 'days', n: period.kind === 'week' ? 7 : 30 });
-          }}
-          options={[...PERIODS, 'other' as const].map((c) => ({ value: c, label: t(`period.kind.${c}`) }))}
+        <PeriodPicker
+          small
+          commitOnBlur={commitOnBlur}
+          period={limit.period}
+          saved={savedPeriod}
+          onChange={(period) => onChange({ ...limit, period })}
         />
-        {choice === 'other' && (
-          <DurationInput
-            value={periodMinutes(period)}
-            min={5}
-            max={90 * DAY_MINUTES}
-            unitMax={{ minutes: DAY_MINUTES, hours: DAY_MINUTES }}
-            label={t('period.every')}
-            onChange={(minutes, unit) => {
-              // A period of days counts whole days.
-              const next = everyPeriod(
-                unit === 'days' ? Math.max(1, Math.round(minutes / DAY_MINUTES)) * DAY_MINUTES : minutes,
-              );
-              // An offset in minutes means nothing for a period of days, and the other way round.
-              onChange(
-                next.kind === period.kind && period.offset ? { ...next, offset: period.offset } : next,
-              );
-            }}
-          />
-        )}
-      </div>
-      {/* A window that moves with the time is not "starts again": it has its own words. */}
-      {period.kind === 'rolling' && <span class="help">{describePeriod(period)}</span>}
+      )}
     </div>
   );
 }

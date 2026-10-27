@@ -263,7 +263,22 @@ export type AnswerResult =
   | { status: 'done'; result?: unknown }
   | { status: 'error'; error: string; ticket?: TicketView };
 
-const normalise = (s: string) => s.trim().replace(/\s+/g, ' ').toLowerCase();
+/**
+ * A typed sentence as compared: the same in any case and spacing, with straight or curly quotes
+ * and apostrophes (« » with their spaces too), composed or decomposed accents, and with or without
+ * the space that some languages put before ! ? : ; (French): keyboards make them hard to type
+ * exactly as shown.
+ */
+export const normalise = (s: string) =>
+  s
+    .replace(/[\u2018\u2019\u201A\u201B\u2032\u02BC`´]/g, "'")
+    .replace(/\u00AB\s*|\s*\u00BB/g, '"')
+    .replace(/[\u201C\u201D\u201E\u201F\u2033]/g, '"')
+    .normalize('NFKC')
+    .replace(/\s+/g, ' ')
+    .replace(/ ([!?:;])/g, '$1')
+    .trim()
+    .toLowerCase();
 
 export async function answerTicket(
   id: string,

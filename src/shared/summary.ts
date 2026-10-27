@@ -96,15 +96,16 @@ export function describePeriod(p: Period): string {
 }
 
 export function describeBudget(b: Budget): string {
-  const site = b.perSite ? ` ${t('budget.perSiteSuffix')}` : '';
+  const perSite = b.perSite ? 'yes' : 'no';
   switch (b.type) {
     case 'time':
-      return (
-        t('budget.time', { duration: formatDuration(b.minutes * 60), period: describePeriod(b.period) }) +
-        site
-      );
+      return t('budget.time', {
+        duration: formatDuration(b.minutes * 60),
+        period: describePeriod(b.period),
+        perSite,
+      });
     case 'visits':
-      return t('budget.visits', { count: b.count, period: describePeriod(b.period) }) + site;
+      return t('budget.visits', { count: b.count, period: describePeriod(b.period), perSite });
   }
 }
 

@@ -17,7 +17,7 @@ tracking: everything stays on your device.
 - **Slow down instead of blocking**: say what you want to do before the site opens, wait for a
   short countdown, type random characters, or use a visual filter, a redirect or a closed tab.
 - **Rules that fit your day**: time windows (overnight too), and time and visit limits that start
-  again every hour, day or so many days. Start from a ready-made list or paste your own
+  again every hour, day, week, month or so many days. Start from a ready-made list or paste your own
   domains, pages, wildcards, regular expressions and exceptions. **Why?** tells you which rule
   applies and when that changes.
 - **Firm when you need it**: each rule has its protection: a reminder, a wait of the length
@@ -40,8 +40,7 @@ runs in private windows only if you allow it.
 | Firefox | 140 |
 | Firefox for Android | 142 |
 
-Keyboard shortcuts and the right-click menu are not available on Firefox for Android, where
-WebHandbrake in the Extensions menu opens the dashboard instead of the popup.
+Keyboard shortcuts and the right-click menu are not available on Firefox for Android.
 
 ## Install
 

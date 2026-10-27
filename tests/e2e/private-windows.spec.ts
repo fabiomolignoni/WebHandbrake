@@ -70,6 +70,18 @@ test('the intervention page opens in a private window, where the popup, a wait a
   expect(await proceeded()).toBe(before + 1);
 });
 
+test('a short link to another site of the rule waits once in a private window too', async ({ h }) => {
+  await h.allowPrivateWindows();
+  await h.configure((c) => {
+    c.groups = [group('Wait', ['short.test', 'video.test'], [policy(delay(1))])];
+  });
+  h.server.route('short.test', { status: 301, headers: { location: 'http://video.test/watch?v=abc' } });
+  const p = await h.openPrivate('http://short.test/abc');
+  await p.expectIntervention();
+  await p.button('Continue', { exact: true }).click(6000);
+  await p.expectReal('video.test/watch?v=abc');
+});
+
 test('time in a private window uses up the limit, and the page is replaced when it runs out', async ({
   h,
 }) => {

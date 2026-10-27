@@ -45,6 +45,7 @@ export type PrivateEvent =
   | 'webNavigation.onBeforeNavigate'
   | 'webNavigation.onErrorOccurred'
   | 'webRequest.onHeadersReceived'
+  | 'webRequest.onBeforeRedirect'
   | 'contextMenus.onClicked'
   | 'commands.onCommand';
 
@@ -63,6 +64,7 @@ const CALLS = {
   'tabs.remove': (id: number) => api.tabs.remove(id),
   'tabs.sendMessage': (id: number, message: unknown) => api.tabs.sendMessage(id, message),
   'windows.get': (id: number) => api.windows.get(id),
+  'windows.getLastFocused': () => api.windows.getLastFocused(),
   'scripting.executeScript': async (tabId: number, files: string[]) => {
     await api.scripting.executeScript({ target: { tabId }, files });
   },
@@ -419,6 +421,21 @@ export function relayPrivateWindows() {
       );
     } catch {
       // webRequest unavailable: the clock works without the private windows' headers.
+    }
+  }
+  // The redirects of the servers to web pages, for the accesses that a short link carries.
+  if (api.webRequest?.onBeforeRedirect) {
+    const redirect = relayEvent('webRequest.onBeforeRedirect', byDetails);
+    try {
+      api.webRequest.onBeforeRedirect.addListener(
+        (d) => {
+          if (/^https?:/i.test(d.redirectUrl))
+            redirect({ tabId: d.tabId, url: d.url, redirectUrl: d.redirectUrl });
+        },
+        { urls: ['http://*/*', 'https://*/*'], types: ['main_frame'] },
+      );
+    } catch {
+      // webRequest unavailable: a short link asks again on the page it sends to.
     }
   }
 

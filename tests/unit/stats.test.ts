@@ -347,6 +347,36 @@ describe('statistics', () => {
     expect(store.usage.days.get('2026-10-07')?.t['a:']).toEqual([600, 0]);
   });
 
+  it('the stored days are listed: retention and exports never read the whole storage', async () => {
+    const { store, stats } = await setup();
+    const { dayKeyOf } = await import('../../src/engine/time');
+    // Older than the totals that limits keep, so its record goes.
+    const old = dayKeyOf(T0 - 100 * dayMs, store.cc.cal);
+    store.usage.add('a:', T0 - 100 * dayMs, 50, 0, store.cc.cal);
+    await store.flushUsage();
+    const local = (globalThis as any).chrome.storage.local;
+    expect((await local.get('u:index'))['u:index']).toEqual([old, '2026-10-04', '2026-10-06', '2026-10-07']);
+    const get = vi.spyOn(local, 'get');
+    store.config.settings.tracking.retentionDays = 30;
+    await stats.applyRetention();
+    expect(await local.get(`u:${old}`)).toEqual({});
+    expect((await local.get('u:index'))['u:index']).toEqual(['2026-10-04', '2026-10-06', '2026-10-07']);
+    const json = JSON.parse((await stats.exportStats('json')).text);
+    expect(Object.keys(json.days).sort()).toEqual(['2026-10-04', '2026-10-06', '2026-10-07']);
+    expect(get.mock.calls.filter(([keys]) => keys === null || keys === undefined)).toEqual([]);
+  });
+
+  it('a day whose first write failed is listed with the next one', async () => {
+    const { store } = await setup();
+    const local = (globalThis as any).chrome.storage.local;
+    vi.spyOn(local, 'set').mockRejectedValueOnce(new Error('quota'));
+    await expect(store.flushUsage()).rejects.toThrow('quota');
+    expect(await store.allDayKeys()).toEqual([]);
+    store.usage.add('a:', T0, 5, 0, store.cc.cal);
+    await store.flushUsage();
+    expect((await local.get('u:index'))['u:index']).toEqual(['2026-10-07']);
+  });
+
   it('old days go after the retention period', async () => {
     const { store, stats } = await setup();
     store.config.settings.tracking.retentionDays = 2;

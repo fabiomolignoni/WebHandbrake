@@ -165,7 +165,7 @@ describe('the plan of a rule', () => {
       'Every time you open a.test, WebHandbrake makes you wait between 20 and 40 seconds.',
     );
     expect(planSentence('always', { ...wait, increase: 5 }, 'a.test', [], 0)).toBe(
-      'Every time you open a.test, WebHandbrake makes you wait 20 seconds, 5 more each time you go in that day.',
+      'Every time you open a.test, WebHandbrake makes you wait 20 seconds, then 5 seconds more each time you go in that day.',
     );
     // The wait on the page is said too.
     expect(planSentence('daily', { type: 'ask', maxMinutes: 10, minReasonLength: 1 }, 'a.test', [], 30)).toBe(
@@ -174,30 +174,37 @@ describe('the plan of a rule', () => {
     expect(planSentence('always', defaultIntervention('ask'), 'a.test', [], 0)).toBe(
       'Every time you open a.test, WebHandbrake first asks what you want to do (for 15 min at most), then lets you in after 10 seconds.',
     );
-    expect(planSentence('daily', BLOCK, 'a.test', [], 10, 60)).toBe(
+    expect(planSentence('daily', BLOCK, 'a.test', [], 10, { kind: 'hour' })).toBe(
       'After 10 min an hour on a.test, WebHandbrake blocks the page.',
     );
-    expect(planSentence('daily', BLOCK, 'a.test', [], 120, 3 * 1440)).toBe(
+    expect(planSentence('daily', BLOCK, 'a.test', [], 120, { kind: 'days', n: 3 })).toBe(
       'After 2 h every 3 days on a.test, WebHandbrake blocks the page.',
     );
-    expect(planSentence('daily', BLOCK, 'a.test', [], 20, 180)).toBe(
+    expect(planSentence('daily', BLOCK, 'a.test', [], 20, { kind: 'minutes', n: 180 })).toBe(
       'After 20 min every 3 h on a.test, WebHandbrake blocks the page.',
     );
+    // A week and a month are the calendar's, not 7 or 30 days.
+    expect(planSentence('daily', BLOCK, 'a.test', [], 180, { kind: 'week' })).toBe(
+      'After 3 h a week on a.test, WebHandbrake blocks the page.',
+    );
+    expect(planSentence('visits', BLOCK, 'a.test', [], 20, { kind: 'month' })).toBe(
+      'After 20 visits a month to a.test, WebHandbrake blocks the page.',
+    );
     // With several sites, whether they share the time allowed or each has its own.
-    expect(planSentence('daily', BLOCK, 'a.test, b.test', [], 30, 1440, 'shared')).toBe(
+    expect(planSentence('daily', BLOCK, 'a.test, b.test', [], 30, { kind: 'day' }, 'shared')).toBe(
       'After 30 min a day in total on a.test, b.test, WebHandbrake blocks the page.',
     );
-    expect(planSentence('daily', BLOCK, 'a.test, b.test', [], 30, 1440, 'each')).toBe(
+    expect(planSentence('daily', BLOCK, 'a.test, b.test', [], 30, { kind: 'day' }, 'each')).toBe(
       'After 30 min a day on each of a.test, b.test, WebHandbrake blocks the page.',
     );
     // Visits, in the same ways.
-    expect(planSentence('visits', BLOCK, 'a.test', [], 1, 120)).toBe(
+    expect(planSentence('visits', BLOCK, 'a.test', [], 1, { kind: 'minutes', n: 120 })).toBe(
       'After 1 visit every 2 h to a.test, WebHandbrake blocks the page.',
     );
-    expect(planSentence('visits', BLOCK, 'a.test, b.test', [], 3, 1440, 'shared')).toBe(
+    expect(planSentence('visits', BLOCK, 'a.test, b.test', [], 3, { kind: 'day' }, 'shared')).toBe(
       'After 3 visits a day in total to a.test, b.test, WebHandbrake blocks the page.',
     );
-    expect(planSentence('visits', BLOCK, 'a.test, b.test', [], 3, 1440, 'each')).toBe(
+    expect(planSentence('visits', BLOCK, 'a.test, b.test', [], 3, { kind: 'day' }, 'each')).toBe(
       'After 3 visits a day to each of a.test, b.test, WebHandbrake blocks the page.',
     );
   });

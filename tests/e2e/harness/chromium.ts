@@ -201,6 +201,34 @@ export async function launchChromium(opts: LaunchOptions): Promise<BrowserDriver
     throw new Error(`the extension did not load (${origin})`);
   }
 
+  /** Changes the extension as the person does on the browser's page of the extension. */
+  const configureExtension = async (update: Record<string, unknown>) => {
+    const page = await context.newPage();
+    try {
+      await page.goto(`chrome://extensions/?id=${origin.slice('chrome-extension://'.length)}`);
+      await page.evaluate(
+        async ([id, u]) => {
+          const dp = (chrome as any).developerPrivate;
+          const done = (resolve: () => void, reject: (e: Error) => void) => () => {
+            const e = chrome.runtime.lastError;
+            if (e) reject(new Error(e.message));
+            else resolve();
+          };
+          // Without the developer mode, Chromium turns off the unpacked extension it reloads.
+          await new Promise<void>((resolve, reject) =>
+            dp.updateProfileConfiguration({ inDeveloperMode: true }, done(resolve, reject)),
+          );
+          await new Promise<void>((resolve, reject) =>
+            dp.updateExtensionConfiguration({ extensionId: id, ...u }, done(resolve, reject)),
+          );
+        },
+        [origin.slice('chrome-extension://'.length), update] as const,
+      );
+    } finally {
+      await page.close().catch(() => undefined);
+    }
+  };
+
   const driver: BrowserDriver = {
     name: 'chromium',
     origin,
@@ -250,32 +278,12 @@ export async function launchChromium(opts: LaunchOptions): Promise<BrowserDriver
       }
     },
     async allowPrivateWindows() {
-      const page = await context.newPage();
-      try {
-        await page.goto(`chrome://extensions/?id=${origin.slice('chrome-extension://'.length)}`);
-        await page.evaluate(async (id) => {
-          const dp = (chrome as any).developerPrivate;
-          const done = (resolve: () => void, reject: (e: Error) => void) => () => {
-            const e = chrome.runtime.lastError;
-            if (e) reject(new Error(e.message));
-            else resolve();
-          };
-          // Without the developer mode, Chromium turns off the unpacked extension it reloads.
-          await new Promise<void>((resolve, reject) =>
-            dp.updateProfileConfiguration({ inDeveloperMode: true }, done(resolve, reject)),
-          );
-          await new Promise<void>((resolve, reject) =>
-            dp.updateExtensionConfiguration(
-              { extensionId: id, incognitoAccess: true },
-              done(resolve, reject),
-            ),
-          );
-        }, origin.slice('chrome-extension://'.length));
-      } finally {
-        await page.close().catch(() => undefined);
-      }
+      await configureExtension({ incognitoAccess: true });
       // The extension starts again: its pages are closed.
       helper = null;
+    },
+    async withholdSiteAccess() {
+      await configureExtension({ hostAccess: 'ON_CLICK' });
     },
     async stopBackground() {
       const page = await helperPage();

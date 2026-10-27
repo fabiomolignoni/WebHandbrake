@@ -72,8 +72,9 @@ function start() {
     if (focused && (recent || media)) return true;
     // Optional: media in background tabs, unfocused windows or Picture-in-Picture.
     if (s?.countAudio && media) return true;
-    // Optional: any open tab of the group counts, active or not.
-    return Boolean(s?.countInactive);
+    // Optional: any open tab of the group counts, active or not. Those not in view are counted by
+    // the background: browsers slow the timers of hidden pages down, so their ticks would be few.
+    return Boolean(s?.countInactive) && document.visibilityState === 'visible';
   };
 
   const apply = (res: TickResponse | null) => {
@@ -113,10 +114,25 @@ function start() {
     true,
   );
 
+  /**
+   * The filter is on the page, or in full screen on what is shown in full screen: Chrome leaves
+   * full screen out of the page's filter, Firefox does not, so it moves there to apply once.
+   * It fades in only when it starts or changes: into and out of full screen it moves at once,
+   * as a fade would show the page unfiltered for a moment.
+   */
+  const filterRule = (css: string, fade: boolean) =>
+    `html { filter: ${css} !important; transition: ${fade ? 'filter .6s ease' : 'none'}; }
+html:has(:fullscreen) { filter: none !important; }
+:fullscreen:not(:has(:fullscreen)) { filter: ${css} !important; }
+@media (prefers-reduced-motion: reduce) { html { transition: none !important; } }`;
+  let filterCss: string | null = null;
+  let filterFaded: ReturnType<typeof setTimeout> | undefined;
+
   const applyFilter = (css: string | null) => {
     if (!css || css === 'none') {
       filterEl?.remove();
       filterEl = null;
+      filterCss = null;
       return;
     }
     if (!filterEl) {
@@ -124,8 +140,13 @@ function start() {
       filterEl.setAttribute('data-webhandbrake', 'filter');
       (document.head ?? document.documentElement).appendChild(filterEl);
     }
-    const rule = `html { filter: ${css} !important; transition: filter .6s ease; } @media (prefers-reduced-motion: reduce) { html { transition: none !important; } }`;
-    if (filterEl.textContent !== rule) filterEl.textContent = rule;
+    if (css === filterCss) return;
+    filterCss = css;
+    filterEl.textContent = filterRule(css, true);
+    clearTimeout(filterFaded);
+    filterFaded = setTimeout(() => {
+      if (filterEl && filterCss === css) filterEl.textContent = filterRule(css, false);
+    }, 700);
   };
 
   const tick = async () => {
@@ -206,7 +227,7 @@ function start() {
         return false;
       }
       if (msg.cmd === 'prepare') {
-        // Leave full screen before the page is replaced or filtered.
+        // Leave full screen before the page is replaced.
         if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
         const seconds = msg.graceSeconds ?? 0;
         const typing = Date.now() - lastTyped < 60_000 && draftText().trim().length > 0;

@@ -55,6 +55,25 @@ describe('data', () => {
     });
   });
 
+  it('a preview lists the rules a merge leaves out as already present', async () => {
+    const t = await setup([group('A', ['a.test'], [{ intervention: BLOCK }], { protection: PERMANENT })]);
+    await t.data.applyImport('b.test', 'merge');
+    expect(t.store.config.groups.map((g) => g.name)).toEqual(['A', 'Imported list']);
+    expect(await t.data.previewImport('b.test', 'merge')).toMatchObject({
+      groups: [{ name: 'Imported list', sites: 1, present: true }],
+      units: [],
+    });
+    await t.data.applyImport('b.test', 'merge');
+    expect(t.store.config.groups).toHaveLength(2);
+    // Replacing takes the file as it is: nothing in it is left out.
+    const file = (await t.data.exportData(false, false)).text;
+    expect((await t.data.previewImport(file, 'merge')).groups.map((g) => g.present)).toEqual([true, true]);
+    expect((await t.data.previewImport(file, 'replace')).groups.map((g) => g.present)).toEqual([
+      false,
+      false,
+    ]);
+  });
+
   it('whatever an import loosens follows the emergency exit; a large one is refused', async () => {
     const t = await setup([group('A', ['a.test'], [{ intervention: BLOCK }], { protection: REMINDER })]);
     const empty = JSON.stringify({
@@ -131,9 +150,24 @@ describe('data', () => {
     fake.local.set('u:2026-10-05', { t: {}, c: {} });
     fake.local.set('u:min', {});
     fake.local.set('bk:1', {});
+    fake.local.set('bk:r:1', { name: 'A rule with a long list' });
+    // The browser lists the keys and counts their bytes: nothing is read.
+    const local = (globalThis as any).chrome.storage.local;
+    const get = vi.spyOn(local, 'get');
     const usage = await t.data.storageUsage();
+    expect(get).not.toHaveBeenCalled();
     expect(usage.keys.map((k) => k.name).sort()).toEqual(['backups', 'u:min', 'usage']);
+    expect(usage.keys.find((k) => k.name === 'backups')?.bytes).toBe(
+      await local.getBytesInUse(['bk:1', 'bk:r:1']),
+    );
     expect(usage.total).toBeGreaterThan(0);
+    // Where it cannot list them, they are read and measured.
+    local.getKeys = undefined;
+    const measured = await t.data.storageUsage();
+    expect(get).toHaveBeenCalledWith(null);
+    expect(measured.keys.find((k) => k.name === 'backups')?.bytes).toBe(
+      JSON.stringify({}).length + JSON.stringify({ name: 'A rule with a long list' }).length,
+    );
   });
 });
 

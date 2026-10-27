@@ -4,6 +4,7 @@
  */
 
 import { timeStep, totp } from '../../src/background/totp';
+import { periodRange } from '../../src/engine/time';
 import { expect, type Harness, type Tab, test } from './harness';
 import {
   ask,
@@ -16,6 +17,7 @@ import {
   REMINDER,
   TRACK,
   timeBudget,
+  today,
   wait,
   window as weekly,
 } from './harness/config';
@@ -41,6 +43,17 @@ const ROUTES = [
 ];
 
 const shots = process.env.WHB_SCREENSHOTS;
+
+/** How often a limit starts again: its radios share their names ("Other") with others. */
+const EVERY = '.period-picker';
+
+/** Midnight in so many days. */
+function startOfDay(days: number): number {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + days);
+  return d.getTime();
+}
 
 /**
  * From What happens to the summary of a new rule, through its protection (#12) and its details (a
@@ -350,7 +363,12 @@ test('a new rule takes wildcards and every website, and the editor warns (#20, #
 
 test('the address guide shows the five common forms and links to every address type (#11)', async ({ h }) => {
   const p = await h.page('dashboard.html#/groups/new');
-  await p.text('How to write an address').click();
+  // The guide takes no room until its help button, next to "Sites in this rule", opens it.
+  await p.role('heading', 'Which sites?').expectVisible();
+  await p.get('.guide-example').expectCount(0);
+  const toggle = p.button('How to write an address');
+  await toggle.click();
+  expect(await toggle.attr('aria-expanded')).toBe('true');
   await p.get('.guide-example').expectCount(5);
   for (const example of [
     'youtube.com',
@@ -655,16 +673,22 @@ test('the time of a new rule can start again every so many hours or days', async
   await p.button('Add', { exact: true }).click();
   await p.button('Next: when').click();
   await p.role('radio', /^After some time/).click();
-  await p.label('Starts again every', { exact: true }).expectValue('1');
-  await p.label('Starts again every: unit').expectValue('days');
   await p.role('radio', 'Other').click();
   await p.label('Time allowed', { exact: true }).fill('120');
+  // How often it starts again: the usual periods, or any other length.
+  await p.role('radio', 'Day', { exact: true, within: EVERY }).expectChecked();
+  await p.role('radio', 'Other', { within: EVERY }).click();
+  await p.label('Starts again every', { exact: true }).expectValue('1');
+  await p.label('Starts again every: unit').expectValue('days');
   // The unit keeps the number: 1 day becomes 1 hour, shorter than the time allowed.
   await p.label('Starts again every: unit').select('hours');
   await p.text('The time allowed must be shorter than the period, or it is never reached.').expectVisible();
   await p.button('Next: what happens').expectEnabled(false);
   await p.label('Starts again every', { exact: true }).fill('3');
   await p.label('Starts again every: unit').select('days');
+  // Every 3 days from today: it starts again in 3 days.
+  const weekday = new Intl.DateTimeFormat('en', { weekday: 'short' }).format(startOfDay(3));
+  await p.text(new RegExp(`^Next start: ${weekday} `)).expectVisible();
   await p.button('Next: what happens').click();
   await p.role('radio', 'Block').click();
   await toSummary(p, { name: 'Clips' });
@@ -672,11 +696,43 @@ test('the time of a new rule can start again every so many hours or days', async
   await p.button('Create rule').click();
   await p.role('heading', 'Rules', { exact: true }).expectVisible();
   const cfg = (await h.rpc('config.get')).config;
-  expect(cfg.groups[cfg.groups.length - 1].policies[0].budget).toMatchObject({
-    type: 'time',
-    minutes: 120,
-    period: { kind: 'days', n: 3 },
+  const budget = cfg.groups[cfg.groups.length - 1].policies[0].budget;
+  expect(budget).toMatchObject({ type: 'time', minutes: 120, period: { kind: 'days', n: 3 } });
+  const range = periodRange(budget.period, Date.now(), cfg.settings);
+  expect([range.start, range.end]).toEqual([startOfDay(0), startOfDay(3)]);
+});
+
+test('the time of a rule can start again every week or every month', async ({ h }) => {
+  // Weeks start today: the week of the limit started today and ends in 7 days.
+  await h.configure((c) => {
+    c.settings.weekStart = today();
+    c.groups = [
+      group('Clips', ['clips.test'], [policy(BLOCK, { budget: timeBudget(30) })], { protection: REMINDER }),
+    ];
   });
+  const id = (await h.rpc('config.get')).config.groups[0].id;
+  const p = await h.page(`dashboard.html#/groups/${id}?step=when`);
+  await p.role('radio', 'Week', { exact: true, within: EVERY }).click();
+  const next = new Date(startOfDay(7));
+  const month = new Intl.DateTimeFormat('en', { month: 'short' }).format(next);
+  const date = next.getDate();
+  await p.text(new RegExp(`^Next start: (${date} ${month}|${month} ${date}),? `)).expectVisible();
+  await openPart(p, 'Summary');
+  await p.get('.plan-text').expectText('After 30 min a week on clips.test');
+  // The week holds the day: the same time in a week is stricter, so it applies at once.
+  await p.button('Save changes').click();
+  await p.text('Change when Clips applies').expectVisible();
+  await p.button('Yes, continue').expectCount(0);
+  const budget = async () => (await h.rpc('config.get')).config.groups[0].policies[0].budget;
+  await expect.poll(budget).toEqual({ type: 'time', minutes: 30, period: { kind: 'week' }, perSite: false });
+  // A month does not hold every week: it loosens, and asks first.
+  await openPart(p, 'When');
+  await p.role('radio', 'Month', { exact: true, within: EVERY }).click();
+  await openPart(p, 'Summary');
+  await p.get('.plan-text').expectText('After 30 min a month on clips.test');
+  await p.button('Save changes').click();
+  await p.button('Yes, continue').click();
+  await expect.poll(budget).toEqual({ type: 'time', minutes: 30, period: { kind: 'month' }, perSite: false });
 });
 
 test('in the editor a limit and its period are a number and a unit', async ({ h }) => {
@@ -694,6 +750,7 @@ test('in the editor a limit and its period are a number and a unit', async ({ h 
   await p.role('radio', 'Other').click();
   await p.label('Time allowed', { exact: true }).expectValue('30');
   await p.label('Time allowed: unit').select('hours');
+  await p.role('radio', 'Other', { within: EVERY }).click();
   await p.label('Starts again every: unit').select('hours');
   await p.label('Starts again every', { exact: true }).fill('2');
   // 30 hours every 2 hours would never be reached.
@@ -708,6 +765,11 @@ test('in the editor a limit and its period are a number and a unit', async ({ h 
   await expect
     .poll(async () => (await h.rpc('config.get')).config.groups[0].policies[0].budget)
     .toMatchObject({ type: 'time', minutes: 30 * 60, period: { kind: 'days', n: 2 } });
+  // The period changed: its days count from today.
+  const now = (await h.rpc('config.get')).config;
+  expect(periodRange(now.groups[0].policies[0].budget.period, Date.now(), now.settings).start).toBe(
+    startOfDay(0),
+  );
 });
 
 test('a number is typed or stepped with the arrow keys, in one box with its unit', async ({ h }) => {
@@ -843,10 +905,11 @@ test('When shows every setting of its answer, with no advanced options; Details 
   await p.role('radio', /^At certain times/).click();
   await p.role('radio', 'Outside these times').expectCount(0);
   await p.role('radio', /^After some time/).click();
-  await p.label('Starts again every', { exact: true }).expectVisible();
+  await p.role('radiogroup', 'Starts again every').expectVisible();
   await p.text('What counts').expectCount(0);
   await p.role('radio', /^After some visits/).click();
   await p.label('How many visits?').fill('4');
+  await p.role('radio', 'Other', { within: EVERY }).click();
   await p.label('Starts again every: unit').select('hours');
   await p.label('Starts again every', { exact: true }).fill('2');
   await p.text('Advanced options', { exact: true }).expectCount(0);

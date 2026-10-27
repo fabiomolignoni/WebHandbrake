@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { isNav } from '../engine/severity';
 import { t } from '../i18n/i18n';
 import { extensionUrl } from '../platform/api';
-import { formatDuration, formatList, formatWhen } from '../shared/format';
+import { formatDuration, formatList, whenParams } from '../shared/format';
 import type { DecisionView, InterventionModel, PauseOptions, StepView, TicketView } from '../shared/models';
 import { call } from '../shared/rpc';
 import { setWeekStart } from '../shared/summary';
@@ -91,12 +91,12 @@ function applyCustomCss(css: string) {
 }
 
 function headline(m: InterventionModel): string {
-  const until = m.until ? formatWhen(m.until) : null;
+  const until = m.until ? whenParams(m.until) : null;
   switch (m.kind) {
     case 'session':
-      return until ? t('iv.session.until', { when: until }) : t('iv.session');
+      return until ? t('iv.session.until', until) : t('iv.session');
     case 'internal':
-      return until ? t('iv.internal.until', { when: until }) : t('iv.internal');
+      return until ? t('iv.internal.until', until) : t('iv.internal');
     case 'delay':
       return t('iv.delay');
     case 'ask':
@@ -110,7 +110,7 @@ function headline(m: InterventionModel): string {
     case 'selftest':
       return t('iv.selftest');
     default:
-      return until ? t('iv.block.until', { when: until }) : t('iv.block');
+      return until ? t('iv.block.until', until) : t('iv.block');
   }
 }
 
@@ -149,7 +149,7 @@ function App() {
       const model = await call('intervention.get', { url });
       setM(model);
       applyCustomCss(model.customCss);
-      document.title = model.hideUrl ? t('iv.title') : `${model.host} — ${t('iv.title')}`;
+      document.title = model.hideUrl ? t('iv.title') : t('iv.title.site', { host: model.host });
       if (model.kind === 'allow') {
         if (/^https?:/i.test(url) && bounceGuard(url)) go(url);
         else if (!/^https?:/i.test(url)) setReopen(true);
@@ -281,6 +281,8 @@ function App() {
     if (!bounceGuard(url) || !(await returnTo(url))) stay(true);
   };
   const passable = Boolean(m.ticket) && !reopen;
+  /** A session of a few allowed sites blocks the others, sign-in pages too: it names the one to add. */
+  const notListed = m.kind === 'session' && m.decision?.session?.kind === 'allowlist' && !m.hideUrl;
 
   return (
     <main class="intervention" style={m.group ? { ['--group' as string]: m.group.color } : undefined}>
@@ -292,16 +294,18 @@ function App() {
           {headline(m)}
         </h1>
         {m.kind === 'selftest' && <Banner kind="ok">{t('iv.selftest.body')}</Banner>}
+        {notListed && <p class="message">{t('iv.session.notListed', { host: m.host })}</p>}
         {m.kind === 'internal' && m.internal && <InternalReasons internal={m.internal} />}
         {m.group?.note && (
           <blockquote class="note">
-            “{m.group.note}”<span class="by">— {t('iv.yourNote')}</span>
+            {t('common.quote', { text: m.group.note })}
+            <span class="by">{t('iv.yourNote')}</span>
           </blockquote>
         )}
         {m.group?.message && <p class="pre message">{m.group.message}</p>}
         {m.kind !== 'selftest' && (
           <p class="meta">
-            {!m.hideUrl && <span>{m.host}</span>}
+            {!m.hideUrl && !notListed && <span>{m.host}</span>}
             {m.group && (
               <span class="row nowrap" style={{ gap: '6px' }}>
                 <ColorDot color={m.group.color} />
@@ -321,6 +325,7 @@ function App() {
             {m.ticket && <> {t('iv.othersNext', { count: m.others.length })}</>}
           </p>
         )}
+        {m.pending && !reopen && <PendingNotice pending={m.pending} />}
         {why && m.decision && (
           <div class="card why">
             <Explain d={m.decision} />
@@ -438,6 +443,34 @@ function InternalReasons({ internal }: { internal: NonNullable<InterventionModel
           {t('iv.internal.open')}
         </button>
       </p>
+    </div>
+  );
+}
+
+/**
+ * A change that loosens the rules here waits to be confirmed: until then the page stays as it was,
+ * which would otherwise look like WebHandbrake ignoring the change.
+ */
+function PendingNotice({ pending }: { pending: NonNullable<InterventionModel['pending']> }) {
+  const now = useNow(30_000);
+  const values = {
+    count: pending.rules.length,
+    rules: formatList(pending.rules.map((r) => t('common.quote', { text: r }))),
+    ...whenParams(pending.readyAt, now),
+  };
+  return (
+    <div class="pending-notice">
+      <Banner kind="info" icon="hourglass">
+        <span>{t(pending.readyAt <= now ? 'iv.pending.ready' : 'iv.pending.waiting', values)}</span>
+        <span>
+          <Button
+            size="small"
+            onClick={() => void call('tabs.open', { url: extensionUrl('dashboard.html#/protection') })}
+          >
+            {t('iv.pending.open')}
+          </Button>
+        </span>
+      </Banner>
     </div>
   );
 }

@@ -11,10 +11,10 @@ import { isNav } from '../engine/severity';
 import { t } from '../i18n/i18n';
 import { api, extensionUrl, isAndroid } from '../platform/api';
 import { newRuleRoute, takeBlockSiteNote } from '../shared/block-site';
-import { formatWhen } from '../shared/format';
+import { whenParams } from '../shared/format';
 import type { DecisionView, PopupModel } from '../shared/models';
 import { call } from '../shared/rpc';
-import { describeIntervention, describeTarget, setWeekStart } from '../shared/summary';
+import { describeTarget, setWeekStart } from '../shared/summary';
 import {
   Banner,
   Button,
@@ -32,7 +32,7 @@ import { bootPage, useModel, useNow } from '../ui/hooks';
 import { BrakeLogo, Icon } from '../ui/icons';
 import { breakSubject, PauseDialog, pauseSummary } from '../ui/pause';
 import { useSaveFlow } from '../ui/saveflow';
-import { interventionIcon, siteStatus, toneOf } from '../ui/status';
+import { interventionIcon, siteStatus, thenName, toneOf } from '../ui/status';
 
 /**
  * Opens a dashboard page, then closes the popup. Closing first could drop the request: when the
@@ -50,10 +50,7 @@ function NextLine({ d, now }: { d: DecisionView; now: number }) {
     return (
       <p class="then">
         <Icon name="clock" />
-        {t('why.nextChange', {
-          when: formatWhen(d.until, now),
-          what: d.next ? describeIntervention(d.next) : '',
-        })}
+        {t('why.nextChange', { what: d.next ? thenName(d.next) : '', ...whenParams(d.until, now) })}
       </p>
     );
   }
@@ -65,8 +62,8 @@ function NextLine({ d, now }: { d: DecisionView; now: number }) {
         <Icon name={interventionIcon(next.type)} />
       </span>
       {t(`why.restriction.${d.restriction.kind}`, {
-        when: formatWhen(d.restriction.at, now),
-        what: describeIntervention(next),
+        what: thenName(next),
+        ...whenParams(d.restriction.at, now),
       })}
     </p>
   );
@@ -177,9 +174,9 @@ function Hero({ m, reload }: { m: PopupModel; reload: () => void }) {
 /** What adding the page to a rule will do: block it now (and until when), from a time, or not at all. */
 function addOutcome(g: PopupModel['groups'][number] | undefined): string {
   if (!g) return t('popup.add.outcomeNew');
-  if (g.blocksNow && g.change) return t('popup.add.outcomeUntil', { when: formatWhen(g.change) });
+  if (g.blocksNow && g.change) return t('popup.add.outcomeUntil', whenParams(g.change));
   if (g.blocksNow) return t('popup.add.outcomeNow');
-  if (g.change) return t('popup.add.outcomeLater', { rule: g.name, when: formatWhen(g.change) });
+  if (g.change) return t('popup.add.outcomeLater', { rule: g.name, ...whenParams(g.change) });
   return t('popup.add.outcomeNever', { rule: g.name });
 }
 
@@ -427,7 +424,7 @@ function App({ tabId, blockSite }: { tabId?: number; blockSite: boolean }) {
                   <span class="stack break-subject" style={{ gap: 0 }}>
                     <span>{breakSubject(p, groupName)}</span>
                     {p.until !== undefined && (
-                      <span class="text-2">{t('pause.leftUntil', { when: formatWhen(p.until, now) })}</span>
+                      <span class="text-2">{t('pause.leftUntil', whenParams(p.until, now))}</span>
                     )}
                   </span>
                 </span>
@@ -509,14 +506,13 @@ function App({ tabId, blockSite }: { tabId?: number; blockSite: boolean }) {
   );
 }
 
-// On Android the button opens the dashboard (background/toolbar.ts): the popup shows only if it is
-// tapped before the background has started, and goes to the dashboard as well.
-if (isAndroid) openDashboard();
-else
-  void Promise.all([
-    bootPage(),
-    ownTab().then(async (tabId) => [tabId, await takeBlockSiteNote(tabId)] as const),
-  ]).then(([s, [tabId, blockSite]]) => {
-    setWeekStart(s.weekStart);
-    render(<App tabId={tabId} blockSite={blockSite} />, document.getElementById('app')!);
-  });
+// On Android the popup opens as a full page: let it take the whole width.
+if (isAndroid) document.documentElement.classList.add('mobile');
+
+void Promise.all([
+  bootPage(),
+  ownTab().then(async (tabId) => [tabId, await takeBlockSiteNote(tabId)] as const),
+]).then(([s, [tabId, blockSite]]) => {
+  setWeekStart(s.weekStart);
+  render(<App tabId={tabId} blockSite={blockSite} />, document.getElementById('app')!);
+});

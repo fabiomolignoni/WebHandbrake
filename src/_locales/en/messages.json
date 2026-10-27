@@ -1,26 +1,26 @@
 {
   "extName": {
     "message": "WebHandbrake – Website Blocker & Time Limits",
-    "description": "Extension name shown in the browser and in the stores (75 characters at most). \"WebHandbrake\" is not translated; the words after the dash say what it does."
+    "description": "Extension name shown in the browser and in the stores: 50 characters at most (addons.mozilla.org; npm run i18n checks it). \"WebHandbrake\" is not translated; the words after the dash say what it does, with the words people search for in your language."
   },
   "extDescription": {
     "message": "Block distracting sites or slow them down with a short pause. Time limits, schedules and focus sessions. No account, no tracking.",
-    "description": "Extension description shown in the browser and in the stores (132 characters at most)."
+    "description": "Extension description shown in the browser and in the stores: 132 characters at most (Chrome; npm run i18n checks it)."
   },
   "cmdOpenPopup": {
     "message": "Open WebHandbrake",
-    "description": "Keyboard shortcut description"
+    "description": "Keyboard shortcut, in the browser’s list of shortcuts: what it does."
   },
   "cmdStartSession": {
     "message": "Start a 25-minute focus session",
-    "description": "Keyboard shortcut description"
+    "description": "Keyboard shortcut, in the browser’s list of shortcuts: what it does. The number is the length of a quick focus session (25 minutes); it cannot be a placeholder here."
   },
   "cmdBlockSite": {
     "message": "Choose how to block the current site",
-    "description": "Keyboard shortcut description"
+    "description": "Keyboard shortcut, in the browser’s list of shortcuts: what it does."
   },
   "cmdOpenDashboard": {
     "message": "Open the dashboard",
-    "description": "Keyboard shortcut description"
+    "description": "Keyboard shortcut, in the browser’s list of shortcuts: what it does."
   }
 }

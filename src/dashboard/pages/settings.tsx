@@ -11,7 +11,14 @@ import {
 import type { Config, Settings } from '../../engine/types';
 import { AVAILABLE_LOCALES, t } from '../../i18n/i18n';
 import { api } from '../../platform/api';
-import { formatDateTime, formatMinutesOfDay, weekdayNames } from '../../shared/format';
+import {
+  formatDateTime,
+  formatMilliseconds,
+  formatMinutesOfDay,
+  formatSize,
+  formatTime,
+  weekdayNames,
+} from '../../shared/format';
 import { NEW_ISSUE_URL } from '../../shared/links';
 import type { ImportPreview } from '../../shared/models';
 import { call } from '../../shared/rpc';
@@ -476,6 +483,7 @@ function InterventionSettings() {
         <BreakLimits
           commitOnBlur
           value={s.pauseLimit}
+          savedPeriod={s.pauseLimit.period}
           defaults={{ count: 5, minutes: 60 }}
           onChange={(limit) => void save((x) => (x.pauseLimit = limit))}
         />
@@ -590,7 +598,12 @@ function ImportDialog({ onClose }: { onClose: () => void }) {
             {preview.groups.length > 0 && (
               <ul class="list compact small">
                 {preview.groups.map((g, i) => (
-                  <li key={i}>{t('import.groupLine', { name: g.name, sites: g.sites })}</li>
+                  <li key={i}>
+                    {t(g.present ? 'import.groupPresent' : 'import.groupLine', {
+                      name: g.name,
+                      sites: g.sites,
+                    })}
+                  </li>
                 ))}
               </ul>
             )}
@@ -781,12 +794,12 @@ function Privacy() {
                         ? k.name
                         : t(`privacy.key.${k.name}`)}
                     </td>
-                    <td class="num">{Math.ceil(k.bytes / 1024)} KB</td>
+                    <td class="num">{formatSize(k.bytes)}</td>
                   </tr>
                 ))}
               <tr>
                 <th>{t('privacy.total')}</th>
-                <th class="num">{data.total !== null ? `${Math.ceil(data.total / 1024)} KB` : '—'}</th>
+                <th class="num">{data.total !== null ? formatSize(data.total) : '—'}</th>
               </tr>
             </tbody>
           </table>
@@ -876,7 +889,7 @@ function Diagnostics() {
             </tr>
             <tr>
               <td>{t('diag.compileMs')}</td>
-              <td class="num">{d.rules.lastCompileMs} ms</td>
+              <td class="num">{formatMilliseconds(d.rules.lastCompileMs)}</td>
             </tr>
           </tbody>
         </table>
@@ -904,8 +917,7 @@ function Diagnostics() {
           </li>
         </ul>
         <p class="small muted">
-          {d.browser} · WebHandbrake {d.version} ·{' '}
-          {d.storageBytes !== null ? `${Math.ceil(d.storageBytes / 1024)} KB` : ''}
+          {d.browser} · WebHandbrake {d.version} · {d.storageBytes !== null ? formatSize(d.storageBytes) : ''}
         </p>
       </div>
       <div class="card stack">
@@ -949,7 +961,7 @@ function Diagnostics() {
               <tbody>
                 {[...d.log].reverse().map((e, i) => (
                   <tr key={i}>
-                    <td class="nowrap">{new Date(e.at).toLocaleTimeString()}</td>
+                    <td class="nowrap">{formatTime(e.at, true)}</td>
                     <td>{e.where}</td>
                     <td>{e.intervention}</td>
                     <td style={{ wordBreak: 'break-all' }}>{e.url}</td>

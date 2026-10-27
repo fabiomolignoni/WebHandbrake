@@ -2,6 +2,7 @@
 
 import { clone } from '../engine/json';
 import { normalizeConfig } from '../engine/schema';
+import { t } from '../i18n/i18n';
 import { api, extensionUrl, quiet } from '../platform/api';
 import type { Api, Envelope, Method } from '../shared/rpc';
 import { onTick } from './accounting';
@@ -58,7 +59,7 @@ const handlers: { [M in Method]: Handler<M> } = {
 
   'config.save': (a) => {
     const { config, errors } = normalizeConfig(a.config);
-    return proposeConfig(config, 'edit', { errors });
+    return proposeConfig(config, 'edit', { errors: errors.map((e) => t(e.key, e.params)) });
   },
   'config.addPage': (a) => addPage(a.url, a.granularity, a.groupId),
   'group.export': (a) => exportGroupFile(a.groupId),

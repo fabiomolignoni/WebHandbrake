@@ -157,6 +157,16 @@ function samePeriod(a: Period, b: Period): boolean {
   return a.kind === b.kind && (a.n ?? 0) === (b.n ?? 0) && (a.offset ?? 0) === (b.offset ?? 0);
 }
 
+/**
+ * Period b in place of a: the same, or one that holds every period of a (a day is inside its week
+ * and its month), which counts at least as much at any time, so the same limit is used up no later.
+ * Any other period starts again elsewhere: null.
+ */
+function comparePeriods(a: Period, b: Period): Direction | null {
+  if (samePeriod(a, b)) return 'neutral';
+  return a.kind === 'day' && (b.kind === 'week' || b.kind === 'month') ? 'strengthen' : null;
+}
+
 /** Coverage of "budget exhausted" for the new budget relative to the old one. */
 function compareBudgets(oldB: Budget | undefined, newB: Budget | undefined): Coverage {
   if (!oldB && !newB) return 'equal';
@@ -168,17 +178,13 @@ function compareBudgets(oldB: Budget | undefined, newB: Budget | undefined): Cov
     if (dirs.includes('strengthen') && dirs.includes('weaken')) return 'other';
     return c === 'neutral' ? 'equal' : c === 'strengthen' ? 'superset' : 'subset';
   };
+  const period = comparePeriods(oldB.period, newB.period);
+  if (!period) return 'other';
   switch (oldB.type) {
-    case 'time': {
-      const n = newB as typeof oldB;
-      if (!samePeriod(oldB.period, n.period)) return 'other';
-      return fromDirs([cmpNum(oldB.minutes, n.minutes, false)]);
-    }
-    case 'visits': {
-      const n = newB as typeof oldB;
-      if (!samePeriod(oldB.period, n.period)) return 'other';
-      return fromDirs([cmpNum(oldB.count, n.count, false)]);
-    }
+    case 'time':
+      return fromDirs([period, cmpNum(oldB.minutes, (newB as typeof oldB).minutes, false)]);
+    case 'visits':
+      return fromDirs([period, cmpNum(oldB.count, (newB as typeof oldB).count, false)]);
   }
 }
 
@@ -375,12 +381,8 @@ export function comparePause(a: PausePolicy, b: PausePolicy): Direction {
   if (!a.allowed && !b.allowed) return 'neutral';
   if (a.allowed !== b.allowed) return b.allowed ? 'weaken' : 'strengthen';
   const dirs: Direction[] = [cmpNum(a.maxMinutes, b.maxMinutes, false)];
-  if (
-    !samePeriod(a.limit.period, b.limit.period) &&
-    (a.limit.count !== undefined || a.limit.minutes !== undefined)
-  ) {
-    dirs.push('weaken');
-  }
+  if (a.limit.count !== undefined || a.limit.minutes !== undefined)
+    dirs.push(comparePeriods(a.limit.period, b.limit.period) ?? 'weaken');
   dirs.push(cmpLimit(a.limit.count, b.limit.count), cmpLimit(a.limit.minutes, b.limit.minutes));
   dirs.push(cmpNum(costRank(a.cost), costRank(b.cost), true));
   if (a.cost.type === 'challenge' && b.cost.type === 'challenge' && a.cost.kind !== b.cost.kind)
@@ -464,7 +466,7 @@ export function classifySetting(path: string, base: unknown, value: unknown): Di
       const a = base as PausePolicy['limit'];
       const c = value as PausePolicy['limit'];
       const dirs = [cmpLimit(a?.count, c?.count), cmpLimit(a?.minutes, c?.minutes)];
-      if (a && c && !samePeriod(a.period, c.period)) dirs.push('weaken');
+      if (a && c) dirs.push(comparePeriods(a.period, c.period) ?? 'weaken');
       return combine(dirs);
     }
     default:

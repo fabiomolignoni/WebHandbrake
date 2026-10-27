@@ -2,7 +2,7 @@
 
 import type { Protection, ProtectionKind } from '../engine/types';
 import { t } from '../i18n/i18n';
-import { formatDateTime, formatDuration } from '../shared/format';
+import { dateTimeParams, formatDuration } from '../shared/format';
 
 export function protectionIcon(kind: ProtectionKind): string {
   return {
@@ -18,6 +18,6 @@ export function protectionIcon(kind: ProtectionKind): string {
 /** "Reminder", "Wait · 1 h", "Locked until Fri 12 Oct 00:00"… */
 export function protectionLabel(p: Protection): string {
   if (p.kind === 'wait') return t('level.wait.tag', { duration: formatDuration(p.seconds) });
-  if (p.kind === 'locked') return t('level.locked.tag', { when: formatDateTime(p.until) });
+  if (p.kind === 'locked') return t('level.locked.tag', dateTimeParams(p.until));
   return t(`level.${p.kind}`);
 }

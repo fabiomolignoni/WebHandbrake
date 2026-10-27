@@ -40,6 +40,11 @@ export function unwrapUrl(raw: string): string {
   return url;
 }
 
+/** Whether a URL is Firefox's reader view of a page, where no content script runs. */
+export function isReaderView(url: string): boolean {
+  return url.trim().toLowerCase().startsWith(READER_PREFIX);
+}
+
 export function parseUrl(raw: string): ParsedUrl | null {
   const href = unwrapUrl(raw);
   let u: URL;

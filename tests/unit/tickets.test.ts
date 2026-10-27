@@ -61,6 +61,17 @@ describe('tickets: costs checked in the background', () => {
     });
   });
 
+  it('a phrase matches with straight or curly quotes, any accent encoding and French spacing', async () => {
+    const { tickets } = await load();
+    const n = tickets.normalise;
+    expect(n('J’accepte : c’est « mon » choix !')).toBe(n('j\'accepte: c\'est "mon" choix!'));
+    expect(n('Ich verstehe, dass es „ernst“ ist.')).toBe(n('Ich verstehe, dass es "ernst" ist.'));
+    // é composed (U+00E9) and e + combining acute (U+0301).
+    expect(n('Ho capito perch\u00e9')).toBe(n('Ho capito perche\u0301'));
+    expect(n('a\u00a0b\u202fc')).toBe('a b c');
+    expect(n('one')).not.toBe(n('one more'));
+  });
+
   it('typed codes, phrases and sums; the code is never in the step shown', async () => {
     const { tickets, purpose } = await load();
     const { view } = await tickets.createTicket(purpose, [

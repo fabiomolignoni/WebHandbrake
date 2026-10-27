@@ -45,9 +45,12 @@ Load `dist/chrome` as an unpacked extension, or `dist/firefox` as a temporary ad
 - TypeScript in strict mode; formatting and lint by Biome (`npm run format`, `npm run lint`).
 - `src/engine/` is pure: no browser API, and every behaviour has a unit test.
 - Every visible string goes through `t()` with a key in `src/locales/en.json`, with a
-  `description` when the context is not obvious, and ICU plurals for counts. Use the interface
-  terms (rule, condition, limit, browser blocking filters), never the code words (group, policy,
-  budget, DNR).
+  `description` that explains each placeholder (and the context, when it is not obvious), and
+  ICU plurals for every number before a noun. A sentence is one message: never join translated
+  pieces; a field or a link inside a sentence is a placeholder (`parts()` and `Fields`). Pass a
+  moment with `whenParams()`, and format dates, times and numbers with `src/shared/format.ts`.
+  Use the interface terms (rule, condition, limit, browser blocking filters), never the code
+  words (group, policy, budget, DNR). `npm run i18n` checks most of this.
 - Keep the interface accessible: keyboard use, labels, contrast, no meaning carried by colour
   alone, reduced motion respected.
 - A new behaviour comes with tests: unit tests for logic, an end-to-end scenario for a flow.
@@ -68,14 +71,51 @@ them in the same pull request, and describe user-visible changes under `[Unrelea
 
 ## Translate
 
-English is the source language. To add a language:
+English is the source language, in two files in the WebExtension JSON layout (`message` and
+`description`, which Weblate can read as “WebExtension JSON” with its `icu-message-format` check):
+`src/locales/en.json` for the interface, in ICU MessageFormat, and `src/_locales/en/messages.json`
+for the name, description and shortcuts that the browser and the stores show. To add a language:
 
-1. Copy `src/locales/en.json` to `src/locales/<code>.json` and translate each `message`; leave the
-   `{placeholders}` and the ICU structure as they are.
-2. Copy `src/_locales/en/messages.json` to `src/_locales/<code>/messages.json` for the name and
-   description shown by the browser.
+1. Copy `src/locales/en.json` to `src/locales/<code>.json` and translate each `message`. The
+   descriptions are for you: a translation file needs only the messages.
+2. Copy `src/_locales/en/messages.json` to `src/_locales/<code>/messages.json` (the folder uses an
+   underscore: `pt_BR`).
 3. Add the language to `AVAILABLE_LOCALES` in `src/i18n/i18n.ts`.
-4. Run `npm run i18n`.
+4. Run `npm run i18n`: it checks the keys, the ICU syntax, the plural categories, the
+   placeholders and the store limits of your files. A message you leave out shows in English.
+5. Look at it: `npm run build` and load `dist/<browser>`, with the language chosen in
+   Settings › General.
+
+How to write the messages:
+
+- **Context.** The description of a message says where it appears and what each `{placeholder}`
+  holds. Keep the placeholders, with their names, and put them where your sentence needs them.
+  Keys say where a message is: `iv.*` the block page, `popup.*` the popup, `today.*`, `focus.*`,
+  `later.*`, `insights.*`, `protection.*` and `settings.*` the dashboard pages, `wizard.*` and
+  `editor.*` the rule editor, `overlay.*` the timer and messages on web pages, `help.*` Help.
+- **Plurals.** Write every plural category of your language (`one`, `few`, `many`, `other`…, as in
+  [CLDR](https://www.unicode.org/cldr/charts/latest/supplemental/language_plural_rules.html)), and
+  always `other`; `#` is the number.
+- **Moments.** `{when}` is a moment written for English: “17:00”, “tomorrow 17:00”, “Thu 17:00”.
+  If the words around it change with the day in your language, choose them with
+  `{day, select, today {… {time}} tomorrow {… {time}} other {… {date} {time}}}`.
+- **Sentences with fields or links.** Messages ending in `Fields` and `targets.guide.more` are a
+  whole sentence around a field or a link: move the placeholder, not the words around it.
+- **Pieces of other messages.** A description that starts “Inside …” names the message that
+  receives it: check the sentence it ends up in.
+- **Typography.** Use the quotation marks and apostrophes of your language (`common.quote` sets the
+  quotes around names and reasons). In ICU an ASCII apostrophe quotes syntax (`'{n,}'`), so an
+  apostrophe in your text is ’.
+- **Dates, times and numbers** are written by the browser in your language: do not type formats
+  into messages.
+- **Not translated:** WebHandbrake, product and policy names, addresses and code examples.
+- **Length.** Labels wrap rather than overflow, but keep buttons and choices short; a badge holds
+  4 characters; the extension name 50 and its description 132. The sentences people type to
+  confirm (`emergency.phrase`, `pending.phrase`) must be easy to type on your keyboards.
+
+`npm run build:pseudo` builds `dist-pseudo/` with every message pseudo-translated: accented, 40%
+longer and between ⟦ ⟧. Text without ⟦ ⟧ there cannot be translated, and ⟦…⟧ ⟦…⟧ side by side is a
+sentence built from pieces: both are bugs to report.
 
 ## Site lists
 

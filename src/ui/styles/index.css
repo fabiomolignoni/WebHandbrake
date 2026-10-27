@@ -327,7 +327,7 @@ blockquote {
 
 .skip-link {
   position: absolute;
-  left: -999px;
+  inset-inline-start: -999px;
   top: 8px;
   z-index: 100;
   background: var(--surface);
@@ -335,7 +335,7 @@ blockquote {
   border-radius: var(--radius-sm);
 }
 .skip-link:focus {
-  left: 8px;
+  inset-inline-start: 8px;
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -497,6 +497,7 @@ blockquote {
 }
 .card-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--s2);
@@ -576,7 +577,12 @@ blockquote {
     border-color var(--transition),
     color var(--transition),
     box-shadow var(--transition);
-  white-space: nowrap;
+  /* A long label wraps (other languages run up to a third longer than English) rather than
+     overflowing its card; a single long word breaks. */
+  max-width: 100%;
+  text-align: center;
+  text-wrap: balance;
+  overflow-wrap: break-word;
   user-select: none;
 }
 .btn:hover {
@@ -841,7 +847,7 @@ blockquote {
 }
 .select {
   appearance: none;
-  padding-right: 32px;
+  padding-inline-end: 32px;
   background-image:
     linear-gradient(45deg, transparent 50%, currentColor 50%),
     linear-gradient(135deg, currentColor 50%, transparent 50%);
@@ -850,6 +856,11 @@ blockquote {
     calc(100% - 12px) 55%;
   background-size: 5px 5px;
   background-repeat: no-repeat;
+}
+.select:dir(rtl) {
+  background-position:
+    12px 55%,
+    17px 55%;
 }
 .input-icon {
   position: relative;
@@ -2177,7 +2188,7 @@ a.kpi:hover .caption {
   .nav a .count {
     position: absolute;
     top: 2px;
-    right: 6px;
+    inset-inline-end: 6px;
   }
   .main {
     padding: var(--s6) var(--s5) 112px;
@@ -2243,7 +2254,7 @@ a.kpi:hover .caption {
   .bottom-nav .count {
     position: absolute;
     top: 2px;
-    right: 22%;
+    inset-inline-end: 22%;
     background: var(--friction);
     color: var(--surface);
     border-radius: 999px;
@@ -2389,7 +2400,7 @@ a.kpi:hover .caption {
 .timeline li:not(:last-child)::after {
   content: "";
   position: absolute;
-  left: calc(10em + var(--s3) + 6px);
+  inset-inline-start: calc(10em + var(--s3) + 6px);
   top: 18px;
   bottom: 0;
   width: 2px;
@@ -2852,6 +2863,9 @@ body.page-popup {
   width: 380px;
   background: var(--bg);
 }
+:root.mobile body.page-popup {
+  width: auto;
+}
 .popup {
   min-height: 200px;
   display: flex;
@@ -2993,8 +3007,8 @@ body.page-popup {
   cursor: not-allowed;
 }
 /*
- * The way to the dashboard: a full-width bar at the end of the popup, where reading ends. It stays
- * in view when the popup scrolls (Chrome caps it at 600 px).
+ * The way to the dashboard: a full-width bar at the end of the popup, where reading ends and the
+ * thumb rests on Android. It stays in view when the popup scrolls (Chrome caps it at 600 px).
  */
 .popup .foot {
   position: sticky;
@@ -3003,6 +3017,9 @@ body.page-popup {
   padding: var(--s3);
   border-top: 1px solid var(--border);
   background: var(--bg);
+}
+:root.mobile .popup {
+  min-height: 100dvh;
 }
 .open-dashboard {
   display: flex;
@@ -3189,7 +3206,9 @@ body.page-popup {
   padding: var(--s3) var(--s5);
   border-inline-start: 3px solid var(--group, var(--accent));
   background: color-mix(in srgb, var(--surface) 70%, transparent);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  border-radius: var(--radius-md);
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
   text-align: start;
 }
 .intervention .note .by {
@@ -3202,6 +3221,7 @@ body.page-popup {
 .intervention .message {
   color: var(--text-2);
   max-width: 50ch;
+  overflow-wrap: anywhere;
 }
 .intervention .actions {
   display: flex;
@@ -3230,6 +3250,10 @@ body.page-popup {
 .intervention .others {
   max-width: 50ch;
   margin: 0;
+}
+.intervention .pending-notice {
+  width: min(520px, 100%);
+  text-align: start;
 }
 .intervention .internal-why {
   align-items: center;
@@ -3823,20 +3847,27 @@ input[type="radio"] {
 .link-row > .icon-svg:last-of-type {
   color: var(--muted);
 }
-/* Short guide next to the sites input: examples to pick. */
-details.disclosure.guide {
-  background: var(--surface-2);
-  border-color: transparent;
+/* What a list of sites is, with the help button of the address guide right after it (field-level
+   help): the guide takes no room until it is asked for. */
+.targets-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s1);
+  margin-block-end: -6px;
 }
-details.disclosure.guide > summary {
-  font-size: var(--fs-sm);
+.targets-head > .btn.icon {
+  flex: none;
+  color: var(--muted);
+}
+.targets-head > .btn.icon[aria-expanded="true"] {
   color: var(--accent-strong);
-  min-height: 40px;
-  padding-block: var(--s2);
+  background: var(--accent-soft);
 }
-details.disclosure.guide > summary .icon-svg {
-  width: 18px;
-  height: 18px;
+/* The short guide, between what the list is and its input: examples to pick. */
+.guide {
+  padding: var(--s3) var(--s4);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
 }
 .guide-list {
   display: flex;

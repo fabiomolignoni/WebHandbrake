@@ -4,7 +4,7 @@ import { render } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { t } from '../i18n/i18n';
 import { routePage } from '../shared/block-site';
-import { formatWhen } from '../shared/format';
+import { whenParams } from '../shared/format';
 import type { Overview } from '../shared/models';
 import { setWeekStart } from '../shared/summary';
 import { Banner, Spinner, Toasts } from '../ui/components';
@@ -217,7 +217,7 @@ function SideStatus({ o }: { o: Overview }) {
       {session && (
         <a href="#/focus">
           <Icon name="target" />
-          <span>{t('nav.status.session', { when: formatWhen(session.endAt, now) })}</span>
+          <span>{t('nav.status.session', whenParams(session.endAt, now))}</span>
         </a>
       )}
       {o.pending.length > 0 && (

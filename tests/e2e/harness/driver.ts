@@ -75,6 +75,12 @@ export interface BrowserDriver {
    */
   allowPrivateWindows?(): Promise<void>;
   /**
+   * Takes the access to websites away from the extension, as the person does on the browser's page
+   * of the extension (Chromium's site access "On click"). Without it, the harness gives the
+   * permission back from an extension page.
+   */
+  withholdSiteAccess?(): Promise<void>;
+  /**
    * Terminates the background (Chrome service worker, with the one of the private windows); false
    * when the browser cannot.
    */

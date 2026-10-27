@@ -56,6 +56,8 @@ test('an allowlist session from the dashboard blocks everything else, with a pre
 }) => {
   const p = await h.page('dashboard.html#/focus');
   await p.role('radio', /Everything except a few sites/).click();
+  // Sign-in pages are blocked too: the list says to add them.
+  await p.text(/add the ones where you sign in too, such as accounts\.google\.com/).expectVisible();
   await p.placeholder('Add a site, or paste a list…').fill('docs.test');
   await p.button('Add', { exact: true }).click();
   await p.button('Start focus session').click();
@@ -65,7 +67,18 @@ test('an allowlist session from the dashboard blocks everything else, with a pre
   await p.text(/Focus session until/).expectVisible();
   await expectAllowed(h, 'http://docs.test/manual');
   await expectBlocked(h, 'http://anything.test/');
-  await expectBlocked(h, 'http://news.test/');
+  // The block page names the site to add, once.
+  const login = await expectBlocked(h, 'http://login.news.test/signin');
+  await login.text('login.news.test is not on this session’s list.').expectVisible();
+  await login.text(/login\.news\.test/, { within: 'main' }).expectCount(1);
+  // Unless the addresses of blocked pages are hidden.
+  await h.configure((c) => {
+    c.settings.interventions.hideUrl = true;
+  });
+  const hidden = await expectBlocked(h, 'http://news.test/');
+  await hidden.role('heading', /You are in a focus session until/).expectVisible();
+  await hidden.text(/not on this session’s list/).expectCount(0);
+  expect(await hidden.get('main').text()).not.toContain('news.test');
 });
 
 test('a blocklist session blocks the sites listed; the list stays for the next session and can be cleared', async ({

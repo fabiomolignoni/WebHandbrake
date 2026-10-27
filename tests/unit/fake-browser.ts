@@ -39,7 +39,9 @@ function event() {
  * `chrome: true` behaves like Chrome's storage, which returns objects with sorted keys; Firefox
  * keeps the order in which the keys were written. `tabs` are the open tabs that `tabs.query()`
  * returns; the array can be changed later, and `tabs.update()` changes it as a browser would.
- * `windows` holds the state of the windows that is not 'normal' (as 'minimized'), by id.
+ * `windows` holds the state of the windows that is not 'normal' (as 'minimized'), by id; `focus`
+ * the window in front (-1 while another application is), 1 at first. Tabs without a `windowId` are
+ * in window 1. `idle` is the state that idle.queryState() returns.
  * What the extension does to the browser (rules, alarms, badges, messages to tabs,
  * notifications…) is kept in the returned object, for the tests to look at.
  *
@@ -108,8 +110,13 @@ export function installFakeBrowser(
         (Array.isArray(keys) ? keys : [keys]).map((k) => [k, undefined]),
       );
     },
-    async getBytesInUse() {
-      return JSON.stringify([...m]).length;
+    /** Like Chrome: the length of each key and of its value as JSON. */
+    async getBytesInUse(keys?: string | string[] | null) {
+      const list = keys === null || keys === undefined ? [...m.keys()] : Array.isArray(keys) ? keys : [keys];
+      return list.reduce((n, k) => n + (m.has(k) ? k.length + JSON.stringify(m.get(k)).length : 0), 0);
+    },
+    async getKeys() {
+      return [...m.keys()];
     },
   });
 
@@ -125,8 +132,13 @@ export function installFakeBrowser(
   const scripts: { id: string; matches?: string[] }[] = [];
   /** What a content script answers to a message from the background (by default nothing). */
   const contentReply: { fn: (tabId: number, message: any) => unknown } = { fn: () => undefined };
-  const permissions = { hostAccess: true, notifications: true, incognito: true };
+  /** `hostAccess` to every site; `sites`, the origins granted one by one ("https://a.test/*"). */
+  const permissions = { hostAccess: true, sites: [] as string[], notifications: true, incognito: true };
   const windows = new Map<number, string>();
+  const focus = { windowId: 1 };
+  /** The last window that had the focus, which windows.getLastFocused() returns. */
+  let lastFocused = 1;
+  const idle = { state: 'active' as 'active' | 'idle' | 'locked' };
   let nextTab = 1000;
 
   const tabById = (id: number) => tabs.find((t) => t.id === id);
@@ -134,15 +146,11 @@ export function installFakeBrowser(
     if (!badges.has(tabId)) badges.set(tabId, {});
     return badges.get(tabId)!;
   };
-  /** The popup of the toolbar button: the manifest's until the extension sets one. */
-  const popup = { value: 'popup.html' };
   const popups: chrome.action.OpenPopupOptions[] = [];
   const action: Record<string, any> = {
     ...(opts.openPopup
       ? { openPopup: async (o: chrome.action.OpenPopupOptions = {}) => void popups.push(o) }
       : {}),
-    setPopup: async (o: { popup: string }) => void (popup.value = o.popup),
-    onClicked: event(),
     setBadgeText: async (o: { tabId: number; text: string }) => void (badge(o.tabId).text = o.text),
     setBadgeBackgroundColor: async (o: { tabId: number; color: string }) =>
       void (badge(o.tabId).color = o.color),
@@ -168,6 +176,9 @@ export function installFakeBrowser(
     onStartup: event(),
     onIdle: event(),
     onHeadersReceived: event(),
+    onBeforeRedirect: event(),
+    onPermissionsAdded: event(),
+    onPermissionsRemoved: event(),
   };
 
   (globalThis as any).chrome = {
@@ -200,17 +211,22 @@ export function installFakeBrowser(
     },
     permissions: {
       contains: async (p: { origins?: string[]; permissions?: string[] }) =>
-        p.permissions?.includes('notifications') ? permissions.notifications : permissions.hostAccess,
-      onAdded: event(),
-      onRemoved: event(),
+        p.permissions?.includes('notifications')
+          ? permissions.notifications
+          : permissions.hostAccess || (p.origins ?? []).every((o) => permissions.sites.includes(o)),
+      onAdded: events.onPermissionsAdded,
+      onRemoved: events.onPermissionsRemoved,
     },
     extension: {
       isAllowedIncognitoAccess: async () => permissions.incognito,
       inIncognitoContext: Boolean(opts.incognito),
     },
     tabs: {
-      query: async (q: { active?: boolean; url?: string[] } = {}) =>
-        tabs.filter((t) => q.active === undefined || Boolean(t.active) === q.active).map((t) => ({ ...t })),
+      query: async (q: { active?: boolean; windowId?: number; url?: string[] } = {}) =>
+        tabs
+          .filter((t) => q.active === undefined || Boolean(t.active) === q.active)
+          .filter((t) => q.windowId === undefined || (t.windowId ?? 1) === q.windowId)
+          .map((t) => ({ ...t })),
       get: async (id: number) => {
         const t = tabById(id);
         if (!t) throw new Error(`No tab with id: ${id}.`);
@@ -243,6 +259,14 @@ export function installFakeBrowser(
     },
     windows: {
       get: async (id: number) => ({ id, state: windows.get(id) ?? 'normal' }),
+      getLastFocused: async () => {
+        if (focus.windowId !== -1) lastFocused = focus.windowId;
+        return {
+          id: lastFocused,
+          focused: focus.windowId === lastFocused,
+          state: windows.get(lastFocused) ?? 'normal',
+        };
+      },
       onFocusChanged: events.onFocusChanged,
     },
     webNavigation: {
@@ -275,8 +299,12 @@ export function installFakeBrowser(
       onClicked: events.onMenuClicked,
     },
     commands: { onCommand: events.onCommand },
-    idle: { onStateChanged: events.onIdle, setDetectionInterval: () => {} },
-    webRequest: { onHeadersReceived: events.onHeadersReceived },
+    idle: {
+      onStateChanged: events.onIdle,
+      setDetectionInterval: () => {},
+      queryState: async () => idle.state,
+    },
+    webRequest: { onHeadersReceived: events.onHeadersReceived, onBeforeRedirect: events.onBeforeRedirect },
     notifications: {
       create: async (id: string, options: unknown) => {
         notifications.push({ id, options });
@@ -305,9 +333,10 @@ export function installFakeBrowser(
     contentReply,
     permissions,
     windows,
+    focus,
+    idle,
     events,
     action,
-    popup,
     popups,
   };
 }

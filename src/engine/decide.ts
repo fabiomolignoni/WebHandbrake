@@ -16,10 +16,10 @@ import {
   redirectDestination,
   redirectKey,
 } from './compile';
-import { breaksLift } from './defaults';
-import { VISIT_RETURN_MS } from './limits';
+import { breaksLift, newId } from './defaults';
+import { REDIRECT_PASS_MS, VISIT_RETURN_MS } from './limits';
 import { type CompiledPattern, siteKeyFor } from './patterns';
-import { isNav, PASSABLE, SEVERITY } from './severity';
+import { isNav, NAV_SEVERITY, PASSABLE, SEVERITY } from './severity';
 import { periodRange, scheduleActive } from './time';
 import type { Budget, FocusSession, Grant, Group, Intervention, Policy, RuntimeState } from './types';
 import { isExtensionUrl, type ParsedUrl, pageKey, parseUrl } from './url';
@@ -182,6 +182,43 @@ export function grantCovers(g: Grant, group: Group, site: string, url: ParsedUrl
     default:
       return true;
   }
+}
+
+/**
+ * The accesses that a redirect of the server carries from a page to the one it sends to, as a short
+ * link does (youtu.be → youtube.com): for every rule that restricts that page, an access like the
+ * one given in the last REDIRECT_PASS_MS for the same rule on the page it comes from, with the same
+ * mode and end. None when a rule that restricts it was not passed there just now, or a focus
+ * session blocks it: the page then asks as usual.
+ */
+export function redirectPasses(ctx: EngineContext, from: string, to: string, uctx: UrlContext): Grant[] {
+  const there = decide(ctx, to, uctx);
+  if (!isNav(there) || there.session || !there.parsed) return [];
+  const fresh = decide(ctx, from, uctx).groups.flatMap((r) =>
+    r.pass && ctx.now - r.pass.createdAt <= REDIRECT_PASS_MS ? [r.pass] : [],
+  );
+  const carried: Grant[] = [];
+  for (const r of there.groups) {
+    if (SEVERITY[r.intervention.type] < NAV_SEVERITY) continue;
+    const pass =
+      r.source === 'policy' && PASSABLE.includes(r.base.type)
+        ? fresh.find(
+            (g) => g.groups !== '*' && g.groups.includes(r.group.id) && g.severity >= SEVERITY[r.base.type],
+          )
+        : undefined;
+    if (!pass) return [];
+    const g: Grant = {
+      ...pass,
+      id: newId(),
+      site: r.site,
+      url: pass.scope === 'page' ? pageKey(there.parsed.href) : pass.url,
+    };
+    // Its own visit: the tab is on its way to that page.
+    delete g.leftAt;
+    delete g.leftTab;
+    carried.push(g);
+  }
+  return carried;
 }
 
 /** A rule that only counts at certain times leaves the other times alone: nothing is counted (#21). */

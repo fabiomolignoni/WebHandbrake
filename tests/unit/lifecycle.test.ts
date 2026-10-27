@@ -163,6 +163,26 @@ describe('storage', () => {
     expect(await store.allDayKeys()).toEqual(['2020-01-01']);
     expect((await store.loadDays(['2020-01-01', '2020-01-02'])).get('2020-01-01')?.t['a:']).toEqual([5, 0]);
   });
+
+  it('the stored days of an earlier build are listed once, from all the storage if the browser cannot list its keys', async () => {
+    fake.local.set('u:2020-01-01', { t: { 'a:': [5, 0] }, c: {} });
+    fake.local.set('u:2020-01-02', { t: {}, c: {} });
+    const local = (globalThis as any).chrome.storage.local;
+    local.getKeys = undefined;
+    const get = vi.spyOn(local, 'get');
+    const { store } = await import('../../src/background/store');
+    await store.ready();
+    expect(get).toHaveBeenCalledWith(null);
+    expect(fake.local.get('u:index')).toEqual(['2020-01-01', '2020-01-02']);
+    // The next start reads the list.
+    vi.resetModules();
+    installFakeBrowser({ sharedWith: fake });
+    const again = vi.spyOn((globalThis as any).chrome.storage.local, 'get');
+    const restarted = (await import('../../src/background/store')).store;
+    await restarted.ready();
+    expect(again).not.toHaveBeenCalledWith(null);
+    expect(await restarted.allDayKeys()).toEqual(['2020-01-01', '2020-01-02']);
+  });
 });
 
 describe('the Date headers of web responses', () => {

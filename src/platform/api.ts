@@ -69,15 +69,25 @@ export function blockedUrlFrom(url: string | undefined): string | null {
   return i === -1 ? null : url.slice(i + 1);
 }
 
+type Commands = typeof api.commands & { openShortcutSettings?: () => Promise<void> };
+
 /**
  * Opens the browser's page where the extension's keyboard shortcuts are changed: through the API
  * where there is one (Firefox, which does not let an extension open about:addons), by its address
  * elsewhere.
  */
 export async function openShortcutSettings(): Promise<void> {
-  const commands = api.commands as typeof api.commands & { openShortcutSettings?: () => Promise<void> };
+  const commands = api.commands as Commands;
   if (commands.openShortcutSettings) await commands.openShortcutSettings();
   else await api.tabs.create({ url: 'chrome://extensions/shortcuts' });
+}
+
+/**
+ * Whether the shortcut settings are blocked with the browser's extension pages: in Firefox they are
+ * in about:addons, while Chromium's page of shortcuts stays open.
+ */
+export function shortcutSettingsBlockable(): boolean {
+  return Boolean((api.commands as Commands | undefined)?.openShortcutSettings);
 }
 
 /** Session storage with an in-memory fallback (Firefox < 115). */

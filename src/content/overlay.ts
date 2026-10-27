@@ -97,7 +97,18 @@ export class Overlay {
   private soundOn = false;
   private lastKind: string | null = null;
   private coverEl: HTMLElement | null = null;
+  private language: { lang: string; dir: 'ltr' | 'rtl' } = { lang: 'en', dir: 'ltr' };
   onHide: () => void = () => {};
+
+  /** The overlay speaks the extension's language, not the page's (for screen readers and hyphenation). */
+  private setLanguage(labels: Record<string, string>) {
+    if (labels.__lang) this.language = { lang: labels.__lang, dir: labels.__dir === 'rtl' ? 'rtl' : 'ltr' };
+    for (const el of [this.layer, this.live]) {
+      if (!el) continue;
+      el.lang = this.language.lang;
+      el.dir = this.language.dir;
+    }
+  }
 
   private ensure() {
     if (this.root) {
@@ -117,10 +128,12 @@ export class Overlay {
     this.live.className = 'sr';
     this.live.setAttribute('aria-live', 'polite');
     this.root.append(style, this.layer, this.live);
+    this.setLanguage({});
     (document.body ?? document.documentElement).appendChild(this.host);
   }
 
   update(res: TickResponse, labels: Record<string, string>) {
+    this.setLanguage(labels);
     this.lastUpdate = Date.now();
     this.soundOn = res.settings.sound;
     if (res.timer && res.settings.showTimer && !this.hiddenForVisit) this.showTimer(res, labels);
@@ -301,6 +314,7 @@ export class Overlay {
       return;
     }
     this.ensure();
+    this.setLanguage(labels);
     if (!this.coverEl) {
       const el = document.createElement('div');
       el.className = 'cover';
@@ -343,6 +357,7 @@ export class Overlay {
   /** A countdown that cannot be postponed, with a button to copy the draft. */
   grace(seconds: number, labels: Record<string, string>, draft: () => string, done: () => void) {
     this.ensure();
+    this.setLanguage(labels);
     const panel = document.createElement('div');
     panel.className = 'panel';
     panel.setAttribute('role', 'alertdialog');

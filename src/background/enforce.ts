@@ -69,14 +69,21 @@ const INTERNAL_PAGES = [
 ];
 /** Prefixes of the settings resets: "settings/reset" also covers "settings/resetProfileSettings". */
 const SETTINGS_RESETS = CHROMIUM.flatMap((b) => [`${b}://settings/reset`, `${b}://settings/triggeredreset`]);
+/**
+ * Chromium's page of the extensions' keyboard shortcuts, which Help opens, turns nothing off and
+ * stays open. Going from it to the list of extensions changes the tab's address, which the tab
+ * listener sees. Firefox shows its shortcuts inside about:addons, which stays blocked.
+ */
+const SHORTCUT_PAGES = CHROMIUM.map((b) => `${b}://extensions/shortcuts`);
+
+/** The page or one of its sub-pages, with or without a query or a fragment. */
+const isPage = (u: string, p: string) =>
+  u === p || u.startsWith(`${p}/`) || u.startsWith(`${p}?`) || u.startsWith(`${p}#`);
 
 export function isProtectedInternal(url: string): boolean {
   const u = url.toLowerCase();
-  return (
-    INTERNAL_PAGES.some(
-      (p) => u === p || u.startsWith(`${p}/`) || u.startsWith(`${p}?`) || u.startsWith(`${p}#`),
-    ) || SETTINGS_RESETS.some((p) => u.startsWith(p))
-  );
+  if (SHORTCUT_PAGES.some((p) => isPage(u, p))) return false;
+  return INTERNAL_PAGES.some((p) => isPage(u, p)) || SETTINGS_RESETS.some((p) => u.startsWith(p));
 }
 
 /** Why the browser's extension and settings pages are blocked. */

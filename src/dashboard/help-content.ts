@@ -44,7 +44,7 @@ export interface HelpFacts {
   graceSeconds: number;
   /** How long statistics are kept. */
   retentionDays: number;
-  /** When a day starts, as HH:MM. */
+  /** When a day starts, as the interface writes a time. */
   dayStart: string;
   /** Days of totals kept for limits when statistics are deleted. */
   budgetKeepDays: number;
@@ -56,9 +56,12 @@ export interface HelpFacts {
   backupsDaily: number;
   /** Length of a focus session started with the keyboard shortcut. */
   sessionMinutes: number;
+  /** A time of day (minutes after midnight) as the interface writes it, for the examples. */
+  time: (minutes: number) => string;
 }
 
-export function helpFacts(): HelpFacts {
+/** `time` writes a time of day; Node scripts and tests keep HH:MM. */
+export function helpFacts(time: (minutes: number) => string = formatHM): HelpFacts {
   const s = defaultConfig().settings;
   return {
     emergencyHours: s.protection.emergencyHours,
@@ -69,12 +72,13 @@ export function helpFacts(): HelpFacts {
     idleSeconds: s.tracking.idleSeconds,
     graceSeconds: s.interventions.graceSeconds,
     retentionDays: s.tracking.retentionDays,
-    dayStart: formatHM(s.dayStart),
+    dayStart: time(s.dayStart),
     budgetKeepDays: BUDGET_KEEP_DAYS,
     minuteHours: MINUTE_RETENTION_MINUTES / 60,
     backupsRecent: RECENT_SNAPSHOTS,
     backupsDaily: DAILY_SNAPSHOTS,
     sessionMinutes: DEFAULT_SESSION_MINUTES,
+    time,
   };
 }
 
@@ -122,8 +126,8 @@ export const HELP_TOPICS: HelpTopic[] = [
     id: 'rules',
     title: 'help.rules.title',
     blocks: [
-      { p: 'help.rules.p1' },
-      { p: 'help.rules.p2' },
+      { p: 'help.rules.p1', params: (f) => ({ start: f.time(9 * 60), end: f.time(17 * 60) }) },
+      { p: 'help.rules.p2', params: (f) => ({ start: f.time(22 * 60), end: f.time(2 * 60) }) },
       { p: 'help.rules.p3', params: (f) => ({ minutes: f.visitGapMinutes }) },
       { p: 'help.rules.p4' },
       { q: 'help.faq.reset.q', a: 'help.faq.reset.a', params: (f) => ({ dayStart: f.dayStart }) },
@@ -160,7 +164,7 @@ export const HELP_TOPICS: HelpTopic[] = [
   {
     id: 'focus',
     title: 'help.focus.title',
-    blocks: [{ p: 'help.focus.p1' }, { p: 'help.focus.p2' }],
+    blocks: [{ p: 'help.focus.p1' }, { p: 'help.focus.p2' }, { p: 'help.focus.p3' }],
   },
   {
     id: 'protection',

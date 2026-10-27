@@ -7,15 +7,17 @@ import {
   EXPORT_FORMAT,
   EXPORT_VERSION,
   exportGroup,
+  type ImportResult,
   mergeImport,
+  presentRules,
   withoutSecrets,
 } from '../engine/importers';
 import { clone, isObj } from '../engine/json';
 import { MAX_IMPORT_BYTES, MAX_LATER_ITEMS } from '../engine/limits';
-import { normalizeFocusLists } from '../engine/schema';
+import { normalizeFocusLists, type Problem } from '../engine/schema';
 import type { Config, LaterItem } from '../engine/types';
 import { t } from '../i18n/i18n';
-import { api } from '../platform/api';
+import { api, quiet } from '../platform/api';
 import { timestampSuffix } from '../shared/format';
 import type { ImportPreview, SaveResult } from '../shared/models';
 import { emptySaveResult, proposeConfig } from './protection';
@@ -52,8 +54,16 @@ export async function exportGroupFile(groupId: string) {
   return { filename: `webhandbrake-group-${safe}-${timestampSuffix()}.json`, text };
 }
 
-function translateWarnings(w: { key: string; params?: Record<string, string | number> }[]) {
-  return w.map((x) => t(x.key, x.params));
+function translateWarnings(w: Problem[]) {
+  return w.map((x) =>
+    t(x.key, x.params?.rule === '' ? { ...x.params, rule: t('editor.unnamed') } : x.params),
+  );
+}
+
+/** Rules of a file without a name get one in the interface language. */
+function nameRules(imp: ImportResult) {
+  const name = imp.format === 'list' ? t('import.listName') : t('editor.unnamed');
+  for (const g of imp.groups) if (!g.name) g.name = name;
 }
 
 function buildNext(text: string, mode: 'merge' | 'replace') {
@@ -65,14 +75,15 @@ function buildNext(text: string, mode: 'merge' | 'replace') {
     };
   }
   const imp = detectAndImport(text, Date.now(), store.config);
+  nameRules(imp);
   if (imp.format === 'unknown' || (!imp.config && !imp.groups.length)) {
-    return { imp, next: null, errors: imp.errors.map((e) => (e.startsWith('import.') ? t(e) : e)) };
+    return { imp, next: null, errors: translateWarnings(imp.errors) };
   }
   const effectiveMode = imp.config ? mode : 'merge';
   return {
     imp,
     next: mergeImport(store.config, imp, effectiveMode),
-    errors: imp.errors.map((e) => (e.startsWith('import.') ? t(e) : e)),
+    errors: translateWarnings(imp.errors),
   };
 }
 
@@ -83,9 +94,15 @@ export async function previewImport(text: string, mode: 'merge' | 'replace'): Pr
     return { format: 'unknown', groups: [], warnings: [], errors, units: [], directions: [] };
   }
   const units = diffConfig(store.config, next);
+  // A merge leaves out the rules that are already present; replacing takes the file as it is.
+  const present = imp.config && mode === 'replace' ? [] : presentRules(store.config, imp.groups);
   return {
     format: imp.format === 'group' ? 'webhandbrake' : imp.format,
-    groups: imp.groups.map((g) => ({ name: g.name, sites: g.targets.length })),
+    groups: imp.groups.map((g, i) => ({
+      name: g.name,
+      sites: g.targets.length,
+      present: Boolean(present[i]),
+    })),
     warnings: translateWarnings(imp.warnings),
     errors,
     units,
@@ -175,18 +192,39 @@ function storageGroup(key: string): string {
   if (key === 'u:min') return 'u:min';
   if (key.startsWith('u:')) return 'usage';
   if (key.startsWith('bk:') || key === 'backups:index') return 'backups';
-  if (key === 'config:pre-migration') return 'config';
+  if (key === 'config:pre-migration' || key === 'config:last') return 'config';
   return key;
+}
+
+/**
+ * The bytes of each row. Where the browser lists the keys and counts their bytes, nothing is read:
+ * statistics and backups can take many megabytes.
+ */
+async function groupSizes(): Promise<Record<string, number>> {
+  const keys = await quiet(api.storage.local.getKeys?.());
+  if (keys) {
+    const byGroup: Record<string, string[]> = {};
+    for (const k of keys) (byGroup[storageGroup(k)] ??= []).push(k);
+    try {
+      const sizes: Record<string, number> = {};
+      for (const [name, list] of Object.entries(byGroup))
+        sizes[name] = await api.storage.local.getBytesInUse(list);
+      return sizes;
+    } catch {
+      // measured on the values, then
+    }
+  }
+  const sizes: Record<string, number> = {};
+  for (const [k, v] of Object.entries(await api.storage.local.get(null))) {
+    const name = storageGroup(k);
+    sizes[name] = (sizes[name] ?? 0) + JSON.stringify(v).length;
+  }
+  return sizes;
 }
 
 /** What is stored, with sizes. */
 export async function storageUsage() {
-  const all = await api.storage.local.get(null);
-  const groups: Record<string, number> = {};
-  for (const [k, v] of Object.entries(all)) {
-    const name = storageGroup(k);
-    groups[name] = (groups[name] ?? 0) + JSON.stringify(v).length;
-  }
+  const groups = await groupSizes();
   let total: number | null = null;
   try {
     total = await api.storage.local.getBytesInUse(null);

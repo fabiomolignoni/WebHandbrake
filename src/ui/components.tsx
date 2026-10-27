@@ -1,6 +1,6 @@
 /** Shared accessible components. */
 
-import type { ButtonHTMLAttributes, ComponentChildren } from 'preact';
+import { type ButtonHTMLAttributes, type ComponentChildren, Fragment, type VNode } from 'preact';
 import { useEffect, useId, useRef, useState } from 'preact/hooks';
 import type { InterventionType } from '../engine/types';
 import { t } from '../i18n/i18n';
@@ -531,6 +531,26 @@ export function Field({
 /** As many characters as the largest value has, for the width of a number field. */
 const digitsOf = (max: number | undefined, fraction: boolean) =>
   Math.max(2, String(Math.trunc(Math.abs(max ?? 999))).length) + (fraction ? 2 : 0);
+
+/**
+ * A sentence with fields inside it, as parts() returns it ("Between [5 s] and [30 s]"): the order is
+ * the language's. Its words are hidden from screen readers, since each field has a label of its own.
+ */
+export function Fields({ children }: { children: (string | VNode)[] }) {
+  return (
+    <>
+      {children.map((c, i) =>
+        typeof c !== 'string' ? (
+          <Fragment key={i}>{c}</Fragment>
+        ) : c.trim() ? (
+          <span key={i} aria-hidden="true">
+            {c.trim()}
+          </span>
+        ) : null,
+      )}
+    </>
+  );
+}
 
 /**
  * A number, typed in a text field with a numeric keyboard (`type="number"` changes the value when

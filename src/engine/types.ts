@@ -65,13 +65,17 @@ export interface Period {
   kind: PeriodKind;
   /** For 'minutes' (5–1440), 'days' (1–90) and 'rolling' (5–1440 minutes). */
   n?: number;
-  /** Alignment offset: minutes for 'minutes', days for 'days'. */
+  /**
+   * Alignment offset: minutes for 'minutes', days for 'days'. A number of days gets the one that
+   * makes it start on the day it is chosen (`chosenPeriod`).
+   */
   offset?: number;
 }
 
 /**
- * The period of a limit starts again every so often: an hour, a day, or a number of minutes or
- * days (`everyPeriod`), never shifted. Weeks, months, rolling windows and offsets are for the
+ * The period of a limit starts again every so often: an hour, a day, a week (from the first day of
+ * the week in Settings), a month (from its first day), a number of minutes from the start of the
+ * day (`everyPeriod`), or a number of days from the day it was chosen. Rolling windows are for the
  * limits of breaks.
  */
 export interface TimeBudget {

@@ -1,16 +1,16 @@
 /**
- * Target list editor: paste anything (URLs, lists, uBlock/uBlacklist
- * syntax), see line-by-line errors, sort, or edit the whole list as text. A short guide with
- * examples sits next to the input. Exceptions ("+…") are added like any other entry and stand out
+ * Target list editor: paste anything (URLs, lists, uBlock/uBlacklist syntax), see line-by-line
+ * errors, sort, or edit the whole list as text. A short guide with examples opens from a help
+ * button next to what the list is. Exceptions ("+…") are added like any other entry and stand out
  * in the list. An entry already in the list is never added twice.
  */
 
-import type { Ref } from 'preact';
+import type { ComponentChildren, Ref } from 'preact';
 import { useEffect, useId, useRef, useState } from 'preact/hooks';
 import { newId, sortTargets } from '../../engine/defaults';
 import { parseTargetList, targetToLine } from '../../engine/patterns';
 import type { Target } from '../../engine/types';
-import { t } from '../../i18n/i18n';
+import { parts, t } from '../../i18n/i18n';
 import { describeTarget, targetTypeLabel } from '../../shared/summary';
 import { Banner, Button, IconButton } from '../../ui/components';
 import { Icon } from '../../ui/icons';
@@ -31,40 +31,43 @@ const GUIDE: [string, string][] = [
   ['+youtube.com/feed/subscriptions', 'targets.guide.exception'],
 ];
 
-function Guide({ onPick }: { onPick: (example: string) => void }) {
+/**
+ * Opened from the help button next to what the list is, the guide comes before the input, as a
+ * hint does (GOV.UK), and never between the input and its list. It stays open while an example is
+ * picked, so that the input does not move.
+ */
+function Guide({ id, onPick }: { id: string; onPick: (example: string) => void }) {
   return (
-    <details class="disclosure guide">
-      <summary>
-        <Icon name="help" />
-        {t('targets.guide.title')}
-      </summary>
-      <div class="body stack stack-sm">
-        <ul class="guide-list plain">
-          {GUIDE.map(([code, key]) => (
-            <li key={code}>
-              <button
-                type="button"
-                class="guide-example"
-                title={t('targets.guide.use')}
-                aria-label={t('targets.guide.useExample', { example: code })}
-                onClick={() => onPick(code)}
-              >
-                {code}
-              </button>
-              <span class="small text-2">{t(key)}</span>
-            </li>
-          ))}
-        </ul>
-        <p class="small muted">
-          {t('targets.guide.more')} {/* A new tab keeps the rule being edited (#11). */}
-          <a href={helpRoute(ADDRESS_TOPIC)} target="_blank" rel="noopener">
-            {t('targets.guide.moreLink')}
-            <Icon name="external" />
-            <span class="sr-only"> {t('common.newTab')}</span>
-          </a>
-        </p>
-      </div>
-    </details>
+    <div id={id} class="guide stack stack-sm">
+      <ul class="guide-list plain">
+        {GUIDE.map(([code, key]) => (
+          <li key={code}>
+            <button
+              type="button"
+              class="guide-example"
+              title={t('targets.guide.use')}
+              aria-label={t('targets.guide.useExample', { example: code })}
+              onClick={() => onPick(code)}
+            >
+              {code}
+            </button>
+            <span class="small text-2">{t(key)}</span>
+          </li>
+        ))}
+      </ul>
+      {/* A new tab keeps the rule being edited (#11). */}
+      <p class="small muted">
+        {parts('targets.guide.more', {
+          help: (
+            <a href={helpRoute(ADDRESS_TOPIC)} target="_blank" rel="noopener">
+              {t('targets.guide.moreLink')}
+              <Icon name="external" />
+              <span class="sr-only"> {t('common.newTab')}</span>
+            </a>
+          ),
+        })}
+      </p>
+    </div>
   );
 }
 
@@ -383,16 +386,21 @@ function TextEditor({
 
 /** The sites of a rule (or of a focus session's list), exceptions included. */
 export function TargetsEditor({
+  head,
   targets,
   onChange,
   onClear,
 }: {
+  /** What the list is (a label or a sentence), followed by the button of the address guide. */
+  head: ComponentChildren;
   targets: Target[];
   onChange: (t: Target[]) => void;
   /** Offers to empty the list at once. */
   onClear?: () => void;
 }) {
   const [draft, setDraft] = useState('');
+  const [guide, setGuide] = useState(false);
+  const guideId = useId();
   const [textMode, setTextModeState] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -444,18 +452,34 @@ export function TargetsEditor({
 
   if (textMode)
     return (
-      <TextEditor
-        targets={targets}
-        onApply={(next) => {
-          onChange(next);
-          setTextMode(false);
-        }}
-        onCancel={() => setTextMode(false)}
-      />
+      <div class="stack">
+        <div class="targets-head">{head}</div>
+        <TextEditor
+          targets={targets}
+          onApply={(next) => {
+            onChange(next);
+            setTextMode(false);
+          }}
+          onCancel={() => setTextMode(false)}
+        />
+      </div>
     );
 
   return (
     <div class="stack" ref={root}>
+      <div class="targets-head">
+        {head}
+        <IconButton
+          icon="help"
+          size="small"
+          variant="ghost"
+          label={t('targets.guide.title')}
+          aria-expanded={guide}
+          aria-controls={guide ? guideId : undefined}
+          onClick={() => setGuide(!guide)}
+        />
+      </div>
+      {guide && <Guide id={guideId} onPick={pick} />}
       <AddBox
         onAdd={addLines}
         placeholder={t('targets.addPlaceholder')}
@@ -463,7 +487,6 @@ export function TargetsEditor({
         setText={setDraft}
         inputRef={inputRef}
       />
-      <Guide onPick={pick} />
       <div class="row between">
         <span class="small muted">
           {exceptions ? t('targets.count', { sites, exceptions }) : t('groups.sites', { count: sites })}

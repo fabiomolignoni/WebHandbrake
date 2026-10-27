@@ -8,7 +8,7 @@ import { isGroupActive } from '../../engine/compile';
 import type { InterventionType, Policy } from '../../engine/types';
 import { t } from '../../i18n/i18n';
 import { api } from '../../platform/api';
-import { formatDate, formatDateTime, formatDuration, formatWhen } from '../../shared/format';
+import { dateTimeParams, formatDate, formatDuration, formatWhen, whenParams } from '../../shared/format';
 import type { GroupStatus, Overview, UpcomingChange, Warning } from '../../shared/models';
 import { call } from '../../shared/rpc';
 import { describeIntervention } from '../../shared/summary';
@@ -62,7 +62,7 @@ export function WarningBanner({ w }: { w: Warning }) {
         )
       }
     >
-      <span>{t(text, { detail: w.detail ?? '', when: w.at ? formatDateTime(w.at) : '' })}</span>
+      <span>{t(text, { detail: w.detail ?? '', ...(w.at ? dateTimeParams(w.at) : { when: '' }) })}</span>
     </Banner>
   );
 }
@@ -70,21 +70,19 @@ export function WarningBanner({ w }: { w: Warning }) {
 /** Whether a rule applies now and until when, or why not, and which of its types comes next. */
 function nowLine(g: GroupStatus, types: InterventionType[], inEffect: InterventionType | null, now: number) {
   if (g.pause)
-    return g.pause.until
-      ? t('status.pausedUntil', { when: formatWhen(g.pause.until, now) })
-      : t('status.paused');
+    return g.pause.until ? t('status.pausedUntil', whenParams(g.pause.until, now)) : t('status.paused');
   if (g.source === 'session')
-    return g.until ? t('status.sessionUntil', { when: formatWhen(g.until, now) }) : t('status.session');
+    return g.until ? t('status.sessionUntil', whenParams(g.until, now)) : t('status.session');
   const state = !inEffect
     ? t('today.applies.not')
     : g.until
-      ? t('today.applies.until', { when: formatWhen(g.until, now) })
+      ? t('today.applies.until', whenParams(g.until, now))
       : t('today.applies.now');
   const next = g.nextChange;
   if (!next || !types.includes(next.intervention.type)) return state;
   const from = t('today.applies.from', {
     what: typeName(next.intervention.type),
-    when: formatWhen(next.at, now),
+    ...whenParams(next.at, now),
   });
   return `${state} · ${from}`;
 }
@@ -229,7 +227,7 @@ export function TodayPage() {
   const summary = [
     t('today.summary.groups', { count: groups.length }),
     groups.length ? t('today.summary.restricted', { count: restricted }) : '',
-    o.upcoming[0] ? t('today.summary.next', { when: formatWhen(o.upcoming[0].at, now) }) : '',
+    o.upcoming[0] ? t('today.summary.next', whenParams(o.upcoming[0].at, now)) : '',
   ].filter(Boolean);
   const warnings = o.warnings.filter((w) => !SETUP_WARNINGS.includes(w.kind));
   const setup = o.warnings.filter((w) => SETUP_WARNINGS.includes(w.kind));
@@ -311,9 +309,7 @@ export function TodayPage() {
                     <div class="stack stack-xs break-subject">
                       <strong>{breakSubject(p, groupName)}</strong>
                       {p.until !== undefined && (
-                        <span class="small text-2">
-                          {t('pause.leftUntil', { when: formatWhen(p.until, now) })}
-                        </span>
+                        <span class="small text-2">{t('pause.leftUntil', whenParams(p.until, now))}</span>
                       )}
                     </div>
                     <Button

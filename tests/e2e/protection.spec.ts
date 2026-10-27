@@ -71,6 +71,23 @@ test('a long wait makes a loosening a pending change, confirmed in Protection on
   expect(cfg.groups[0].targets.map((t: any) => t.value)).toEqual(['other.test']);
 });
 
+test('the block page says that a change to its rule waits to be confirmed, and leads to Protection', async ({
+  h,
+}) => {
+  await h.configure((c) => {
+    c.groups = [group('Evenings', ['late.test'], [policy(BLOCK)], { protection: wait(24 * 3600) })];
+  });
+  expect((await h.configure((c) => (c.groups[0].targets = []))).pending).not.toBeNull();
+  const tab = await expectBlocked(h, 'http://late.test/');
+  await tab.text(/Your change to “Evenings” can be confirmed from/).expectVisible();
+  // Once the wait is over, the page stays blocked until the change is confirmed, and says so.
+  await h.clock.advance(24 * HOUR + 60_000);
+  await tab.reload();
+  await tab.text(/Your change to “Evenings” is ready to confirm/).expectVisible();
+  const p = await h.newTab(() => tab.button('Open Protection').click());
+  await p.button('Confirm the change').expectEnabled();
+});
+
 test('a pending change can be cancelled, and expires when not confirmed in time', async ({ h }) => {
   await h.configure((c) => {
     c.groups = [group('Evenings', ['late.test'], [policy(BLOCK)], { protection: wait(24 * 3600) })];
@@ -296,6 +313,43 @@ test('browser settings pages are protected as the mode says; loosening it follow
   const open = await h.open(internal);
   await sleep(1500);
   expect(await open.isIntervention()).toBe(false);
+});
+
+test('Chromium’s page of shortcuts stays open while the extension pages are blocked, but not its side menu', async ({
+  h,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'Firefox shows its shortcuts in about:addons, which stays blocked');
+  await h.configure((c) => {
+    c.settings.protection.internalPages = 'always';
+  });
+  const help = await h.page('dashboard.html#/help/shortcuts');
+  await help.text('The browser’s shortcut settings are blocked right now by your protection.').expectHidden();
+  const shortcuts = await h.newTab(() => help.button('Change shortcuts').click());
+  await shortcuts.expectUrl('chrome://extensions/shortcuts');
+  await sleep(1500);
+  expect(await shortcuts.url()).toBe('chrome://extensions/shortcuts');
+  // The side menu shows the list of extensions in the same page: only its address changes.
+  for (const link of ['sectionsExtensions', 'sectionsSitePermissions']) {
+    if (await shortcuts.isIntervention()) await shortcuts.goto('chrome://extensions/shortcuts');
+    await shortcuts.eval((id: string) => {
+      const find = (root: ParentNode): HTMLElement | null => {
+        for (const el of Array.from(root.querySelectorAll('*'))) {
+          if (el.id === id) return el as HTMLElement;
+          const inner = el.shadowRoot && find(el.shadowRoot);
+          if (inner) return inner;
+        }
+        return null;
+      };
+      find(document)!.click();
+    }, link);
+    await shortcuts.expectIntervention(true, 8000);
+    await shortcuts
+      .role('heading', 'The browser’s extension and settings pages are blocked right now.')
+      .expectVisible();
+  }
+  const list = await h.open('chrome://extensions/');
+  await list.expectIntervention(true, 8000);
 });
 
 test('a clock set backwards is detected and time does not go back', async ({ h }) => {

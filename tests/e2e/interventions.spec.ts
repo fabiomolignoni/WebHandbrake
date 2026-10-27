@@ -7,7 +7,7 @@ import { VISIT_RETURN_MS } from '../../src/engine/limits';
 import { expect, type Tab, test } from './harness';
 import { ask, BLOCK, challenge, delay, filter, group, pauseFree, policy, REMINDER } from './harness/config';
 import { defaultPage } from './harness/server';
-import { challengeCode, expectAllowed, expectBlocked, sleep } from './helpers';
+import { challengeCode, expectAllowed, expectBlocked, pixel, sleep } from './helpers';
 
 const today = () => {
   const d = new Date();
@@ -245,6 +245,33 @@ test.describe('delay', () => {
     await p.button('Continue', { exact: true }).click(6000);
     await p.expectReal('one.test/');
     await expectAllowed(h, 'http://two.test/');
+  });
+
+  test('a short link to another site of the rule waits once; going to another site yourself waits again', async ({
+    h,
+  }) => {
+    await h.configure((c) => {
+      c.groups = [group('Wait', ['short.test', 'video.test', 'one.test', 'two.test'], [policy(delay(1))])];
+    });
+    h.server.route('short.test', { status: 301, headers: { location: 'http://video.test/watch?v=abc' } });
+    const sites = async () =>
+      (await h.state()).state.grants
+        .filter((g: any) => g.kind === 'pass')
+        .map((g: any) => g.site)
+        .sort();
+    const p = await expectBlocked(h, 'http://short.test/abc');
+    await p.button('Continue', { exact: true }).click(6000);
+    await p.expectReal('video.test/watch?v=abc');
+    expect(h.server.hits('short.test')).toHaveLength(1);
+    // The access for the short link, and the one it carried to the site it sends to.
+    expect(await sites()).toEqual(['short.test', 'video.test']);
+    // Right after going in, an address of another site of the rule is no redirect: it waits.
+    const q = await expectBlocked(h, 'http://one.test/');
+    await q.button('Continue', { exact: true }).click(6000);
+    await q.expectReal('one.test/');
+    await q.goto('http://two.test/');
+    await q.expectIntervention();
+    expect(h.server.hits('two.test')).toEqual([]);
   });
 
   test('a pass for some minutes ends by itself and the open tab is restricted again', async ({ h }) => {
@@ -577,6 +604,61 @@ test.describe('in-page interventions', () => {
     expect(
       await h.control.eval((tabId: number) => chrome.tabs.get(tabId).then((t) => t.mutedInfo?.muted), id),
     ).toBe(false);
+  });
+
+  test('a filter also covers what the page shows in full screen, once', async ({ h }) => {
+    // Red, inverted once: cyan. Not filtered, or filtered twice: red.
+    const red = 'background: rgb(255, 0, 0); width: 200px; height: 100px; border: 0; display: block';
+    h.server.route('full.test', (r) => ({
+      body: defaultPage(
+        r.host,
+        r.path,
+        `<div id="stage" style="${red}"></div>
+<iframe id="frame" title="Video" style="${red}" src="http://video.test/embed"></iframe>
+<button id="stage-full">Stage in full screen</button><button id="frame-full">Video in full screen</button>
+<button id="page-full">Page in full screen</button>
+<script>
+  for (const id of ['stage', 'frame', 'page'])
+    document.getElementById(id + '-full').onclick = () =>
+      (id === 'page' ? document.documentElement : document.getElementById(id)).requestFullscreen();
+</script>`,
+      ),
+    }));
+    h.server.route('video.test', () => ({
+      body: '<body style="margin: 0; background: rgb(255, 0, 0)"></body>',
+    }));
+    await h.configure((c) => {
+      c.groups = [group('Invert', ['full.test'], [policy(filter('invert'))])];
+    });
+    const p = await expectAllowed(h, 'http://full.test/');
+    await p.front();
+    await expect
+      .poll(() => p.eval(() => getComputedStyle(document.documentElement).filter))
+      .toBe('invert(1)');
+    const shot = test.info().outputPath('full.png');
+    const inStage = await p.eval(() => {
+      const r = document.getElementById('stage')!.getBoundingClientRect();
+      return [Math.round(r.left + 10), Math.round(r.top + 10)];
+    });
+    await expect.poll(() => pixel(p, shot, inStage[0], inStage[1]), { timeout: 5000 }).toEqual([0, 255, 255]);
+    // Faded in: from now on it follows full screen at once.
+    await expect
+      .poll(() => p.eval(() => getComputedStyle(document.documentElement).transitionDuration))
+      .toBe('0s');
+    // An element, a video embedded from another site, the whole page.
+    for (const [button, id, x, y] of [
+      ['Stage in full screen', 'stage', 20, 20],
+      ['Video in full screen', 'frame', 20, 20],
+      ['Page in full screen', '', inStage[0], inStage[1]],
+    ] as const) {
+      await p.button(button).click();
+      await expect.poll(() => p.eval(() => document.fullscreenElement?.id ?? null)).toBe(id);
+      expect(await p.eval(() => getComputedStyle(document.fullscreenElement!).filter)).toBe('invert(1)');
+      expect(await pixel(p, shot, x, y)).toEqual([0, 255, 255]);
+      await p.eval(() => document.exitFullscreen());
+      await expect.poll(() => p.eval(() => document.fullscreenElement)).toBeNull();
+      expect(await pixel(p, shot, inStage[0], inStage[1])).toEqual([0, 255, 255]);
+    }
   });
 
   test('the filters of every rule add up, also once another rule has let the page through', async ({ h }) => {

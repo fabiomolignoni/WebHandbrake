@@ -15,7 +15,7 @@ import {
 } from '../../engine/limits';
 import type { Protection, ProtectionKind } from '../../engine/types';
 import { t } from '../../i18n/i18n';
-import { formatDateTime, formatDuration } from '../../shared/format';
+import { dateTimeParams, formatDuration } from '../../shared/format';
 import type { PartnerSetup } from '../../shared/models';
 import { call } from '../../shared/rpc';
 import { Button, Dialog, DurationInput, Field, RadioCards, Segmented, toast } from '../../ui/components';
@@ -269,7 +269,7 @@ export function ProtectionPicker({
           )}
           {value.kind === 'locked' && (
             <div class="row">
-              <span class="small grow">{t('editor.lockedUntil', { when: formatDateTime(value.until) })}</span>
+              <span class="small grow">{t('editor.lockedUntil', dateTimeParams(value.until))}</span>
               <Button size="small" onClick={() => setDialog('locked')}>
                 {t('protection.lockedChange')}
               </Button>

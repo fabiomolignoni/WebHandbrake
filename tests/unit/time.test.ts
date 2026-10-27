@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   addDays,
   bitmapSchedule,
+  chosenPeriod,
   clamp,
   DAY,
   dayKey,
@@ -203,6 +204,40 @@ describe('periods', () => {
     // The next period starts where this one ends.
     const next = periodRange({ kind: 'days', n: 3 }, three.end, cal);
     expect(next.start).toBe(three.end);
+  });
+
+  it('a number of days chosen today starts today; chosen again, its length keeps its start', () => {
+    const now = at(2, 15);
+    const three = chosenPeriod({ kind: 'days', n: 3 }, undefined, now, cal);
+    const r = periodRange(three, now, cal);
+    expect([r.start, r.end]).toEqual([at(2, 0), at(5, 0)]);
+    expect(r.kind === 'days' && r.days).toEqual(['2026-10-07']);
+    // Chosen the next day, it starts that day.
+    const later = chosenPeriod({ kind: 'days', n: 3 }, undefined, at(3, 9), cal);
+    expect(periodRange(later, at(3, 9), cal).start).toBe(at(3, 0));
+    // The length it had keeps the start it had; another length starts on the day it is chosen.
+    expect(chosenPeriod({ kind: 'days', n: 3 }, three, at(3, 9), cal)).toBe(three);
+    const four = chosenPeriod({ kind: 'days', n: 4 }, three, at(3, 9), cal);
+    expect(periodRange(four, at(3, 9), cal).start).toBe(at(3, 0));
+    // Before the day starts, it is still the day before.
+    const night = chosenPeriod({ kind: 'days', n: 3 }, undefined, at(3, 2), late);
+    expect(periodRange(night, at(3, 2), late).start).toBe(at(2, 4));
+    // On the reference day, no offset is needed.
+    const monday = new Date(2024, 0, 1, 12).getTime();
+    expect(chosenPeriod({ kind: 'days', n: 7 }, undefined, monday, cal)).toEqual({ kind: 'days', n: 7 });
+  });
+
+  it('the other periods start with the clock or the calendar, without an offset', () => {
+    const sevenDays = { kind: 'days' as const, n: 7, offset: 2 };
+    expect(chosenPeriod({ kind: 'week' }, sevenDays, at(2, 9), cal)).toEqual({ kind: 'week' });
+    expect(chosenPeriod({ kind: 'month' }, undefined, at(2, 9), cal)).toEqual({ kind: 'month' });
+    expect(chosenPeriod({ kind: 'minutes', n: 90, offset: 30 }, undefined, at(2, 9), cal)).toEqual({
+      kind: 'minutes',
+      n: 90,
+    });
+    // A number of minutes saved with an offset keeps it while its length stays.
+    const minutes = { kind: 'minutes' as const, n: 90, offset: 30 };
+    expect(chosenPeriod({ kind: 'minutes', n: 90 }, minutes, at(2, 9), cal)).toBe(minutes);
   });
 });
 

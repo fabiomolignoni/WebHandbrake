@@ -5,9 +5,9 @@
  */
 
 import { expiredGrants, nextGlobalChange } from '../engine/next';
-import { t } from '../i18n/i18n';
+import { initI18n, t } from '../i18n/i18n';
 import { api, quiet } from '../platform/api';
-import { formatDuration } from '../shared/format';
+import { formatDuration, setFormatPrefs } from '../shared/format';
 import type { ChangedBroadcast } from '../shared/rpc';
 import { updateActiveBadges } from './badge';
 import { broadcastToPrivate } from './bridge';
@@ -48,6 +48,10 @@ async function doReconcile(configChanged: boolean) {
   await maintenance();
   await syncRules();
   if (configChanged) {
+    // The language and the formats may have changed: menus, notifications, badges and the
+    // sentences to type use them.
+    await initI18n(store.config.settings.language);
+    setFormatPrefs(store.config.settings);
     await quiet(updateContentScripts());
     await quiet(rebuildMenus());
   }

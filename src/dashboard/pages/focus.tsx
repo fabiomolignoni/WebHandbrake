@@ -5,7 +5,7 @@ import { isGroupActive } from '../../engine/compile';
 import { DEFAULT_SESSION_MINUTES, MAX_SESSION_MS, QUICK_SESSION_MINUTES } from '../../engine/limits';
 import type { FocusKind, FocusLists, FocusSession, Group } from '../../engine/types';
 import { t } from '../../i18n/i18n';
-import { formatDuration, formatWhen } from '../../shared/format';
+import { formatDuration, whenParams } from '../../shared/format';
 import type { TicketView } from '../../shared/models';
 import { call } from '../../shared/rpc';
 import {
@@ -50,8 +50,8 @@ function SessionCard({ s, groups, onChange }: { s: FocusSession; groups: Group[]
         <div class="stack stack-xs grow" style={{ minWidth: 0 }}>
           <strong>
             {started
-              ? t('focus.activeUntil', { when: formatWhen(s.endAt, now) })
-              : t('focus.startsAt', { when: formatWhen(s.startAt, now) })}
+              ? t('focus.activeUntil', whenParams(s.endAt, now))
+              : t('focus.startsAt', whenParams(s.startAt, now))}
           </strong>
           <span class="small text-2">{names}</span>
           {s.locked && (
@@ -284,16 +284,16 @@ function FocusSessions({
               )}
             </div>
           ) : (
-            <div class="stack stack-sm">
-              <p class="help">{t(mode === 'blocklist' ? 'focus.blocklistHelp' : 'focus.allowlistHelp')}</p>
-              {/* One editor per list: an address half typed in one does not move to the other. */}
-              <TargetsEditor
-                key={mode}
-                targets={mode === 'blocklist' ? block : allow}
-                onChange={(next) => keep(mode === 'blocklist' ? { block: next } : { allow: next })}
-                onClear={() => clear(mode === 'blocklist' ? 'block' : 'allow')}
-              />
-            </div>
+            // One editor per list: an address half typed in one does not move to the other.
+            <TargetsEditor
+              key={mode}
+              head={
+                <p class="help">{t(mode === 'blocklist' ? 'focus.blocklistHelp' : 'focus.allowlistHelp')}</p>
+              }
+              targets={mode === 'blocklist' ? block : allow}
+              onChange={(next) => keep(mode === 'blocklist' ? { block: next } : { allow: next })}
+              onClear={() => clear(mode === 'blocklist' ? 'block' : 'allow')}
+            />
           )}
           <div class="field">
             <span class="label" id="focus-start">
@@ -349,9 +349,7 @@ function FocusSessions({
         >
           <div class="stack">
             <p>
-              {t('focus.previewBody', {
-                end: formatWhen(until() ?? Date.now() + (delay + (length ?? 0)) * 60_000),
-              })}
+              {t('focus.previewBody', whenParams(until() ?? Date.now() + (delay + (length ?? 0)) * 60_000))}
             </p>
             {mode === 'allowlist' && (
               <Banner kind="info">{t('focus.previewAllowlist', { count: allow.length })}</Banner>
