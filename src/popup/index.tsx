@@ -330,7 +330,6 @@ function App({ tabId, blockSite }: { tabId?: number; blockSite: boolean }) {
   const otherPauses = m.activePauses.filter((p) => !m.decision?.groups.some((g) => g.pause?.id === p.id));
   const tiles = (pause ? 1 : 0) + (m.canAdd ? 2 : 0);
   const groupName = (id: string) => m.groups.find((g) => g.id === id)?.name;
-  const figures = m.today.impulses > 0 || m.laterCount > 0;
   return (
     <div class="popup">
       <header class="popup-head">
@@ -467,8 +466,8 @@ function App({ tabId, blockSite }: { tabId?: number; blockSite: boolean }) {
         )}
       </div>
       {/*
-       * The one way to the dashboard, always in view, with today's figures it opens on. The button
-       * is named by its label alone and stretches over the whole bar (whole-card link).
+       * The one way to the dashboard, always in view, with the pages saved for later. The button is
+       * named by its label alone and stretches over the whole bar (whole-card link).
        */}
       <footer class="foot">
         <div class="open-dashboard card-link">
@@ -479,19 +478,14 @@ function App({ tabId, blockSite }: { tabId?: number; blockSite: boolean }) {
             <button
               type="button"
               class="stretched open-dashboard-name"
-              aria-describedby={figures ? 'open-dashboard-today' : undefined}
+              aria-describedby={m.laterCount > 0 ? 'open-dashboard-later' : undefined}
               onClick={() => openDashboard()}
             >
               {t('popup.dashboard')}
             </button>
-            {figures && (
-              <span id="open-dashboard-today" class="stack stack-xs">
-                {m.today.impulses > 0 && (
-                  <span class="tiny muted">{t('popup.impulses', { count: m.today.impulses })}</span>
-                )}
-                {m.laterCount > 0 && (
-                  <span class="tiny muted">{t('popup.laterCount', { count: m.laterCount })}</span>
-                )}
+            {m.laterCount > 0 && (
+              <span id="open-dashboard-later" class="tiny muted">
+                {t('popup.laterCount', { count: m.laterCount })}
               </span>
             )}
           </div>

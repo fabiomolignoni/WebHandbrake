@@ -3030,10 +3030,6 @@
   "popup.forfeitYes": {
     "message": "Yes, stop now"
   },
-  "popup.impulses": {
-    "message": "{count, plural, one {You chose not to go in once} other {You chose not to go in # times}}",
-    "description": "Popup. {count}: a number."
-  },
   "popup.later": {
     "message": "Save for later"
   },

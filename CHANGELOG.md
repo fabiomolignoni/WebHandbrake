@@ -45,6 +45,8 @@ All notable changes to WebHandbrake are documented here. The format follows
   part, leads back to it.
 - The text under the countdown of a wait no longer tells you to breathe slowly: it says when you
   can continue.
+- The popup's **Dashboard** bar no longer says how many times you chose not to go in today: Today
+  and Insights show it. The bar names only the pages saved for later.
 - Focus › **Everything except a few sites** says that the pages where you sign in, such as
   accounts.google.com, are blocked too unless you add them to the list, as are the servers on your
   computer (localhost). During such a session, the block page names the site that is not on the

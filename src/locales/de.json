@@ -2693,9 +2693,6 @@
   "popup.forfeitYes": {
     "message": "Ja, jetzt aufhören"
   },
-  "popup.impulses": {
-    "message": "{count, plural, one {Einmal verzichtet} other {# Mal verzichtet}}"
-  },
   "popup.later": {
     "message": "Für später speichern"
   },

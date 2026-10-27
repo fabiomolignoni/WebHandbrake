@@ -170,7 +170,7 @@ test('the popup reopens the tabs that are allowed again', async ({ h }) => {
   await b.expectReal('news.test/2');
 });
 
-test('the popup counts the impulses resisted today, and leaves pages it cannot act on alone', async ({
+test('the popup leaves the times you chose not to go in to the dashboard, and pages it cannot act on alone', async ({
   h,
 }) => {
   await h.configure((c) => {
@@ -180,7 +180,8 @@ test('the popup counts the impulses resisted today, and leaves pages it cannot a
   await p.button('Close the tab').click();
   const dashboard = await h.page('dashboard.html#/today');
   const popup = await h.popup(dashboard);
-  await popup.text('You chose not to go in once').expectVisible();
+  await popup.button('Dashboard', { exact: true }).expectVisible();
+  expect(await popup.get('.foot').text()).not.toMatch(/chose not to go in/);
   // An extension page: nothing to block or save.
   await popup.button('Block site').expectCount(0);
   await popup.button('Save for later').expectCount(0);
@@ -210,13 +211,13 @@ test('the whole Dashboard bar at the end of the popup is one button, named by it
   await h.configure(() => undefined);
   await h.rpc('later.add', { url: 'http://later.test/' });
   const popup = await h.popup(await h.open('http://site.test/'));
-  // Its figures leave out the time on limited sites.
+  // It says only how many pages are saved for later.
   await popup.get('.foot').expectText('1 page saved for later');
   expect(await popup.get('.foot').text()).not.toMatch(/limited sites/);
-  // Its icon, its figures and its arrow are all the button: the label alone names it.
+  // Its icon, its figure and its arrow are all the button: the label alone names it.
   const hits = await popup.eval(() => {
     const button = document.querySelector('.foot button')!;
-    return [...document.querySelectorAll('.open-dashboard-icon, #open-dashboard-today, .foot .icon-svg')].map(
+    return [...document.querySelectorAll('.open-dashboard-icon, #open-dashboard-later, .foot .icon-svg')].map(
       (el) => {
         const r = el.getBoundingClientRect();
         return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2) === button;

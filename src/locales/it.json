@@ -2693,9 +2693,6 @@
   "popup.forfeitYes": {
     "message": "Sì, smetti ora"
   },
-  "popup.impulses": {
-    "message": "{count, plural, one {Hai scelto di non entrare una volta} other {Hai scelto di non entrare # volte}}"
-  },
   "popup.later": {
     "message": "Salva per dopo"
   },
