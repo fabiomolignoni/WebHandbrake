@@ -127,7 +127,7 @@ function General() {
               onChange={(dateFormat) => void save((x) => (x.dateFormat = dateFormat))}
               options={[
                 { value: 'auto', label: t('settings.auto') },
-                { value: 'iso', label: 'YYYY-MM-DD' },
+                { value: 'iso', label: t('settings.dateFormat.iso') },
               ]}
             />
           )}

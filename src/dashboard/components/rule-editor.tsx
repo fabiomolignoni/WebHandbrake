@@ -1056,7 +1056,7 @@ function Summary({
             )}
           </div>
           <p class="plan-text">{rulePlan(rule)}</p>
-          {rule.note.trim() && <p class="small quote">“{rule.note.trim()}”</p>}
+          {rule.note.trim() && <p class="small quote">{t('common.quote', { text: rule.note.trim() })}</p>}
         </div>
       </div>
       {issues.length > 0 && <IssueList issues={issues} />}
