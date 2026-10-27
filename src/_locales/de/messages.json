@@ -1,0 +1,20 @@
+{
+  "extName": {
+    "message": "WebHandbrake – Website-Blocker & Zeitlimits"
+  },
+  "extDescription": {
+    "message": "Sperre ablenkende Websites oder bremse sie mit einer Wartezeit. Zeitlimits, Zeitpläne und Fokussitzungen. Kein Konto, kein Tracking."
+  },
+  "cmdOpenPopup": {
+    "message": "WebHandbrake öffnen"
+  },
+  "cmdStartSession": {
+    "message": "25-minütige Fokussitzung starten"
+  },
+  "cmdBlockSite": {
+    "message": "Wählen, wie die aktuelle Website gesperrt wird"
+  },
+  "cmdOpenDashboard": {
+    "message": "Dashboard öffnen"
+  }
+}
