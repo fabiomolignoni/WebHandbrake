@@ -102,7 +102,8 @@ export interface WhenParams {
 /**
  * A moment for a message: {when} as formatWhen writes it, and its parts for a language whose words
  * around it change with the day ("alle 17:00", "domani alle 17:00"): {day} (today, tomorrow, week
- * or date) to choose with select, {time} and {date} (the weekday within a week, else the date).
+ * or date) to choose with select, {time} and {date} (the weekday within a week, written in full for
+ * a sentence such as "fino a giovedì alle 17:00", else the date).
  */
 export function whenParams(ms: number, now = Date.now()): WhenParams {
   const day = whenDay(ms, now);
@@ -110,7 +111,7 @@ export function whenParams(ms: number, now = Date.now()): WhenParams {
     when: formatWhen(ms, now),
     day,
     time: formatTime(ms),
-    date: formatDate(ms, day === 'week' ? { weekday: 'short' } : { day: 'numeric', month: 'short' }),
+    date: formatDate(ms, day === 'week' ? { weekday: 'long' } : { day: 'numeric', month: 'short' }),
   };
 }
 

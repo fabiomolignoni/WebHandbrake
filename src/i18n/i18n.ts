@@ -13,6 +13,7 @@ export type Messages = Record<string, { message: string; description?: string }>
 /** Languages shipped with the extension. Add a locale file and its code here to translate. */
 export const AVAILABLE_LOCALES: { code: string; name: string; dir: 'ltr' | 'rtl' }[] = [
   { code: 'en', name: 'English', dir: 'ltr' },
+  { code: 'it', name: 'Italiano', dir: 'ltr' },
 ];
 
 const RTL = new Set(['ar', 'fa', 'he', 'ur']);

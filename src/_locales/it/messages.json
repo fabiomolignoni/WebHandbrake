@@ -1,0 +1,20 @@
+{
+  "extName": {
+    "message": "WebHandbrake – Blocco siti e limiti di tempo"
+  },
+  "extDescription": {
+    "message": "Blocca o rallenta i siti che distraggono. Limiti di tempo, orari e sessioni di concentrazione. Nessun account, nessun tracciamento."
+  },
+  "cmdOpenPopup": {
+    "message": "Apri WebHandbrake"
+  },
+  "cmdStartSession": {
+    "message": "Avvia una sessione di concentrazione di 25 minuti"
+  },
+  "cmdBlockSite": {
+    "message": "Scegli come bloccare il sito corrente"
+  },
+  "cmdOpenDashboard": {
+    "message": "Apri la dashboard"
+  }
+}
