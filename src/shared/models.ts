@@ -303,7 +303,6 @@ export interface PopupModel {
   groups: { id: string; name: string; color: string; blocksNow: boolean; change: number | null }[];
   /** The rule "Block this site" adds to by default; null for a new rule. */
   addTo: string | null;
-  today: TodayStats;
   pause: PauseOptions | null;
   activePauses: Grant[];
   restorable: number;

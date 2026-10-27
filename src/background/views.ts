@@ -187,7 +187,6 @@ export async function popupModel(tabId?: number): Promise<PopupModel> {
       };
     }),
     addTo: parsed?.web ? defaultAddGroup(url, 'domain', c) : null,
-    today: todayStats(),
     pause,
     activePauses: store.state.grants.filter((g) => g.kind === 'pause' && grantActive(c, g)),
     restorable: (await restorableTabs()).length,
