@@ -3626,6 +3626,10 @@
   "settings.dateFormat": {
     "message": "Date format"
   },
+  "settings.dateFormat.iso": {
+    "message": "YYYY-MM-DD",
+    "description": "Settings › General › Date format: the choice of year-month-day dates (ISO 8601), as a pattern: Y the year, M the month, D the day. Use the letters of your language, such as JJJJ-MM-TT or AAAA-MM-GG."
+  },
   "settings.dateHeaders": {
     "message": "Detect a manipulated system clock"
   },

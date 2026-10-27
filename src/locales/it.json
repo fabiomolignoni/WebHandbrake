@@ -3203,6 +3203,9 @@
   "settings.dateFormat": {
     "message": "Formato della data"
   },
+  "settings.dateFormat.iso": {
+    "message": "AAAA-MM-GG"
+  },
   "settings.dateHeaders": {
     "message": "Rileva un orologio di sistema manomesso"
   },

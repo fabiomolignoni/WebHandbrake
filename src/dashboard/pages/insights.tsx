@@ -819,7 +819,7 @@ export function InsightsPage() {
                         <li key={i}>
                           <strong>{formatDateTime(p.at)}</strong> · {breakSubject(p, groupName)} ·{' '}
                           {t('common.minutes', { n: p.used ?? p.minutes })}
-                          {p.reason && <> · “{p.reason}”</>}
+                          {p.reason && <> · {t('common.quote', { text: p.reason })}</>}
                         </li>
                       ))}
                     </ul>
@@ -833,7 +833,7 @@ export function InsightsPage() {
                     <ul class="list compact small">
                       {s.intentions.slice(0, 30).map((x, i) => (
                         <li key={i}>
-                          <strong>{formatDateTime(x.at)}</strong> · “{x.text}” ·{' '}
+                          <strong>{formatDateTime(x.at)}</strong> · {t('common.quote', { text: x.text })} ·{' '}
                           {t('common.minutes', { n: x.minutes })}
                         </li>
                       ))}
