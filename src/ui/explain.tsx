@@ -3,7 +3,7 @@
 import { isNav } from '../engine/severity';
 import type { Group } from '../engine/types';
 import { t } from '../i18n/i18n';
-import { formatDuration, formatWhen } from '../shared/format';
+import { formatDuration, whenParams } from '../shared/format';
 import type { BudgetView, DecisionView, GroupDecisionView } from '../shared/models';
 import {
   describeCondition,
@@ -14,7 +14,7 @@ import {
 } from '../shared/summary';
 import { ColorDot } from './components';
 import { Icon } from './icons';
-import { statusName } from './status';
+import { statusName, thenName } from './status';
 
 export function budgetText(b: BudgetView): string {
   if (b.type === 'visits') return t('budget.visitsUsed', { used: b.used, limit: b.limit });
@@ -27,17 +27,13 @@ export function verdict(d: DecisionView, now = Date.now()): string {
   const name = statusName(d.intervention);
   if (isNav(d)) {
     return d.until
-      ? t('why.restrictedUntil', { what: name, when: formatWhen(d.until, now) })
+      ? t('why.restrictedUntil', { what: name, ...whenParams(d.until, now) })
       : t('why.restricted', { what: name });
   }
   if (!d.groups.length) return d.excepted.length ? t('why.excepted') : t('why.noRules');
   if (d.groups.some((g) => g.pause)) return t('why.paused');
   if (d.groups.some((g) => g.pass)) return t('why.passed');
-  if (d.restriction)
-    return t('why.allowedUntil', {
-      what: interventionName(d.restriction.intervention.type),
-      when: formatWhen(d.restriction.at, now),
-    });
+  if (d.restriction) return t('why.allowedUntil', whenParams(d.restriction.at, now));
   return t('why.allowed');
 }
 
@@ -55,14 +51,12 @@ function GroupBlock({ g, groups }: { g: GroupDecisionView; groups?: Group[] }) {
       </p>
       {g.source === 'session' && <p class="small">{t('why.bySession')}</p>}
       {g.pause && (
-        <p class="small">
-          {t('why.pause', { when: g.pause.until ? formatWhen(g.pause.until) : t('why.whileOnSite') })}
-        </p>
+        <p class="small">{g.pause.until ? t('why.pause', whenParams(g.pause.until)) : t('why.paused')}</p>
       )}
       {g.pass && (
         <p class="small">
-          {g.pass.until ? t('why.passUntil', { when: formatWhen(g.pass.until) }) : t('why.passVisit')}
-          {g.pass.intention ? ` — “${g.pass.intention}”` : ''}
+          {g.pass.until ? t('why.passUntil', whenParams(g.pass.until)) : t('why.passVisit')}
+          {g.pass.intention ? ` — ${t('common.quote', { text: g.pass.intention })}` : ''}
         </p>
       )}
       {g.policies.length > 0 && (
@@ -96,7 +90,7 @@ export function Explain({ d, groups }: { d: DecisionView; groups?: Group[] }) {
       <p>
         <strong>{verdict(d)}</strong>
       </p>
-      {d.session && <p class="small">{t('why.session', { when: formatWhen(d.session.endAt) })}</p>}
+      {d.session && <p class="small">{t('why.session', whenParams(d.session.endAt))}</p>}
       {d.groups.map((g) => (
         <GroupBlock key={g.groupId} g={g} groups={groups} />
       ))}
@@ -107,18 +101,15 @@ export function Explain({ d, groups }: { d: DecisionView; groups?: Group[] }) {
       ))}
       {d.until && (
         <p class="small">
-          {t('why.nextChange', {
-            when: formatWhen(d.until),
-            what: d.next ? interventionName(d.next.type) : '',
-          })}
+          {t('why.nextChange', { what: d.next ? thenName(d.next) : '', ...whenParams(d.until) })}
         </p>
       )}
       {!d.until && isNav(d) && <p class="small">{t('why.noEnd')}</p>}
       {d.restriction && !isNav(d) && (
         <p class="small">
           {t(`why.restriction.${d.restriction.kind}`, {
-            when: formatWhen(d.restriction.at),
-            what: interventionName(d.restriction.intervention.type),
+            what: thenName(d.restriction.intervention),
+            ...whenParams(d.restriction.at),
           })}
         </p>
       )}

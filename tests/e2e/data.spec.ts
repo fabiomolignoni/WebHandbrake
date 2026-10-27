@@ -100,9 +100,28 @@ test('export, import and sharing of a single rule round-trip', async ({ h }) => 
   const id = JSON.parse(exp.text).config.groups[0].id;
   const shared = await h.rpc('group.export', { groupId: id });
   expect(shared.filename).toMatch(/^webhandbrake-group-share-me-/);
+  // The same rule is already present: importing it adds nothing.
+  const same = await h.rpc('data.import', { text: shared.text, mode: 'merge' });
+  expect(same.applied).toEqual([]);
+  // Renamed, it is another rule.
+  await h.configure((c) => {
+    c.groups[0].name = 'Mine';
+  });
   const r = await h.rpc('data.import', { text: shared.text, mode: 'merge' });
   expect(r.applied.map((u: any) => u.kind)).toEqual(['group.add']);
-  expect((await h.rpc('config.get')).config.groups.map((g: any) => g.name)).toEqual(['Share me', 'Share me']);
+  expect((await h.rpc('config.get')).config.groups.map((g: any) => g.name)).toEqual(['Mine', 'Share me']);
+});
+
+test('importing the same list twice adds it once; the preview says it is already present', async ({ h }) => {
+  await h.rpc('data.import', { text: LIST, mode: 'merge' });
+  const p = await h.page('dashboard.html#/settings/data');
+  await p.button('Import a file or a list…').click();
+  await p.label('…or paste the content here').fill(LIST);
+  await p.button('Preview').click();
+  await p.text('Imported list: 3 sites, already present').expectVisible();
+  await p.button('Import', { exact: true, within: 'dialog' }).click();
+  await p.text('Imported list: 3 sites, already present').expectHidden();
+  expect((await h.rpc('config.get')).config.groups.map((g: any) => g.name)).toEqual(['Imported list']);
 });
 
 test('every change keeps a backup, and a backup can be restored', async ({ h }) => {

@@ -12,7 +12,7 @@ import { updateBadge } from './badge';
 import { isPrivateBackground, listenToPrivateWindows, relayPrivateWindows } from './bridge';
 import { initClockObserver, restoreTestClock } from './clock';
 import { registerNavigationListeners, registerTabListeners } from './enforce';
-import { endLeftVisits } from './intervention';
+import { endLeftVisits, registerRedirectListener } from './intervention';
 import { registerCommands, registerMenuClicks } from './menus';
 import { onMessage } from './messages';
 import { registerNotificationClicks } from './notifications';
@@ -21,9 +21,9 @@ import { registerPermissionListeners } from './permissions';
 import { ALARM_NEXT, ALARM_PERIODIC, ensurePeriodicAlarm, reconcile } from './reconcile';
 import { store } from './store';
 import { getTab } from './tabs';
+import { ALARM_TAB_TIME, countTabTime, registerTabTimeListeners } from './tabtime';
 import { testLog } from './test-log';
 import { registerWaitListeners } from './tickets';
-import { registerToolbar } from './toolbar';
 
 if (__TEST__) captureErrors('background', (m) => testLog.errors.push(m));
 
@@ -65,6 +65,7 @@ function main() {
       await store.ready();
       if (alarm.name === ALARM_NEXT) await reconcile('alarm');
       else if (alarm.name === ALARM_PERIODIC) await periodic();
+      else if (alarm.name === ALARM_TAB_TIME) await countTabTime();
     })();
   });
 
@@ -86,11 +87,12 @@ function main() {
     },
   );
   registerWaitListeners();
+  registerTabTimeListeners();
+  registerRedirectListener();
   registerPermissionListeners();
   registerMenuClicks();
   registerCommands();
   registerNotificationClicks();
-  registerToolbar();
   initClockObserver();
   void boot();
 }

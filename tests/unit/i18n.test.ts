@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   AVAILABLE_LOCALES,
+  formatLocale,
   initI18n,
   locale,
+  parts,
   resolveLocale,
+  resolveRegional,
   t,
   template,
   textDirection,
@@ -66,9 +69,34 @@ describe('translation', () => {
     expect(resolveLocale('xx', ['yy'])).toBe('en');
   });
 
+  it('dates, times and numbers follow the region of a browser language in the interface language', () => {
+    expect(resolveRegional('en', ['it-IT', 'en-GB', 'en-US'])).toBe('en-GB');
+    expect(resolveRegional('pt-BR', ['pt-br'])).toBe('pt-BR');
+    // No browser language in the interface language, or not a valid tag: the language alone.
+    expect(resolveRegional('en', ['it-IT'])).toBe('en');
+    expect(resolveRegional('en', ['en-!!', 'en-AU'])).toBe('en-AU');
+  });
+
+  it('parts: the elements of a sentence come back where the message puts them', () => {
+    const shortest = { field: 'shortest' };
+    const longest = { field: 'longest' };
+    expect(parts('delay.rangeFields', { shortest, longest })).toEqual([
+      'Between ',
+      shortest,
+      ' and ',
+      longest,
+    ]);
+    expect(parts('targets.guide.more', { help: longest })).toEqual([
+      'More ways to write an address are in ',
+      longest,
+      '.',
+    ]);
+  });
+
   it('translates keys with parameters; unknown keys come back as they are', async () => {
     expect(await initI18n('auto')).toBe('en');
     expect(locale()).toBe('en');
+    expect(formatLocale()).toMatch(/^en/);
     expect(textDirection()).toBe('ltr');
     expect(t('groups.title')).toBe('Rules');
     expect(t('groups.sites', { count: 3 })).toMatch(/3/);

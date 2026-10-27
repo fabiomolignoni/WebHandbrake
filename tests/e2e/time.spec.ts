@@ -4,7 +4,7 @@
  */
 
 import { expect, type Harness, type Tab, test } from './harness';
-import { BLOCK, group, pauseFree, policy, TRACK, timeBudget, visitBudget } from './harness/config';
+import { BLOCK, filter, group, pauseFree, policy, TRACK, timeBudget, visitBudget } from './harness/config';
 import { defaultPage } from './harness/server';
 import { expectAllowed, expectBlocked, sleep, useUntil } from './helpers';
 
@@ -22,6 +22,12 @@ async function groupSeconds(h: Harness, name: string): Promise<number> {
   return stats.groups.find((g: any) => g.name === name)?.seconds ?? 0;
 }
 
+/**
+ * Milliseconds on a clock that never goes back: the system clock can be put right while a test
+ * runs (WSL does so by seconds every 30 s), which would shorten the time measured.
+ */
+const monotonic = () => performance.now();
+
 async function use(tab: Tab, ms: number) {
   await useUntil(tab, async () => false, ms);
 }
@@ -31,17 +37,68 @@ test('active time is counted and an exhausted budget applies within seconds', as
     c.groups = [group('Video', ['video.test'], [policy(BLOCK, { budget: timeBudget(0.1) })])];
   });
   // Counting starts as soon as the page loads: the time is measured from before it opens.
-  const t0 = Date.now();
+  const t0 = monotonic();
   const p = await expectAllowed(h, 'http://video.test/watch');
   await useUntil(p, () => p.isIntervention(), 20_000);
   await p.expectIntervention(true, 3000);
-  const elapsed = Date.now() - t0;
+  const elapsed = monotonic() - t0;
   expect(elapsed).toBeGreaterThan(4500);
   expect(elapsed).toBeLessThan(15_000);
   expect(await counted(h)).toBeGreaterThanOrEqual(5);
   // The badge and the popup say why.
   const why = await h.rpc('explain', { url: 'http://video.test/other' });
   expect(why.primary.policies[0].budget.exhausted).toBe(true);
+});
+
+test('time in the reader view is counted, and an exhausted budget applies there', async ({
+  h,
+  browserName,
+}) => {
+  test.skip(browserName !== 'firefox', 'The reader view is Firefox’s');
+  // No page script runs in the reader view: the background counts its time.
+  const story = Array.from(
+    { length: 12 },
+    () => `<p>${'Reading a page in the reader view is still reading the site. '.repeat(6)}</p>`,
+  ).join('');
+  h.server.route('news.test', (r) => ({ body: defaultPage(r.host, r.path, `<article>${story}</article>`) }));
+  await h.configure((c) => {
+    // The browser gets no real input during a run: after a while the system counts as idle, which
+    // stops the counting there as it should.
+    c.settings.tracking.idleEnabled = false;
+    c.groups = [group('News', ['news.test'], [policy(BLOCK, { budget: timeBudget(0.1) })])];
+  });
+  const t0 = monotonic();
+  const p = await h.open(`about:reader?url=${encodeURIComponent('http://news.test/story')}`);
+  await p.front();
+  await p.expectIntervention(true, 20_000);
+  expect(monotonic() - t0).toBeGreaterThan(4500);
+  expect(await groupSeconds(h, 'News')).toBeGreaterThanOrEqual(5);
+});
+
+test('without access to websites, the time of the tab in view counts and a limit applies', async ({ h }) => {
+  await h.configure((c) => {
+    // The browser gets no real input during a run: after a while the system counts as idle, which
+    // stops the counting there as it should.
+    c.settings.tracking.idleEnabled = false;
+    c.groups = [
+      group('Video', ['video.test'], [policy(BLOCK, { budget: timeBudget(0.1) })]),
+      group('Inverted', ['video.test'], [policy(filter('invert'))]),
+    ];
+  });
+  await h.removeSiteAccess();
+  const t0 = monotonic();
+  const p = await h.open('http://video.test/watch');
+  await p.front();
+  // No page script runs there: it would have applied the filter.
+  await sleep(1500);
+  expect(await p.eval(() => document.querySelector('[data-webhandbrake]')?.tagName ?? null)).toBeNull();
+  // The background counts the time, and the page is replaced as soon as the limit runs out.
+  await useUntil(p, () => p.isIntervention(), 20_000);
+  await p.expectIntervention(true, 3000);
+  expect(monotonic() - t0).toBeGreaterThan(4500);
+  expect(await groupSeconds(h, 'Video')).toBeGreaterThanOrEqual(5);
+  const ov = await h.rpc('overview.get');
+  expect(ov.warnings.map((w: any) => w.kind)).toContain('host-permission');
 });
 
 test('a tab in the background is not counted', async ({ h, browserName }) => {
@@ -58,6 +115,24 @@ test('a tab in the background is not counted', async ({ h, browserName }) => {
   const other = await expectAllowed(h, 'http://other.test/');
   await use(other, 5000);
   expect(await groupSeconds(h, 'Social')).toBeLessThan(before + 2);
+});
+
+test('with "Count tabs that are open but not active", a tab in the background counts', async ({ h }) => {
+  await h.configure((c) => {
+    c.settings.tracking.countInactive = true;
+    c.groups = [group('Social', ['social.test'], [policy(TRACK)])];
+  });
+  const t0 = monotonic();
+  await expectAllowed(h, 'http://social.test/');
+  const other = await expectAllowed(h, 'http://other.test/');
+  await use(other, 8000);
+  // The background counts a tab not in view (browsers slow its page down): up to now, at the
+  // latest at its alarm every minute.
+  await h.rpc('test.periodic');
+  const seconds = await groupSeconds(h, 'Social');
+  expect(seconds).toBeGreaterThan(5);
+  // Never twice: the first tick of a page counts a second of its own.
+  expect(seconds).toBeLessThan((monotonic() - t0) / 1000 + 2);
 });
 
 test('no time is counted while the user is idle on the page', async ({ h }) => {
@@ -170,7 +245,7 @@ test('typing in a page gives a grace period with a countdown and a copy button',
   const p = await expectAllowed(h, 'http://forum.test/thread');
   await p.label('Comment').type('a long comment I do not want to lose');
   await sleep(300);
-  const t0 = Date.now();
+  const t0 = monotonic();
   await h.rpc('pause.cancel', { all: true });
   const dialog = p.get({ role: 'alertdialog', within: 'webhandbrake-overlay' });
   await dialog.expectVisible();
@@ -179,7 +254,7 @@ test('typing in a page gives a grace period with a countdown and a copy button',
   await p.button('Copy my draft', { within: 'webhandbrake-overlay' }).expectVisible();
   expect(await p.isIntervention()).toBe(false);
   await p.expectIntervention(true, 12_000);
-  expect(Date.now() - t0).toBeGreaterThan(3500);
+  expect(monotonic() - t0).toBeGreaterThan(3500);
 });
 
 test.describe('a page that asks before it is left', () => {

@@ -5,7 +5,9 @@
  * (or playing media when that is counted) and the user is not idle. Credits are computed per
  * usage key from the time since the previous credit of the same key, so a group never gets more
  * than one second per real second whatever the number of tabs, and gaps (sleep, locked
- * screen, clock jumps) are never counted.
+ * screen, clock jumps) are never counted. The pages where no content script runs, and the tabs not
+ * in view with Count tabs that are open but not active, are counted by the background in stretches
+ * (tabtime.ts), with the same credits.
  */
 
 import { type Decision, decide, pageFilters } from '../engine/decide';
@@ -15,7 +17,7 @@ import { isNav, SEVERITY } from '../engine/severity';
 import type { Activity } from '../engine/types';
 import { stripWww } from '../engine/url';
 import { usageKeys } from '../engine/usage';
-import { locale, template, t as tr } from '../i18n/i18n';
+import { formatLocale, locale, template, textDirection, t as tr } from '../i18n/i18n';
 import { api, sessionStore } from '../platform/api';
 import type { TickResponse } from '../shared/models';
 import type { TickRequest } from '../shared/rpc';
@@ -47,23 +49,29 @@ export function initIdle() {
   }
 }
 
-function creditSeconds(key: string, t: number): number {
+/**
+ * Seconds to credit to a key at t. A stretch counted by the background (`from`) gets its time,
+ * without what ticks already credited to the key meanwhile.
+ */
+function creditSeconds(key: string, t: number, from?: number): number {
   const last = lastCredit.get(key);
   lastCredit.set(key, t);
+  if (from !== undefined) return Math.max(0, t - Math.max(from, last ?? from)) / 1000;
   if (last === undefined) return 1;
   const dt = t - last;
   if (dt <= 0) return 0;
   return dt > MAX_STEP_MS ? 1 : dt / 1000;
 }
 
-/** Records activity on a key; true when it starts a visit. */
-function updateActivity(key: string, t: number, gapMs: number): boolean {
+/** Records activity on a key, from `from` to t; true when it starts a visit. */
+function updateActivity(key: string, t: number, gapMs: number, from = t): boolean {
   const act: Activity | undefined = store.state.activity[key];
   store.state.activity[key] = { last: t };
-  return !act || t - act.last > gapMs;
+  return !act || from - act.last > gapMs;
 }
 
-function credit(d: Decision, incognito: boolean, t: number) {
+/** Credits the time of a page up to t: since the previous credit, or since `from` (a stretch). */
+function credit(d: Decision, incognito: boolean, t: number, from?: number) {
   const s = store.config.settings;
   const cal = store.cc.cal;
   const gap = s.tracking.visitGapMinutes * 60_000;
@@ -74,15 +82,15 @@ function credit(d: Decision, incognito: boolean, t: number) {
   const counted = d.groups.filter((r) => r.intervention.type !== 'allow');
   const outside = !counted.length && Boolean(parsed?.web) && s.tracking.allSites;
   const totalKey = outside ? usageKeys.outside : usageKeys.all;
-  const any = counted.length || outside ? creditSeconds(totalKey, t) : 0;
+  const any = counted.length || outside ? creditSeconds(totalKey, t, from) : 0;
   if (any > 0) store.usage.add(totalKey, t, any, 0, cal, !outside);
   for (const r of counted) {
     const gk = usageKeys.group(r.group.id);
     const sk = usageKeys.site(r.group.id, r.site);
     for (const key of [gk, sk]) {
-      const sec = creditSeconds(key, t);
+      const sec = creditSeconds(key, t, from);
       if (sec <= 0) continue;
-      const visit = updateActivity(key, t, gap);
+      const visit = updateActivity(key, t, gap, from);
       store.usage.add(key, t, sec, visit ? 1 : 0, cal);
     }
   }
@@ -96,7 +104,7 @@ function credit(d: Decision, incognito: boolean, t: number) {
     const last = hostLastActive.get(seen) ?? 0;
     hostLastActive.set(seen, t);
     const key = incognito ? usageKeys.private : usageKeys.host(host);
-    store.usage.add(key, t, any, t - last > gap ? 1 : 0, cal, false);
+    store.usage.add(key, t, any, (from ?? t) - last > gap ? 1 : 0, cal, false);
   }
   store.scheduleUsage();
   store.scheduleState();
@@ -205,6 +213,29 @@ function responseFor(d: Decision, t: number, incognito: boolean, active: boolean
   return res;
 }
 
+/** Whether the time of a page with this decision counts: not on a page that it replaces. */
+function counts(d: Decision): boolean {
+  return !d.exempt && !isNav(d) && Boolean(d.groups.length || store.config.settings.tracking.allSites);
+}
+
+/** Whether the time of a page counts now (tabtime.ts). */
+export function timeCounts(url: string, incognito: boolean): boolean {
+  return counts(decide(ctx(), url, { incognito }));
+}
+
+/**
+ * Credits a stretch of a page that sends no ticks, from `from` to t: the time counts for the rules
+ * of the page as it started, which the background ends at least every minute (tabtime.ts). A limit
+ * that runs out applies at once.
+ */
+export function creditStretch(url: string, incognito: boolean, from: number, t: number) {
+  const d = decide(ctx(from), url, { incognito });
+  if (!counts(d)) return;
+  const before = decide(ctx(t), url, { incognito }).severity;
+  credit(d, incognito, t, from);
+  if (decide(ctx(t), url, { incognito }).severity !== before) void reconcile('budget');
+}
+
 const lastSeverity = new Map<number, number>();
 
 export async function onTick(req: TickRequest, sender: chrome.runtime.MessageSender): Promise<TickResponse> {
@@ -217,13 +248,7 @@ export async function onTick(req: TickRequest, sender: chrome.runtime.MessageSen
   const c = ctx(t);
   let d = decide(c, req.url, { incognito });
   const locked = idleState === 'locked';
-  if (
-    !d.exempt &&
-    req.active &&
-    !locked &&
-    !isNav(d) &&
-    (d.groups.length || store.config.settings.tracking.allSites)
-  ) {
+  if (req.active && !locked && counts(d)) {
     credit(d, incognito, t);
     const before = d.severity;
     d = decide(ctx(t), req.url, { incognito });
@@ -272,5 +297,10 @@ function overlayLabels(): Record<string, string> {
     'overlay.cover.body',
     'overlay.cover.open',
   ];
-  return { ...Object.fromEntries(keys.map((k) => [k, template(k)])), __locale: locale() };
+  return {
+    ...Object.fromEntries(keys.map((k) => [k, template(k)])),
+    __locale: formatLocale(),
+    __lang: locale(),
+    __dir: textDirection(),
+  };
 }

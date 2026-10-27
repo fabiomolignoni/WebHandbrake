@@ -333,10 +333,7 @@ async function stripDays(days: string[]) {
   const cutoff = budgetCutoff();
   const recent = days.filter((d) => d >= cutoff);
   const old = days.filter((d) => d < cutoff);
-  if (old.length) {
-    await api.storage.local.remove(old.map((k) => `u:${k}`));
-    for (const k of old) store.usage.days.delete(k);
-  }
+  await store.removeDays(old);
   if (recent.length) {
     const records = await store.loadDays(recent);
     const items: Record<string, DayRecord> = {};

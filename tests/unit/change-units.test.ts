@@ -134,6 +134,44 @@ describe('limits', () => {
     expect(change(time(30), undefined)).toBe('strengthen');
     expect(change(undefined, time(30))).toBe('weaken');
   });
+
+  it('a period that starts elsewhere loosens: a week or a month for days, another start of the days', () => {
+    const week: Period = { kind: 'week' };
+    const month: Period = { kind: 'month' };
+    const days = (n: number, offset?: number): Period => ({ kind: 'days', n, ...(offset ? { offset } : {}) });
+    // A week from its first day and 7 days from another day each start again before the other.
+    expect(change(time(30, week), time(30, days(7)))).toBe('weaken');
+    expect(change(time(30, days(7)), time(30, week))).toBe('weaken');
+    expect(change(time(30, month), time(30, days(30)))).toBe('weaken');
+    expect(change(time(30, days(30)), time(30, month))).toBe('weaken');
+    expect(change(time(30, week), time(30, month))).toBe('weaken');
+    expect(change(time(30, month), time(30, week))).toBe('weaken');
+    // Moving the start of a number of days can start it again at once.
+    expect(change(time(30, days(3)), time(30, days(3, 1)))).toBe('weaken');
+    expect(change(time(30, days(3, 2)), time(30, days(3)))).toBe('weaken');
+    // The same start, with the offset written or not, is no change; less time still restricts sooner.
+    expect(change(time(30, days(3)), time(30, { kind: 'days', n: 3, offset: 0 }))).toBe('neutral');
+    expect(change(time(30, days(3, 1)), time(20, days(3, 1)))).toBe('strengthen');
+    expect(change(time(30, week), time(20, week))).toBe('strengthen');
+  });
+
+  it('a week or a month in place of a day, with no more allowed, is stricter: it holds the day', () => {
+    const week: Period = { kind: 'week' };
+    const month: Period = { kind: 'month' };
+    const visits = (count: number, period: Period): Budget => ({ type: 'visits', count, period });
+    expect(change(time(30, day), time(30, week))).toBe('strengthen');
+    expect(change(time(30, day), time(20, month))).toBe('strengthen');
+    expect(change(visits(3, day), visits(3, week))).toBe('strengthen');
+    // More time in the longer period may be used up later; the shorter period starts again sooner.
+    expect(change(time(30, day), time(60, week))).toBe('weaken');
+    expect(change(time(30, week), time(30, day))).toBe('weaken');
+    expect(change(time(30, month), time(30, day))).toBe('weaken');
+    // Only a day is inside every week and month: an hour or a number of days is not.
+    expect(change(time(10, { kind: 'hour' }), time(10, week))).toBe('weaken');
+    expect(change(time(30, { kind: 'days', n: 1 }), time(30, week))).toBe('weaken');
+    // Per site or not, as before.
+    expect(change(time(30, day), { ...time(30, week), perSite: true })).toBe('weaken');
+  });
 });
 
 describe('interventions of the same severity', () => {
@@ -209,7 +247,14 @@ describe('breaks and options', () => {
     expect(comparePause(p, { ...p, maxMinutes: 30 })).toBe('weaken');
     expect(comparePause(p, { ...p, limit: { ...p.limit, count: 1 } })).toBe('strengthen');
     expect(comparePause(p, { ...p, limit: { count: 3, period: day } })).toBe('weaken');
-    expect(comparePause(p, { ...p, limit: { ...p.limit, period: { kind: 'week' } } })).toBe('weaken');
+    // A week or a month holds the day: the same limits are reached no later.
+    expect(comparePause(p, { ...p, limit: { ...p.limit, period: { kind: 'week' } } })).toBe('strengthen');
+    expect(comparePause(p, { ...p, limit: { count: 4, minutes: 30, period: { kind: 'month' } } })).toBe(
+      'weaken',
+    );
+    const weekly = { ...p, limit: { ...p.limit, period: { kind: 'week' as const } } };
+    expect(comparePause(weekly, p)).toBe('weaken');
+    expect(comparePause(p, { ...p, limit: { ...p.limit, period: { kind: 'days', n: 2 } } })).toBe('weaken');
     expect(comparePause(p, { ...p, cost: { type: 'password' } })).toBe('strengthen');
     expect(comparePause(p, { ...p, cost: { type: 'confirm' } })).toBe('weaken');
     const challenge = { ...p, cost: { type: 'challenge' as const, kind: 'random' as const, length: 24 } };
@@ -246,7 +291,13 @@ describe('settings', () => {
       'strengthen',
     );
     expect(classifySetting('pauseLimit', { count: 5, period: day }, { period: day })).toBe('weaken');
-    expect(classifySetting('pauseLimit', { period: day }, { period: { kind: 'week' } })).toBe('weaken');
+    expect(
+      classifySetting('pauseLimit', { count: 5, period: day }, { count: 5, period: { kind: 'week' } }),
+    ).toBe('strengthen');
+    expect(
+      classifySetting('pauseLimit', { count: 5, period: { kind: 'week' } }, { count: 5, period: day }),
+    ).toBe('weaken');
+    expect(classifySetting('pauseLimit', { period: day }, { period: { kind: 'days', n: 2 } })).toBe('weaken');
     expect(classifySetting('dayStart', 0, 240)).toBe('weaken');
     expect(classifySetting('dayStart', 0, 0)).toBe('neutral');
   });

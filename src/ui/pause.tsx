@@ -147,7 +147,7 @@ export function PauseDialog({
           })}
         </p>
         <p class="small">
-          <strong>{t('pause.cost')}:</strong> {costsLabel(o.costs)}
+          {t('pause.summary.cost', { cost: costsLabel(o.costs) })}
           {budget && <> · {budget}</>}
         </p>
         {error && <Banner kind="danger">{error}</Banner>}

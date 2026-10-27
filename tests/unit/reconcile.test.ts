@@ -179,7 +179,7 @@ describe('browser settings pages', () => {
     for (const url of [
       'about:addons',
       'chrome://extensions/?id=x',
-      'chrome://extensions/shortcuts',
+      'chrome://extensions/shortcutsx',
       'chrome://flags',
       'chrome://settings/reset',
       'chrome://settings/resetProfileSettings?origin=userclick',
@@ -187,8 +187,11 @@ describe('browser settings pages', () => {
       'ABOUT:CONFIG',
     ])
       expect(isProtectedInternal(url), url).toBe(true);
-    // The settings that cannot turn the extension off stay open (passwords, privacy, search…).
+    // The settings that cannot turn the extension off stay open (passwords, privacy, search…), and
+    // so does Chromium's page of shortcuts, which Help opens.
     for (const url of [
+      'chrome://extensions/shortcuts',
+      'edge://extensions/shortcuts?x',
       'about:blank',
       'about:preferences',
       'chrome://newtab',

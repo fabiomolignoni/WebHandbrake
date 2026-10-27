@@ -5,7 +5,7 @@
 
 import { useState } from 'preact/hooks';
 import { t } from '../i18n/i18n';
-import { formatDateTime, formatDuration } from '../shared/format';
+import { dateTimeParams, formatDuration } from '../shared/format';
 import type { SaveResult, TicketView } from '../shared/models';
 import { describeUnit } from '../shared/summary';
 import { Banner, Button, Dialog, toast } from './components';
@@ -98,7 +98,7 @@ export function useSaveFlow() {
                 <span>
                   {t(info.pending.emergency ? 'save.pendingEmergencyBody' : 'save.pendingBody', {
                     wait: formatDuration((info.pending.readyAt - info.pending.createdAt) / 1000),
-                    when: formatDateTime(info.pending.readyAt),
+                    ...dateTimeParams(info.pending.readyAt),
                   })}
                 </span>
                 <ul class="small" style={{ margin: 0, paddingInlineStart: '18px' }}>
@@ -112,7 +112,7 @@ export function useSaveFlow() {
               <Banner kind="warning" icon="lock">
                 <strong>
                   {info.refused.reason === 'locked' && info.refused.until
-                    ? t('save.refused.lockedUntil', { until: formatDateTime(info.refused.until) })
+                    ? t('save.refused.lockedUntil', dateTimeParams(info.refused.until))
                     : t(`save.refused.${info.refused.reason}`)}
                 </strong>
                 <ul class="small" style={{ margin: 0, paddingInlineStart: '18px' }}>

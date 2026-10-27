@@ -7,8 +7,9 @@
 import { isNav } from '../engine/severity';
 import type { Intervention, InterventionType, Policy } from '../engine/types';
 import { t } from '../i18n/i18n';
-import { formatDuration, formatWhen } from '../shared/format';
+import { formatDuration, whenParams } from '../shared/format';
 import type { DecisionView, GroupStatus } from '../shared/models';
+import { describeIntervention } from '../shared/summary';
 
 export type Tone = 'free' | 'gentle' | 'friction' | 'protected' | 'calm' | 'neutral';
 
@@ -48,6 +49,14 @@ export function statusIcon(type: InterventionType): string {
 /** A state as a noun ("Blocked", "Asks first", "Wait 20 s"), for pills and headlines. */
 export function statusName(i: Intervention): string {
   return t(`status.type.${i.type}`, { seconds: i.type === 'delay' ? i.seconds : 0 });
+}
+
+/**
+ * What comes next on a site, after "Next:": a state when the site opens ("Allowed", "Time
+ * counted"), else what happens with its main setting ("Wait 30 s", "Greyscale").
+ */
+export function thenName(i: Intervention): string {
+  return toneOf(i.type) === 'free' ? statusName(i) : describeIntervention(i);
 }
 
 /**
@@ -103,13 +112,13 @@ export function interventionStatus(i: Intervention, until: number | null, now = 
     return {
       tone,
       icon,
-      label: until ? t('status.freeUntil', { when: formatWhen(until, now) }) : t('status.free'),
+      label: until ? t('status.freeUntil', whenParams(until, now)) : t('status.free'),
     };
   const what = statusName(i);
   return {
     tone,
     icon,
-    label: until ? t('status.until', { what, when: formatWhen(until, now) }) : what,
+    label: until ? t('status.until', { what, ...whenParams(until, now) }) : what,
   };
 }
 
@@ -126,7 +135,7 @@ export function siteStatus(d: DecisionView | null, now = Date.now()): SiteStatus
       tone: 'protected',
       icon: 'target',
       label: '',
-      title: t('status.site.session', { when: formatWhen(d.session.endAt, now) }),
+      title: t('status.site.session', whenParams(d.session.endAt, now)),
     };
   }
   if (isNav(d)) {
@@ -146,7 +155,7 @@ export function siteStatus(d: DecisionView | null, now = Date.now()): SiteStatus
       label: '',
       title:
         paused.pause.until !== undefined
-          ? t('status.pausedUntil', { when: formatWhen(paused.pause.until, now) })
+          ? t('status.pausedUntil', whenParams(paused.pause.until, now))
           : t('status.paused'),
     };
   }
@@ -157,7 +166,7 @@ export function siteStatus(d: DecisionView | null, now = Date.now()): SiteStatus
       icon: 'check-circle',
       label: '',
       title: passed.pass.until
-        ? t('status.site.passUntil', { when: formatWhen(passed.pass.until, now) })
+        ? t('status.site.passUntil', whenParams(passed.pass.until, now))
         : t('status.site.passVisit'),
     };
   }
@@ -185,7 +194,7 @@ export function siteStatus(d: DecisionView | null, now = Date.now()): SiteStatus
       tone,
       icon,
       label: '',
-      title: t('status.site.freeUntil', { when: formatWhen(d.restriction.at, now) }),
+      title: t('status.site.freeUntil', whenParams(d.restriction.at, now)),
     };
   return { tone, icon, label: '', title: t('status.site.free') };
 }

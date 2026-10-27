@@ -4,15 +4,16 @@
  */
 
 import { useId } from 'preact/hooks';
-import { DAY_MINUTES, everyPeriod, periodMinutes, SCHEDULE_PRESETS } from '../../engine/defaults';
+import { periodMinutes, SCHEDULE_PRESETS } from '../../engine/defaults';
 import { clone } from '../../engine/json';
 import type { Budget, Policy, Schedule, TimeBudget, TimeWindow, VisitBudget } from '../../engine/types';
 import { t } from '../../i18n/i18n';
-import { formatDuration } from '../../shared/format';
-import { DurationInput, NumberInput, RadioCards, Toggle } from '../../ui/components';
+import { formatDuration, formatMinutesOfDay } from '../../shared/format';
+import { NumberInput, RadioCards, Toggle } from '../../ui/components';
 import { Icon } from '../../ui/icons';
 import { type WhenKind, whenKind } from '../rule-form';
 import { DailyMinutes } from './daily-minutes';
+import { PeriodPicker } from './period-picker';
 import { WindowsEditor } from './schedule';
 
 const WHEN_KINDS: WhenKind[] = ['always', 'schedule', 'limit', 'visits'];
@@ -40,12 +41,15 @@ export interface ConditionMemo {
 export function ConditionEditor({
   policy,
   onChange,
+  saved,
   severalSites,
   memo,
   onMemo,
 }: {
   policy: Policy;
   onChange: (p: Policy) => void;
+  /** The limit as saved, for a rule that exists. */
+  saved?: Budget;
   /** The rule has several sites: a limit is shared by them unless each gets its own. */
   severalSites: boolean;
   memo: ConditionMemo;
@@ -99,7 +103,12 @@ export function ConditionEditor({
             <Icon name={WHEN_CARD[o.value].icon} />
             <span>
               <strong>{t(WHEN_CARD[o.value].label)}</strong>
-              <span class="small muted">{t(WHEN_CARD[o.value].desc)}</span>
+              <span class="small muted">
+                {t(WHEN_CARD[o.value].desc, {
+                  start: formatMinutesOfDay(9 * 60),
+                  end: formatMinutesOfDay(17 * 60),
+                })}
+              </span>
             </span>
           </>
         )}
@@ -140,7 +149,7 @@ export function ConditionEditor({
                   min={0}
                   max={1000}
                   label={t('budget.visitsQuestion')}
-                  suffix={t('budget.visitsUnit')}
+                  suffix={t('budget.visitsUnit', { n: budget.count })}
                   describedBy={`${id}-visit-help`}
                   onChange={(count) => setBudget({ ...budget, count })}
                 />
@@ -150,39 +159,12 @@ export function ConditionEditor({
               </span>
             </div>
           )}
-          <div class="row">
-            <span class="label" aria-hidden="true">
-              {t('wizard.when.every')}
-            </span>
-            <DurationInput
-              value={periodMinutes(budget.period)}
-              min={5}
-              max={90 * DAY_MINUTES}
-              unitMax={{ minutes: DAY_MINUTES, hours: DAY_MINUTES }}
-              label={t('wizard.when.every')}
-              describedBy={budget.type === 'time' ? `${id}-every-help` : undefined}
-              onChange={(every, unit) =>
-                // A period of days counts whole days.
-                setBudget({
-                  ...budget,
-                  period: everyPeriod(
-                    unit === 'days' ? Math.max(1, Math.round(every / DAY_MINUTES)) * DAY_MINUTES : every,
-                  ),
-                })
-              }
-            />
-          </div>
-          {neverReached(budget) ? (
-            <span class="error-text" id={`${id}-every-help`}>
-              {t('wizard.when.tooLong')}
-            </span>
-          ) : (
-            budget.type === 'time' && (
-              <span class="help" id={`${id}-every-help`}>
-                {t('wizard.when.everyHelp')}
-              </span>
-            )
-          )}
+          <PeriodPicker
+            period={budget.period}
+            saved={saved?.period}
+            error={neverReached(budget) ? t('wizard.when.tooLong') : undefined}
+            onChange={(period) => setBudget({ ...budget, period })}
+          />
           {(severalSites || budget.perSite) && (
             <Toggle
               checked={Boolean(budget.perSite)}

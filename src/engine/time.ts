@@ -204,7 +204,7 @@ export type PeriodRange =
   | { kind: 'days'; days: string[]; start: number; end: number }
   | { kind: 'minutes'; from: number; to: number; start: number; end: number };
 
-/** Reference logical day for multi-day periods: Monday 2024-01-01. */
+/** Reference logical day for multi-day periods, which the offset shifts: Monday 2024-01-01. */
 const DAYS_EPOCH = dayNumber({ y: 2024, m: 0, d: 1 });
 
 /**
@@ -283,6 +283,25 @@ export function periodRange(p: Period, t: number, cal: CalendarSettings): Period
       };
     }
   }
+}
+
+/**
+ * The period a limit gets when how often it starts again is chosen. The period it had (`before`)
+ * stays as it was when its length is chosen again, so that it keeps its start; a number of days
+ * otherwise starts on the day of t. The other periods start with the clock or the calendar.
+ */
+export function chosenPeriod(
+  p: Period,
+  before: Period | undefined,
+  t: number,
+  cal: CalendarSettings,
+): Period {
+  if (before && before.kind === p.kind && (before.n ?? 0) === (p.n ?? 0)) return before;
+  const chosen: Period = p.n === undefined ? { kind: p.kind } : { kind: p.kind, n: p.n };
+  if (p.kind !== 'days') return chosen;
+  const n = clamp(p.n ?? 1, 1, 90);
+  const offset = (((dayNumber(logicalDayOf(t, cal)) - DAYS_EPOCH) % n) + n) % n;
+  return offset ? { ...chosen, offset } : chosen;
 }
 
 export function clamp(v: number, min: number, max: number): number {

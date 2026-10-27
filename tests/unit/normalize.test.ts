@@ -16,6 +16,7 @@ import {
   normalizeSettings,
   normalizeTarget,
   normalizeWindows,
+  type Problem,
 } from '../../src/engine/schema';
 import { scheduleActive } from '../../src/engine/time';
 import { type Group, SCHEMA_VERSION } from '../../src/engine/types';
@@ -189,12 +190,16 @@ describe('normalising what is read from storage or a file', () => {
     });
     const period = (p: Record<string, unknown>) =>
       limit({ type: 'time', minutes: 30, period: p })?.budget?.period;
-    expect(period({ kind: 'week' })).toEqual({ kind: 'days', n: 7 });
-    expect(period({ kind: 'month' })).toEqual({ kind: 'days', n: 30 });
+    // Weeks and months are the calendar's; the 7 and 30 days that 1.1.0 made of them stay so.
+    expect(period({ kind: 'week' })).toEqual({ kind: 'week' });
+    expect(period({ kind: 'month' })).toEqual({ kind: 'month' });
+    expect(period({ kind: 'days', n: 7 })).toEqual({ kind: 'days', n: 7 });
     expect(period({ kind: 'rolling', n: 60 })).toEqual({ kind: 'hour' });
     expect(period({ kind: 'rolling', n: 90 })).toEqual({ kind: 'minutes', n: 90 });
+    // Minutes count from the start of the day; days keep the day they count from.
     expect(period({ kind: 'minutes', n: 120, offset: 30 })).toEqual({ kind: 'minutes', n: 120 });
-    expect(period({ kind: 'days', n: 3, offset: 1 })).toEqual({ kind: 'days', n: 3 });
+    expect(period({ kind: 'days', n: 3, offset: 1 })).toEqual({ kind: 'days', n: 3, offset: 1 });
+    expect(period({ kind: 'days', n: 3, offset: 0 })).toEqual({ kind: 'days', n: 3 });
     // The longest visit is dropped.
     expect(limit({ type: 'visits', count: 3, period: { kind: 'day' }, maxVisitMinutes: 10 })?.budget).toEqual(
       {
@@ -290,7 +295,7 @@ describe('normalising what is read from storage or a file', () => {
   });
 
   it('rules: defaults for what is missing, valid colours only, unknown fields kept', () => {
-    const errors: string[] = [];
+    const errors: Problem[] = [];
     const g = normalizeGroup(
       {
         id: 'g',
@@ -304,7 +309,7 @@ describe('normalising what is read from storage or a file', () => {
     );
     expect(g).toMatchObject({
       id: 'g',
-      name: 'Group',
+      name: '',
       rev: 1,
       updatedAt: 5,
       enabled: true,
@@ -313,12 +318,12 @@ describe('normalising what is read from storage or a file', () => {
     });
     expect(g?.color).toMatch(/^#[0-9a-f]{6}$/i);
     expect(g?.targets).toHaveLength(1);
-    expect(errors).toEqual(['Rule “”: an entry that could not be read was left out: {"value":""}']);
+    expect(errors).toEqual([{ key: 'import.warn.entry', params: { rule: '', entry: '{"value":""}' } }]);
     expect(normalizeGroup([], [])).toBeNull();
   });
 
   it('rules: an entry repeated is kept once, without a word', () => {
-    const errors: string[] = [];
+    const errors: Problem[] = [];
     const g = normalizeGroup(
       {
         id: 'g',
@@ -366,8 +371,8 @@ describe('normalising what is read from storage or a file', () => {
     expect(config.schema).toBe(SCHEMA_VERSION);
     expect(new Set(config.groups.map((g) => g.id)).size).toBe(2);
     expect(config.tombstones).toEqual([{ id: 'x' }]);
-    expect(errors).toEqual(['A rule that could not be read was left out.']);
-    expect(normalizeConfig('nope')).toMatchObject({ errors: ['not an object'] });
+    expect(errors).toEqual([{ key: 'import.warn.rule' }]);
+    expect(normalizeConfig('nope')).toMatchObject({ errors: [{ key: 'import.error.format' }] });
   });
 
   it('schema 1: shared lists move into their rules, Always allowed becomes exceptions', () => {
@@ -470,7 +475,7 @@ describe('schema 2: one condition per rule', () => {
       ['w', 'Work', ['p1']],
       ['w-2', 'Work (2)', ['p2']],
       ['w-3', 'Work (3)', ['p3']],
-      ['other', 'Group', ['o']],
+      ['other', '', ['o']],
     ]);
     // The last condition applies at the times of none before it that has no limit.
     expect(groups[2].policies[0].schedule).toEqual({

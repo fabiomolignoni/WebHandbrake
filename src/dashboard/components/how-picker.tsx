@@ -17,9 +17,17 @@ import type {
   InterventionType,
 } from '../../engine/types';
 import { isRedirectUrl } from '../../engine/validate';
-import { t } from '../../i18n/i18n';
-import { formatDuration } from '../../shared/format';
-import { DurationInput, NumberInput, RadioCards, RadioList, Segmented, Toggle } from '../../ui/components';
+import { parts, t } from '../../i18n/i18n';
+import { formatDuration, formatPercent } from '../../shared/format';
+import {
+  DurationInput,
+  Fields,
+  NumberInput,
+  RadioCards,
+  RadioList,
+  Segmented,
+  Toggle,
+} from '../../ui/components';
 import { Icon } from '../../ui/icons';
 import { interventionIcon, LADDER, toneOf } from '../../ui/status';
 
@@ -85,9 +93,9 @@ const waitLength = (v: DelayIntervention): WaitLength =>
 
 /** A wait to the second: "1 min 5 s", where formatDuration says "1 min". */
 const waitText = (s: number) =>
-  s < 60 || s % 60 === 0
+  s < 60 || s % 60 === 0 || s >= 3600
     ? formatDuration(s)
-    : `${formatDuration(s - (s % 60))} ${t('duration.s', { s: s % 60 })}`;
+    : t('duration.ms', { m: Math.floor(s / 60), s: s % 60 });
 
 /** The settings of the choice. */
 function Options({ value: v, onChange }: { value: Intervention; onChange: (i: Intervention) => void }) {
@@ -112,7 +120,7 @@ function Options({ value: v, onChange }: { value: Intervention; onChange: (i: In
               value={v.intensity ?? 100}
               onInput={(e) => onChange({ ...v, intensity: Number((e.target as HTMLInputElement).value) })}
             />
-            <span class="num">{v.intensity ?? 100}%</span>
+            <span class="num">{formatPercent((v.intensity ?? 100) / 100, false)}</span>
           </label>
         </div>
       );
@@ -120,26 +128,38 @@ function Options({ value: v, onChange }: { value: Intervention; onChange: (i: In
       return (
         <div class="stack stack-sm">
           <div class="row nowrap small">
-            <span aria-hidden="true">{t('wizard.how.askMax')}</span>
-            <DurationInput
-              units={['minutes', 'hours']}
-              value={v.maxMinutes}
-              min={1}
-              max={1440}
-              label={t('wizard.how.askMax')}
-              onChange={(maxMinutes) => onChange({ ...v, maxMinutes })}
-            />
+            <Fields>
+              {parts('wizard.how.askMaxFields', {
+                duration: (
+                  <DurationInput
+                    units={['minutes', 'hours']}
+                    value={v.maxMinutes}
+                    min={1}
+                    max={1440}
+                    label={t('wizard.how.askMax')}
+                    onChange={(maxMinutes) => onChange({ ...v, maxMinutes })}
+                  />
+                ),
+              })}
+            </Fields>
           </div>
           <div class="row nowrap small">
-            <span aria-hidden="true">{t('ask.minReason')}</span>
-            <NumberInput
-              value={v.minReasonLength}
-              min={1}
-              max={300}
-              label={t('ask.minReason')}
-              suffix={t('ask.minReasonUnit', { n: v.minReasonLength })}
-              onChange={(minReasonLength) => onChange({ ...v, minReasonLength: Math.round(minReasonLength) })}
-            />
+            <Fields>
+              {parts('ask.minReasonFields', {
+                length: (
+                  <NumberInput
+                    value={v.minReasonLength}
+                    min={1}
+                    max={300}
+                    label={t('ask.minReason')}
+                    suffix={t('ask.minReasonUnit', { n: v.minReasonLength })}
+                    onChange={(minReasonLength) =>
+                      onChange({ ...v, minReasonLength: Math.round(minReasonLength) })
+                    }
+                  />
+                ),
+              })}
+            </Fields>
           </div>
         </div>
       );
@@ -172,7 +192,7 @@ function Options({ value: v, onChange }: { value: Intervention; onChange: (i: In
                   min={4}
                   max={500}
                   label={t('challenge.length')}
-                  suffix={t('challenge.chars')}
+                  suffix={t('challenge.chars', { n: v.length ?? 24 })}
                   onChange={(length) => onChange({ ...v, length })}
                 />
               </span>
@@ -277,26 +297,37 @@ function WaitLengthOptions({
       />
       {kind === 'fixed' && (
         <div class="row nowrap small">
-          <span aria-hidden="true">{t('delay.seconds')}</span>
-          {seconds(t('delay.seconds'), v.seconds, (s) => onChange({ ...v, seconds: s }))}
+          <Fields>
+            {parts('delay.fixedFields', {
+              seconds: seconds(t('delay.seconds'), v.seconds, (s) => onChange({ ...v, seconds: s })),
+            })}
+          </Fields>
         </div>
       )}
       {kind === 'random' && (
         <div class="row small">
-          <span aria-hidden="true">{t('delay.between')}</span>
-          {seconds(t('delay.shortest'), v.seconds, (s) => onChange({ ...v, seconds: s }))}
-          <span aria-hidden="true">{t('delay.and')}</span>
-          {seconds(t('delay.longest'), v.randomTo ?? v.seconds, (s) => onChange({ ...v, randomTo: s }), 2)}
+          <Fields>
+            {parts('delay.rangeFields', {
+              shortest: seconds(t('delay.shortest'), v.seconds, (s) => onChange({ ...v, seconds: s })),
+              longest: seconds(
+                t('delay.longest'),
+                v.randomTo ?? v.seconds,
+                (s) => onChange({ ...v, randomTo: s }),
+                2,
+              ),
+            })}
+          </Fields>
         </div>
       )}
       {kind === 'growing' && (
         <>
           <div class="row small">
-            <span aria-hidden="true">{t('delay.seconds')}</span>
-            {seconds(t('delay.seconds'), v.seconds, (s) => onChange({ ...v, seconds: s }))}
-            <span aria-hidden="true">{t('delay.plus')}</span>
-            {seconds(t('delay.increase'), step, (s) => onChange({ ...v, increase: s }))}
-            <span aria-hidden="true">{t('delay.eachTime')}</span>
+            <Fields>
+              {parts('delay.growingFields', {
+                first: seconds(t('delay.seconds'), v.seconds, (s) => onChange({ ...v, seconds: s })),
+                step: seconds(t('delay.increase'), step, (s) => onChange({ ...v, increase: s })),
+              })}
+            </Fields>
           </div>
           <span class="help">
             {t('delay.growingHelp', {

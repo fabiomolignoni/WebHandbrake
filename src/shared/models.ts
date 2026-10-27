@@ -286,6 +286,11 @@ export interface InterventionModel {
     rules: { id: string; name: string; color: string; protection: Protection }[];
     session: boolean;
   } | null;
+  /**
+   * Changes that loosen the rules named (none: a setting of the protection) and wait to be
+   * confirmed; the page stays as it is until then. `readyAt`: the first can be confirmed from then.
+   */
+  pending: { rules: string[]; readyAt: number } | null;
 }
 
 export interface PopupModel {
@@ -422,7 +427,8 @@ export interface LaterModel {
 
 export interface ImportPreview {
   format: 'webhandbrake' | 'list' | 'unknown';
-  groups: { name: string; sites: number }[];
+  /** The rules of the file; `present` ones are left out of a merge, as the same rule is there. */
+  groups: { name: string; sites: number; present: boolean }[];
   warnings: string[];
   errors: string[];
   units: ChangeUnit[];

@@ -194,7 +194,7 @@ export function WindowsEditor({
   return (
     <div class="stack">
       <div class="row">
-        <span class="small muted">{t('schedule.presets')}:</span>
+        <span class="small muted">{t('schedule.presets')}</span>
         {Object.keys(SCHEDULE_PRESETS).map((k) => (
           <button
             key={k}

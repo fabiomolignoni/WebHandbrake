@@ -8,10 +8,15 @@ import { checkIncognito } from './permissions';
 import { maintenance, reconcile } from './reconcile';
 import { applyRetention } from './stats';
 import { store } from './store';
+import { countTabTime } from './tabtime';
 
-/** Persists counters, expires timed state and runs the daily tasks once per logical day. */
+/**
+ * Counts the time of the pages without ticks, persists counters, expires timed state and runs the
+ * daily tasks once per logical day.
+ */
 export async function periodic() {
   counters.wakeups++;
+  await countTabTime();
   await store.flushAll();
   const before = JSON.stringify([
     store.state.grants.length,

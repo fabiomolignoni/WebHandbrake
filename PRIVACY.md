@@ -1,6 +1,6 @@
 # Privacy policy
 
-Last updated: 2026-10-26
+Last updated: 2026-10-27
 
 This policy applies to the WebHandbrake browser extension for Chrome, Firefox and Firefox for
 Android.
@@ -35,6 +35,9 @@ lists.
   system clock that is wrong. It makes no extra requests. This is on by default and is turned off
   with **Settings › Time › Detect a manipulated system clock**. Only a detected difference is
   stored, and it is listed under **Protection › Events**.
+- **Where a server redirects a top-level page**, so that a short link to another site of the same
+  rule (youtu.be to youtube.com) does not ask again right after you went in from the block page.
+  It makes no extra requests and stores only the access it gives.
 - **Inside the pages where its page script runs**: whether the page is visible and its window has
   the focus, when you last used the keyboard, mouse or touch screen, whether audio or video is
   playing, and the page's address. This is used to count active time and to show the timer,
@@ -46,6 +49,12 @@ lists.
 - **Whether the device is idle or locked**, to stop counting time.
 - **Which tab of a window is shown, and whether the window is minimised**, while a wait that
   pauses or starts again when you switch to another tab is in progress, to time it.
+- **Which tab the window in front shows, whether that window is minimised, and whether
+  WebHandbrake has access to the site of that tab**, when you switch tabs or windows, when its
+  access changes and once a minute, to count the time of a page where the page script cannot run:
+  in Firefox's Reader View, and on the websites you took its access away from. With **Count tabs
+  that are open but not active**, the addresses of all open tabs instead, to count the tabs that
+  are not in view, whose pages the browser slows down.
 
 The page script runs on the sites of your active rules. It runs on every site when **Track time on
 all sites** is on, when an active rule has a regular expression, when an active rule has an
@@ -61,8 +70,8 @@ What is stored** shows, with their sizes.
 
 | Item | What it contains | Kept for | How to delete it | In exports and backups |
 |---|---|---|---|---|
-| Rules and settings | Your rules and settings. The passwords of rules are kept only as salted hashes; the secret of a rule's partner code is kept as it is, because codes are checked on this device. After an update that changes the data format, a copy of the previous version is also kept until the next save. | Until you change them | **Settings › Data › Reset rules and settings…**, which waits as long as the emergency exit when it loosens an active rule | Exports: yes, the password hashes and the partner codes only if you tick **Include the passwords and the partner codes of the rules**. Backups: yes, including them. |
-| Automatic backups | Copies of your rules and settings, including the password hashes and the partner codes: one before each of the last 20 changes and one a day for 30 days. | Until newer copies replace them | Only by uninstalling WebHandbrake. **Reset** and the emergency exit do not remove them. | Not exported |
+| Rules and settings | Your rules and settings. The passwords of rules are kept only as salted hashes; the secret of a rule's partner code is kept as it is, because codes are checked on this device. A second copy of the latest version is kept, to restore it if the first one is damaged. After an update that changes the data format, a copy of the previous version is also kept until the next save. | Until you change them | **Settings › Data › Reset rules and settings…**, which waits as long as the emergency exit when it loosens an active rule | Exports: yes, the password hashes and the partner codes only if you tick **Include the passwords and the partner codes of the rules**. Backups: yes, including them. |
+| Automatic backups | Copies of your rules and settings, including the password hashes and the partner codes: one before each of the last 20 changes and one a day for 30 days. A rule that is the same in several copies is stored once. | Until newer copies replace them | Only by uninstalling WebHandbrake. **Reset** and the emergency exit do not remove them. | Not exported |
 | Breaks, sessions, pending changes and protection events | Breaks and accesses in progress (an access to a single page with its address; an access for the rest of a visit that a tab has left, when and in which tab, for 2 minutes at most), the last 1000 breaks taken (with the reasons that earlier versions asked for), focus sessions, pending changes, the limits you used up early with **Stop now**, an emergency exit you requested, the detected clock difference, and the last 200 protection events: clock changes, settings restored from a backup, removed access to all sites or to private windows, browser blocking filters that did not match your settings, times WebHandbrake was not running, and the steps of the emergency exit. | Until they end or newer records replace them | Deleting all statistics removes the reasons of breaks | Not in exports or backups. Insights' JSON export includes the breaks. |
 | Visit tracking | For each rule and each site of a rule that you are visiting: when you were last active. | Until the visit ends | Ends by itself | Not exported |
 | Daily statistics | For each day: the time and visits per rule, per site of a rule and per site (the site name, never a full address), the time and visits in private windows (one total, without the sites), the time per hour on limited sites, outside your rules (with **Track time on all sites**), per site and in private windows, and counters of intervention pages shown, of times you continued or left, of breaks and of focus sessions. Sites outside your rules appear only with **Track time on all sites**, which also keeps one total of the time outside your rules. Deleting one site keeps its time among the other sites, without its name. | 730 days by default, changed in **Settings › Time › Keep daily statistics for** | **Insights › Data › Delete data**, or **Settings › Privacy › Delete all statistics** | Exports: only if you tick **Include statistics**. **Insights › Data** also exports them as CSV or JSON. Not in backups. |
@@ -84,6 +93,10 @@ closes. **Settings › Privacy** does not list it.
   none does. Each expires 60 minutes after its wait is over.
 - Which reasons for going in have already been recalled on the page, and a marker that WebHandbrake is
   running.
+- While WebHandbrake counts the time of a page itself (in Firefox's Reader View, on a website it
+  has no access to, or in a tab not in view with **Count tabs that are open but not active**): the
+  number of its tab, its address and since when. It is replaced when you switch tabs or windows,
+  and at least every minute.
 - For a few seconds after the **Block this site** keyboard shortcut, the number of the tab it was
   pressed in, so that the popup opens on **Block this site** for that tab. The popup removes it as
   it opens.
@@ -166,13 +179,13 @@ does with it.
 | `declarativeNetRequest` | Installing browser blocking filters that stop or redirect a restricted page before it loads. | Reading the content of pages. |
 | `tabs` | Reading the address of open tabs, including the browser's own pages that host access does not cover, so that rules apply to tabs that are already open and the browser's extension and settings pages can be protected. | Reading the content of tabs. |
 | `webNavigation` | Noticing page changes that the filters cannot see: single-page sites, the back and forward buttons, changes of the part of the address after `#`, and blocked requests when access to sites is missing. | Keeping a history of navigations. |
-| `webRequest` | Reading the `Date` header of top-level pages that the browser loads anyway, for the clock check. | Blocking, changing or storing a request. |
+| `webRequest` | Reading the `Date` header of top-level pages that the browser loads anyway, for the clock check, and where their servers redirect them, for short links. | Blocking, changing or storing a request. |
 | `alarms` | Waking WebHandbrake when a schedule, limit, break or session changes, and once a minute for maintenance. | — |
 | `idle` | Stopping time counting when you are inactive or the screen is locked. | — |
 | `scripting` | Adding the page script that shows the timer, filters and the grace period, covers a page that asks to stay open when it should be replaced, and counts active time, on the sites described in [What WebHandbrake reads](#what-webhandbrake-reads). | Reading the text you type outside the page, or storing page content. |
 | `contextMenus` | The right-click menu that blocks a site or starts a focus session (on a computer). | — |
 | `notifications` (optional) | Showing the system notifications you turn on; the browser asks for it when you turn them on in **Settings › Feedback**. | Showing notifications you did not turn on. |
-| `<all_urls>` (access to all sites) | Checking the address of each page against your rules, redirecting a restricted page before it loads, running the page script and reading the `Date` header. Without it, restricted pages can only be blocked with the browser's error page. | Sending anything anywhere. |
+| `<all_urls>` (access to all sites) | Checking the address of each page against your rules, redirecting a restricted page before it loads, running the page script, reading the `Date` header and seeing where pages redirect. Without it, restricted pages are blocked with the browser's error page first, and time is counted without the page script: there is no timer, warning, filter or grace period. | Sending anything anywhere. |
 | `web_accessible_resources` | Letting the browser show the intervention page (`intervention.html` and the script, style sheet and icons it loads) in place of a restricted page. | — |
 | `incognito` (Chrome only) | Set to "split": private windows have a background process of their own, which Chrome needs to show the intervention page there. It keeps nothing and passes everything to the main one. | Running in private windows without your permission. |
 
@@ -209,6 +222,12 @@ Every change to what WebHandbrake reads, stores or sends, or to its permissions,
 this policy, its "Last updated" date and the list below. The full history is in the
 [history of this file](https://github.com/fabiomolignoni/WebHandbrake/commits/main/PRIVACY.md).
 
+- 2026-10-27: WebHandbrake reads where a server redirects a top-level page, so that a short link
+  to another site of a rule does not ask again right after you went in. To count the time of a page
+  in Firefox's Reader View, or on a website you took its access away from, it reads which tab the
+  window in front shows and whether it has access to its site, and keeps that tab, its address and
+  since when in the browser's memory; with **Count tabs that are open but not active**, it does so
+  for every open tab of your rules.
 - 2026-10-26: Daily statistics keep the visits in private windows too, and their time on every
   site with **Track time on all sites**, still as one total without the sites; that setting also
   keeps one total of the time outside your rules. Deleting one site keeps its time without its

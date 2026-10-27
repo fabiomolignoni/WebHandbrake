@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { decide, pageFilters } from '../../src/engine/decide';
+import { decide, pageFilters, redirectPasses } from '../../src/engine/decide';
 import { defaultState, delayIntervention } from '../../src/engine/defaults';
 import { compileDnr } from '../../src/engine/dnr';
+import { REDIRECT_PASS_MS } from '../../src/engine/limits';
 import { nextRestriction, untilFor } from '../../src/engine/next';
 import { SEVERITY } from '../../src/engine/severity';
 import { inWindows, periodRange, scheduleActive, windowInterval } from '../../src/engine/time';
@@ -104,6 +105,32 @@ describe('decisions', () => {
     expect(untilFor(c, 'https://youtube.com/', { incognito: false }).until).toBe(at(1, 0));
   });
 
+  it('a weekly limit starts again on the first day of the week set, a monthly one on the 1st', () => {
+    const limit = (name: string, kind: 'week' | 'month') =>
+      group(
+        name,
+        [`${name}.example`],
+        [{ budget: { type: 'time', minutes: 60, period: { kind } }, intervention: BLOCK }],
+      );
+    const usage = new Usage();
+    // An hour on Saturday 10 October, and one on Wednesday 30 September.
+    usage.add(usageKeys.group('w'), at(5, 10), 3600, 1, cal);
+    usage.add(usageKeys.group('m'), new Date(2026, 8, 30, 10).getTime(), 3600, 1, cal);
+    const type = (url: string, now: number, weekStart = 1) => {
+      const c = config([limit('w', 'week'), limit('m', 'month')], (x) => {
+        x.settings.weekStart = weekStart;
+      });
+      return decide(ctx(c, now, defaultState(), usage), url).intervention.type;
+    };
+    // On Sunday the week that started on Monday has Saturday's hour; one that starts on Sunday has not.
+    expect(type('https://w.example/', at(6, 12))).toBe('block');
+    expect(type('https://w.example/', at(6, 12), 0)).toBe('track');
+    expect(type('https://w.example/', at(7, 12))).toBe('track');
+    // The hour of 30 September counts until the month is over.
+    expect(type('https://m.example/', new Date(2026, 8, 30, 20).getTime())).toBe('block');
+    expect(type('https://m.example/', new Date(2026, 9, 1, 9).getTime())).toBe('track');
+  });
+
   it('per-site budgets', () => {
     const g = group(
       'S',
@@ -184,6 +211,71 @@ describe('decisions', () => {
     expect(decide(ctx(config([g2]), at(0, 9, 5), state), 'https://site.example/').intervention.type).toBe(
       'track',
     );
+  });
+
+  it('a redirect of the server carries the accesses just given to the page it sends to', () => {
+    const sites = ['short.example', 'video.example'];
+    const w = group('W', sites, [{ intervention: delayIntervention(30) }]);
+    const x = group('X', sites, [{ intervention: delayIntervention(10) }]);
+    const pass = (groupId: string, more: Partial<Grant> = {}): Grant => ({
+      id: `pass-${groupId}`,
+      kind: 'pass',
+      groups: [groupId],
+      scope: 'site',
+      site: 'short.example',
+      from: 'https://short.example/abc',
+      createdAt: at(0, 9),
+      visit: true,
+      severity: SEVERITY.delay,
+      intention: 'one video',
+      ...more,
+    });
+    const from = 'https://short.example/abc';
+    const to = 'https://video.example/watch?v=1';
+    const uctx = { incognito: false };
+    const carried = (groups = [w], grants = [pass('W')], now = at(0, 9) + 5000, target = to) => {
+      const state = defaultState();
+      state.grants = grants;
+      return redirectPasses(ctx(config(groups), now, state), from, target, uctx);
+    };
+    // The same access, with the same mode and end, for the site it sends to.
+    const [g] = carried();
+    expect(g).toEqual({ ...pass('W'), id: expect.any(String), site: 'video.example', url: undefined });
+    expect(g.id).not.toBe('pass-W');
+    const state = defaultState();
+    state.grants = [pass('W'), g];
+    expect(decide(ctx(config([w]), at(0, 9, 1), state), to, uctx).intervention.type).toBe('track');
+    // For some minutes, it ends when the one given ends; for one page, it is for the page sent to.
+    const minutes = pass('W', { visit: undefined, until: at(0, 9, 10), minutes: 10 });
+    expect(carried([w], [minutes])).toMatchObject([
+      { until: at(0, 9, 10), minutes: 10, site: 'video.example' },
+    ]);
+    const page = pass('W', { scope: 'page', url: from });
+    expect(carried([w], [page])).toMatchObject([{ scope: 'page', url: pageKey(to) }]);
+    // Given too long ago, it carries nothing: the page asks as usual.
+    expect(carried([w], [pass('W')], at(0, 9) + REDIRECT_PASS_MS + 1)).toEqual([]);
+    // Every rule that restricts the page must have been passed just now.
+    expect(carried([w, x], [pass('W')])).toEqual([]);
+    expect(carried([w, x], [pass('W'), pass('X')]).map((c) => c.groups)).toEqual([['W'], ['X']]);
+    // Nothing to carry to a page that no rule restricts, nor through a focus session.
+    expect(carried([w], [pass('W')], at(0, 9) + 5000, 'https://free.example/')).toEqual([]);
+    const focus = defaultState();
+    focus.grants = [pass('W')];
+    focus.sessions = [
+      {
+        id: 's',
+        kind: 'blocklist',
+        groups: [],
+        allow: [],
+        block: [t('video.example')],
+        startAt: at(0, 8),
+        endAt: at(0, 12),
+        createdAt: at(0, 8),
+        locked: false,
+        noPauses: false,
+      },
+    ];
+    expect(redirectPasses(ctx(config([w]), at(0, 9) + 5000, focus), from, to, uctx)).toEqual([]);
   });
 
   it('a break lifts a block, and only a block', () => {

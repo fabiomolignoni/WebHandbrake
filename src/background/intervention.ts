@@ -1,15 +1,17 @@
 /** Intervention page model and passes. */
 
-import { type Decision, decide, grantCovers } from '../engine/decide';
+import { isStale, unitGroups } from '../engine/changes';
+import { type Decision, decide, grantCovers, redirectPasses } from '../engine/decide';
 import { ASK_WAIT_SECONDS, askChoices } from '../engine/defaults';
-import { MAX_CUSTOM_CSS_CHARS, RECHECK_GRANT_MS, VISIT_RETURN_MS } from '../engine/limits';
+import { MAX_CUSTOM_CSS_CHARS, RECHECK_GRANT_MS, REDIRECT_PASS_MS, VISIT_RETURN_MS } from '../engine/limits';
 import { isNav, NAV_SEVERITY, SEVERITY } from '../engine/severity';
 import { dayKeyOf } from '../engine/time';
 import type { Grant, Intervention } from '../engine/types';
 import { displayHost, pageKey, parseUrl } from '../engine/url';
 import { usageKeys } from '../engine/usage';
-import { blockedUrlFrom, extensionUrl, INTERVENTION_PAGE, quiet } from '../platform/api';
+import { api, blockedUrlFrom, extensionUrl, INTERVENTION_PAGE, quiet } from '../platform/api';
 import type { InterventionModel, PauseOptions } from '../shared/models';
+import { onPrivate } from './bridge';
 import { now } from './clock';
 import { randomInt } from './crypto';
 import { logDecision } from './diagnostics-state';
@@ -27,7 +29,7 @@ import { pauseOptions } from './pauses';
 import { reconcile } from './reconcile';
 import { countSessionStop } from './sessions';
 import { store } from './store';
-import { queryTabs, removeTab, updateTab } from './tabs';
+import { getTab, queryTabs, removeTab, updateTab } from './tabs';
 import { createTicket, registerExecutor, type Step, showTicket } from './tickets';
 
 const shownRecently = new Map<string, number>();
@@ -51,7 +53,35 @@ function base(url: string, kind: InterventionModel['kind']): InterventionModel {
     locked: false,
     canSaveLater: /^https?:/i.test(url),
     internal: null,
+    pending: null,
   };
+}
+
+/**
+ * The changes that wait to be confirmed and change these rules, or these settings: until one is
+ * confirmed, the page stays as it was, and the page says so. Null when there are none.
+ */
+function pendingOf(ruleIds: string[], settings: string[] = []): InterventionModel['pending'] {
+  const config = store.config;
+  const touched = new Set<string>();
+  let readyAt = Number.POSITIVE_INFINITY;
+  for (const p of store.state.pending) {
+    if (p.expiresAt <= now()) continue;
+    let hit = false;
+    for (const u of p.units) {
+      if (isStale(u, config)) continue;
+      // A setting counts for every rule: only the settings named do here.
+      if (u.kind === 'setting') hit ||= settings.includes(u.path);
+      else
+        for (const id of unitGroups(u, config).filter((x) => ruleIds.includes(x))) {
+          touched.add(id);
+          hit = true;
+        }
+    }
+    if (hit) readyAt = Math.min(readyAt, p.readyAt);
+  }
+  if (readyAt === Number.POSITIVE_INFINITY) return null;
+  return { rules: config.groups.filter((g) => touched.has(g.id)).map((g) => g.name), readyAt };
 }
 
 /** What can make CSS load something: @import and the functions that take an address. */
@@ -111,6 +141,8 @@ export async function interventionModel(
 async function modelOf(url: string, sender: chrome.runtime.MessageSender): Promise<InterventionModel> {
   await store.ready();
   const tab = sender.tab;
+  // A redirect that brought the tab here may carry an access to this page: it is looked at first.
+  if (tab?.id !== undefined) await redirects.get(tab.id);
   const incognito = Boolean(tab?.incognito);
   const parsed = parseUrl(url);
 
@@ -137,6 +169,10 @@ async function modelOf(url: string, sender: chrome.runtime.MessageSender): Promi
         session: guard.session,
       };
       m.until = internalGuardUntil(c);
+      m.pending = pendingOf(
+        guard.groups.map((g) => g.id),
+        ['protection.internalPages'],
+      );
     }
     return m;
   }
@@ -176,6 +212,10 @@ async function modelOf(url: string, sender: chrome.runtime.MessageSender): Promi
         .filter((r) => r !== primary && SEVERITY[r.intervention.type] >= NAV_SEVERITY)
         .map((r) => ({ id: r.group.id, name: r.group.name, color: r.group.color }))
     : [];
+  // A focus session blocks whatever its rules say; the rules on the page block until a change
+  // that loosens them is confirmed.
+  if (primary && !d.session && primary.source !== 'session')
+    m.pending = pendingOf([primary.group.id, ...m.others.map((o) => o.id)]);
 
   // Interventions shown (deduplicated per tab, URL and rule for a minute).
   const gid = primary?.group.id ?? 'session';
@@ -381,6 +421,54 @@ function restartUnusedAccesses(grant: Grant, url: string, incognito: boolean, t0
     if (g.until !== undefined && g.minutes) g.until = t0 + g.minutes * 60_000;
     g.createdAt = t0;
   }
+}
+
+/** The redirects of each tab being looked at: the block page they lead to waits for them. */
+const redirects = new Map<number, Promise<void>>();
+
+/**
+ * A redirect of the server in a tab going in from a block page: the accesses just given on the page
+ * it comes from carry over to the page it sends to (a short link), which then does not ask again.
+ * An address the person opens is no redirect: it asks as usual.
+ */
+export function followRedirect(tabId: number, from: string, to: string) {
+  const run = (redirects.get(tabId) ?? Promise.resolve())
+    .then(() => carryPasses(tabId, from, to))
+    .catch(() => undefined);
+  redirects.set(tabId, run);
+  void run.then(() => {
+    if (redirects.get(tabId) === run) redirects.delete(tabId);
+  });
+}
+
+async function carryPasses(tabId: number, from: string, to: string) {
+  await store.ready();
+  const t0 = now();
+  if (!store.state.grants.some((g) => g.kind === 'pass' && t0 - g.createdAt <= REDIRECT_PASS_MS)) return;
+  const tab = await quiet(getTab(tabId));
+  // The tab still shows the block page: no page was opened in it since.
+  if (!tab || !blockedUrlFrom(tab.url)) return;
+  const carried = redirectPasses(ctx(t0), from, to, { incognito: Boolean(tab.incognito) });
+  if (!carried.length) return;
+  store.state.grants.push(...carried);
+  await store.saveState();
+  await reconcile('redirect');
+}
+
+/** Listens to the redirects of the servers, in the private windows too. */
+export function registerRedirectListener() {
+  const event = api.webRequest?.onBeforeRedirect;
+  if (!event) return;
+  const onRedirect = (d: { tabId: number; url: string; redirectUrl: string }) => {
+    if (d.tabId >= 0 && /^https?:/i.test(d.redirectUrl)) followRedirect(d.tabId, d.url, d.redirectUrl);
+  };
+  try {
+    event.addListener(onRedirect, { urls: ['http://*/*', 'https://*/*'], types: ['main_frame'] });
+  } catch {
+    // webRequest unavailable: a short link asks again on the page it sends to.
+    return;
+  }
+  onPrivate('webRequest.onBeforeRedirect', onRedirect);
 }
 
 /**

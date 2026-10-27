@@ -13,6 +13,7 @@
     "build:chrome": "node scripts/build.mjs --target=chrome",
     "build:firefox": "node scripts/build.mjs --target=firefox",
     "build:test": "node scripts/build.mjs --test",
+    "build:pseudo": "node scripts/build.mjs --pseudo",
     "watch": "node scripts/build.mjs --watch",
     "build:verify": "node scripts/verify-build.mjs",
     "package": "node scripts/build.mjs && node scripts/package.mjs",

@@ -3,12 +3,22 @@
  * Message check (npm run i18n):
  *
  * - every message key used in the sources exists in src/locales/en.json;
- * - every message is a string with balanced braces;
- * - every call t('<key>', { … }) with an object literal passes every placeholder of the message,
- *   and every call t('<key>') without parameters is for a message without placeholders (calls
- *   whose parameters are not an object literal, or contain a spread, are skipped);
+ * - every message is a string with balanced braces, and every plural or select has an `other`;
+ * - every call t('<key>', { … }) or parts('<key>', { … }) with an object literal passes every
+ *   placeholder of the message, and every call t('<key>') without parameters is for a message
+ *   without placeholders. whenParams(…) and dateTimeParams(…), as the parameters or spread in
+ *   them, pass {when}, {day}, {time} and {date}. Calls whose parameters are another expression,
+ *   or contain another spread, are skipped;
+ * - the description of every English message with placeholders explains each of them;
+ * - English messages follow the typography of the translations: ’ for an apostrophe (an ASCII '
+ *   only quotes ICU syntax), “ ” for quotes, … for an ellipsis; a number followed by a noun is a
+ *   plural ({n, plural, one {# day} other {# days}}), since other languages need more forms;
  * - the locale lists agree: AVAILABLE_LOCALES in src/i18n/i18n.ts, the files in src/locales and
  *   the folders in src/_locales;
+ * - every translation (src/locales/<lang>.json, src/_locales/<lang>/messages.json) has only keys of
+ *   English, valid ICU syntax with the plural categories of CLDR, the placeholders of English
+ *   (plus {day}, {time} and {date} where English has {when}), and store names and descriptions
+ *   within the stores' limits;
  * - no message of src/locales/en.json or src/_locales/en/messages.json uses the code
  *   words group, groups, DNR or declarativeNetRequest (placeholder names are not text);
  * - with --unused, it lists the keys that are no longer used.
@@ -32,8 +42,13 @@ async function* walk(dir) {
   }
 }
 
-/** t('<key>', { (the parameters are an object literal) or t('<key>') (no parameters). */
-const tCall = /\bt\(\s*'([a-zA-Z0-9_.:-]+)'\s*(?:,\s*\{|\))/g;
+/**
+ * t('<key>', { (the parameters are an object literal), t('<key>') (no parameters),
+ * t('<key>', whenParams(…)) or parts('<key>', {.
+ */
+const tCall = /\b(?:t|parts)\(\s*'([a-zA-Z0-9_.:-]+)'\s*(?:,\s*(\{|(?:whenParams|dateTimeParams)\()|\))/g;
+/** The parameters that whenParams() and dateTimeParams() give a message. */
+const WHEN_PARAMS = ['when', 'day', 'time', 'date'];
 
 /**
  * The top-level property names of the object literal that opens at src[open] ('{'), or null when it
@@ -69,6 +84,13 @@ function objectKeys(src, open) {
   for (const raw of parts) {
     const p = raw.trim();
     if (!p) continue;
+    if (
+      /^\.\.\.\(?\s*(?:whenParams|dateTimeParams)\(/.test(p) ||
+      /^\.\.\.\(.*\?\s*dateTimeParams\(/.test(p)
+    ) {
+      keys.push(...WHEN_PARAMS);
+      continue;
+    }
     if (p.startsWith('...')) return null;
     const m = p.match(/^(?:'([^']+)'|"([^"]+)"|([A-Za-z_$][\w$]*))/);
     if (m) keys.push(m[1] ?? m[2] ?? m[3]);
@@ -162,7 +184,7 @@ function placeholders(message) {
 const used = new Set();
 /** Calls t('<key>', { … }) and t('<key>'): file, line, key, parameter names (null with a spread). */
 const calls = [];
-const re = /\bt\(\s*'([a-zA-Z0-9_.-]+)'/g;
+const re = /\b(?:t|parts)\(\s*'([a-zA-Z0-9_.-]+)'/g;
 const keyLike = /'((?:[a-z][a-zA-Z0-9]*\.)+[a-zA-Z0-9_-]+)'/g;
 // Message namespaces: quoted strings starting with one of them are message keys (passed as data,
 // returned as error codes, chosen in ternaries…).
@@ -256,7 +278,7 @@ for await (const file of walk(join(root, 'src'))) {
       file: relative(root, file),
       line: src.slice(0, m.index).split('\n').length,
       key: m[1],
-      params: src[end] === '{' ? objectKeys(src, end) : [],
+      params: m[2] === '{' ? objectKeys(src, end) : m[2] ? WHEN_PARAMS : [],
     });
   }
   for (const m of src.matchAll(keyLike)) {
@@ -267,6 +289,8 @@ for await (const file of walk(join(root, 'src'))) {
 }
 
 const DYNAMIC = {
+  'duration.unit.{x}': ['seconds', 'minutes', 'hours', 'days'],
+  'popup.add.{x}.scope': ['domain', 'host', 'path', 'page'],
   'level.{l}': ['reminder', 'wait', 'password', 'partner', 'locked', 'permanent'],
   'level.{l}.desc': ['reminder', 'wait', 'password', 'partner', 'locked', 'permanent'],
   'level.{l}.weaken': ['reminder', 'wait', 'password', 'partner', 'locked', 'permanent'],
@@ -359,6 +383,7 @@ const DYNAMIC = {
   'save.refused.{x}': ['permanent', 'locked'],
   'pending.error.{x}': ['permanent', 'locked'],
   'period.kind.{x}': ['hour', 'day', 'week', 'month', 'other'],
+  'wizard.period.{x}': ['hour', 'day', 'week', 'month'],
   'why.restriction.{x}': ['budget', 'schedule', 'pause', 'pass', 'session'],
   'schedule.preset.{x}': ['office', 'evenings', 'allDay', 'weekdays', 'nights'],
   'pauseRules.costKind.{x}': ['none', 'confirm', 'delay', 'random', 'phrase', 'math', 'password'],
@@ -512,6 +537,231 @@ if (!listSrc) {
     }
   }
 }
+/**
+ * The problems of an ICU message as a translation platform would see them: syntax, a plural or
+ * select without `other`, a plural category that CLDR does not have. Apostrophes quote syntax
+ * characters as in src/i18n/icu.ts.
+ */
+function icuProblems(message) {
+  const problems = [];
+  let i = 0;
+  const ws = () => {
+    while (/\s/.test(message[i] ?? '')) i++;
+  };
+  const ident = () => {
+    ws();
+    const start = i;
+    while (i < message.length && /[^\s,{}]/.test(message[i])) i++;
+    return message.slice(start, i);
+  };
+  const nodes = (nested, inPlural) => {
+    while (i < message.length) {
+      const c = message[i];
+      if (c === "'") {
+        const next = message[i + 1];
+        if (next === "'") i += 2;
+        else if (next === '{' || next === '}' || (inPlural && next === '#')) {
+          const end = message.indexOf("'", i + 1);
+          if (end === -1) problems.push('an apostrophe opens a quote that never closes');
+          i = end === -1 ? message.length : end + 1;
+        } else i++;
+      } else if (c === '}') {
+        if (nested) return;
+        problems.push('a } without a {');
+        i++;
+      } else if (c === '{') {
+        i++;
+        arg();
+      } else i++;
+    }
+    if (nested) problems.push('a { without a }');
+  };
+  const arg = () => {
+    const name = ident();
+    if (!/^[\w.]+$/.test(name)) problems.push(`a placeholder without a valid name: {${name}`);
+    ws();
+    if (message[i] === '}') {
+      i++;
+      return;
+    }
+    if (message[i] !== ',') {
+      problems.push(`{${name} is not followed by } or ,`);
+      return;
+    }
+    i++;
+    const type = ident();
+    ws();
+    if (type === 'number') {
+      while (i < message.length && message[i] !== '}') i++;
+      i++;
+      return;
+    }
+    if (type !== 'plural' && type !== 'select' && type !== 'selectordinal') {
+      problems.push(`{${name}, ${type}}: unknown argument type`);
+      while (i < message.length && message[i] !== '}') i++;
+      i++;
+      return;
+    }
+    if (message[i] !== ',') {
+      problems.push(`{${name}, ${type}} has no options`);
+      return;
+    }
+    i++;
+    const keys = [];
+    for (;;) {
+      ws();
+      if (i >= message.length) {
+        problems.push(`{${name}, ${type}, …} never closes`);
+        return;
+      }
+      if (message[i] === '}') {
+        i++;
+        break;
+      }
+      const key = ident();
+      ws();
+      if (type !== 'select' && key.startsWith('offset:')) continue;
+      if (message[i] !== '{') {
+        problems.push(`{${name}, ${type}}: option ${key} has no {…}`);
+        return;
+      }
+      keys.push(key);
+      i++;
+      nodes(true, type !== 'select');
+      i++;
+    }
+    if (!keys.includes('other')) problems.push(`{${name}, ${type}} has no other {…}`);
+    if (type !== 'select')
+      for (const k of keys)
+        if (!/^=\d+$/.test(k) && !PLURAL_CATEGORIES.includes(k))
+          problems.push(`{${name}, ${type}}: ${k} is not a plural category`);
+  };
+  nodes(false, false);
+  return problems;
+}
+const PLURAL_CATEGORIES = ['zero', 'one', 'two', 'few', 'many', 'other'];
+
+for (const [k, v] of Object.entries(en)) {
+  if (typeof v?.message !== 'string') continue;
+  for (const problem of icuProblems(v.message)) {
+    console.error(`src/locales/en.json: ${k}: ${problem}`);
+    bad++;
+  }
+}
+
+// The typography the translations follow: ’ “ ” …; an ASCII apostrophe only quotes ICU syntax.
+for (const [k, v] of Object.entries(en)) {
+  if (typeof v?.message !== 'string') continue;
+  const m = v.message;
+  const loose = m.replace(/'(?:[{}#][^']*'|')/g, '');
+  if (loose.includes("'")) {
+    console.error(`src/locales/en.json: ${k}: use ’ for an apostrophe (an ASCII ' quotes ICU syntax)`);
+    bad++;
+  }
+  if (m.includes('"')) {
+    console.error(`src/locales/en.json: ${k}: use “ ” for quotes`);
+    bad++;
+  }
+  if (m.includes('...')) {
+    console.error(`src/locales/en.json: ${k}: use … for an ellipsis`);
+    bad++;
+  }
+}
+
+// A number followed by a noun is a plural: "{days} days" reads "2 dni" and "5 dni" in Polish, but
+// "2 godziny" and "5 godzin". Abbreviations (s, min, h, MB) do not change.
+const NUMBERS =
+  /^(?:n|count|seconds|minutes|hours|days|length|recent|daily|keepDays|returnMinutes|confirmHours|total|increase|to)$/;
+const NOT_NOUNS = new Set(['s', 'min', 'h', 'MB', 'of', 'and', 'or', 'to', 'more', 'in', 'from', 'at']);
+for (const [k, v] of Object.entries(en)) {
+  if (typeof v?.message !== 'string') continue;
+  // Only the text outside plural and select arguments.
+  let text = v.message;
+  for (let n = 0; n < 6; n++)
+    text = text.replace(/\{\w+, (?:plural|select|selectordinal),[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g, '#');
+  for (const m of text.matchAll(/\{(\w+)\}[ -]([\p{L}]+)/gu)) {
+    if (!NUMBERS.test(m[1]) || NOT_NOUNS.has(m[2])) continue;
+    console.error(`src/locales/en.json: ${k}: {${m[1]}} ${m[2]}: write the number as a plural`);
+    bad++;
+  }
+}
+
+// Translators see a message alone: its description says what each placeholder holds.
+for (const [k, v] of Object.entries(en)) {
+  if (typeof v?.message !== 'string') continue;
+  const unexplained = placeholders(v.message).filter((name) => !v.description?.includes(`{${name}}`));
+  if (unexplained.length) {
+    console.error(
+      `src/locales/en.json: ${k}: the description does not explain ${unexplained.map((n) => `{${n}}`).join(', ')}`,
+    );
+    bad++;
+  }
+}
+
+/** The placeholders that a translation may use: those of English, and the parts of a moment. */
+function allowedPlaceholders(message) {
+  const names = placeholders(message);
+  return names.includes('when') ? [...names, 'day', 'time', 'date'] : names;
+}
+
+// Translations: only keys of English, valid ICU, the placeholders of English.
+for (const file of (await readdir(join(root, 'src/locales'))).filter((f) => f.endsWith('.json'))) {
+  if (file === 'en.json') continue;
+  const where = `src/locales/${file}`;
+  const messages = JSON.parse(await readFile(join(root, where), 'utf8'));
+  for (const [k, v] of Object.entries(messages)) {
+    if (!(k in en)) {
+      console.error(`${where}: ${k} is not an English key`);
+      bad++;
+      continue;
+    }
+    if (typeof v?.message !== 'string') {
+      console.error(`${where}: ${k}: invalid entry`);
+      bad++;
+      continue;
+    }
+    for (const problem of icuProblems(v.message)) {
+      console.error(`${where}: ${k}: ${problem}`);
+      bad++;
+    }
+    const allowed = allowedPlaceholders(en[k].message);
+    const used = placeholders(v.message);
+    for (const name of used.filter((n) => !allowed.includes(n))) {
+      console.error(`${where}: ${k}: {${name}} is not a placeholder of the English message`);
+      bad++;
+    }
+    for (const name of placeholders(en[k].message).filter((n) => !used.includes(n) && n !== 'when')) {
+      console.error(`${where}: ${k}: {${name}} of the English message is missing`);
+      bad++;
+    }
+    if (placeholders(en[k].message).includes('when') && !used.some((n) => WHEN_PARAMS.includes(n))) {
+      console.error(`${where}: ${k}: the moment ({when}, or {time} and {date}) is missing`);
+      bad++;
+    }
+  }
+}
+
+// The names and descriptions of the stores and the browser: the limits of the stores, in every
+// language (addons.mozilla.org: names of 50 characters at most; Chrome: descriptions of 132).
+const STORE_LIMITS = { extName: 50, extDescription: 132 };
+const manifestEn = JSON.parse(await readFile(join(root, 'src/_locales/en/messages.json'), 'utf8'));
+for (const folder of await readdir(join(root, 'src/_locales'))) {
+  const where = `src/_locales/${folder}/messages.json`;
+  const messages = JSON.parse(await readFile(join(root, where), 'utf8'));
+  for (const [k, v] of Object.entries(messages)) {
+    if (!(k in manifestEn)) {
+      console.error(`${where}: ${k} is not an English key`);
+      bad++;
+      continue;
+    }
+    const limit = STORE_LIMITS[k];
+    if (limit && [...v.message].length > limit) {
+      console.error(`${where}: ${k} has ${[...v.message].length} characters, ${limit} at most`);
+      bad++;
+    }
+  }
+}
+
 // Interface strings use the interface terms (rule, browser blocking filters), never the
 // code words. Placeholder names and ICU keywords are not text.
 const CODE_WORDS = /(?<![\p{L}\p{N}_])(?:group|groups|DNR|declarativeNetRequest)(?![\p{L}\p{N}_])/giu;

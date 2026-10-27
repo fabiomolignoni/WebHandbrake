@@ -4,10 +4,11 @@
  * configuration plus a report of what could not be mapped.
  */
 
-import { GROUP_COLORS, newGroup, newId, newPolicy } from './defaults';
+import { deepEqual } from './changes';
+import { GROUP_COLORS, newGroup, newId, newPolicy, targetKey } from './defaults';
 import { clone, isObj } from './json';
 import { parseTargetList } from './patterns';
-import { normalizeConfig } from './schema';
+import { normalizeConfig, type Problem } from './schema';
 import type { Config, Group } from './types';
 
 /** `format` of the export file with the whole configuration. */
@@ -25,8 +26,8 @@ export interface ImportResult {
   /** Groups to add (merge mode) — for list and group imports. */
   groups: Group[];
   /** i18n keys with parameters, shown as the import report. */
-  warnings: { key: string; params?: Record<string, string | number> }[];
-  errors: string[];
+  warnings: Problem[];
+  errors: Problem[];
 }
 
 function result(format: ImportResult['format']): ImportResult {
@@ -39,13 +40,13 @@ function result(format: ImportResult['format']): ImportResult {
  */
 export function detectAndImport(text: string, now = Date.now(), current?: Config): ImportResult {
   const trimmed = text.trim();
-  if (!trimmed) return { ...result('unknown'), errors: ['import.error.empty'] };
+  if (!trimmed) return { ...result('unknown'), errors: [{ key: 'import.error.empty' }] };
   if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
     let data: unknown;
     try {
       data = JSON.parse(trimmed);
     } catch {
-      return { ...result('unknown'), errors: ['import.error.json'] };
+      return { ...result('unknown'), errors: [{ key: 'import.error.json' }] };
     }
     if (isObj(data)) {
       if (data.format === EXPORT_FORMAT || (Array.isArray(data.groups) && isObj(data.settings))) {
@@ -55,7 +56,7 @@ export function detectAndImport(text: string, now = Date.now(), current?: Config
     }
     const strings = collectStrings(data);
     if (strings.length) return importList(strings.join('\n'), now);
-    return { ...result('unknown'), errors: ['import.error.format'] };
+    return { ...result('unknown'), errors: [{ key: 'import.error.format' }] };
   }
   return importList(trimmed, now);
 }
@@ -128,14 +129,15 @@ function importList(text: string, now: number): ImportResult {
   const r = result('list');
   const { targets, errors } = parseTargetList(text);
   if (!targets.length) {
-    r.errors.push('import.error.noSites');
+    r.errors.push({ key: 'import.error.noSites' });
     return r;
   }
   for (const e of errors)
     r.warnings.push({ key: 'import.warn.line', params: { line: e.line, text: e.text } });
   const group = newGroup(
     {
-      name: 'Imported list',
+      // Named by the background, in the interface language (import.listName).
+      name: '',
       color: GROUP_COLORS[2],
       targets: targets.map((t) => ({ ...t, id: newId() })),
       policies: [newPolicy({ intervention: { type: 'block' } })],
@@ -146,6 +148,51 @@ function importList(text: string, now: number): ImportResult {
   return r;
 }
 
+/**
+ * A rule from a file as merging adds it: it never brings a password or a partner that the person
+ * does not know, and asks for a reminder instead.
+ */
+function asMerged(g: Group): Group {
+  const secret = g.protection.kind === 'password' || g.protection.kind === 'partner';
+  return secret ? { ...g, protection: { kind: 'reminder' } } : g;
+}
+
+/** What a rule is, its ids and revision aside: its sites in any order, its condition, its protection… */
+function ruleContent(g: Group): unknown {
+  return {
+    name: g.name,
+    color: g.color,
+    icon: g.icon,
+    note: g.note,
+    message: g.message,
+    enabled: g.enabled,
+    archived: g.archived,
+    targets: [...new Set(g.targets.map(targetKey))].sort(),
+    policies: g.policies.map((p) => ({
+      schedule: p.schedule,
+      budget: p.budget,
+      intervention: p.intervention,
+    })),
+    pause: g.pause,
+    protection: g.protection,
+    options: g.options,
+  };
+}
+
+/**
+ * Which rules a merge leaves out as already present: the same, as merging would add it, as a rule
+ * of the configuration or as one before it in the file. Importing a file twice adds its rules once.
+ */
+export function presentRules(current: Config, groups: Group[]): boolean[] {
+  const kept = current.groups.map(ruleContent);
+  return groups.map((g) => {
+    const content = ruleContent(asMerged(g));
+    if (kept.some((k) => deepEqual(k, content))) return true;
+    kept.push(content);
+    return false;
+  });
+}
+
 /** Builds the configuration resulting from an import, merging into or replacing the current one. */
 export function mergeImport(current: Config, imp: ImportResult, mode: 'merge' | 'replace'): Config {
   if (mode === 'replace' && imp.config) {
@@ -154,17 +201,15 @@ export function mergeImport(current: Config, imp: ImportResult, mode: 'merge' | 
     return next;
   }
   const next: Config = clone(current);
-  for (const g of imp.groups) {
-    // A rule from a file never brings a password or a partner that the person does not know:
-    // it asks for a reminder instead.
-    const secret = g.protection.kind === 'password' || g.protection.kind === 'partner';
+  const present = presentRules(current, imp.groups);
+  imp.groups.forEach((g, i) => {
+    if (present[i]) return;
     next.groups.push({
-      ...g,
-      protection: secret ? { kind: 'reminder' } : g.protection,
+      ...asMerged(g),
       id: newId(),
       policies: g.policies.map((p) => ({ ...p, id: newId() })),
       targets: g.targets.map((t) => ({ ...t, id: newId() })),
     });
-  }
+  });
   return next;
 }

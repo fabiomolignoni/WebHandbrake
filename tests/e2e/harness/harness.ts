@@ -518,6 +518,13 @@ export class Harness {
    * Lets the extension run in private windows (Chromium), which starts it again, and waits for its
    * background.
    */
+  /** Takes the access to websites away from the extension, as the person can. */
+  async removeSiteAccess() {
+    if (this.driver.withholdSiteAccess) await this.driver.withholdSiteAccess();
+    else await this.control.eval(() => chrome.permissions.remove({ origins: ['<all_urls>'] }));
+    await expect.poll(async () => (await this.rpc('diag.get')).permissions.hostAccess).toBe(false);
+  }
+
   async allowPrivateWindows() {
     if (!this.driver.allowPrivateWindows) throw new Error(`allowPrivateWindows: not in ${this.browser}`);
     await this.driver.allowPrivateWindows();

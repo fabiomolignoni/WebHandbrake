@@ -5,10 +5,11 @@ import {
   EXPORT_RULE_FORMAT,
   exportGroup,
   mergeImport,
+  presentRules,
   withoutSecrets,
 } from '../../src/engine/importers';
 import type { Config } from '../../src/engine/types';
-import { BLOCK, config, group, t } from './helpers';
+import { BLOCK, config, group, PERMANENT, t } from './helpers';
 
 const NOW = Date.UTC(2026, 9, 5);
 const HASH = `pbkdf2-sha256$1000$${'A'.repeat(22)}==$${'B'.repeat(43)}=`;
@@ -16,9 +17,12 @@ const SECRET = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP';
 
 describe('reading a file or a pasted text', () => {
   it('reports an empty text, broken JSON and JSON without sites', () => {
-    expect(detectAndImport('  ', NOW)).toMatchObject({ format: 'unknown', errors: ['import.error.empty'] });
-    expect(detectAndImport('{"groups": [', NOW)).toMatchObject({ errors: ['import.error.json'] });
-    expect(detectAndImport('{"hello": 1}', NOW)).toMatchObject({ errors: ['import.error.format'] });
+    expect(detectAndImport('  ', NOW)).toMatchObject({
+      format: 'unknown',
+      errors: [{ key: 'import.error.empty' }],
+    });
+    expect(detectAndImport('{"groups": [', NOW)).toMatchObject({ errors: [{ key: 'import.error.json' }] });
+    expect(detectAndImport('{"hello": 1}', NOW)).toMatchObject({ errors: [{ key: 'import.error.format' }] });
   });
 
   it('a WebHandbrake export, wrapped or bare, is a whole configuration', () => {
@@ -55,7 +59,7 @@ describe('reading a file or a pasted text', () => {
     expect(r.groups[0].targets.map((x) => x.value)).toEqual(['ads.test', 'tracker.test']);
     expect(r.groups[0].policies.map((p) => p.intervention)).toEqual([BLOCK]);
     expect(r.warnings).toEqual([{ key: 'import.warn.line', params: { line: 3, text: 'not a site' } }]);
-    expect(detectAndImport('just words', NOW).errors).toEqual(['import.error.noSites']);
+    expect(detectAndImport('just words', NOW).errors).toEqual([{ key: 'import.error.noSites' }]);
   });
 
   it('JSON of another tool gives the addresses it holds', () => {
@@ -126,9 +130,66 @@ describe('merging an import', () => {
     expect(imp.config?.settings.onboarded).toBe(false);
   });
 
+  it('importing the same file twice adds its rules once; a rule that differs by one site is added', () => {
+    const file = JSON.stringify(
+      config([
+        group('Shared', ['s.test', 'z.test', '+s.test/docs'], [{ intervention: BLOCK }], {
+          protection: PERMANENT,
+        }),
+      ]),
+    );
+    const once = mergeImport(current(), detectAndImport(file, NOW), 'merge');
+    const twice = mergeImport(once, detectAndImport(file, NOW + 60_000), 'merge');
+    expect(twice).toEqual(once);
+    expect(twice.groups.map((g) => g.name)).toEqual(['Mine', 'Shared']);
+    // The sites in another order are the same rule; one site more or less is another.
+    const other = JSON.parse(file);
+    other.groups[0].targets.reverse();
+    expect(mergeImport(once, detectAndImport(JSON.stringify(other), NOW), 'merge')).toEqual(once);
+    other.groups[0].targets.push(t('y.test'));
+    const more = mergeImport(once, detectAndImport(JSON.stringify(other), NOW), 'merge');
+    expect(more.groups.map((g) => g.name)).toEqual(['Mine', 'Shared', 'Shared']);
+    expect(more.groups[2].targets.map((x) => x.value)).toContain('y.test');
+    // So is the same rule with another condition, protection or name.
+    for (const change of [
+      (g: any) => (g.policies[0].intervention = { type: 'close' }),
+      (g: any) => (g.protection = { kind: 'reminder' }),
+      (g: any) => (g.name = 'Shared again'),
+    ]) {
+      const changed = JSON.parse(file);
+      change(changed.groups[0]);
+      expect(mergeImport(once, detectAndImport(JSON.stringify(changed), NOW), 'merge').groups).toHaveLength(
+        3,
+      );
+    }
+  });
+
+  it('a rule with a secret is present as merging adds it, with a reminder; a file adds its rule once', () => {
+    const pw = group('Shared', ['s.test'], [{ intervention: BLOCK }], {
+      protection: { kind: 'password', hash: HASH },
+    });
+    const imp = detectAndImport(JSON.stringify(config([pw, { ...pw, id: 'Copy' }])), NOW);
+    // The two rules of the file are the same: only the first is added.
+    expect(presentRules(current(), imp.groups)).toEqual([false, true]);
+    const once = mergeImport(current(), imp, 'merge');
+    expect(once.groups.map((g) => g.protection.kind)).toEqual(['wait', 'reminder']);
+    expect(presentRules(once, imp.groups)).toEqual([true, true]);
+    // The rule with its password is not the reminder one that merging adds.
+    expect(presentRules(config([pw]), imp.groups)).toEqual([false, true]);
+  });
+
+  it('the same list of sites, or the same shared rule, is added once', () => {
+    const list = mergeImport(current(), detectAndImport('b.test\na.test', NOW), 'merge');
+    expect(mergeImport(list, detectAndImport('a.test\nb.test', NOW), 'merge')).toEqual(list);
+    expect(mergeImport(list, detectAndImport('a.test', NOW), 'merge').groups).toHaveLength(3);
+    const mine = current();
+    expect(mergeImport(mine, detectAndImport(exportGroup(mine, 'Mine')!, NOW), 'merge')).toEqual(mine);
+  });
+
   it('a list or a shared rule is always merged', () => {
     const imp = detectAndImport('new.test', NOW);
     const next = mergeImport(current(), imp, 'replace');
-    expect(next.groups.map((g) => g.name)).toEqual(['Mine', 'Imported list']);
+    // The background names it in the interface language.
+    expect(next.groups.map((g) => g.name)).toEqual(['Mine', '']);
   });
 });

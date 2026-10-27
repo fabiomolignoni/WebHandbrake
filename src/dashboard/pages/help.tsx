@@ -3,7 +3,8 @@
 import { Fragment } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { t } from '../../i18n/i18n';
-import { api, features, openShortcutSettings, quiet } from '../../platform/api';
+import { api, features, openShortcutSettings, quiet, shortcutSettingsBlockable } from '../../platform/api';
+import { formatMinutesOfDay } from '../../shared/format';
 import { CHANGELOG_URL, NEW_ISSUE_URL, PRIVACY_URL, REPO_URL } from '../../shared/links';
 import { Button } from '../../ui/components';
 import { Icon } from '../../ui/icons';
@@ -58,8 +59,7 @@ function Shortcuts({ facts }: { facts: HelpFacts }) {
 
 function ShortcutList({ facts }: { facts: HelpFacts }) {
   const keys = useCommandKeys();
-  // The shortcut settings are among the browser's extension pages.
-  const blocked = useDashboard().model.browserPagesBlocked;
+  const blocked = useDashboard().model.browserPagesBlocked && shortcutSettingsBlockable();
   if (!keys) return null;
   return (
     <div class="stack stack-sm">
@@ -145,7 +145,7 @@ export function HelpPage({ topic: openAt = null }: { topic?: string | null }) {
     heading?.scrollIntoView();
     heading?.focus({ preventScroll: true });
   }, [openAt]);
-  const facts = helpFacts();
+  const facts = helpFacts(formatMinutesOfDay);
   const contents = [
     ...HELP_TOPICS.map((topic) => ({ id: topic.id, title: t(topic.title) })),
     { id: 'about', title: t('help.about') },

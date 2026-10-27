@@ -91,6 +91,7 @@ describe('the Help structure', () => {
   it('the facts are numbers or HH:MM, never empty', () => {
     for (const [name, value] of Object.entries(helpFacts())) {
       if (typeof value === 'number') expect(Number.isFinite(value), name).toBe(true);
+      else if (typeof value === 'function') expect(value(9 * 60 + 5), name).toBe('09:05');
       else expect(value, name).toMatch(/^\d\d:\d\d$/);
     }
   });

@@ -80,8 +80,14 @@ export function normalizeTarget(raw: unknown): Target | null {
 
 const targetKey = (t: Record<string, any>) => `${t.type}|${t.value}|${Boolean(t.allow)}`;
 
+/** Something left out of a file or a stored configuration: a message key and its parameters. */
+export interface Problem {
+  key: string;
+  params?: Record<string, string | number>;
+}
+
 /** A rule's entries, each once: a repeated entry is left out without a word. */
-function normalizeTargets(raw: unknown, errors: string[], where: string): Target[] {
+function normalizeTargets(raw: unknown, errors: Problem[], rule: string): Target[] {
   if (!Array.isArray(raw)) return [];
   const out: Target[] = [];
   const seen = new Set<string>();
@@ -90,10 +96,7 @@ function normalizeTargets(raw: unknown, errors: string[], where: string): Target
     if (t) {
       if (!seen.has(targetKey(t))) out.push(t);
       seen.add(targetKey(t));
-    } else
-      errors.push(
-        `${where}: an entry that could not be read was left out: ${JSON.stringify(r).slice(0, 80)}`,
-      );
+    } else errors.push({ key: 'import.warn.entry', params: { rule, entry: JSON.stringify(r).slice(0, 80) } });
   }
   return out;
 }
@@ -206,20 +209,19 @@ export function normalizeIntervention(raw: unknown): Intervention {
 }
 
 /**
- * A limit starts again every so often. The weeks, months and rolling windows of earlier versions
- * become as many days or minutes, and their offsets are dropped.
+ * A limit starts again every so often. The rolling windows of earlier versions become as many
+ * minutes, and a number of minutes counts from the start of the day, without an offset. A number of
+ * days keeps the day it counts from (`chosenPeriod`). The weeks and months that 1.1.0 turned into 7
+ * and 30 days stay so.
  */
 function budgetPeriod(p: Period): Period {
   switch (p.kind) {
-    case 'week':
-      return { kind: 'days', n: 7 };
-    case 'month':
-      return { kind: 'days', n: 30 };
     case 'rolling':
       return everyPeriod(p.n ?? 60);
     case 'minutes':
-    case 'days':
       return { kind: p.kind, n: p.n };
+    case 'days':
+      return p.offset ? { kind: p.kind, n: p.n, offset: p.offset } : { kind: p.kind, n: p.n };
     default:
       return { kind: p.kind };
   }
@@ -452,7 +454,7 @@ function normalizeProtection(raw: Record<string, any>, legacy: Legacy, current?:
 
 export function normalizeGroup(
   raw: unknown,
-  errors: string[],
+  errors: Problem[],
   now = Date.now(),
   legacy: Legacy = NO_LEGACY,
   current?: Protection,
@@ -469,14 +471,14 @@ export function normalizeGroup(
     id,
     rev: num(raw.rev, 1, 1),
     updatedAt: num(raw.updatedAt, now),
-    name: name || 'Group',
+    name,
     color: /^#[0-9a-f]{6}$/i.test(str(raw.color)) ? raw.color : GROUP_COLORS[0],
     icon: str(raw.icon, 'circle', 40),
     note: str(raw.note, '', 2000),
     message: str(raw.message, '', 5000),
     enabled: bool(raw.enabled, true),
     archived: bool(raw.archived, false),
-    targets: normalizeTargets(raw.targets, errors, `Rule “${name}”`),
+    targets: normalizeTargets(raw.targets, errors, name),
     // One condition (the migration to schema 3 split the rules that had more); without one, the
     // rule counts the time, as it did.
     policies: [
@@ -552,11 +554,11 @@ export function normalizeConfig(
   input: unknown,
   now = Date.now(),
   opts: { secretsFrom?: Config } = {},
-): { config: Config; errors: string[] } {
-  const errors: string[] = [];
+): { config: Config; errors: Problem[] } {
+  const errors: Problem[] = [];
   // Imports and restored backups may come from an earlier schema.
   const raw = migrate(input).data;
-  if (!isObj(raw)) return { config: defaultConfig(), errors: ['not an object'] };
+  if (!isObj(raw)) return { config: defaultConfig(), errors: [{ key: 'import.error.format' }] };
   const groups: Group[] = [];
   const ids = new Set<string>();
   const legacy = legacyProtection(raw.settings);
@@ -565,7 +567,7 @@ export function normalizeConfig(
     const current = id ? opts.secretsFrom?.groups.find((x) => x.id === id)?.protection : undefined;
     const n = normalizeGroup(g, errors, now, legacy, current);
     if (!n) {
-      errors.push('A rule that could not be read was left out.');
+      errors.push({ key: 'import.warn.rule' });
       continue;
     }
     if (ids.has(n.id)) n.id = newId();

@@ -512,29 +512,28 @@ export function RuleEditor(props: Props) {
   const parts: Record<StepId, () => ComponentChildren> = {
     sites: () => (
       <>
-        <div class="field">
-          <span class="label" id="rule-templates">
-            {t('wizard.sites.templates')}
-          </span>
-          <span class="help">{t('editor.templatesHelp')}</span>
-          <div class="chips" role="group" aria-labelledby="rule-templates">
-            {TEMPLATES.map((tpl) => (
-              <button
-                key={tpl.id}
-                type="button"
-                class="chip"
-                aria-pressed={hasTemplate(draft.targets, tpl.entries)}
-                onClick={() => toggleList(tpl.id)}
-              >
-                <Icon name={tpl.icon} />
-                {t(tpl.nameKey)}
-              </button>
-            ))}
-          </div>
+        {/* Right under "Pick a ready-made list, add your own sites, or both.": the lists come first,
+            since picking is quicker than typing, and a pressed list says it is in the rule. */}
+        <div class="chips" role="group" aria-label={t('wizard.sites.templates')}>
+          {TEMPLATES.map((tpl) => (
+            <button
+              key={tpl.id}
+              type="button"
+              class="chip"
+              aria-pressed={hasTemplate(draft.targets, tpl.entries)}
+              onClick={() => toggleList(tpl.id)}
+            >
+              <Icon name={tpl.icon} />
+              {t(tpl.nameKey)}
+            </button>
+          ))}
         </div>
         <div class="field">
-          <span class="label">{t('wizard.sites.yours')}</span>
-          <TargetsEditor targets={draft.targets} onChange={(targets) => set({ targets })} />
+          <TargetsEditor
+            head={<span class="label">{t('wizard.sites.yours')}</span>}
+            targets={draft.targets}
+            onChange={(targets) => set({ targets })}
+          />
           {creating && !sites.length && <span class="help">{t('wizard.sites.none')}</span>}
         </div>
       </>
@@ -544,6 +543,7 @@ export function RuleEditor(props: Props) {
       <ConditionEditor
         policy={policy}
         onChange={setPolicy}
+        saved={creating ? undefined : saved.policies[0]?.budget}
         severalSites={severalSites}
         memo={memory.memo[policy.id] ?? {}}
         onMemo={(m) => remember({ memo: { ...memory.memo, [policy.id]: m } })}
@@ -565,6 +565,7 @@ export function RuleEditor(props: Props) {
               value={draft.pause}
               onChange={(pause) => set({ pause })}
               hasPassword={protection?.kind === 'password'}
+              saved={creating ? undefined : saved.pause}
             />
           </section>
         )}
