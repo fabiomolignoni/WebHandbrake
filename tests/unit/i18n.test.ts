@@ -65,6 +65,7 @@ describe('translation', () => {
   it('the language of the settings, else of the browser, else English', () => {
     expect(AVAILABLE_LOCALES.map((l) => l.code)).toContain('en');
     expect(resolveLocale('en', ['it'])).toBe('en');
+    expect(resolveLocale('auto', ['it-IT', 'en-GB'])).toBe('it');
     expect(resolveLocale('auto', ['xx-YY', 'en-GB'])).toBe('en');
     expect(resolveLocale('xx', ['yy'])).toBe('en');
   });

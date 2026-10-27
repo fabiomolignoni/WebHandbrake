@@ -80,7 +80,7 @@ describe('times and dates', () => {
       day: 'tomorrow',
       time: '09:00',
     });
-    expect(whenParams(at(3, 9), now)).toMatchObject({ day: 'week', date: 'Thu' });
+    expect(whenParams(at(3, 9), now)).toMatchObject({ day: 'week', date: 'Thursday' });
     expect(whenParams(at(10, 9), now)).toMatchObject({ day: 'date', date: 'Oct 15' });
     expect(dateTimeParams(at(10, 9))).toEqual({
       when: 'Thu, Oct 15, 09:00',
