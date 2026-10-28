@@ -80,6 +80,9 @@ All notable changes to WebHandbrake are documented here. The format follows
   `example.com/search?q=hello%20world` or `?q=hello+world`, now matches that address: it matched
   only when the query had no space, accent or other encoded character. **Block this site** ›
   **This page** also matches a page whose query holds an encoded &, # or +.
+- A rule made stricter while its block page was open, such as a longer wait or a shorter access
+  after it, no longer lets that page in on the old terms: the page now asks as the rule does at
+  once, and a wait, a question or a challenge answered on the old terms gives no access.
 
 - A wait that pauses or starts again when you switch to another tab is now timed by WebHandbrake
   itself, not by the block page: switching tabs or minimising the window adds to the wait even if
