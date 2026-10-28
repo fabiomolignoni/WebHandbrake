@@ -405,6 +405,25 @@ describe('messages', () => {
     expect(tick.ok).toBe(true);
   });
 
+  it('a page asks why for its own window: the rules of private windows apply in a private tab', async () => {
+    await setup([
+      group('P', ['a.test'], [{ intervention: BLOCK }], {
+        options: { ...defaultOptions(), privacy: 'private' },
+      }),
+    ]);
+    const why = (sender: Partial<chrome.runtime.MessageSender>, incognito?: boolean) =>
+      ask({ whb: 1, method: 'explain', args: { url: 'https://a.test/', incognito } }, sender) as Promise<{
+        value: { intervention: { type: string } };
+      }>;
+    const blockPage = { url: 'chrome-extension://test/intervention.html', tab: { id: 3 } as chrome.tabs.Tab };
+    const privateTab = { ...blockPage, tab: { id: 3, incognito: true } as chrome.tabs.Tab };
+    expect((await why(privateTab)).value.intervention.type).toBe('block');
+    expect((await why(blockPage)).value.intervention.type).toBe('allow');
+    // Test a URL says which window it means.
+    expect((await why(page, true)).value.intervention.type).toBe('block');
+    expect((await why(privateTab, false)).value.intervention.type).toBe('allow');
+  });
+
   it('errors are answered, not thrown', async () => {
     await setup([]);
     const logged = vi.spyOn(console, 'error').mockImplementation(() => {});

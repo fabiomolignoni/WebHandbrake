@@ -40,6 +40,7 @@ export interface Api {
   'overview.get': { req: Record<string, never>; res: Overview };
   'config.get': { req: Record<string, never>; res: ConfigModel };
   'popup.get': { req: { tabId?: number }; res: PopupModel };
+  /** Without `incognito`, for the window of the page that asks. */
   explain: { req: { url: string; draftGroup?: Group; incognito?: boolean }; res: DecisionView };
   'intervention.get': { req: { url: string }; res: InterventionModel };
   /** The person left an intervention page without going in (an impulse resisted). */
