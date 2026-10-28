@@ -1,0 +1,20 @@
+{
+  "extName": {
+    "message": "WebHandbrake – Bloqueur de sites, limites de temps"
+  },
+  "extDescription": {
+    "message": "Bloquez ou freinez les sites qui vous distraient. Limites de temps, horaires et sessions de concentration. Sans compte ni pistage."
+  },
+  "cmdOpenPopup": {
+    "message": "Ouvrir WebHandbrake"
+  },
+  "cmdStartSession": {
+    "message": "Démarrer une session de concentration de 25 minutes"
+  },
+  "cmdBlockSite": {
+    "message": "Choisir comment bloquer le site actuel"
+  },
+  "cmdOpenDashboard": {
+    "message": "Ouvrir le tableau de bord"
+  }
+}

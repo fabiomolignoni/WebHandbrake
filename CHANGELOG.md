@@ -8,6 +8,8 @@ All notable changes to WebHandbrake are documented here. The format follows
 
 ### Added
 
+- **French.** The whole interface, Help and the extension’s name and description are in
+  French. It follows the browser’s language, or choose it in Settings › General › **Language**.
 - **Spanish.** The whole interface, Help and the extension’s name and description are in
   Spanish, written for Spain and Latin America alike. It follows the browser’s language, or
   choose it in Settings › General › **Language**.

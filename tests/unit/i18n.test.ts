@@ -68,6 +68,7 @@ describe('translation', () => {
     expect(resolveLocale('auto', ['it-IT', 'en-GB'])).toBe('it');
     expect(resolveLocale('auto', ['de-AT', 'en-GB'])).toBe('de');
     expect(resolveLocale('auto', ['es-419', 'en-GB'])).toBe('es');
+    expect(resolveLocale('auto', ['fr-CA', 'en-GB'])).toBe('fr');
     expect(resolveLocale('auto', ['xx-YY', 'en-GB'])).toBe('en');
     expect(resolveLocale('xx', ['yy'])).toBe('en');
   });
