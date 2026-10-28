@@ -93,6 +93,8 @@ All notable changes to WebHandbrake are documented here. The format follows
 - An emergency exit cancelled while its sentence was being typed, or asked for again since, no
   longer completes when the sentence is typed: it completes only while it is asked for and its wait
   is over.
+- A small calculation whose result is 0 (such as 27 − 27) let you in with an empty answer: an
+  empty answer is now a wrong one.
 - A new length for **Inactive after** (Settings › Time) reached the browser's idle detection only
   once WebHandbrake started again: until then, the time of pages counted without their page script,
   such as Firefox's reader view, stopped after the previous length.

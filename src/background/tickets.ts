@@ -333,7 +333,8 @@ export async function answerTicket(
       if (normalise(a) !== normalise(step.phrase)) return fail('ticket.error.mismatch');
       break;
     case 'math':
-      if (Number(a.trim()) !== t.active.answer) return fail('ticket.error.wrongAnswer');
+      // An empty answer is no number, not 0.
+      if (!a.trim() || Number(a.trim()) !== t.active.answer) return fail('ticket.error.wrongAnswer');
       break;
     case 'rulePassword': {
       const hash = sharedSecret(step.groups, passwordOf);
