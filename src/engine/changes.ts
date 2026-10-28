@@ -10,6 +10,7 @@
 import { compileTargets, isGroupActive, redirectDestination, redirectKey } from './compile';
 import { ASK_WAIT_SECONDS } from './defaults';
 import { clone } from './json';
+import { type CompiledPattern, compilePattern, mayOverlap } from './patterns';
 import { SEVERITY, severityOf } from './severity';
 import { scheduleBitmap } from './time';
 import type {
@@ -573,6 +574,60 @@ function groupIsActive(c: Config, id: string): boolean {
   return Boolean(g && isGroupActive(g));
 }
 
+/** The site that a limit per site counts for the addresses of an entry: its host, or each address's. */
+const siteOfEntry = (cp: CompiledPattern) => (cp.scheme === 'web' && cp.host && !cp.regex ? cp.host : null);
+
+/**
+ * The blocking entries of a rule as `splitsSiteLimit` looks them up: the entries of a site with its
+ * subdomains by site (the least specific one), the others in a list. Made once for a list of entries,
+ * against which the units of a long list are classified one by one.
+ */
+interface BlockingEntries {
+  bySite: Map<string, CompiledPattern>;
+  others: CompiledPattern[];
+}
+const blockingEntries = new WeakMap<Target[], BlockingEntries>();
+
+function blockingEntriesOf(targets: Target[]): BlockingEntries {
+  let entries = blockingEntries.get(targets);
+  if (entries) return entries;
+  entries = { bySite: new Map(), others: [] };
+  for (const t of targets) {
+    const cp = !t.allow && compilePattern(t);
+    if (!cp) continue;
+    const site = siteOfEntry(cp);
+    const same = site && cp.subdomains ? entries.bySite.get(site) : undefined;
+    if (!site || !cp.subdomains) entries.others.push(cp);
+    else if (!same || cp.spec < same.spec) entries.bySite.set(site, cp);
+  }
+  blockingEntries.set(targets, entries);
+  return entries;
+}
+
+/**
+ * Whether an entry added to a rule with a limit per site gives some of its addresses a limit of their
+ * own. A limit per site counts the site of the entry that decides (`siteKeyFor`): an entry more
+ * specific than one already there, for another site (m.youtube.com in a rule with youtube.com),
+ * would count its addresses apart, from nothing, where they shared the limit already used.
+ */
+function splitsSiteLimit(config: Config, groupId: string, target: Target): boolean {
+  const g = config.groups.find((x) => x.id === groupId);
+  const added = compilePattern(target);
+  if (!g?.policies.some((p) => p.budget?.perSite) || !added) return false;
+  const site = siteOfEntry(added);
+  const splits = (cp: CompiledPattern) =>
+    cp.spec <= added.spec && siteOfEntry(cp) !== site && mayOverlap(cp, added);
+  const { bySite, others } = blockingEntriesOf(g.targets);
+  if (others.some(splits)) return true;
+  if (!site) return [...bySite.values()].some(splits);
+  // A site meets only the sites it is a part of: the others are more specific than it, or apart.
+  for (let i = site.indexOf('.'); i !== -1; i = site.indexOf('.', i + 1)) {
+    const cp = bySite.get(site.slice(i + 1));
+    if (cp && splits(cp)) return true;
+  }
+  return false;
+}
+
 /** Classifies a unit against the configuration it applies to. */
 export function classify(unit: ChangeUnit, config: Config): Direction {
   switch (unit.kind) {
@@ -620,7 +675,9 @@ export function classify(unit: ChangeUnit, config: Config): Direction {
     }
     case 'target.add':
       if (!groupIsActive(config, unit.owner.id)) return 'neutral';
-      return unit.target.allow ? 'weaken' : 'strengthen';
+      return unit.target.allow || splitsSiteLimit(config, unit.owner.id, unit.target)
+        ? 'weaken'
+        : 'strengthen';
     case 'target.remove':
       if (!groupIsActive(config, unit.owner.id)) return 'neutral';
       return unit.target.allow ? 'strengthen' : 'weaken';

@@ -86,6 +86,10 @@ All notable changes to WebHandbrake are documented here. The format follows
 - In a private window, the block page of a rule for private windows only said the page was
   available again (or, with **Reopen the page automatically**, went back to it and was blocked
   again) every time something changed: it looked again with the rules of normal windows.
+- In a rule with a limit for each site, adding a part of a site already in it, such as
+  m.youtube.com to a rule with youtube.com, applied at once as a stricter change, while it gave
+  that part a limit of its own, unused: the time already used on the site no longer counted there.
+  It now takes the rule's protection, as any change that loosens it.
 
 - A wait that pauses or starts again when you switch to another tab is now timed by WebHandbrake
   itself, not by the block page: switching tabs or minimising the window adds to the wait even if

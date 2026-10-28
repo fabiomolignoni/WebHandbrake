@@ -35,6 +35,32 @@ describe('change classification', () => {
     expect(classifyAll(base, c)).toEqual([['target.remove', 'weaken']]);
   });
 
+  it('a part of a site already in a rule with a limit per site is not a site of its own at once', () => {
+    const perSite = {
+      budget: { type: 'time' as const, minutes: 30, period: { kind: 'day' as const }, perSite: true },
+      intervention: BLOCK,
+    };
+    const limited = config([group('Video', ['youtube.com', '*.video.example'], [perSite])]);
+    const adding = (line: string) => {
+      const b = clone(limited);
+      b.groups[0].targets.push(t(line));
+      return classifyAll(limited, b);
+    };
+    // It would count m.youtube.com apart, from nothing, where it shared the limit of youtube.com.
+    expect(adding('m.youtube.com')).toEqual([['target.add', 'weaken']]);
+    expect(adding('video.example')).toEqual([['target.add', 'weaken']]);
+    // The same site, another site, or an entry that never decides before the ones there.
+    expect(adding('youtube.com/shorts')).toEqual([['target.add', 'strengthen']]);
+    expect(adding('reddit.com')).toEqual([['target.add', 'strengthen']]);
+    expect(adding('/^https:\\/\\/m\\.youtube\\.com\\//')).toEqual([['target.add', 'strengthen']]);
+    // A limit for the whole rule counts every site together.
+    const shared = clone(limited);
+    shared.groups[0].policies[0].budget!.perSite = false;
+    const b = clone(shared);
+    b.groups[0].targets.push(t('m.youtube.com'));
+    expect(classifyAll(shared, b)).toEqual([['target.add', 'strengthen']]);
+  });
+
   it('exceptions work the other way round', () => {
     const b = clone(base);
     b.groups[0].targets = b.groups[0].targets.filter((x) => !x.allow);
