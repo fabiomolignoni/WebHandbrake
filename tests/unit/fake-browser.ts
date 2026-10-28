@@ -138,7 +138,7 @@ export function installFakeBrowser(
   const focus = { windowId: 1 };
   /** The last window that had the focus, which windows.getLastFocused() returns. */
   let lastFocused = 1;
-  const idle = { state: 'active' as 'active' | 'idle' | 'locked' };
+  const idle = { state: 'active' as 'active' | 'idle' | 'locked', interval: 60 };
   let nextTab = 1000;
 
   const tabById = (id: number) => tabs.find((t) => t.id === id);
@@ -301,7 +301,7 @@ export function installFakeBrowser(
     commands: { onCommand: events.onCommand },
     idle: {
       onStateChanged: events.onIdle,
-      setDetectionInterval: () => {},
+      setDetectionInterval: (seconds: number) => void (idle.interval = seconds),
       queryState: async () => idle.state,
     },
     webRequest: { onHeadersReceived: events.onHeadersReceived, onBeforeRedirect: events.onBeforeRedirect },

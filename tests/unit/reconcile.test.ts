@@ -71,6 +71,12 @@ describe('reconciliation', () => {
     expect(fake.broadcasts).toContainEqual({ whb: 1, changed: ['state', 'config'] });
   });
 
+  it('a change of the time without activity reaches the system idle detection', async () => {
+    const t = await setup([], (c) => (c.settings.tracking.idleSeconds = 30));
+    await t.reconcile.reconcile('test', { config: true });
+    expect(fake.idle.interval).toBe(30);
+  });
+
   it('calls made before a run starts are merged into it', async () => {
     const t = await setup([group('A', ['a.test'], [{ intervention: { type: 'track' } }])]);
     const { counters } = await import('../../src/background/diagnostics-state');
