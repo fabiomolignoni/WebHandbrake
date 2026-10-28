@@ -5,7 +5,7 @@
 
 import { newId, newPolicy } from './defaults';
 import type { Group, Target } from './types';
-import { parseUrl, stripWww } from './url';
+import { entryQuery, parseUrl, stripWww } from './url';
 
 export type Granularity = 'domain' | 'host' | 'path' | 'page';
 
@@ -26,7 +26,7 @@ export function targetFor(url: string, granularity: Granularity): Target | null 
         ? { id: newId(), type: 'path', value: `${host}${path}` }
         : { id: newId(), type: 'domain', value: host };
     case 'page': {
-      const q = p.query.map(([k, v]) => `${k}=${v}`).join('&');
+      const q = entryQuery(p.query);
       if (!path && !q) return { id: newId(), type: 'homepage', value: host };
       return { id: newId(), type: 'page', value: `${host}${path || '/'}${q ? `?${q}` : ''}` };
     }

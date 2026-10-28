@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { pageRule, targetFor } from '../../src/engine/page-target';
+import { compilePattern, matchPattern } from '../../src/engine/patterns';
 import {
   displayHost,
   isExtensionUrl,
@@ -94,6 +95,14 @@ describe('"Block this site / page"', () => {
     expect(value('https://news.test/', 'page')).toEqual(['homepage', 'news.test']);
     expect(value('https://news.test/?id=1', 'page')).toEqual(['page', 'news.test/?id=1']);
     expect(value('https://news.test/', 'path')).toEqual(['domain', 'news.test']);
+  });
+
+  it('a page whose query has characters of the entry syntax matches itself', () => {
+    const url = 'https://news.test/search?q=a%26b+c%2B%2B&lang=caf%C3%A9';
+    const x = targetFor(url, 'page');
+    expect(x?.value).toBe('news.test/search?q=a%26b%20c%2B%2B&lang=café');
+    expect(matchPattern(compilePattern(x!)!, parseUrl(url)!)).toBe(true);
+    expect(pageKey(url)).toBe('https://news.test/search?q=a%26b%20c%2B%2B&lang=café');
   });
 
   it('only web pages, each entry with its own id', () => {

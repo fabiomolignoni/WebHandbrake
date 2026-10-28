@@ -23,7 +23,7 @@
 
 import { MAX_REGEX_LENGTH } from './limits';
 import type { Target, TargetType } from './types';
-import { type ParsedUrl, stripWww, toAsciiHost } from './url';
+import { decodeQueryPart, type ParsedUrl, stripWww, toAsciiHost } from './url';
 
 export interface ParsedLine {
   target?: Omit<Target, 'id'>;
@@ -623,8 +623,10 @@ export function compilePattern(target: Target): CompiledPattern | null {
     for (const pair of rest.slice(q + 1).split('&')) {
       if (!pair) continue;
       const i = pair.indexOf('=');
-      const k = i === -1 ? pair : pair.slice(0, i);
-      const v = i === -1 ? '*' : pair.slice(i + 1);
+      // Compared with the parameters of the address, which are decoded: "q=hello%20world" (as the
+      // address bar shows it) is "hello world".
+      const k = decodeQueryPart(i === -1 ? pair : pair.slice(0, i)).toLowerCase();
+      const v = i === -1 ? '*' : decodeQueryPart(pair.slice(i + 1));
       query.push({
         k,
         v,
@@ -821,6 +823,28 @@ function rawHostOf(cp: CompiledPattern): string {
   return cut === -1 ? v : v.slice(0, cut);
 }
 
+/**
+ * A decoded query parameter's name or value as the browser may write it in an address: a character
+ * other than a letter or a digit as it is or percent-encoded, a space as + or %20. With `wild`, * is
+ * any characters of the value.
+ */
+function queryPartRe(s: string, wild: boolean): string {
+  let out = '';
+  for (const ch of s) {
+    if (wild && ch === '*') out += '[^&]*';
+    else if (/[a-z0-9]/i.test(ch)) out += ch;
+    else if (ch === ' ') out += '(?:\\+|%20)';
+    else {
+      const encoded = [...new TextEncoder().encode(ch)]
+        .map((b) => `%${b.toString(16).toUpperCase().padStart(2, '0')}`)
+        .join('');
+      // Unencoded in an address, + is a space, & ends the parameter and # the query.
+      out += '+&#'.includes(ch) ? encoded : `(?:${escapeRe(ch)}|${encoded})`;
+    }
+  }
+  return out;
+}
+
 function permutations<T>(items: T[]): T[][] {
   if (items.length <= 1) return [items];
   const out: T[][] = [];
@@ -872,7 +896,7 @@ export function dnrRegex(cp: CompiledPattern): { re: string; exact: boolean } | 
   let query = cp.pathMode === 'any' || cp.pathMode === 'home' ? '' : '(?:\\?.*)?';
   if (cp.query.length) {
     const param = (c: QueryConstraint) =>
-      `${escapeRe(c.k)}=${c.v === '*' ? '[^&]*' : wildToRe(c.v, '[^&]*', '[^&]*')}(?:&|$)`;
+      `${queryPartRe(c.k, false)}=${c.v === '*' ? '[^&]*' : queryPartRe(c.v, true)}(?:&|$)`;
     if (cp.query.length <= 3) {
       const perms = permutations(cp.query).map((perm) => perm.map(param).join('(?:[^&]*&)*?'));
       query = `\\?(?:[^&]*&)*?(?:${perms.join('|')}).*`;
@@ -909,7 +933,12 @@ export function representativeUrl(cp: CompiledPattern): string | null {
       p = `${path}/whb-r`;
   }
   const q = cp.query.length
-    ? `?${cp.query.map((c) => `${c.k}=${c.v === '*' ? 'whb-x' : c.v.replace(/\*/g, 'whb-x')}`).join('&')}`
+    ? `?${cp.query
+        .map(
+          (c) =>
+            `${encodeURIComponent(c.k)}=${c.v === '*' ? 'whb-x' : encodeURIComponent(c.v.replace(/\*/g, 'whb-x'))}`,
+        )
+        .join('&')}`
     : '';
   const f = cp.fragment !== null ? `#${cp.fragment}` : '';
   return `https://${host}${p}${q}${f}`;

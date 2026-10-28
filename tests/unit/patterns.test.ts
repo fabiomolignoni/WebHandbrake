@@ -176,6 +176,20 @@ describe('matching', () => {
     expect(matches('youtube.com/watch?v=AbC$', 'https://youtube.com/watch?v=abc')).toBe(false);
   });
 
+  it('matches query parameters written as the address bar shows them', () => {
+    const url = 'https://example.com/search?q=hello+world&lang=caf%C3%A9';
+    for (const line of [
+      'example.com/search?q=hello%20world',
+      'example.com/search?q=hello+world',
+      'example.com/search?lang=café',
+      'example.com/search?lang=caf%C3%A9',
+      'example.com/search?q=hello%20*',
+    ])
+      expect([line, matches(line, url)]).toEqual([line, true]);
+    expect(matches('example.com/search?q=a%26b', 'https://example.com/search?q=a%26b')).toBe(true);
+    expect(matches('example.com/search?q=a%26b', 'https://example.com/search?q=a&b')).toBe(false);
+  });
+
   it('matches internal pages, local files and reader mode', () => {
     expect(matches('about:addons', 'about:addons')).toBe(true);
     expect(matches('chrome://extensions', 'chrome://extensions/?id=x')).toBe(true);
@@ -224,6 +238,13 @@ describe('DNR expressions and representative URLs', () => {
       ['youtube.com/watch?list=*', 'https://www.youtube.com/watch?v=1', false],
       ['a.com/x?b=1&c=2', 'https://a.com/x?c=2&z=0&b=1', true],
       ['reddit.com/r/*/comments/*', 'https://reddit.com/r/a/comments/b', true],
+      ['a.com/s?q=hello%20world', 'https://a.com/s?q=hello+world', true],
+      ['a.com/s?q=hello+world', 'https://a.com/s?q=hello%20world', true],
+      ['a.com/s?q=café', 'https://a.com/s?q=caf%C3%A9', true],
+      ['a.com/s?q=a%26b', 'https://a.com/s?q=a%26b', true],
+      ['a.com/s?q=a%26b', 'https://a.com/s?q=a&b', false],
+      ['a.com/s?q=c%2B%2B', 'https://a.com/s?q=c%2B%2B', true],
+      ['a.com/s?q=c%2B%2B', 'https://a.com/s?q=c++', false],
     ];
     for (const [line, url, expected] of cases)
       expect([line, url, re(line).test(url)]).toEqual([line, url, expected]);
@@ -237,6 +258,7 @@ describe('DNR expressions and representative URLs', () => {
       'example.*',
       '=m.a.com',
       'a.com/$',
+      'a.com/s?q=hello%20world&r=a%26b*',
     ]) {
       const cp = compilePattern(t(line))!;
       expect(matchPattern(cp, parseUrl(representativeUrl(cp)!)!)).toBe(true);
