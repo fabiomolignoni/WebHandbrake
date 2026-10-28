@@ -64,8 +64,14 @@ export function useNow(ms = 1000): number {
   return now;
 }
 
+type Appearance = Pick<Settings, 'theme' | 'highContrast' | 'hour12' | 'dateFormat'>;
+
+/** The settings last applied, which a change of the system's colours applies again. */
+let appearance: Appearance | null = null;
+
 /** Applies theme, contrast, language and formats from the settings. */
-export function applyAppearance(s: Pick<Settings, 'theme' | 'highContrast' | 'hour12' | 'dateFormat'>) {
+export function applyAppearance(s: Appearance) {
+  appearance = s;
   const root = document.documentElement;
   const dark =
     s.theme === 'dark' || (s.theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
@@ -87,6 +93,16 @@ export async function bootPage(): Promise<Settings> {
   const s = model.config.settings;
   await initI18n(s.language);
   applyAppearance(s);
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => applyAppearance(s));
+  followSystemColours();
   return s;
+}
+
+/**
+ * A theme that follows the system changes with it, as the settings are now: those of a page that
+ * stays open (the dashboard) may have changed since it opened.
+ */
+export function followSystemColours() {
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (appearance) applyAppearance(appearance);
+  });
 }

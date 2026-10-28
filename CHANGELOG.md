@@ -90,6 +90,8 @@ All notable changes to WebHandbrake are documented here. The format follows
   m.youtube.com to a rule with youtube.com, applied at once as a stricter change, while it gave
   that part a limit of its own, unused: the time already used on the site no longer counted there.
   It now takes the rule's protection, as any change that loosens it.
+- When the system switched between light and dark, an open dashboard went back to the theme,
+  contrast and formats it had when it was opened, undoing those chosen in Settings since.
 
 - A wait that pauses or starts again when you switch to another tab is now timed by WebHandbrake
   itself, not by the block page: switching tabs or minimising the window adds to the wait even if
