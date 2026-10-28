@@ -412,6 +412,10 @@ export async function startEmergency(): Promise<{ ticket: TicketView | null; err
 
 registerExecutor('emergency.complete', async () => {
   const t0 = now();
+  // Checked again: the exit may have been cancelled since its sentence was asked, or asked again.
+  const e = store.state.emergency;
+  if (!e) throw new Error('emergency.error.notRequested');
+  if (t0 < e.readyAt) throw new Error('emergency.error.notReady');
   const next: Config = clone(store.config);
   // Every rule asks only for a reminder, which also forgets the passwords and partner codes.
   for (const g of next.groups) g.protection = { kind: 'reminder' };
