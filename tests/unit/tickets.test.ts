@@ -99,6 +99,18 @@ describe('tickets: costs checked in the background', () => {
     });
   });
 
+  it('a calculation whose result is 0 takes the 0, not an empty answer', async () => {
+    const { tickets, purpose } = await load();
+    const { view } = await tickets.createTicket(purpose, [{ type: 'math' }]);
+    const math = await tickets.getTicket(view!.id);
+    math!.active = { question: '27 - 27', answer: 0 };
+    for (const empty of ['', '  '])
+      expect(await tickets.answerTicket(view!.id, empty)).toMatchObject({
+        error: 'ticket.error.wrongAnswer',
+      });
+    expect(await tickets.answerTicket(view!.id, '0')).toMatchObject({ status: 'done' });
+  });
+
   it('wrong answers in a row lock the ticket for a while', async () => {
     const { tickets, purpose } = await load();
     const { view } = await tickets.createTicket(purpose, [{ type: 'phrase', phrase: 'yes' }]);
