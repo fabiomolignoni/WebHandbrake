@@ -12,7 +12,7 @@ import {
   TICKET_MAX_FAILURES,
   TICKET_TTL_MS,
 } from '../engine/limits';
-import type { Cost, Group } from '../engine/types';
+import type { Cost, Group, Intervention } from '../engine/types';
 import { api, extensionUrl, features, INTERVENTION_PAGE, quiet, sessionStore } from '../platform/api';
 import type { StepView, TicketPurposeKind, TicketView } from '../shared/models';
 import { listenEverywhere } from './bridge';
@@ -53,6 +53,8 @@ export type Purpose =
   | {
       kind: 'pass';
       url: string;
+      /** What the rule asked when the page was shown: the access is given only while it still asks it. */
+      intervention: Intervention;
       groups: string[];
       severity: number;
       scope: 'page' | 'site' | 'group';

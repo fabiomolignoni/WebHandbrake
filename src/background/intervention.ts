@@ -1,6 +1,6 @@
 /** Intervention page model and passes. */
 
-import { isStale, unitGroups } from '../engine/changes';
+import { deepEqual, isStale, unitGroups } from '../engine/changes';
 import { type Decision, decide, grantCovers, redirectPasses } from '../engine/decide';
 import { ASK_WAIT_SECONDS, askChoices } from '../engine/defaults';
 import { MAX_CUSTOM_CSS_CHARS, RECHECK_GRANT_MS, REDIRECT_PASS_MS, VISIT_RETURN_MS } from '../engine/limits';
@@ -344,6 +344,7 @@ async function passTicket(url: string, i: Intervention, incognito: boolean) {
     {
       kind: 'pass',
       url,
+      intervention: i,
       groups,
       severity,
       scope,
@@ -362,6 +363,10 @@ registerExecutor('pass', async (ticket) => {
   if (ticket.purpose.kind !== 'pass') return;
   const p = ticket.purpose;
   const t0 = now();
+  // The rule may have changed since its page asked (a longer wait, a shorter access, made stricter
+  // at once): what was answered then gives only what the rule still asks for.
+  const r = decide(ctx(t0), p.url, { incognito: p.incognito }).groups.find((x) => x.group.id === p.groups[0]);
+  if (r?.source !== 'policy' || !deepEqual(r.base, p.intervention)) throw new Error('ticket.error.changed');
   const minutes = ticket.collected.minutes ?? p.minutes;
   const grant: Grant = {
     id: crypto.randomUUID(),

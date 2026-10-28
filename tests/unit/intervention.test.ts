@@ -153,6 +153,25 @@ describe('the intervention page', () => {
     expect((await t.model('https://d.test/a')).ticket!.id).not.toBe(first.ticket!.id);
   });
 
+  it('a wait asked before its rule changed gives no access: the page asks as the rule does now', async () => {
+    const t = await setup([group('W', ['w.test'], [{ intervention: delayIntervention(10) }])]);
+    const before = (await t.model('https://w.test/')).ticket!;
+    // Made stricter at once, while the page shows the wait of 10 s.
+    t.store.config.groups[0].policies[0].intervention = delayIntervention(600);
+    t.store.cc = compileConfig(t.store.config);
+    vi.setSystemTime(T0 + 11_000);
+    expect(await t.tickets.answerTicket(before.id, '')).toEqual({
+      status: 'error',
+      error: 'ticket.error.changed',
+    });
+    expect(t.store.state.grants.filter((g) => g.kind === 'pass')).toEqual([]);
+    const now = (await t.model('https://w.test/')).ticket!;
+    expect(now.step).toMatchObject({ type: 'wait', seconds: 600 });
+    vi.setSystemTime(T0 + 612_000);
+    expect(await t.tickets.answerTicket(now.id, '')).toMatchObject({ status: 'done' });
+    expect(t.store.state.grants.filter((g) => g.kind === 'pass')).toHaveLength(1);
+  });
+
   it('a redirect fills in its placeholders; an address that is not a web page blocks', async () => {
     const t = await setup([
       group(

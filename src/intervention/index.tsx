@@ -196,7 +196,12 @@ function App() {
       const settings = (await call('config.get', {})).config.settings;
       if (settings.interventions.autoReopen) void returnTo(url);
       else setReopen(true);
-    } else if (!['delay', 'ask', 'challenge'].includes(m.kind) || d.intervention.type !== m.kind) {
+    } else if (
+      !['delay', 'ask', 'challenge'].includes(m.kind) ||
+      JSON.stringify(d.intervention) !== JSON.stringify(m.decision?.intervention)
+    ) {
+      // A wait, a question or a challenge that changed asks as the rule does now; the same one goes
+      // on with its wait (the page gets the same ticket again).
       setReopen(false);
       void load();
     }
@@ -611,9 +616,12 @@ function PassStep({
     let done = false;
     try {
       const r = await call('ticket.answer', { id: ticket.id, answer: value, minutes });
-      // A ticket already used is that of another page of the same site, which went in: the page
-      // looks again, and goes in too or asks anew.
-      if (r.status === 'done' || (r.status === 'error' && r.error === 'ticket.error.expired')) {
+      // A ticket already used is that of another page of the same site, which went in, and one the
+      // rule no longer asks for was changed since: the page looks again, and goes in or asks anew.
+      if (
+        r.status === 'done' ||
+        (r.status === 'error' && (r.error === 'ticket.error.expired' || r.error === 'ticket.error.changed'))
+      ) {
         done = true;
         onPassed();
       } else if (r.status === 'next') {
