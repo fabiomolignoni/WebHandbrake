@@ -238,6 +238,37 @@ describe('the protection of each rule', () => {
   });
 });
 
+describe('the emergency exit, cancelled', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    installFakeBrowser();
+  });
+  afterEach(() => vi.doUnmock('../../src/background/reconcile'));
+
+  it('its sentence asked before it was cancelled, or asked again, completes nothing', async () => {
+    const t = await setup([group('A', ['a.test'], [{ intervention: BLOCK }], { protection: PERMANENT })]);
+    await t.protection.requestEmergency();
+    if (t.store.state.emergency) t.store.state.emergency.readyAt = 0;
+    const start = await t.protection.startEmergency();
+    await t.protection.cancelEmergency();
+    expect(await t.answer(start.ticket?.id ?? '', t.protection.emergencyPhrase())).toEqual({
+      status: 'error',
+      error: 'emergency.error.notRequested',
+    });
+    // Asked again, it waits again: the sentence of the first request does not end the wait.
+    await t.protection.requestEmergency();
+    if (t.store.state.emergency) t.store.state.emergency.readyAt = 0;
+    const again = await t.protection.startEmergency();
+    await t.protection.cancelEmergency();
+    await t.protection.requestEmergency();
+    expect(await t.answer(again.ticket?.id ?? '', t.protection.emergencyPhrase())).toEqual({
+      status: 'error',
+      error: 'emergency.error.notReady',
+    });
+    expect(t.store.config.groups[0].protection).toEqual(PERMANENT);
+  });
+});
+
 describe('changes that follow the emergency exit', () => {
   beforeEach(() => {
     vi.resetModules();
