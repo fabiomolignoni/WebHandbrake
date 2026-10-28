@@ -1,0 +1,4424 @@
+{
+  "access.change": {
+    "message": "Cambiar la contraseña"
+  },
+  "access.mismatch": {
+    "message": "Las contraseñas no coinciden."
+  },
+  "access.newPassword": {
+    "message": "Nueva contraseña"
+  },
+  "access.repeat": {
+    "message": "Repite la contraseña"
+  },
+  "addPage.error.noRule": {
+    "message": "Esta regla ya no existe."
+  },
+  "addPage.error.unsupported": {
+    "message": "Desde aquí solo se pueden bloquear páginas web."
+  },
+  "ask.minReason": {
+    "message": "Motivo de al menos"
+  },
+  "ask.minReasonFields": {
+    "message": "Motivo de al menos {length}"
+  },
+  "ask.minReasonUnit": {
+    "message": "{n, plural, one {carácter} other {caracteres}}"
+  },
+  "backup.reason.add-page": {
+    "message": "Sitio agregado"
+  },
+  "backup.reason.daily": {
+    "message": "Copia diaria"
+  },
+  "backup.reason.edit": {
+    "message": "Antes de un cambio"
+  },
+  "backup.reason.emergency": {
+    "message": "Salida de emergencia"
+  },
+  "backup.reason.import": {
+    "message": "Antes de una importación"
+  },
+  "backup.reason.import-group": {
+    "message": "Antes de importar una regla"
+  },
+  "backup.reason.import-list": {
+    "message": "Antes de importar una lista"
+  },
+  "backup.reason.import-webhandbrake": {
+    "message": "Antes de una importación"
+  },
+  "backup.reason.install": {
+    "message": "Instalación"
+  },
+  "backup.reason.onboarding": {
+    "message": "Configuración inicial"
+  },
+  "backup.reason.other": {
+    "message": "Copia automática"
+  },
+  "backup.reason.password": {
+    "message": "Cambio de contraseña"
+  },
+  "backup.reason.pending": {
+    "message": "Cambio confirmado"
+  },
+  "backup.reason.reset": {
+    "message": "Antes de restablecer"
+  },
+  "backup.reason.restore": {
+    "message": "Antes de una restauración"
+  },
+  "backups.error.notFound": {
+    "message": "Esta copia de seguridad ya no existe."
+  },
+  "badge.hours": {
+    "message": "{n}h"
+  },
+  "badge.minutes": {
+    "message": "{n}m"
+  },
+  "badge.seconds": {
+    "message": "{n}s"
+  },
+  "badge.title": {
+    "message": "WebHandbrake – {group}: quedan {time}"
+  },
+  "budget.perSite": {
+    "message": "Contar cada sitio por separado"
+  },
+  "budget.time": {
+    "message": "después de {duration} {period}{perSite, select, yes { (por sitio)} other {}}"
+  },
+  "budget.timeUsed": {
+    "message": "{used} de {limit} usados"
+  },
+  "budget.visitHelp": {
+    "message": "Una visita nueva empieza cuando vuelves tras unos minutos fuera."
+  },
+  "budget.visits": {
+    "message": "después de {count, plural, one {# visita} other {# visitas}} {period}{perSite, select, yes { (por sitio)} other {}}"
+  },
+  "budget.visitsQuestion": {
+    "message": "¿Cuántas visitas?"
+  },
+  "budget.visitsUnit": {
+    "message": "{n, plural, one {visita} other {visitas}}"
+  },
+  "budget.visitsUsed": {
+    "message": "{used, plural, one {# visita} other {# visitas}} de {limit}"
+  },
+  "challenge.canvasLabel": {
+    "message": "{length, plural, one {# carácter para escribir, mostrado como imagen.} other {# caracteres para escribir, mostrados como imagen.}}"
+  },
+  "challenge.chars": {
+    "message": "{n, plural, one {carácter} other {caracteres}}"
+  },
+  "challenge.kind": {
+    "message": "Desafío"
+  },
+  "challenge.kind.math": {
+    "message": "Un pequeño cálculo"
+  },
+  "challenge.kind.phrase": {
+    "message": "Una frase que elijas"
+  },
+  "challenge.kind.random": {
+    "message": "Caracteres aleatorios"
+  },
+  "challenge.length": {
+    "message": "Longitud"
+  },
+  "challenge.phrase": {
+    "message": "Frase para escribir"
+  },
+  "challenge.phraseHelp": {
+    "message": "Una frase que te recuerde por qué, por ejemplo: “Elijo usar este tiempo de forma consciente”."
+  },
+  "checklist.allGood": {
+    "message": "Las vías habituales para saltarte tus reglas están cerradas."
+  },
+  "checklist.attention": {
+    "message": "Requiere atención"
+  },
+  "checklist.clock.no": {
+    "message": "El reloj del sistema se cambió {count, plural, one {una vez} other {# veces}} {days, plural, one {en el último día} other {en los últimos # días}}."
+  },
+  "checklist.clock.ok": {
+    "message": "Sin cambios en el reloj del sistema {days, plural, one {en el último día} other {en los últimos # días}}."
+  },
+  "checklist.host.no": {
+    "message": "Sin acceso a los sitios web: las páginas bloqueadas muestran primero un error del navegador, y los filtros, los temporizadores, los avisos y el tiempo para terminar de escribir no funcionan."
+  },
+  "checklist.host.ok": {
+    "message": "Tiene acceso a todos los sitios web."
+  },
+  "checklist.incognito.android": {
+    "message": "En Firefox, abre Ajustes › Extensiones, elige WebHandbrake y activa “Ejecutar en navegación privada”."
+  },
+  "checklist.incognito.blockedNow": {
+    "message": "Ahora mismo tu protección bloquea estas páginas del navegador. Hazlo cuando vuelvan a abrirse."
+  },
+  "checklist.incognito.chrome": {
+    "message": "Abre chrome://extensions, elige Detalles debajo de WebHandbrake y activa “Permitir en modo incógnito”."
+  },
+  "checklist.incognito.firefox": {
+    "message": "Abre el Administrador de complementos (about:addons), elige WebHandbrake y, en “Ejecutar en ventanas privadas”, selecciona Permitir."
+  },
+  "checklist.incognito.no": {
+    "message": "No está activo en las ventanas privadas."
+  },
+  "checklist.incognito.ok": {
+    "message": "También está activo en las ventanas privadas."
+  },
+  "checklist.internal.always": {
+    "message": "Las páginas de extensiones y de configuración del navegador están siempre bloqueadas."
+  },
+  "checklist.internal.auto": {
+    "message": "Las páginas de extensiones y de configuración del navegador se bloquean durante las reglas y sesiones con protección firme."
+  },
+  "checklist.internal.blockedNow": {
+    "message": "Ahora mismo están bloqueadas."
+  },
+  "checklist.internal.no": {
+    "message": "Las páginas de extensiones y de configuración del navegador nunca se bloquean."
+  },
+  "checklist.internal.openNow": {
+    "message": "Ahora mismo no están bloqueadas."
+  },
+  "checklist.ok": {
+    "message": "Correcto"
+  },
+  "checklist.rules.error": {
+    "message": "No se pudo configurar del todo el bloqueo. Consulta Diagnóstico."
+  },
+  "checklist.rules.ok": {
+    "message": "El bloqueo funciona con todas tus reglas."
+  },
+  "checklist.rules.overflow": {
+    "message": "{count, plural, one {# entrada se comprueba más despacio, así que sus páginas pueden aparecer un momento.} other {# entradas se comprueban más despacio, así que sus páginas pueden aparecer un momento.}} Consulta Diagnóstico."
+  },
+  "checklist.score": {
+    "message": "{passed} de {total, plural, one {# comprobación superada} other {# comprobaciones superadas}}"
+  },
+  "checklist.someToCheck": {
+    "message": "Todavía quedan vías abiertas para saltarte tus reglas."
+  },
+  "common.cancel": {
+    "message": "Cancelar"
+  },
+  "common.close": {
+    "message": "Cerrar"
+  },
+  "common.dismiss": {
+    "message": "Descartar"
+  },
+  "common.done": {
+    "message": "Listo"
+  },
+  "common.edit": {
+    "message": "Editar"
+  },
+  "common.loading": {
+    "message": "Cargando…"
+  },
+  "common.minutes": {
+    "message": "{n, plural, one {# min} other {# min}}"
+  },
+  "common.newTab": {
+    "message": "(se abre en una pestaña nueva)"
+  },
+  "common.no": {
+    "message": "no"
+  },
+  "common.ok": {
+    "message": "Aceptar"
+  },
+  "common.quote": {
+    "message": "“{text}”"
+  },
+  "common.save": {
+    "message": "Guardar"
+  },
+  "common.undo": {
+    "message": "Deshacer"
+  },
+  "common.yes": {
+    "message": "sí"
+  },
+  "cost.confirm": {
+    "message": "una confirmación"
+  },
+  "cost.delay": {
+    "message": "una espera de {seconds} s"
+  },
+  "cost.math": {
+    "message": "un pequeño cálculo"
+  },
+  "cost.none": {
+    "message": "ninguno"
+  },
+  "cost.password": {
+    "message": "tu contraseña"
+  },
+  "cost.phrase": {
+    "message": "escribir una frase"
+  },
+  "cost.random": {
+    "message": "escribir {length, plural, one {# carácter aleatorio} other {# caracteres aleatorios}}"
+  },
+  "dailyMinutes.custom": {
+    "message": "Tiempo permitido"
+  },
+  "dailyMinutes.other": {
+    "message": "Otro"
+  },
+  "data.backups": {
+    "message": "Copias de seguridad automáticas"
+  },
+  "data.backupsHelp": {
+    "message": "Se guarda una copia antes de cada cambio y una vez al día. Si restaurar una copia relaja una regla activa, la restauración espera {hours, plural, one {# hora} other {# horas}} y luego la confirmas en Protección."
+  },
+  "data.copied": {
+    "message": "Copiado al portapapeles."
+  },
+  "data.copy": {
+    "message": "Copiar como texto"
+  },
+  "data.copyFailed": {
+    "message": "No se pudo copiar. Descarga el archivo."
+  },
+  "data.download": {
+    "message": "Descargar el archivo"
+  },
+  "data.export": {
+    "message": "Exportar"
+  },
+  "data.exportHelp": {
+    "message": "Guarda tus reglas y ajustes en un archivo. Puedes importarlo aquí o en otro dispositivo."
+  },
+  "data.groupsCount": {
+    "message": "{count, plural, one {# regla} other {# reglas}}"
+  },
+  "data.import": {
+    "message": "Importar"
+  },
+  "data.importAction": {
+    "message": "Importar un archivo o una lista…"
+  },
+  "data.importHelp": {
+    "message": "Un archivo de WebHandbrake, una regla compartida o una lista de sitios, uno por línea. También sirven las listas de otros bloqueadores."
+  },
+  "data.includeSecrets": {
+    "message": "Incluir las contraseñas de las reglas y los códigos de confianza"
+  },
+  "data.includeStats": {
+    "message": "Incluir las estadísticas"
+  },
+  "data.noBackups": {
+    "message": "Todavía no hay copias de seguridad."
+  },
+  "data.reset": {
+    "message": "Restablecer"
+  },
+  "data.resetAction": {
+    "message": "Restablecer reglas y ajustes…"
+  },
+  "data.resetConfirm": {
+    "message": "¿Restablecer todas las reglas y ajustes? Si esto relaja una regla activa, el restablecimiento espera {hours, plural, one {# hora} other {# horas}} y luego lo confirmas en Protección."
+  },
+  "data.resetHelp": {
+    "message": "Vuelve a las reglas y ajustes predeterminados. Las estadísticas y las páginas guardadas se conservan."
+  },
+  "data.restore": {
+    "message": "Restaurar"
+  },
+  "days.everyDay": {
+    "message": "Todos los días"
+  },
+  "days.none": {
+    "message": "Ningún día"
+  },
+  "days.weekdays": {
+    "message": "lun–vie"
+  },
+  "days.weekends": {
+    "message": "Fines de semana"
+  },
+  "delay.auto": {
+    "message": "Abrir la página en cuanto termine la espera"
+  },
+  "delay.autoHelp": {
+    "message": "Si está desactivado, eliges tú: continuar o cerrar la pestaña."
+  },
+  "delay.countdown": {
+    "message": "Mostrar la cuenta regresiva"
+  },
+  "delay.countdownHelp": {
+    "message": "Si está desactivado, no ves cuántos segundos faltan."
+  },
+  "delay.fixedFields": {
+    "message": "Espera de {seconds}"
+  },
+  "delay.growingFields": {
+    "message": "Espera de {first} más {step} cada vez que entras"
+  },
+  "delay.growingHelp": {
+    "message": "{first}, luego {second}, luego {third}… Cada día vuelve a {first}."
+  },
+  "delay.increase": {
+    "message": "Espera adicional cada vez que entras"
+  },
+  "delay.length": {
+    "message": "¿Cuánto dura?"
+  },
+  "delay.length.fixed": {
+    "message": "Fija"
+  },
+  "delay.length.growing": {
+    "message": "Más larga cada vez"
+  },
+  "delay.length.random": {
+    "message": "Aleatoria"
+  },
+  "delay.longest": {
+    "message": "Espera más larga"
+  },
+  "delay.onBlur": {
+    "message": "Si cambias a otra pestaña durante la espera"
+  },
+  "delay.onBlur.ignore": {
+    "message": "La cuenta regresiva continúa"
+  },
+  "delay.onBlur.pause": {
+    "message": "La cuenta regresiva se pone en pausa"
+  },
+  "delay.onBlur.restart": {
+    "message": "La espera vuelve a empezar"
+  },
+  "delay.rangeFields": {
+    "message": "Entre {shortest} y {longest}"
+  },
+  "delay.seconds": {
+    "message": "Espera"
+  },
+  "delay.shortest": {
+    "message": "Espera más corta"
+  },
+  "diag.clearLog": {
+    "message": "Vaciar el registro"
+  },
+  "diag.compileMs": {
+    "message": "Tiempo para crear los filtros"
+  },
+  "diag.copied": {
+    "message": "Informe copiado al portapapeles."
+  },
+  "diag.copyReport": {
+    "message": "Copiar el informe de diagnóstico"
+  },
+  "diag.counters": {
+    "message": "Contadores"
+  },
+  "diag.dynamic": {
+    "message": "Filtros de bloqueo en el navegador"
+  },
+  "diag.includeUrls": {
+    "message": "Incluir las direcciones"
+  },
+  "diag.invalidTargets": {
+    "message": "Entradas que no se pudieron usar: {list}"
+  },
+  "diag.lastError": {
+    "message": "El navegador rechazó algunos filtros: {error}"
+  },
+  "diag.log": {
+    "message": "Decisiones recientes"
+  },
+  "diag.logEmpty": {
+    "message": "Todavía no hay nada registrado."
+  },
+  "diag.logEnabled": {
+    "message": "Llevar un registro"
+  },
+  "diag.logHelp": {
+    "message": "Muestra las últimas páginas que WebHandbrake detuvo, con su dirección completa, hasta que se cierra el navegador. Sirve para ver por qué se bloqueó una página. Cualquier persona que use este equipo puede leerlo."
+  },
+  "diag.openIssue": {
+    "message": "Abrir una incidencia en GitHub"
+  },
+  "diag.overflow": {
+    "message": "{count, plural, one {# entrada se comprueba más despacio, sin filtros del navegador.} other {# entradas se comprueban más despacio, sin filtros del navegador.}}"
+  },
+  "diag.perm.host": {
+    "message": "Acceso a todos los sitios: {ok}"
+  },
+  "diag.perm.incognito": {
+    "message": "Permitido en ventanas privadas: {ok}"
+  },
+  "diag.perm.notifications": {
+    "message": "Notificaciones: {ok}"
+  },
+  "diag.permissions": {
+    "message": "Permisos"
+  },
+  "diag.redirects": {
+    "message": "Filtros de redirección"
+  },
+  "diag.regex": {
+    "message": "Filtros con expresiones regulares"
+  },
+  "diag.report": {
+    "message": "Informar de un problema"
+  },
+  "diag.reportHelp": {
+    "message": "Copia el informe y pégalo en una incidencia nueva en GitHub. Las direcciones se omiten, salvo que las incluyas."
+  },
+  "diag.rules": {
+    "message": "Filtros de bloqueo"
+  },
+  "diag.runSelftest": {
+    "message": "Ejecutar la autoprueba"
+  },
+  "diag.selftest": {
+    "message": "Autoprueba"
+  },
+  "diag.selftestHelp": {
+    "message": "Abre una página de prueba. Si el bloqueo funciona, verás una confirmación."
+  },
+  "diag.url": {
+    "message": "Dirección"
+  },
+  "diag.what": {
+    "message": "Decisión"
+  },
+  "diag.when": {
+    "message": "Hora"
+  },
+  "diag.where": {
+    "message": "Dónde"
+  },
+  "duration.d": {
+    "message": "{d, plural, one {# día} other {# días}}"
+  },
+  "duration.h": {
+    "message": "{h} h"
+  },
+  "duration.hm": {
+    "message": "{h} h {m} min"
+  },
+  "duration.m": {
+    "message": "{m} min"
+  },
+  "duration.ms": {
+    "message": "{m} min {s} s"
+  },
+  "duration.s": {
+    "message": "{s} s"
+  },
+  "duration.unit": {
+    "message": "Unidad"
+  },
+  "duration.unit.days": {
+    "message": "{n, plural, one {día} other {días}}"
+  },
+  "duration.unit.hours": {
+    "message": "{n, plural, one {hora} other {horas}}"
+  },
+  "duration.unit.minutes": {
+    "message": "{n, plural, one {minuto} other {minutos}}"
+  },
+  "duration.unit.seconds": {
+    "message": "{n, plural, one {segundo} other {segundos}}"
+  },
+  "duration.unitOf": {
+    "message": "{label}: unidad"
+  },
+  "editor.advanced": {
+    "message": "Opciones avanzadas"
+  },
+  "editor.breaks": {
+    "message": "Pausas"
+  },
+  "editor.change": {
+    "message": "Cambiar"
+  },
+  "editor.color": {
+    "message": "Color"
+  },
+  "editor.colorN": {
+    "message": "Color {n}"
+  },
+  "editor.details.intro": {
+    "message": "Cómo reconoces esta regla y qué ves cuando te detiene."
+  },
+  "editor.details.title": {
+    "message": "Nombre, motivo y página de bloqueo"
+  },
+  "editor.discard": {
+    "message": "Descartar los cambios"
+  },
+  "editor.embeds": {
+    "message": "Bloquear también los videos y el contenido insertado de estos sitios"
+  },
+  "editor.embedsHelp": {
+    "message": "Cuando aparecen dentro de otros sitios."
+  },
+  "editor.errorsCount": {
+    "message": "{count, plural, one {# problema por corregir} other {# problemas por corregir}}"
+  },
+  "editor.exceptionsCount": {
+    "message": "{count, plural, one {# excepción} other {# excepciones}}"
+  },
+  "editor.fixErrors": {
+    "message": "Para guardar, corrige los problemas indicados."
+  },
+  "editor.icon": {
+    "message": "Icono"
+  },
+  "editor.issues": {
+    "message": "Para revisar"
+  },
+  "editor.leaveConfirm": {
+    "message": "Hay cambios sin guardar. ¿Salir sin guardar?"
+  },
+  "editor.level": {
+    "message": "Protección de esta regla"
+  },
+  "editor.lockedNow": {
+    "message": "Esta regla está sellada. Puedes hacerla más estricta, pero no relajarla."
+  },
+  "editor.lockedUntil": {
+    "message": "Sellada hasta el {date}, a las {time}."
+  },
+  "editor.look": {
+    "message": "Color e icono"
+  },
+  "editor.message": {
+    "message": "Mensaje en la página de bloqueo"
+  },
+  "editor.messageHelp": {
+    "message": "Opcional. Se muestra debajo del título."
+  },
+  "editor.moreActions": {
+    "message": "Más acciones"
+  },
+  "editor.name": {
+    "message": "Nombre"
+  },
+  "editor.namePlaceholder": {
+    "message": "Ponle un nombre a la regla, p. ej., Redes sociales"
+  },
+  "editor.next.details": {
+    "message": "Siguiente: detalles"
+  },
+  "editor.next.sites": {
+    "message": "Siguiente: sitios"
+  },
+  "editor.next.summary": {
+    "message": "Siguiente: resumen"
+  },
+  "editor.note": {
+    "message": "¿Por qué te importa esta regla?"
+  },
+  "editor.noteHelp": {
+    "message": "Se muestra cuando la regla te detiene. Mejor si es breve y personal."
+  },
+  "editor.notePlaceholder": {
+    "message": "p. ej., quiero terminar la tesis antes de marzo."
+  },
+  "editor.overview.intro": {
+    "message": "Elige Cambiar para editar una parte y luego guarda."
+  },
+  "editor.overview.message": {
+    "message": "Mensaje personalizado en la página de bloqueo"
+  },
+  "editor.overview.noMessage": {
+    "message": "Página de bloqueo estándar"
+  },
+  "editor.overview.noReason": {
+    "message": "todavía sin motivo personal"
+  },
+  "editor.overview.noSites": {
+    "message": "Todavía no hay sitios"
+  },
+  "editor.overview.title": {
+    "message": "Esta regla de un vistazo"
+  },
+  "editor.page": {
+    "message": "Página de bloqueo"
+  },
+  "editor.pageHelp": {
+    "message": "Lo que ves cuando esta regla te detiene."
+  },
+  "editor.partOf": {
+    "message": "Parte {n} de {total}"
+  },
+  "editor.passwordHelp": {
+    "message": "La necesitarás para relajar esta regla. Dásela a una persona de confianza o guárdala donde no la tengas a mano."
+  },
+  "editor.passwordTitle": {
+    "message": "Contraseña de {name}"
+  },
+  "editor.privacy": {
+    "message": "Ventanas"
+  },
+  "editor.privacy.all": {
+    "message": "Ventanas normales y privadas"
+  },
+  "editor.privacy.normal": {
+    "message": "Solo ventanas normales"
+  },
+  "editor.privacy.private": {
+    "message": "Solo ventanas privadas"
+  },
+  "editor.privacyHelp": {
+    "message": "Con un solo tipo de ventana, una página puede aparecer un momento antes de bloquearse."
+  },
+  "editor.quickSession": {
+    "message": "Incluir en las sesiones rápidas de concentración"
+  },
+  "editor.quickSessionHelp": {
+    "message": "Las sesiones rápidas de concentración, que se inician desde el menú contextual o con el atajo de teclado, bloquean los sitios de esta regla."
+  },
+  "editor.save": {
+    "message": "Guardar los cambios"
+  },
+  "editor.sections": {
+    "message": "Partes de la regla"
+  },
+  "editor.step.changed": {
+    "message": "modificada"
+  },
+  "editor.step.details": {
+    "message": "Detalles"
+  },
+  "editor.step.problem": {
+    "message": "tiene un problema por corregir"
+  },
+  "editor.step.summary": {
+    "message": "Resumen"
+  },
+  "editor.tabs": {
+    "message": "Cuando la regla empiece, aplicarla a"
+  },
+  "editor.tabs.active": {
+    "message": "La pestaña actual (las demás cuando cambies a ellas)"
+  },
+  "editor.tabs.all": {
+    "message": "Todas las pestañas abiertas"
+  },
+  "editor.tabs.inactive": {
+    "message": "Solo las pestañas en segundo plano"
+  },
+  "editor.tabsHelp": {
+    "message": "Para las pestañas ya abiertas en estos sitios."
+  },
+  "editor.timer": {
+    "message": "Mostrar el temporizador en estos sitios"
+  },
+  "editor.timerHelp": {
+    "message": "Una pequeña cuenta regresiva cuando queda poco tiempo."
+  },
+  "editor.unnamed": {
+    "message": "Regla sin nombre"
+  },
+  "editor.unsaved": {
+    "message": "Cambios sin guardar"
+  },
+  "emergency.cancel": {
+    "message": "Cancelar la solicitud"
+  },
+  "emergency.complete": {
+    "message": "Completar la salida de emergencia"
+  },
+  "emergency.confirmBody": {
+    "message": "Dentro de {hours, plural, one {# hora} other {# horas}} podrás completarla escribiendo una frase. Hasta entonces no cambia nada y puedes cancelarla."
+  },
+  "emergency.description": {
+    "message": "Para cuando tus reglas resultan demasiado estrictas. No depende de nadie más: solicítala, espera {hours, plural, one {# hora} other {# horas}} y luego escribe una frase. Las sesiones de concentración terminan y la protección de todas las reglas pasa a ser Recordatorio. Tus reglas se quedan como están."
+  },
+  "emergency.done": {
+    "message": "Salida de emergencia completada. Ahora todas las reglas tienen la protección Recordatorio."
+  },
+  "emergency.error.notReady": {
+    "message": "La espera todavía no ha terminado."
+  },
+  "emergency.error.notRequested": {
+    "message": "Primero solicita la salida de emergencia."
+  },
+  "emergency.phrase": {
+    "message": "Entiendo que esto elimina mis protecciones."
+  },
+  "emergency.ready": {
+    "message": "La espera ha terminado. Completa la salida o cancélala."
+  },
+  "emergency.request": {
+    "message": "Solicitar la salida de emergencia"
+  },
+  "emergency.title": {
+    "message": "Salida de emergencia"
+  },
+  "emergency.waiting": {
+    "message": "Solicitada. Puedes completarla a partir del {date}, a las {time} (dentro de {left})."
+  },
+  "ext.name": {
+    "message": "WebHandbrake"
+  },
+  "filter.blur": {
+    "message": "Desenfoque"
+  },
+  "filter.fade": {
+    "message": "Atenuación"
+  },
+  "filter.grayscale": {
+    "message": "Escala de grises"
+  },
+  "filter.intensity": {
+    "message": "Intensidad"
+  },
+  "filter.invert": {
+    "message": "Colores invertidos"
+  },
+  "filter.label": {
+    "message": "Filtro"
+  },
+  "filter.sepia": {
+    "message": "Sepia"
+  },
+  "focus.activeUntil": {
+    "message": "Sesión de concentración {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}"
+  },
+  "focus.allowlistHelp": {
+    "message": "Durante la sesión solo se pueden abrir estos sitios: agrega también aquellos en los que inicias sesión, como accounts.google.com. La lista se guarda para la próxima vez."
+  },
+  "focus.allowlistMode": {
+    "message": "Solo sitios permitidos"
+  },
+  "focus.blocklistHelp": {
+    "message": "Durante la sesión estos sitios están bloqueados. La lista se guarda para la próxima vez."
+  },
+  "focus.blocklistMode": {
+    "message": "{count, plural, one {Bloquea # sitio} other {Bloquea # sitios}}"
+  },
+  "focus.cancel": {
+    "message": "Cancelar"
+  },
+  "focus.custom": {
+    "message": "Otra"
+  },
+  "focus.customMinutes": {
+    "message": "Duración de la sesión"
+  },
+  "focus.duration": {
+    "message": "Duración"
+  },
+  "focus.end": {
+    "message": "Terminar ahora"
+  },
+  "focus.endTitle": {
+    "message": "Terminar la sesión de concentración antes de tiempo"
+  },
+  "focus.extend": {
+    "message": "+{duration}"
+  },
+  "focus.extended": {
+    "message": "Sesión ampliada en {duration}."
+  },
+  "focus.listCleared": {
+    "message": "Lista vaciada."
+  },
+  "focus.locked": {
+    "message": "No se puede interrumpir"
+  },
+  "focus.lockedHelp": {
+    "message": "Solo la salida de emergencia puede terminarla antes de tiempo."
+  },
+  "focus.lockedLabel": {
+    "message": "No se puede interrumpir"
+  },
+  "focus.lockedLabelHelp": {
+    "message": "Solo la salida de emergencia puede terminarla antes de tiempo. Aun así, puedes ampliarla."
+  },
+  "focus.mode": {
+    "message": "Qué bloquear"
+  },
+  "focus.mode.allowlist": {
+    "message": "Todo excepto algunos sitios"
+  },
+  "focus.mode.allowlist.desc": {
+    "message": "Solo siguen abiertos los sitios que indiques."
+  },
+  "focus.mode.blocklist": {
+    "message": "Algunos sitios"
+  },
+  "focus.mode.blocklist.desc": {
+    "message": "Bloquea solo los sitios que indiques."
+  },
+  "focus.mode.groups": {
+    "message": "Algunas de mis reglas"
+  },
+  "focus.mode.groups.desc": {
+    "message": "Bloquea los sitios de las reglas que elijas."
+  },
+  "focus.newSession": {
+    "message": "Nueva sesión"
+  },
+  "focus.noGroups": {
+    "message": "Todavía no hay reglas: crea una primero o elige “Algunos sitios”."
+  },
+  "focus.noPauses": {
+    "message": "Sin pausas durante la sesión"
+  },
+  "focus.previewAllowlist": {
+    "message": "{count, plural, =0 {Se bloquearán todos los sitios web.} one {Se bloquearán todos los sitios web excepto uno.} other {Se bloquearán todos los sitios web excepto #.}}"
+  },
+  "focus.previewBody": {
+    "message": "La sesión durará {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}."
+  },
+  "focus.previewLocked": {
+    "message": "No podrás terminarla antes de tiempo, salvo con la salida de emergencia. Sí podrás ampliarla."
+  },
+  "focus.previewTitle": {
+    "message": "Antes de empezar"
+  },
+  "focus.shortcutHelp": {
+    "message": "En la versión de escritorio, el atajo de concentración inicia una sesión rápida de {minutes, plural, one {# minuto} other {# minutos}}. Su tecla está en Ayuda › Atajos de teclado."
+  },
+  "focus.start": {
+    "message": "Iniciar la sesión de concentración"
+  },
+  "focus.startIn": {
+    "message": "Inicio"
+  },
+  "focus.startInN": {
+    "message": "Dentro de {duration}"
+  },
+  "focus.startNow": {
+    "message": "Ahora"
+  },
+  "focus.startedToast": {
+    "message": "Sesión de concentración iniciada."
+  },
+  "focus.startsAt": {
+    "message": "{day, select, today {Empieza a las {time}} tomorrow {Empieza mañana a las {time}} other {Empieza el {date} a las {time}}}"
+  },
+  "focus.subtitle": {
+    "message": "Bloquea tus distracciones durante un rato, ahora o un poco más tarde."
+  },
+  "focus.title": {
+    "message": "Concentración"
+  },
+  "focus.until": {
+    "message": "Hasta una hora"
+  },
+  "focus.untilTime": {
+    "message": "Hasta las"
+  },
+  "focus.whichGroups": {
+    "message": "Reglas que incluir"
+  },
+  "grant.label": {
+    "message": "Una vez superado, abrir"
+  },
+  "grant.minutes": {
+    "message": "Durante cuánto tiempo"
+  },
+  "grant.mode": {
+    "message": "Durante cuánto tiempo"
+  },
+  "grant.mode.minutes": {
+    "message": "Un tiempo fijo"
+  },
+  "grant.mode.visit": {
+    "message": "El resto de la visita"
+  },
+  "grant.mode.visitHelp": {
+    "message": "Hasta que salgas de estas páginas o dejes de usarlas durante un rato."
+  },
+  "grant.scope.group": {
+    "message": "Todos los sitios de la regla"
+  },
+  "grant.scope.page": {
+    "message": "Solo esta página"
+  },
+  "grant.scope.site": {
+    "message": "Este sitio"
+  },
+  "groups.actions": {
+    "message": "Más acciones para {name}"
+  },
+  "groups.archive": {
+    "message": "Archivar"
+  },
+  "groups.archived": {
+    "message": "Archivada"
+  },
+  "groups.copyName": {
+    "message": "{name} (copia)"
+  },
+  "groups.delete": {
+    "message": "Eliminar la regla"
+  },
+  "groups.deleteBody": {
+    "message": "La regla se eliminará. Si restringe sitios, eliminarla está sujeto a su protección."
+  },
+  "groups.deleteTitle": {
+    "message": "¿Eliminar “{name}”?"
+  },
+  "groups.disabled": {
+    "message": "Desactivada"
+  },
+  "groups.dragHint": {
+    "message": "Arrastra para reordenar"
+  },
+  "groups.duplicate": {
+    "message": "Duplicar"
+  },
+  "groups.empty": {
+    "message": "Todavía no hay reglas. Elige los sitios que quieres bloquear o frenar. Solo lleva un minuto."
+  },
+  "groups.enable": {
+    "message": "Activar o desactivar {name}"
+  },
+  "groups.enabled": {
+    "message": "Activada"
+  },
+  "groups.export": {
+    "message": "Compartir"
+  },
+  "groups.filter": {
+    "message": "Mostrar"
+  },
+  "groups.filter.active": {
+    "message": "Activas"
+  },
+  "groups.filter.all": {
+    "message": "Todas"
+  },
+  "groups.filter.archived": {
+    "message": "Archivadas"
+  },
+  "groups.filter.disabled": {
+    "message": "Desactivadas"
+  },
+  "groups.moveDown": {
+    "message": "Bajar"
+  },
+  "groups.moveUp": {
+    "message": "Subir"
+  },
+  "groups.new": {
+    "message": "Nueva regla"
+  },
+  "groups.noMatch": {
+    "message": "Ninguna regla coincide con tu búsqueda."
+  },
+  "groups.orderNote": {
+    "message": "El orden es solo para ti. Cuando varias reglas cubren un sitio, se aplican todas."
+  },
+  "groups.search": {
+    "message": "Buscar reglas y sitios"
+  },
+  "groups.sites": {
+    "message": "{count, plural, one {# sitio} other {# sitios}}"
+  },
+  "groups.sitesMore": {
+    "message": "{count, plural, one {{sites} y # más} other {{sites} y # más}}"
+  },
+  "groups.subtitle": {
+    "message": "Bloquea, limita o frena los sitios que elijas."
+  },
+  "groups.title": {
+    "message": "Reglas"
+  },
+  "groups.unarchive": {
+    "message": "Restaurar"
+  },
+  "help.about": {
+    "message": "Acerca de"
+  },
+  "help.aboutBody": {
+    "message": "WebHandbrake {version}: software libre y de código abierto."
+  },
+  "help.accessibility.p1": {
+    "message": "En Ajustes › General tienes los temas claro y oscuro y Alto contraste. Las animaciones siguen el ajuste de movimiento reducido de tu sistema. Todas las páginas funcionan con teclado y con lector de pantalla."
+  },
+  "help.accessibility.p2": {
+    "message": "Los caracteres aleatorios se muestran como una imagen, que un lector de pantalla no puede leer: para un desafío o una pausa, elige mejor una frase propia. Si escribir o esperar te resulta difícil, elige opciones que no requieran ni lo uno ni lo otro, como Filtro, Bloqueo o una confirmación."
+  },
+  "help.accessibility.p3": {
+    "message": "Para informar de una barrera, usa el formulario de accesibilidad en GitHub (“Informar de un problema o sugerir una idea” en Ayuda › Acerca de)."
+  },
+  "help.accessibility.title": {
+    "message": "Accesibilidad"
+  },
+  "help.changelog": {
+    "message": "Novedades"
+  },
+  "help.choosing.p1": {
+    "message": "Ningún ajuste le sirve a todo el mundo. Una pregunta o una espera te dejan decidir cada vez; un bloqueo decide de antemano. Las opciones estrictas pueden resultar frustrantes los días en que de verdad necesitas un sitio."
+  },
+  "help.choosing.p2": {
+    "message": "Empieza por lo que te parezca adecuado y haz tus reglas más firmes cuando lo necesites. Hacer una regla más estricta siempre funciona al instante; relajarla depende de su protección."
+  },
+  "help.choosing.p3": {
+    "message": "Hacer una pausa o relajar una regla de vez en cuando es normal."
+  },
+  "help.choosing.p4": {
+    "message": "Estadísticas muestra en qué se va tu tiempo. Verlo rara vez cambia los hábitos por sí solo, así que combínalo con una regla."
+  },
+  "help.choosing.title": {
+    "message": "Elegir lo que te conviene"
+  },
+  "help.contents": {
+    "message": "Contenido"
+  },
+  "help.data.p1": {
+    "message": "Exportar (Ajustes › Datos) guarda tus reglas y ajustes en un archivo. Las estadísticas, las contraseñas y los códigos de confianza solo se incluyen si los marcas. Desde Estadísticas también puedes exportar las estadísticas en CSV o JSON."
+  },
+  "help.data.p2": {
+    "message": "Importar acepta un archivo de WebHandbrake, una regla compartida o una lista de sitios, incluidas las listas de otros bloqueadores. Muestra una vista previa y luego agrega a tus reglas las que aún no tienes, o lo sustituye todo. Las estadísticas nunca se importan."
+  },
+  "help.data.p3": {
+    "message": "Las copias de seguridad automáticas guardan tus reglas y ajustes tal como estaban {recent, plural, one {antes del último cambio} other {antes de cada uno de los últimos # cambios}}, y una vez al día durante {daily, plural, one {# día} other {# días}}. Solo las eliminan copias más recientes o la desinstalación."
+  },
+  "help.data.p4": {
+    "message": "Restablecer vuelve a las reglas y ajustes predeterminados. Si una importación, una restauración o un restablecimiento relaja una regla activa, espera lo mismo que la salida de emergencia y luego lo confirmas en Protección. Desinstalar lo elimina todo, así que exporta antes."
+  },
+  "help.data.title": {
+    "message": "Tus datos"
+  },
+  "help.emergency.p1": {
+    "message": "Para cuando tus reglas resultan demasiado estrictas. Siempre funciona y no depende de nadie más: solicítala en Protección, espera {hours, plural, one {# hora} other {# horas}} y luego escribe una frase. Puedes cancelarla durante la espera."
+  },
+  "help.emergency.p2": {
+    "message": "Termina todas las sesiones de concentración, incluso las que no se pueden interrumpir. La protección de todas las reglas pasa a ser Recordatorio, así que desaparecen las contraseñas, los códigos de confianza y las fechas de sellado. Tus reglas y los cambios pendientes se quedan como están."
+  },
+  "help.emergency.title": {
+    "message": "Salida de emergencia"
+  },
+  "help.faq.clock.a": {
+    "message": "Atrasar el reloj del sistema no hace retroceder a WebHandbrake en el tiempo: las restricciones duran más, no menos. Además, compara tu reloj con la hora que envían los sitios web y usa la hora corregida (Ajustes › Tiempo), así que un reloj que iba adelantado y se corrigió vuelve a contar cuando varios sitios web lo confirman. Cambiar la zona horaria desplaza tus horarios."
+  },
+  "help.faq.clock.q": {
+    "message": "¿Y si cambio el reloj del sistema?"
+  },
+  "help.faq.flash.a": {
+    "message": "La mayoría de las páginas se detienen antes de cargarse. Unas pocas se comprueban justo después, así que pueden aparecer un instante. Ocurre con las reglas limitadas a ventanas privadas o normales, con algunas entradas avanzadas y con las pestañas ya abiertas cuando empieza una regla."
+  },
+  "help.faq.flash.q": {
+    "message": "¿Por qué apareció una página un momento antes de bloquearse?"
+  },
+  "help.faq.harden.a": {
+    "message": "Sí, con las políticas empresariales de tu navegador, que se configuran fuera de WebHandbrake. Pueden impedir que se elimine y desactivar las ventanas privadas, el modo invitado, los perfiles nuevos, el modo de resolución de problemas o las herramientas para desarrolladores. Chrome: ExtensionInstallForcelist, IncognitoModeAvailability, BrowserGuestModeEnabled, BrowserAddPersonEnabled, DeveloperToolsAvailability. Firefox: ExtensionSettings (modo de instalación force_installed), PrivateBrowsingModeAvailability, DisableSafeMode (Windows y macOS), BlockAboutProfiles, DisableDeveloperTools."
+  },
+  "help.faq.harden.q": {
+    "message": "¿Puedo hacer que WebHandbrake sea más difícil de esquivar?"
+  },
+  "help.faq.locked.a": {
+    "message": "Usa la salida de emergencia en Protección. Requiere una larga espera a propósito, pero siempre funciona y no depende de nadie más. También elimina una contraseña de regla olvidada."
+  },
+  "help.faq.locked.q": {
+    "message": "Mis reglas son demasiado estrictas. ¿Qué puedo hacer?"
+  },
+  "help.faq.notApplied.a": {
+    "message": "Comprueba que la regla esté activada, que su condición se aplique ahora mismo y que ninguna excepción o pausa cubra el sitio. Comprueba también que WebHandbrake funcione en las ventanas privadas y tenga acceso a los sitios web (consulta Protección). Si un sitio está más restringido de lo que esperas, puede que otra regla también lo cubra."
+  },
+  "help.faq.notApplied.q": {
+    "message": "¿Por qué no se restringe un sitio?"
+  },
+  "help.faq.notCounted.a": {
+    "message": "El tiempo cuenta mientras la página está en pantalla y la estás usando. Tras {seconds, plural, one {# segundo} other {# segundos}} sin actividad deja de contar, salvo que se esté reproduciendo audio o video. Las pestañas y el contenido multimedia en segundo plano solo cuentan si lo activas en Ajustes › Tiempo."
+  },
+  "help.faq.notCounted.q": {
+    "message": "¿Por qué no se contó mi tiempo?"
+  },
+  "help.faq.private.a": {
+    "message": "Los navegadores solo ejecutan extensiones en las ventanas privadas si lo permites. Protección › “¿Es sólida tu protección?” muestra cómo hacerlo."
+  },
+  "help.faq.private.q": {
+    "message": "¿Por qué no se bloquea un sitio en las ventanas privadas?"
+  },
+  "help.faq.reset.a": {
+    "message": "Los límites por hora vuelven a empezar cada hora, y los diarios cuando empieza tu día (de forma predeterminada a las {dayStart}; consulta Ajustes › General). Los semanales vuelven a empezar el primer día de tu semana, que también se configura allí, y los mensuales el día 1. Los límites cada tantos días cuentan desde el día en que los configuraste o cambiaste cada cuánto vuelven a empezar; los de cada tantas horas o minutos cuentan desde el inicio de tu día."
+  },
+  "help.faq.reset.q": {
+    "message": "¿Cuándo vuelven a empezar los límites?"
+  },
+  "help.faq.restored.a": {
+    "message": "Cuando las reglas guardadas están dañadas, WebHandbrake restaura la copia que conserva de su último guardado o, si no puede, la copia de seguridad válida más reciente o los valores predeterminados. Lo anota en Eventos. Revisa tus reglas: si se usó una copia de seguridad, faltan los cambios hechos desde entonces."
+  },
+  "help.faq.restored.q": {
+    "message": "¿Por qué Hoy dice que mis ajustes se restauraron desde una copia de seguridad?"
+  },
+  "help.faq.sync.a": {
+    "message": "No. Todo se queda en este dispositivo. Para llevar tus reglas a otro, expórtalas e importa el archivo en el otro dispositivo (Ajustes › Datos)."
+  },
+  "help.faq.sync.q": {
+    "message": "¿Se sincronizan mis ajustes entre dispositivos?"
+  },
+  "help.faq.uninstall.a": {
+    "message": "No. En la versión de escritorio puede bloquear las páginas de extensiones del navegador (consulta Protección), lo que hace más lento eliminarlo, pero el control siempre es tuyo."
+  },
+  "help.faq.uninstall.q": {
+    "message": "¿Puede WebHandbrake impedir su propia desinstalación?"
+  },
+  "help.focus.p1": {
+    "message": "Una sesión de concentración bloquea durante un tiempo determinado los sitios de las reglas que elijas, los sitios que indiques o todos los sitios excepto unos pocos. Tus listas se guardan para las próximas sesiones. Inicia una desde Concentración, el menú contextual o el atajo de teclado. Las sesiones rápidas usan las reglas que tienen activado “Incluir en las sesiones rápidas de concentración”."
+  },
+  "help.focus.p2": {
+    "message": "Siempre puedes ampliar una sesión. Para terminarla antes de tiempo, tienes que confirmarlo. Una sesión que no se puede interrumpir solo termina antes con la salida de emergencia."
+  },
+  "help.focus.p3": {
+    "message": "“Todo excepto algunos sitios” también bloquea las páginas en las que inicias sesión y los servidores de tu equipo (localhost), salvo que estén en su lista. Su página de bloqueo indica qué sitio falta."
+  },
+  "help.focus.title": {
+    "message": "Sesiones de concentración"
+  },
+  "help.groups.p1": {
+    "message": "Escribe o pega direcciones, una o muchas. youtube.com también cubre sus subdominios, como m.youtube.com. Para más precisión, usa las formas de la tabla siguiente."
+  },
+  "help.groups.p2": {
+    "message": "Las excepciones empiezan por + y dejan abierta una parte de un sitio bloqueado; agrégalas como cualquier otro sitio. Gana la entrada más precisa: con reddit.com bloqueado y +reddit.com/r/*/comments/* permitido, las conversaciones individuales se abren y el resto de Reddit sigue bloqueado. Una excepción solo funciona en su propia regla."
+  },
+  "help.groups.title": {
+    "message": "Reglas y sitios"
+  },
+  "help.insights.p1": {
+    "message": "Estadísticas muestra tu tiempo y tus visitas en los sitios de tus reglas, por día, regla y sitio. Activa “Registrar el tiempo en todos los sitios” (Ajustes › Tiempo) para incluir otros sitios."
+  },
+  "help.insights.p2": {
+    "message": "“Intervenciones de WebHandbrake” cuenta las páginas de bloqueo mostradas. “Decisiones de no entrar” cuenta las que dejaste sin entrar ni hacer una pausa. También encontrarás tus pausas, tus sesiones de concentración y los motivos que diste."
+  },
+  "help.insights.title": {
+    "message": "Estadísticas"
+  },
+  "help.interventions.p1": {
+    "message": "De la opción más suave a la más estricta: Solo recuento, Filtro (gris, desenfocado…), Pregunta, Espera, Desafío (escribir algo o resolver un pequeño cálculo), Bloqueo, Redirección y Cierre de pestaña."
+  },
+  "help.interventions.p2": {
+    "message": "En todas las páginas de bloqueo puedes cerrar la pestaña o volver atrás. También puedes guardar la página para más tarde: la encontrarás en Más tarde cuando vuelva a abrirse."
+  },
+  "help.interventions.p3": {
+    "message": "Si un sitio está a punto de bloquearse mientras escribes, tienes {seconds, plural, one {# segundo} other {# segundos}} para terminar o copiar tu texto. Una página que te pide quedarte en ella (“¿Salir del sitio?”) queda cubierta, con sus videos y sonidos en pausa, hasta que salgas de ella."
+  },
+  "help.interventions.title": {
+    "message": "Qué puede ocurrir en un sitio"
+  },
+  "help.interventions.visit": {
+    "message": "Tras una espera o un desafío, normalmente entras durante el resto de la visita. La visita termina cuando cierras esas páginas, te alejas de ellas durante {returnMinutes, plural, one {# minuto} other {# minutos}} (tiempo suficiente para iniciar sesión en otro sitio y volver) o dejas de usarlas durante {minutes, plural, one {# minuto} other {# minutos}}. Cuando varias reglas se aplican a una página, cada una pregunta por turnos."
+  },
+  "help.issue": {
+    "message": "Informar de un problema o sugerir una idea"
+  },
+  "help.issueHelp": {
+    "message": "En GitHub. Un informe de Ajustes › Diagnóstico ayuda a encontrar la causa."
+  },
+  "help.license": {
+    "message": "Distribuido bajo la licencia GNU General Public License v3.0 o posterior."
+  },
+  "help.limits.item1": {
+    "message": "Otros navegadores, aplicaciones y dispositivos."
+  },
+  "help.limits.item2": {
+    "message": "Los perfiles nuevos del navegador, el modo invitado y el modo de resolución de problemas de Firefox."
+  },
+  "help.limits.item3": {
+    "message": "Las ventanas privadas, salvo que permitas WebHandbrake en ellas."
+  },
+  "help.limits.item4": {
+    "message": "Su propia eliminación. Desinstalarlo borra todos sus datos."
+  },
+  "help.limits.item5": {
+    "message": "Las páginas donde las extensiones no pueden ejecutarse, como las páginas del propio navegador y las tiendas de complementos."
+  },
+  "help.limits.item6": {
+    "message": "Los cambios de zona horaria, que desplazan tus horarios."
+  },
+  "help.limits.item7": {
+    "message": "Una persona con control total del dispositivo."
+  },
+  "help.limits.p1": {
+    "message": "WebHandbrake funciona dentro de este perfil del navegador. Puede hacer que saltarte tus reglas sea más lento, pero no imposible. No cubre:"
+  },
+  "help.limits.p2": {
+    "message": "Protección › “¿Es sólida tu protección?” muestra cuáles de estos puntos están abiertos."
+  },
+  "help.limits.title": {
+    "message": "Lo que WebHandbrake no puede hacer"
+  },
+  "help.mobile.p1": {
+    "message": "WebHandbrake funciona en Firefox para Android. Abre la ventana emergente desde el menú Extensiones, y el panel desde los ajustes de la extensión."
+  },
+  "help.mobile.p2": {
+    "message": "Android no tiene atajos de teclado ni menú contextual, y allí no se pueden bloquear las páginas de extensiones del navegador. El tiempo solo cuenta mientras Firefox está abierto en pantalla, salvo en la Vista de lectura y en los sitios web a los que WebHandbrake no tiene acceso: allí la pestaña visible cuenta aunque haya otra aplicación delante."
+  },
+  "help.mobile.title": {
+    "message": "Firefox para Android"
+  },
+  "help.pauses.p1": {
+    "message": "Una pausa abre durante un rato todos los sitios de una regla. Solo Bloqueo tiene pausas: Pregunta, Espera y Desafío ya tienen su propia forma de entrar. En Qué ocurre, cada regla que bloquea decide si se permiten pausas, cuánto pueden durar, cuántas tienes y qué cuestan."
+  },
+  "help.pauses.p2": {
+    "message": "Una pausa termina sola, o antes si la terminas desde la ventana emergente o desde Hoy."
+  },
+  "help.pauses.title": {
+    "message": "Pausas"
+  },
+  "help.privacy.p1": {
+    "message": "Sin cuenta, sin servidor, sin rastreo. WebHandbrake no hace solicitudes de red propias. Tus reglas, ajustes y estadísticas se quedan en tu navegador."
+  },
+  "help.privacy.p2": {
+    "message": "Las estadísticas son totales diarios por regla y por sitio, más el tiempo por hora en los sitios limitados y por sitio, nunca direcciones completas. En las ventanas privadas solo se guarda lo que necesitan tus límites. Las estadísticas se conservan durante {days, plural, one {# día} other {# días}}; los límites conservan sus totales durante {keepDays, plural, one {# día} other {# días}} aunque las elimines."
+  },
+  "help.privacy.p3": {
+    "message": "Un pequeño script se ejecuta en los sitios de tus reglas para mostrar el temporizador y los filtros y para detectar si hay actividad. Con “Registrar el tiempo en todos los sitios” o algunas entradas avanzadas, se ejecuta en todos los sitios. No se guarda nada de lo que lee, salvo el tiempo."
+  },
+  "help.privacy.p4": {
+    "message": "Las páginas guardadas para más tarde conservan su dirección y su título hasta que las quitas. El registro de decisiones (Ajustes › Diagnóstico) guarda direcciones solo si lo activas, y solo hasta que se cierra el navegador. Ajustes › Privacidad muestra todo lo que se guarda, con su tamaño."
+  },
+  "help.privacy.title": {
+    "message": "Privacidad"
+  },
+  "help.privacyPolicy": {
+    "message": "Política de privacidad"
+  },
+  "help.protection.item1": {
+    "message": "Recordatorio: confirmas el cambio."
+  },
+  "help.protection.item2": {
+    "message": "Espera: esperas el tiempo que elegiste. Una espera de más de {minutes} min sigue en segundo plano y luego confirmas el cambio en Protección en un plazo de {confirmHours, plural, one {# hora} other {# horas}}."
+  },
+  "help.protection.item3": {
+    "message": "Contraseña: escribes la contraseña de la regla."
+  },
+  "help.protection.item4": {
+    "message": "Código de confianza: escribes el código que muestra el teléfono de tu persona de confianza."
+  },
+  "help.protection.item5": {
+    "message": "Sellada: no se puede relajar hasta una fecha que eliges. Después, basta con una confirmación."
+  },
+  "help.protection.item6": {
+    "message": "Permanente: no se puede relajar nunca. Solo la salida de emergencia la elimina."
+  },
+  "help.protection.p1": {
+    "message": "Hacer una regla más estricta siempre funciona al instante, igual que los cambios neutros, como un nombre nuevo. Relajar una regla, por ejemplo quitar un sitio, subir un límite o desactivarla, requiere lo que pida su protección."
+  },
+  "help.protection.p2": {
+    "message": "Cada regla tiene una de estas seis protecciones:"
+  },
+  "help.protection.p3": {
+    "message": "Los cambios pendientes aparecen en Protección, donde puedes confirmarlos o cancelarlos."
+  },
+  "help.protection.p4": {
+    "message": "La página Protección también comprueba las vías habituales para saltarte tus reglas, como las ventanas privadas o el reloj del sistema, y muestra en Eventos todo lo que sea inusual."
+  },
+  "help.protection.p5": {
+    "message": "Con Contraseña, dale la contraseña a una persona de confianza o guárdala donde no la tengas a mano. WebHandbrake solo guarda una versión ilegible de ella (un hash con sal)."
+  },
+  "help.protection.p6": {
+    "message": "Con Código de confianza, una persona de confianza escanea una vez un código QR con una aplicación de autenticación en su teléfono. Después, para relajar la regla, necesitas el código de seis dígitos que muestra su aplicación. No se envía nada a ningún sitio, y la salida de emergencia sigue funcionando sin esa persona."
+  },
+  "help.protection.p7": {
+    "message": "Algunos cambios funcionan como la salida de emergencia: relajar los ajustes de Protección y cualquier importación, restauración o restablecimiento que relaje una regla activa. Esperan lo mismo que la salida de emergencia y luego los confirmas escribiendo una frase."
+  },
+  "help.protection.title": {
+    "message": "Proteger tus reglas"
+  },
+  "help.rules.p1": {
+    "message": "Una regla tiene una sola condición, como “lun–vie {start}–{end} → Bloqueo” o “Siempre, después de 45 min al día → Espera de 30 s”. Cuando no se aplica, los sitios se abren con normalidad."
+  },
+  "help.rules.p2": {
+    "message": "Una condición puede usar horas del día, incluso pasada la medianoche, como {start}–{end}. O puede ser un límite de tiempo o de visitas que vuelve a empezar cada cierto tiempo, por ejemplo cada día o cada 2 horas."
+  },
+  "help.rules.p3": {
+    "message": "El tiempo solo cuenta mientras la página está en pantalla y la estás usando, o mientras se reproduce contenido multimedia. Varias pestañas nunca cuentan dos veces. Una visita nueva empieza cuando vuelves tras {minutes, plural, one {# minuto} other {# minutos}} fuera."
+  },
+  "help.rules.p4": {
+    "message": "Cuando varias reglas cubren un sitio, se aplican todas, empezando por la más estricta, y la página solo se abre cuando todas las reglas te dejan entrar. Para ver qué reglas se aplican y hasta cuándo, usa “¿Por qué?” en la ventana emergente o “Probar una dirección” en el editor de reglas."
+  },
+  "help.rules.title": {
+    "message": "Cuándo se aplica una regla"
+  },
+  "help.shortcut.block": {
+    "message": "elegir cómo bloquear el sitio actual"
+  },
+  "help.shortcut.dashboard": {
+    "message": "abrir el panel"
+  },
+  "help.shortcut.focus": {
+    "message": "iniciar una sesión de concentración de {minutes, plural, one {# minuto} other {# minutos}}"
+  },
+  "help.shortcut.popup": {
+    "message": "abrir la ventana emergente"
+  },
+  "help.shortcutNone": {
+    "message": "Sin tecla"
+  },
+  "help.shortcuts": {
+    "message": "Atajos de teclado"
+  },
+  "help.shortcutsBlocked": {
+    "message": "Ahora mismo tu protección bloquea la configuración de atajos del navegador."
+  },
+  "help.shortcutsChange": {
+    "message": "Cambiar los atajos"
+  },
+  "help.shortcutsNote": {
+    "message": "Estas son las teclas que tu navegador asignó a WebHandbrake. Si una tecla ya está en uso, puede que el navegador no asigne ninguna: elige una con Cambiar los atajos. No disponible en Android."
+  },
+  "help.source": {
+    "message": "Código fuente"
+  },
+  "help.start.p1": {
+    "message": "WebHandbrake te ayuda a usar los sitios que eliges solo cuando quieres y cuanto quieres. Todo se queda en este dispositivo."
+  },
+  "help.start.p2": {
+    "message": "Pones los sitios en reglas, como Redes sociales o Video. Cada regla dice cuándo actúa y qué ocurre: un filtro, una pregunta, una espera, un breve desafío o un bloqueo."
+  },
+  "help.start.p3": {
+    "message": "La ventana emergente muestra lo que se aplica al sitio actual. Desde ahí puedes hacer una pausa, guardar la página para más tarde o bloquear el sitio. El panel, esta página, es donde lo gestionas todo."
+  },
+  "help.start.p4": {
+    "message": "Para empezar, abre Reglas › Nueva regla. Elige los sitios, cuándo se aplica la regla, qué ocurre, su nombre y su protección, y luego elige Crear regla. Los ajustes menos habituales están en Opciones avanzadas."
+  },
+  "help.start.title": {
+    "message": "Primeros pasos"
+  },
+  "help.subtitle": {
+    "message": "Todo lo que necesitas, disponible sin conexión."
+  },
+  "help.syntax.allSites": {
+    "message": "Todos los sitios web. Agrega excepciones para los sitios que necesitas."
+  },
+  "help.syntax.comment": {
+    "message": "Las líneas que empiezan por # son comentarios, y también “  # …” después de una entrada."
+  },
+  "help.syntax.contains": {
+    "message": "Cualquier dirección que contenga “news”."
+  },
+  "help.syntax.countries": {
+    "message": "El sitio en todos los países: amazon.com, amazon.es, amazon.com.mx…"
+  },
+  "help.syntax.domain": {
+    "message": "Todo el sitio, subdominios incluidos."
+  },
+  "help.syntax.doubleWildcard": {
+    "message": "** equivale a cualquier texto, barras incluidas."
+  },
+  "help.syntax.entry": {
+    "message": "Entrada"
+  },
+  "help.syntax.exception": {
+    "message": "Una excepción: sigue abierta aunque el sitio esté bloqueado."
+  },
+  "help.syntax.homepage": {
+    "message": "Solo la página principal."
+  },
+  "help.syntax.host": {
+    "message": "Solo este sitio, no sus subdominios."
+  },
+  "help.syntax.import": {
+    "message": "Los formatos importados de uBlock Origin, AdGuard y uBlacklist se convierten automáticamente."
+  },
+  "help.syntax.meaning": {
+    "message": "Significado"
+  },
+  "help.syntax.page": {
+    "message": "Exactamente esta página."
+  },
+  "help.syntax.path": {
+    "message": "Esta sección y las páginas que contiene."
+  },
+  "help.syntax.query": {
+    "message": "Las páginas con este parámetro en su dirección."
+  },
+  "help.syntax.regex": {
+    "message": "Una expresión regular."
+  },
+  "help.syntax.wildcard": {
+    "message": "* equivale a cualquier texto entre dos barras."
+  },
+  "help.title": {
+    "message": "Ayuda"
+  },
+  "help.troubleshooting.p1": {
+    "message": "Empieza por “¿Por qué?” en la ventana emergente o “Probar una dirección” en el editor de reglas. Muestran qué reglas se aplican y cuándo cambia eso."
+  },
+  "help.troubleshooting.p2": {
+    "message": "Ajustes › Diagnóstico ejecuta una autoprueba y copia un informe para pegarlo en una incidencia en GitHub. El informe omite las direcciones, salvo que las incluyas."
+  },
+  "help.troubleshooting.title": {
+    "message": "Solución de problemas"
+  },
+  "icon.cart": {
+    "message": "Compras"
+  },
+  "icon.chat": {
+    "message": "Chat"
+  },
+  "icon.circle": {
+    "message": "Círculo"
+  },
+  "icon.dice": {
+    "message": "Azar"
+  },
+  "icon.eye-off": {
+    "message": "Oculto"
+  },
+  "icon.gamepad": {
+    "message": "Juegos"
+  },
+  "icon.globe": {
+    "message": "Web"
+  },
+  "icon.heart": {
+    "message": "Corazón"
+  },
+  "icon.newspaper": {
+    "message": "Noticias"
+  },
+  "icon.play": {
+    "message": "Video"
+  },
+  "icon.users": {
+    "message": "Personas"
+  },
+  "icon.zap": {
+    "message": "Energía"
+  },
+  "import.apply": {
+    "message": "Importar"
+  },
+  "import.changes": {
+    "message": "{count, plural, one {# cambio} other {# cambios}} · {weakening, plural, =0 {ninguno relaja tus reglas} one {# relaja tus reglas} other {# relajan tus reglas}}"
+  },
+  "import.chooseFile": {
+    "message": "Elegir un archivo…"
+  },
+  "import.error.empty": {
+    "message": "El archivo está vacío."
+  },
+  "import.error.format": {
+    "message": "No se reconoce este formato."
+  },
+  "import.error.json": {
+    "message": "El archivo no es un JSON válido."
+  },
+  "import.error.noSites": {
+    "message": "No se encontró ningún sitio."
+  },
+  "import.error.tooLarge": {
+    "message": "El archivo es demasiado grande ({mb} MB como máximo)."
+  },
+  "import.format": {
+    "message": "Formato detectado: {format}"
+  },
+  "import.format.list": {
+    "message": "lista de sitios"
+  },
+  "import.format.unknown": {
+    "message": "desconocido"
+  },
+  "import.format.webhandbrake": {
+    "message": "WebHandbrake"
+  },
+  "import.groupLine": {
+    "message": "{name}: {sites, plural, one {# sitio} other {# sitios}}"
+  },
+  "import.groupPresent": {
+    "message": "{name}: {sites, plural, one {# sitio} other {# sitios}}, ya existe"
+  },
+  "import.help": {
+    "message": "Elige un archivo o pega su contenido. Si la importación relaja una regla activa, espera {hours, plural, one {# hora} other {# horas}} y luego la confirmas en Protección."
+  },
+  "import.listName": {
+    "message": "Lista importada"
+  },
+  "import.merge": {
+    "message": "Agregar a mis reglas"
+  },
+  "import.mode": {
+    "message": "Modo de importación"
+  },
+  "import.paste": {
+    "message": "…o pega aquí el contenido"
+  },
+  "import.preview": {
+    "message": "Vista previa"
+  },
+  "import.replace": {
+    "message": "Sustituirlo todo"
+  },
+  "import.report": {
+    "message": "Informe de importación"
+  },
+  "import.title": {
+    "message": "Importar"
+  },
+  "import.warn.entry": {
+    "message": "Una entrada de “{rule}” no se pudo leer y se omitió: {entry}"
+  },
+  "import.warn.line": {
+    "message": "Línea {line} ignorada: {text}"
+  },
+  "import.warn.rule": {
+    "message": "Se omitió una regla que no se pudo leer."
+  },
+  "import.weakening": {
+    "message": "relaja"
+  },
+  "insights.byGroup": {
+    "message": "Por regla"
+  },
+  "insights.bySite": {
+    "message": "Por sitio"
+  },
+  "insights.data": {
+    "message": "Datos"
+  },
+  "insights.dataActions": {
+    "message": "Exportar o eliminar datos"
+  },
+  "insights.day": {
+    "message": "Día"
+  },
+  "insights.delete": {
+    "message": "Eliminar datos"
+  },
+  "insights.delete.all": {
+    "message": "Todo"
+  },
+  "insights.delete.range": {
+    "message": "Este periodo"
+  },
+  "insights.delete.site": {
+    "message": "Un sitio"
+  },
+  "insights.deleteNote": {
+    "message": "Eliminar datos nunca restablece un límite: los límites conservan sus totales durante {days, plural, one {# día} other {# días}}. Tus motivos solo se eliminan con “Todo”."
+  },
+  "insights.deleteTitle": {
+    "message": "Eliminar estadísticas"
+  },
+  "insights.deleteWhat": {
+    "message": "Qué eliminar"
+  },
+  "insights.deleted": {
+    "message": "Estadísticas eliminadas."
+  },
+  "insights.deletedGroup": {
+    "message": "Regla eliminada"
+  },
+  "insights.empty": {
+    "message": "No hay nada registrado en este periodo."
+  },
+  "insights.exportCsv": {
+    "message": "Exportar como CSV"
+  },
+  "insights.exportJson": {
+    "message": "Exportar como JSON"
+  },
+  "insights.hour": {
+    "message": "Hora"
+  },
+  "insights.hours": {
+    "message": "Hora a hora"
+  },
+  "insights.hoursAllLabel": {
+    "message": "Tiempo por hora, en los sitios limitados y fuera de tus reglas"
+  },
+  "insights.hoursLabel": {
+    "message": "Tiempo por hora en los sitios limitados"
+  },
+  "insights.hoursSitesLabel": {
+    "message": "Tiempo por sitio y por hora"
+  },
+  "insights.impulses": {
+    "message": "{count, plural, one {decisión de no entrar} other {decisiones de no entrar}}"
+  },
+  "insights.intentions": {
+    "message": "Motivos para entrar"
+  },
+  "insights.legend": {
+    "message": "Sitios"
+  },
+  "insights.limitedSites": {
+    "message": "Sitios limitados"
+  },
+  "insights.mode": {
+    "message": "Mostrar"
+  },
+  "insights.mode.sites": {
+    "message": "Por sitio"
+  },
+  "insights.mode.total": {
+    "message": "Total"
+  },
+  "insights.month": {
+    "message": "Mes"
+  },
+  "insights.moreSites": {
+    "message": "{count, plural, one {# sitio más} other {# sitios más}}"
+  },
+  "insights.next": {
+    "message": "Periodo siguiente"
+  },
+  "insights.noHourSites": {
+    "message": "Sin detalle hora a hora por sitio para este día: las versiones anteriores solo guardaban el total."
+  },
+  "insights.noHours": {
+    "message": "Sin detalle hora a hora para este día."
+  },
+  "insights.noIntentions": {
+    "message": "No hay motivos registrados."
+  },
+  "insights.noPauses": {
+    "message": "No hay pausas."
+  },
+  "insights.none": {
+    "message": "Todavía nada."
+  },
+  "insights.otherSites": {
+    "message": "Otros sitios"
+  },
+  "insights.outsideRules": {
+    "message": "Fuera de tus reglas"
+  },
+  "insights.pauses": {
+    "message": "{count, plural, one {pausa} other {pausas}} ({minutes} min)"
+  },
+  "insights.pausesLog": {
+    "message": "Pausas"
+  },
+  "insights.period": {
+    "message": "Periodo"
+  },
+  "insights.previous": {
+    "message": "Periodo anterior"
+  },
+  "insights.privacy": {
+    "message": "Totales por día y por hora, guardados solo en este dispositivo."
+  },
+  "insights.private": {
+    "message": "Ventanas privadas"
+  },
+  "insights.private.help": {
+    "message": "Sus sitios no se registran."
+  },
+  "insights.sessions": {
+    "message": "{count, plural, one {sesión de concentración} other {sesiones de concentración}}"
+  },
+  "insights.showChart": {
+    "message": "Mostrar como gráfico"
+  },
+  "insights.showTable": {
+    "message": "Mostrar como tabla"
+  },
+  "insights.shown": {
+    "message": "{count, plural, one {intervención de WebHandbrake} other {intervenciones de WebHandbrake}}"
+  },
+  "insights.span.day": {
+    "message": "Día"
+  },
+  "insights.span.month": {
+    "message": "Mes"
+  },
+  "insights.span.week": {
+    "message": "Semana"
+  },
+  "insights.span.year": {
+    "message": "Año"
+  },
+  "insights.subtitle": {
+    "message": "Cómo usas el tiempo en tus sitios limitados. Sin juicios, solo números."
+  },
+  "insights.time": {
+    "message": "Tiempo"
+  },
+  "insights.title": {
+    "message": "Estadísticas"
+  },
+  "insights.total": {
+    "message": "en los sitios limitados"
+  },
+  "insights.total.column": {
+    "message": "Total"
+  },
+  "insights.trend": {
+    "message": "Día a día"
+  },
+  "insights.trend.months": {
+    "message": "Mes a mes"
+  },
+  "insights.trendAllLabel": {
+    "message": "Tiempo por día, en los sitios limitados y fuera de tus reglas"
+  },
+  "insights.trendAllLabel.months": {
+    "message": "Tiempo por mes, en los sitios limitados y fuera de tus reglas"
+  },
+  "insights.trendLabel": {
+    "message": "Tiempo por día en los sitios limitados"
+  },
+  "insights.trendLabel.months": {
+    "message": "Tiempo por mes en los sitios limitados"
+  },
+  "insights.trendSitesLabel": {
+    "message": "Tiempo por sitio y por día"
+  },
+  "insights.trendSitesLabel.months": {
+    "message": "Tiempo por sitio y por mes"
+  },
+  "insights.visits": {
+    "message": "{count, plural, one {# visita} other {# visitas}}"
+  },
+  "insights.vsPrevious": {
+    "message": "{change} respecto al periodo anterior"
+  },
+  "intervention.allow": {
+    "message": "Sin recuento"
+  },
+  "intervention.allow.summary": {
+    "message": "Permitido, sin contar el tiempo"
+  },
+  "intervention.ask": {
+    "message": "Pregunta"
+  },
+  "intervention.ask.summary": {
+    "message": "Pregunta (hasta {max})"
+  },
+  "intervention.block": {
+    "message": "Bloqueo"
+  },
+  "intervention.challenge": {
+    "message": "Desafío"
+  },
+  "intervention.challenge.math": {
+    "message": "Resolver un pequeño cálculo"
+  },
+  "intervention.challenge.phrase": {
+    "message": "Escribir tu frase"
+  },
+  "intervention.challenge.random": {
+    "message": "Escribir {length, plural, one {# carácter aleatorio} other {# caracteres aleatorios}}"
+  },
+  "intervention.close": {
+    "message": "Cierre de la pestaña"
+  },
+  "intervention.delay": {
+    "message": "Espera"
+  },
+  "intervention.delay.growingSummary": {
+    "message": "Espera de {seconds} s, {increase} s más cada vez{hidden, select, yes { (cuenta regresiva oculta)} other {}}"
+  },
+  "intervention.delay.summary": {
+    "message": "Espera de {seconds} s{hidden, select, yes { (cuenta regresiva oculta)} other {}}"
+  },
+  "intervention.filter": {
+    "message": "Filtro"
+  },
+  "intervention.help.allow": {
+    "message": "Los sitios se abren y su tiempo no se cuenta."
+  },
+  "intervention.help.ask": {
+    "message": "Te pregunta qué quieres hacer y durante cuánto tiempo. Entras en cuanto das un motivo."
+  },
+  "intervention.help.block": {
+    "message": "La página no se abre. Puedes guardarla para más tarde."
+  },
+  "intervention.help.challenge": {
+    "message": "Para entrar, escribe algunos caracteres o una frase, o resuelve un pequeño cálculo."
+  },
+  "intervention.help.close": {
+    "message": "La pestaña se cierra al instante."
+  },
+  "intervention.help.delay": {
+    "message": "Esperas unos segundos antes de entrar. A menudo basta para que se pasen las ganas."
+  },
+  "intervention.help.filter": {
+    "message": "La página se abre, pero menos atractiva: gris, desenfocada o atenuada."
+  },
+  "intervention.help.redirect": {
+    "message": "Abre otra página en su lugar, como tu lista de tareas."
+  },
+  "intervention.help.track": {
+    "message": "Los sitios se abren como siempre. Solo se cuenta su tiempo."
+  },
+  "intervention.label": {
+    "message": "Qué ocurre"
+  },
+  "intervention.redirect": {
+    "message": "Redirección"
+  },
+  "intervention.redirect.summary": {
+    "message": "Ir a {url}"
+  },
+  "intervention.short.allow": {
+    "message": "Sin recuento"
+  },
+  "intervention.short.ask": {
+    "message": "Pregunta"
+  },
+  "intervention.short.block": {
+    "message": "Bloqueo"
+  },
+  "intervention.short.challenge": {
+    "message": "Desafío"
+  },
+  "intervention.short.close": {
+    "message": "Cierre de pestaña"
+  },
+  "intervention.short.delay": {
+    "message": "Espera"
+  },
+  "intervention.short.filter": {
+    "message": "Filtro"
+  },
+  "intervention.short.redirect": {
+    "message": "Redirección"
+  },
+  "intervention.short.track": {
+    "message": "Solo recuento"
+  },
+  "intervention.track": {
+    "message": "Solo recuento"
+  },
+  "iv.ask": {
+    "message": "¿Qué quieres hacer en {host}?"
+  },
+  "iv.ask.continue": {
+    "message": "Continuar durante {minutes} min"
+  },
+  "iv.ask.custom": {
+    "message": "¿Cuánto tiempo?"
+  },
+  "iv.ask.howLong": {
+    "message": "¿Durante cuánto tiempo?"
+  },
+  "iv.ask.minLength": {
+    "message": "Al menos {n, plural, one {# carácter} other {# caracteres}}."
+  },
+  "iv.ask.other": {
+    "message": "Otro"
+  },
+  "iv.ask.placeholder": {
+    "message": "En pocas palabras"
+  },
+  "iv.ask.reason": {
+    "message": "Tu motivo"
+  },
+  "iv.ask.upTo": {
+    "message": "Hasta {duration}."
+  },
+  "iv.ask.wait": {
+    "message": "Podrás continuar dentro de {seconds} s."
+  },
+  "iv.back": {
+    "message": "Volver atrás"
+  },
+  "iv.block": {
+    "message": "Esta página está bloqueada ahora mismo."
+  },
+  "iv.block.until": {
+    "message": "Esta página está bloqueada {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}."
+  },
+  "iv.challenge": {
+    "message": "Escribe para continuar"
+  },
+  "iv.challenge.body": {
+    "message": "Para continuar, escribe {length, plural, one {el carácter que aparece debajo} other {los # caracteres que aparecen debajo}}."
+  },
+  "iv.close": {
+    "message": "Cerrando esta pestaña…"
+  },
+  "iv.closeTab": {
+    "message": "Cerrar la pestaña"
+  },
+  "iv.continue": {
+    "message": "Continuar"
+  },
+  "iv.delay": {
+    "message": "Respira hondo."
+  },
+  "iv.delay.hidden": {
+    "message": "Tómate un momento…"
+  },
+  "iv.delay.hint": {
+    "message": "Podrás continuar cuando el círculo se cierre."
+  },
+  "iv.delay.left": {
+    "message": "Podrás continuar dentro de {seconds} s."
+  },
+  "iv.delay.ready": {
+    "message": "Ya puedes continuar, o cerrar la pestaña."
+  },
+  "iv.delay.restartNote": {
+    "message": "Si sales de esta página, la espera vuelve a empezar."
+  },
+  "iv.goBack": {
+    "message": "Volver atrás"
+  },
+  "iv.group": {
+    "message": "{group}"
+  },
+  "iv.internal": {
+    "message": "Las páginas de extensiones y de configuración del navegador están bloqueadas ahora mismo."
+  },
+  "iv.internal.always": {
+    "message": "Para que WebHandbrake no se pueda desactivar por impulso, están siempre bloqueadas."
+  },
+  "iv.internal.body": {
+    "message": "Para que WebHandbrake no se pueda desactivar por impulso, siguen bloqueadas mientras:"
+  },
+  "iv.internal.change": {
+    "message": "Puedes cambiarlo en Protección."
+  },
+  "iv.internal.open": {
+    "message": "Abrir Protección"
+  },
+  "iv.internal.rule": {
+    "message": "“{rule}” se aplica y tiene protección firme ({protection})"
+  },
+  "iv.internal.session": {
+    "message": "hay en curso una sesión de concentración que no se puede interrumpir"
+  },
+  "iv.internal.until": {
+    "message": "Las páginas de extensiones y de configuración del navegador están bloqueadas {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}."
+  },
+  "iv.loop": {
+    "message": "Esta página no deja de redirigir. Revisa Ajustes › Diagnóstico en WebHandbrake."
+  },
+  "iv.notNow": {
+    "message": "Ahora no: cerrar la pestaña"
+  },
+  "iv.nowAllowed": {
+    "message": "Esta página vuelve a estar disponible."
+  },
+  "iv.others": {
+    "message": "{count, plural, one {Aquí también se aplica otra regla: {rules}.} other {Aquí también se aplican otras reglas: {rules}.}}"
+  },
+  "iv.othersNext": {
+    "message": "{count, plural, one {Te preguntará a continuación: la página se abrirá cuando ambas reglas te dejen pasar.} other {Te preguntarán a continuación: la página se abrirá cuando todas las reglas te dejen pasar.}}"
+  },
+  "iv.pending.open": {
+    "message": "Abrir Protección"
+  },
+  "iv.pending.ready": {
+    "message": "{count, plural, =0 {Tu cambio en los ajustes de protección está listo para confirmar. Hasta que lo confirmes, no cambia nada.} one {Tu cambio en {rules} está listo para confirmar. Hasta que lo confirmes, la regla se queda como estaba.} other {Tus cambios en {rules} están listos para confirmar. Hasta que los confirmes, las reglas se quedan como estaban.}}"
+  },
+  "iv.pending.waiting": {
+    "message": "{count, plural, =0 {Tu cambio en los ajustes de protección se podrá confirmar {day, select, today {a partir de las {time}} tomorrow {a partir de mañana a las {time}} other {a partir del {date} a las {time}}}. Hasta entonces, no cambia nada.} one {Tu cambio en {rules} se podrá confirmar {day, select, today {a partir de las {time}} tomorrow {a partir de mañana a las {time}} other {a partir del {date} a las {time}}}. Hasta entonces, la regla se queda como estaba.} other {Tus cambios en {rules} se podrán confirmar {day, select, today {a partir de las {time}} tomorrow {a partir de mañana a las {time}} other {a partir del {date} a las {time}}}. Hasta entonces, las reglas se quedan como estaban.}}"
+  },
+  "iv.redirect": {
+    "message": "Abriendo la página que elegiste en su lugar…"
+  },
+  "iv.reopen": {
+    "message": "Volver a abrir la página"
+  },
+  "iv.saveLater": {
+    "message": "Guardar para más tarde"
+  },
+  "iv.saved": {
+    "message": "Guardada en Más tarde. La encontrarás allí cuando la página vuelva a abrirse."
+  },
+  "iv.savedShort": {
+    "message": "Guardada"
+  },
+  "iv.selftest": {
+    "message": "Autoprueba superada"
+  },
+  "iv.selftest.body": {
+    "message": "El bloqueo funciona. Puedes cerrar esta pestaña."
+  },
+  "iv.session": {
+    "message": "Estás en una sesión de concentración."
+  },
+  "iv.session.locked": {
+    "message": "Esta sesión no se puede interrumpir."
+  },
+  "iv.session.notListed": {
+    "message": "{host} no está en la lista de esta sesión."
+  },
+  "iv.session.until": {
+    "message": "Estás en una sesión de concentración {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}."
+  },
+  "iv.takeBreak": {
+    "message": "Hacer una pausa"
+  },
+  "iv.title": {
+    "message": "Un momento de pausa"
+  },
+  "iv.title.site": {
+    "message": "{host} – Un momento de pausa"
+  },
+  "iv.why": {
+    "message": "¿Por qué?"
+  },
+  "iv.yourNote": {
+    "message": "—tu motivo para esta regla"
+  },
+  "later.available": {
+    "message": "disponible ahora"
+  },
+  "later.availableAt": {
+    "message": "disponible {day, select, today {a partir de las {time}} tomorrow {a partir de mañana a las {time}} other {a partir del {date} a las {time}}}"
+  },
+  "later.empty": {
+    "message": "Nada guardado para más tarde."
+  },
+  "later.emptyHelp": {
+    "message": "Cuando una página esté bloqueada, elige “Guardar para más tarde” para encontrarla aquí."
+  },
+  "later.never": {
+    "message": "no se abrirá con las reglas actuales"
+  },
+  "later.notify": {
+    "message": "Avisarme cuando las páginas guardadas estén disponibles"
+  },
+  "later.notifyHelp": {
+    "message": "Requiere las notificaciones activadas (Ajustes › Avisos)."
+  },
+  "later.open": {
+    "message": "Abrir"
+  },
+  "later.openAll": {
+    "message": "Abrir {count, plural, one {la página disponible} other {las # páginas disponibles}}"
+  },
+  "later.opened": {
+    "message": "{count, plural, one {# página abierta.} other {# páginas abiertas.}}"
+  },
+  "later.remove": {
+    "message": "Quitar"
+  },
+  "later.saved": {
+    "message": "guardada el {date}, a las {time}"
+  },
+  "later.subtitle": {
+    "message": "Páginas que guardaste en lugar de abrirlas."
+  },
+  "later.title": {
+    "message": "Más tarde"
+  },
+  "level.firm.browserPages": {
+    "message": "Mientras esta regla se aplica, también se bloquean las páginas de extensiones del navegador, para que WebHandbrake no se pueda desactivar por impulso. Puedes cambiarlo en Protección."
+  },
+  "level.locked": {
+    "message": "Sellada"
+  },
+  "level.locked.desc": {
+    "message": "No es posible hasta una fecha que elijas."
+  },
+  "level.locked.tag": {
+    "message": "Sellada hasta el {date}, {time}"
+  },
+  "level.locked.weaken": {
+    "message": "No se puede relajar hasta esa fecha. Después, basta con una confirmación."
+  },
+  "level.partner": {
+    "message": "Código de confianza"
+  },
+  "level.partner.desc": {
+    "message": "Un código de una persona de confianza."
+  },
+  "level.partner.weaken": {
+    "message": "Para relajar la regla hace falta un código del teléfono de tu persona de confianza. Cada código sirve una sola vez."
+  },
+  "level.password": {
+    "message": "Contraseña"
+  },
+  "level.password.desc": {
+    "message": "La contraseña de la regla."
+  },
+  "level.password.weaken": {
+    "message": "Para relajar la regla hace falta su contraseña. Dásela a una persona de confianza o guárdala donde no la tengas a mano."
+  },
+  "level.permanent": {
+    "message": "Permanente"
+  },
+  "level.permanent.desc": {
+    "message": "No es posible, sin fecha de fin."
+  },
+  "level.permanent.weaken": {
+    "message": "No se puede relajar, sin fecha de fin. Solo la salida de emergencia elimina esta protección."
+  },
+  "level.reminder": {
+    "message": "Recordatorio"
+  },
+  "level.reminder.desc": {
+    "message": "Solo una confirmación."
+  },
+  "level.reminder.weaken": {
+    "message": "Para relajar la regla se pide una confirmación."
+  },
+  "level.wait": {
+    "message": "Espera"
+  },
+  "level.wait.desc": {
+    "message": "Una espera que tú eliges."
+  },
+  "level.wait.tag": {
+    "message": "Espera · {duration}"
+  },
+  "level.wait.weaken": {
+    "message": "Para relajar la regla tienes que esperar. Una espera larga sigue en segundo plano y luego confirmas el cambio en Protección."
+  },
+  "level.wait.weakenLong": {
+    "message": "Para relajar la regla hay que esperar {duration} y luego confirmar el cambio en Protección."
+  },
+  "level.wait.weakenShort": {
+    "message": "Para relajar la regla, primero tienes que esperar {duration}."
+  },
+  "locked.ack": {
+    "message": "Lo entiendo y quiero sellar esta regla."
+  },
+  "locked.body": {
+    "message": "Hasta la fecha que elijas, esta regla no se podrá relajar. Después, bastará con una confirmación."
+  },
+  "locked.confirm": {
+    "message": "Sellar"
+  },
+  "locked.point1": {
+    "message": "Puedes seguir agregando sitios, haciéndola más estricta e iniciando sesiones de concentración."
+  },
+  "locked.point2": {
+    "message": "No puedes quitar sitios, subir límites, desactivarla ni elegir una protección más suave."
+  },
+  "locked.point3": {
+    "message": "La salida de emergencia sigue funcionando, tras una larga espera."
+  },
+  "locked.title": {
+    "message": "Sellar esta regla"
+  },
+  "locked.until": {
+    "message": "Sellada hasta"
+  },
+  "menu.blockLink": {
+    "message": "Bloquear el sitio del enlace en"
+  },
+  "menu.blockPage": {
+    "message": "Bloquear esta página en"
+  },
+  "menu.blockSite": {
+    "message": "Bloquear este sitio en"
+  },
+  "menu.focus": {
+    "message": "Iniciar una sesión de concentración"
+  },
+  "menu.focusMinutes": {
+    "message": "{minutes, plural, one {# minuto} other {# minutos}}"
+  },
+  "menu.newGroup": {
+    "message": "Nueva regla…"
+  },
+  "nav.focus": {
+    "message": "Concentración"
+  },
+  "nav.groups": {
+    "message": "Reglas"
+  },
+  "nav.help": {
+    "message": "Ayuda"
+  },
+  "nav.insights": {
+    "message": "Estadísticas"
+  },
+  "nav.label": {
+    "message": "Navegación principal"
+  },
+  "nav.later": {
+    "message": "Más tarde"
+  },
+  "nav.more": {
+    "message": "Más"
+  },
+  "nav.pendingCount": {
+    "message": "{count, plural, one {# cambio pendiente} other {# cambios pendientes}}"
+  },
+  "nav.protection": {
+    "message": "Protección"
+  },
+  "nav.settings": {
+    "message": "Ajustes"
+  },
+  "nav.sidebar": {
+    "message": "Barra lateral"
+  },
+  "nav.skip": {
+    "message": "Saltar al contenido"
+  },
+  "nav.status.session": {
+    "message": "Concentración {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}"
+  },
+  "nav.today": {
+    "message": "Hoy"
+  },
+  "nav.welcome": {
+    "message": "Primeros pasos"
+  },
+  "notify.later.body": {
+    "message": "{count, plural, one {Una página que guardaste ya está disponible.} other {# páginas que guardaste ya están disponibles.}}"
+  },
+  "notify.later.title": {
+    "message": "Páginas guardadas disponibles"
+  },
+  "notify.pending.body": {
+    "message": "{count, plural, one {Confirma tu cambio en Protección o expirará.} other {Confirma tus # cambios en Protección o expirarán.}}"
+  },
+  "notify.pending.title": {
+    "message": "Pendiente de confirmación"
+  },
+  "notify.sessionEnd.body": {
+    "message": "{duration} de concentración. {stopped, plural, =0 {WebHandbrake no tuvo que intervenir.} one {WebHandbrake intervino una vez.} other {WebHandbrake intervino # veces.}}"
+  },
+  "notify.sessionEnd.title": {
+    "message": "Sesión de concentración terminada"
+  },
+  "overlay.cover.body": {
+    "message": "Esta página pidió seguir abierta, así que queda cubierta hasta que salgas de ella. Si el navegador te pregunta si quieres salir de la página, elige salir."
+  },
+  "overlay.cover.open": {
+    "message": "Abrir la página de bloqueo"
+  },
+  "overlay.cover.title": {
+    "message": "Se acabó el tiempo para este sitio."
+  },
+  "overlay.dismiss": {
+    "message": "Aceptar"
+  },
+  "overlay.drag": {
+    "message": "Mover el temporizador (teclas de flecha)"
+  },
+  "overlay.grace.body": {
+    "message": "La página se sustituirá dentro de {seconds} s."
+  },
+  "overlay.grace.copied": {
+    "message": "Copiado"
+  },
+  "overlay.grace.copy": {
+    "message": "Copiar mi borrador"
+  },
+  "overlay.grace.title": {
+    "message": "Se acabó el tiempo para este sitio. Termina o copia lo que estás escribiendo."
+  },
+  "overlay.hide": {
+    "message": "Ocultar durante esta visita"
+  },
+  "overlay.intention": {
+    "message": "Tu motivo"
+  },
+  "overlay.passLeft": {
+    "message": "acceso · {group}"
+  },
+  "overlay.pauseLeft": {
+    "message": "pausa · {group}"
+  },
+  "overlay.timer.aria": {
+    "message": "{group}: quedan {time}"
+  },
+  "overlay.timerLeft": {
+    "message": "restantes · {group}"
+  },
+  "partner.account": {
+    "message": "Código de confianza"
+  },
+  "partner.breaks": {
+    "message": "Las pausas también requieren el código de la persona de confianza"
+  },
+  "partner.change": {
+    "message": "Cambiar de persona de confianza"
+  },
+  "partner.codeHelp": {
+    "message": "Los seis dígitos que muestra ahora su aplicación."
+  },
+  "partner.codeLabel": {
+    "message": "Código de la aplicación de tu persona de confianza"
+  },
+  "partner.confirm": {
+    "message": "Confirmar"
+  },
+  "partner.dialogTitle": {
+    "message": "Configurar un código de confianza para {name}"
+  },
+  "partner.done": {
+    "message": "Código de confianza configurado."
+  },
+  "partner.error.code": {
+    "message": "Ese código no coincide. Comprueba que ambos dispositivos muestren la hora correcta."
+  },
+  "partner.error.expired": {
+    "message": "La configuración tardó demasiado. Vuelve a empezar para obtener un código nuevo."
+  },
+  "partner.keyLabel": {
+    "message": "Clave de configuración, para escribirla en lugar de escanear"
+  },
+  "partner.once": {
+    "message": "El código QR y la clave se muestran una sola vez. Cierra esta ventana cuando la aplicación de tu persona de confianza muestre la cuenta. No guardes ninguna copia."
+  },
+  "partner.qrLabel": {
+    "message": "Código QR para la aplicación de autenticación de tu persona de confianza"
+  },
+  "partner.scan": {
+    "message": "Pide a tu persona de confianza que escanee este código QR con una aplicación de autenticación en su teléfono, o que escriba la clave de abajo."
+  },
+  "pause.cancel": {
+    "message": "Ahora no"
+  },
+  "pause.covers": {
+    "message": "Abre todos los sitios de {rules} durante {duration}. Puedes terminarla antes."
+  },
+  "pause.error.duration": {
+    "message": "Esta duración no está permitida."
+  },
+  "pause.left.both": {
+    "message": "{count, plural, =0 {no quedan pausas} one {queda # pausa} other {quedan # pausas}} {period}, {minutes} min en total"
+  },
+  "pause.left.count": {
+    "message": "{count, plural, =0 {no quedan pausas} one {queda # pausa} other {quedan # pausas}} {period}"
+  },
+  "pause.left.minutes": {
+    "message": "quedan {minutes} min de pausa {period}"
+  },
+  "pause.leftUntil": {
+    "message": "{day, select, today {Hasta las {time}} tomorrow {Hasta mañana a las {time}} other {Hasta el {date} a las {time}}}"
+  },
+  "pause.period.day": {
+    "message": "hoy"
+  },
+  "pause.period.hour": {
+    "message": "en esta hora"
+  },
+  "pause.period.month": {
+    "message": "este mes"
+  },
+  "pause.period.other": {
+    "message": "en este periodo"
+  },
+  "pause.period.week": {
+    "message": "esta semana"
+  },
+  "pause.start": {
+    "message": "Empezar la pausa"
+  },
+  "pause.started": {
+    "message": "Pausa de {minutes, plural, one {# minuto} other {# minutos}} iniciada."
+  },
+  "pause.subject.all": {
+    "message": "Todas las reglas"
+  },
+  "pause.subject.page": {
+    "message": "{page} · {rules}"
+  },
+  "pause.subject.site": {
+    "message": "{site} · {rules}"
+  },
+  "pause.summary.cost": {
+    "message": "Precio: {cost}"
+  },
+  "pause.summary.free": {
+    "message": "Gratis"
+  },
+  "pause.title": {
+    "message": "Hacer una pausa"
+  },
+  "pause.unavailable.noGroup": {
+    "message": "Ninguna regla se aplica a esta página."
+  },
+  "pause.unavailable.noMinutesLeft": {
+    "message": "No quedan minutos de pausa en este periodo."
+  },
+  "pause.unavailable.noneLeft": {
+    "message": "No quedan pausas en este periodo."
+  },
+  "pause.unavailable.notAllowed": {
+    "message": "Esta regla no permite pausas."
+  },
+  "pause.unavailable.onBreak": {
+    "message": "Ya estás en una pausa."
+  },
+  "pause.unavailable.otherRule": {
+    "message": "Una pausa no abriría esta página: otra regla que se aplica aquí no permite pausas."
+  },
+  "pause.unavailable.session": {
+    "message": "Las pausas no están disponibles durante esta sesión de concentración."
+  },
+  "pauseRules.allowed": {
+    "message": "Permitir pausas"
+  },
+  "pauseRules.allowedHelp": {
+    "message": "Una pausa abre durante un rato todos los sitios de la regla."
+  },
+  "pauseRules.costKind.confirm": {
+    "message": "Confirmarla"
+  },
+  "pauseRules.costKind.delay": {
+    "message": "Esperar"
+  },
+  "pauseRules.costKind.math": {
+    "message": "Resolver un pequeño cálculo"
+  },
+  "pauseRules.costKind.none": {
+    "message": "Nada"
+  },
+  "pauseRules.costKind.password": {
+    "message": "Escribir la contraseña de la regla"
+  },
+  "pauseRules.costKind.phrase": {
+    "message": "Escribir una frase"
+  },
+  "pauseRules.costKind.random": {
+    "message": "Escribir caracteres aleatorios"
+  },
+  "pauseRules.durationHelp": {
+    "message": "Una pausa dura este tiempo, salvo que la termines antes."
+  },
+  "pauseRules.limitCount": {
+    "message": "Como máximo este número de pausas"
+  },
+  "pauseRules.limitMinutes": {
+    "message": "Como máximo este tiempo"
+  },
+  "pauseRules.minutes": {
+    "message": "Como máximo"
+  },
+  "pauseRules.minutesFields": {
+    "message": "Como máximo {duration}"
+  },
+  "pauseRules.noPassword": {
+    "message": "Esta regla no tiene contraseña, así que, para hacer una pausa, tendrás que escribir 32 caracteres aleatorios."
+  },
+  "pauseRules.q.cost": {
+    "message": "¿Qué cuesta hacer una pausa?"
+  },
+  "pauseRules.q.duration": {
+    "message": "¿Cuánto puede durar una pausa?"
+  },
+  "pauseRules.q.limit": {
+    "message": "¿Cuántas pausas?"
+  },
+  "pauseRules.summary.free": {
+    "message": "Pausas: hasta {duration} cada una, gratis."
+  },
+  "pauseRules.summary.off": {
+    "message": "Sin pausas."
+  },
+  "pauseRules.summary.on": {
+    "message": "Pausas: hasta {duration} cada una. Precio: {cost}."
+  },
+  "pending.applied": {
+    "message": "Cambio aplicado."
+  },
+  "pending.cancel": {
+    "message": "Cancelar el cambio"
+  },
+  "pending.cancelled": {
+    "message": "Cambio cancelado: tus reglas se quedan como están."
+  },
+  "pending.confirm": {
+    "message": "Confirmar el cambio"
+  },
+  "pending.confirmTitle": {
+    "message": "Confirmar el cambio"
+  },
+  "pending.emergencyNote": {
+    "message": "Funciona como la salida de emergencia: se confirma escribiendo una frase."
+  },
+  "pending.error.locked": {
+    "message": "Una regla que este cambio relaja está sellada, así que ahora no se puede aplicar."
+  },
+  "pending.error.notFound": {
+    "message": "Este cambio ya no existe."
+  },
+  "pending.error.notReady": {
+    "message": "La espera todavía no ha terminado."
+  },
+  "pending.error.outdated": {
+    "message": "Tus reglas cambiaron después de la solicitud, así que este cambio se eliminó."
+  },
+  "pending.error.permanent": {
+    "message": "Una regla que este cambio relaja ahora es permanente, así que no se puede aplicar."
+  },
+  "pending.phrase": {
+    "message": "Entiendo que este cambio relaja mis protecciones."
+  },
+  "pending.readyIn": {
+    "message": "se podrá confirmar dentro de {duration}"
+  },
+  "pending.readyUntil": {
+    "message": "listo: confírmalo {day, select, today {antes de las {time}} tomorrow {antes de mañana a las {time}} other {antes del {date} a las {time}}} o expirará"
+  },
+  "pending.requested": {
+    "message": "solicitado el {date}, a las {time}"
+  },
+  "period.every": {
+    "message": "Vuelve a empezar cada"
+  },
+  "period.everyDays": {
+    "message": "{n, plural, one {cada día} other {cada # días}}"
+  },
+  "period.everyMinutes": {
+    "message": "cada {duration}"
+  },
+  "period.kind.day": {
+    "message": "Día"
+  },
+  "period.kind.hour": {
+    "message": "Hora"
+  },
+  "period.kind.month": {
+    "message": "Mes"
+  },
+  "period.kind.other": {
+    "message": "Otro"
+  },
+  "period.kind.week": {
+    "message": "Semana"
+  },
+  "period.next": {
+    "message": "Próximo inicio: {day, select, today {hoy a las {time}} tomorrow {mañana a las {time}} other {el {date} a las {time}}}"
+  },
+  "period.perDay": {
+    "message": "al día"
+  },
+  "period.perHour": {
+    "message": "por hora"
+  },
+  "period.perMonth": {
+    "message": "al mes"
+  },
+  "period.perWeek": {
+    "message": "a la semana"
+  },
+  "period.rolling": {
+    "message": "en cualquier intervalo de {duration}"
+  },
+  "permanent.ack": {
+    "message": "Entiendo que solo la salida de emergencia puede relajar esta regla."
+  },
+  "permanent.body": {
+    "message": "No podrás relajar esta regla. No hay fecha de fin."
+  },
+  "permanent.confirm": {
+    "message": "Hacer permanente"
+  },
+  "permanent.point3": {
+    "message": "Solo la salida de emergencia puede eliminar esta protección. Requiere una larga espera y pone todas las reglas en Recordatorio."
+  },
+  "permanent.title": {
+    "message": "Hacer permanente esta regla"
+  },
+  "popup.actions": {
+    "message": "Acciones rápidas"
+  },
+  "popup.add.action": {
+    "message": "Bloquear"
+  },
+  "popup.add.continue": {
+    "message": "Continuar en el editor"
+  },
+  "popup.add.domain": {
+    "message": "Todo el sitio"
+  },
+  "popup.add.domain.scope": {
+    "message": "Subdominios incluidos"
+  },
+  "popup.add.group": {
+    "message": "Agregar a"
+  },
+  "popup.add.host": {
+    "message": "Sitio sin subdominios"
+  },
+  "popup.add.host.scope": {
+    "message": "Los subdominios siguen abiertos"
+  },
+  "popup.add.newGroup": {
+    "message": "Nueva regla…"
+  },
+  "popup.add.outcomeLater": {
+    "message": "“{rule}” lo bloquea {day, select, today {a partir de las {time}} tomorrow {a partir de mañana a las {time}} other {a partir del {date} a las {time}}}. Hasta entonces, sigue abierto."
+  },
+  "popup.add.outcomeNever": {
+    "message": "“{rule}” no bloquea: al sitio se le aplica lo que hace esta regla."
+  },
+  "popup.add.outcomeNew": {
+    "message": "Una regla nueva que lo bloquea siempre, para configurarla en el editor de reglas."
+  },
+  "popup.add.outcomeNow": {
+    "message": "Bloqueado al instante, siempre."
+  },
+  "popup.add.outcomeUntil": {
+    "message": "Bloqueado al instante, {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}."
+  },
+  "popup.add.page": {
+    "message": "Esta página"
+  },
+  "popup.add.page.scope": {
+    "message": "Solo esta página"
+  },
+  "popup.add.path": {
+    "message": "Esta sección"
+  },
+  "popup.add.path.scope": {
+    "message": "Y las páginas que contiene"
+  },
+  "popup.add.title": {
+    "message": "Bloquear este sitio"
+  },
+  "popup.add.what": {
+    "message": "Qué bloquear"
+  },
+  "popup.blockSite": {
+    "message": "Bloquear el sitio"
+  },
+  "popup.currentSite": {
+    "message": "Sitio actual"
+  },
+  "popup.dashboard": {
+    "message": "Panel"
+  },
+  "popup.endPause": {
+    "message": "Terminar la pausa"
+  },
+  "popup.forfeit": {
+    "message": "Parar ya"
+  },
+  "popup.forfeitConfirm": {
+    "message": "¿Renunciar al tiempo que te queda en {group} durante este periodo?"
+  },
+  "popup.forfeitDone": {
+    "message": "Listo. El límite queda agotado en este periodo."
+  },
+  "popup.forfeitYes": {
+    "message": "Sí, parar ya"
+  },
+  "popup.later": {
+    "message": "Guardar para más tarde"
+  },
+  "popup.laterCount": {
+    "message": "{count, plural, one {# página guardada para más tarde} other {# páginas guardadas para más tarde}}"
+  },
+  "popup.notSetUp": {
+    "message": "WebHandbrake todavía no está configurado."
+  },
+  "popup.pause": {
+    "message": "Hacer una pausa"
+  },
+  "popup.pendingReady": {
+    "message": "{count, plural, one {Un cambio está listo para confirmar} other {# cambios están listos para confirmar}}"
+  },
+  "popup.private": {
+    "message": "privada"
+  },
+  "popup.reopen": {
+    "message": "{count, plural, one {Reabrir # pestaña disponible de nuevo} other {Reabrir # pestañas disponibles de nuevo}}"
+  },
+  "popup.reopened": {
+    "message": "{count, plural, one {# pestaña reabierta.} other {# pestañas reabiertas.}}"
+  },
+  "popup.savedLater": {
+    "message": "Guardada para más tarde."
+  },
+  "popup.setup": {
+    "message": "Configurar"
+  },
+  "popup.status": {
+    "message": "En curso"
+  },
+  "popup.why": {
+    "message": "¿Por qué?"
+  },
+  "privacy.deleteAll": {
+    "message": "Eliminar tus datos"
+  },
+  "privacy.deleteAllHelp": {
+    "message": "Elimina tus estadísticas y motivos. Los límites conservan sus totales durante {days, plural, one {# día} other {# días}}."
+  },
+  "privacy.deleteStats": {
+    "message": "Eliminar todas las estadísticas"
+  },
+  "privacy.deleteStatsBody": {
+    "message": "Se eliminarán tus estadísticas y motivos. Los límites conservan sus totales durante {days, plural, one {# día} other {# días}}. Esta acción no se puede deshacer."
+  },
+  "privacy.key.activity": {
+    "message": "Registro de visitas"
+  },
+  "privacy.key.backups": {
+    "message": "Copias de seguridad automáticas"
+  },
+  "privacy.key.config": {
+    "message": "Reglas y ajustes"
+  },
+  "privacy.key.focus": {
+    "message": "Sitios de las sesiones de concentración"
+  },
+  "privacy.key.intentions": {
+    "message": "Motivos para entrar"
+  },
+  "privacy.key.later": {
+    "message": "Páginas guardadas para más tarde"
+  },
+  "privacy.key.meta": {
+    "message": "Información técnica"
+  },
+  "privacy.key.state": {
+    "message": "Pausas, sesiones, cambios pendientes y eventos de protección"
+  },
+  "privacy.key.u:min": {
+    "message": "Tiempo minuto a minuto"
+  },
+  "privacy.key.usage": {
+    "message": "Estadísticas diarias"
+  },
+  "privacy.network": {
+    "message": "Conexiones de red"
+  },
+  "privacy.networkBody": {
+    "message": "Ninguna. WebHandbrake nunca contacta con un servidor. Una página de redirección que configures la abre tu navegador, como cualquier enlace."
+  },
+  "privacy.point.aggregates": {
+    "message": "Las estadísticas son totales diarios por regla y por sitio, nunca direcciones completas."
+  },
+  "privacy.point.content": {
+    "message": "En los sitios de tus reglas, un pequeño script muestra el temporizador y los filtros y detecta si hay actividad. No se guarda nada de lo que lee."
+  },
+  "privacy.point.local": {
+    "message": "Sin cuenta, sin servidor, sin rastreo."
+  },
+  "privacy.point.noNetwork": {
+    "message": "Nunca hace solicitudes de red propias."
+  },
+  "privacy.point.private": {
+    "message": "En las ventanas privadas solo se guardan los totales que necesitan tus límites."
+  },
+  "privacy.resetLink": {
+    "message": "Restablecer reglas y ajustes…"
+  },
+  "privacy.retention": {
+    "message": "Estadísticas diarias: según lo configurado en Ajustes › Tiempo. Tiempo minuto a minuto: {hours, plural, one {# hora} other {# horas}}. Copias de seguridad: {recent, plural, one {el último cambio} other {los últimos # cambios}} y una al día durante {daily, plural, one {# día} other {# días}}."
+  },
+  "privacy.stored": {
+    "message": "Qué se guarda"
+  },
+  "privacy.summary": {
+    "message": "WebHandbrake funciona por completo en este dispositivo."
+  },
+  "privacy.title": {
+    "message": "Tu privacidad"
+  },
+  "privacy.total": {
+    "message": "Total"
+  },
+  "protection.change": {
+    "message": "Cambiar"
+  },
+  "protection.changeLevel": {
+    "message": "Cambiar la protección de {name}"
+  },
+  "protection.checklist": {
+    "message": "¿Es sólida tu protección?"
+  },
+  "protection.emergency": {
+    "message": "Salida de emergencia"
+  },
+  "protection.emergencyWait": {
+    "message": "Tiempo de espera"
+  },
+  "protection.emergencyWaitHelp": {
+    "message": "Para acortarlo, primero esperas el tiempo actual ({hours, plural, one {# hora} other {# horas}}) y luego escribes una frase."
+  },
+  "protection.guardNote": {
+    "message": "Relajar estos ajustes requiere una espera de {hours, plural, one {# hora} other {# horas}}, como la salida de emergencia."
+  },
+  "protection.hardeningNote": {
+    "message": "¿Necesitas más? Las políticas empresariales de tu navegador pueden impedir que se elimine WebHandbrake. Consulta Ayuda › Lo que WebHandbrake no puede hacer."
+  },
+  "protection.internal.always": {
+    "message": "Siempre"
+  },
+  "protection.internal.auto": {
+    "message": "Durante las reglas y sesiones con protección firme"
+  },
+  "protection.internal.never": {
+    "message": "Nunca"
+  },
+  "protection.internalFollowPause": {
+    "message": "Las pausas también desbloquean estas páginas"
+  },
+  "protection.internalPages": {
+    "message": "Bloquear las páginas de extensiones y de configuración del navegador"
+  },
+  "protection.internalPagesHelp": {
+    "message": "Cierra la vía más fácil para saltarse WebHandbrake: desactivarlo. El resto de la configuración del navegador sigue abierta. Protección firme significa Contraseña, Código de confianza, Sellada, Permanente o una espera de más de {minutes} min. No disponible en Android."
+  },
+  "protection.level": {
+    "message": "Protección"
+  },
+  "protection.levels": {
+    "message": "Protección de tus reglas"
+  },
+  "protection.levelsExplained": {
+    "message": "Qué hacen las protecciones"
+  },
+  "protection.levelsHelp": {
+    "message": "Cada regla tiene su propia protección: decide qué hace falta para relajarla."
+  },
+  "protection.lockedChange": {
+    "message": "Cambiar la fecha"
+  },
+  "protection.noRules": {
+    "message": "Todavía no hay reglas activas: no hay nada que proteger."
+  },
+  "protection.noTamper": {
+    "message": "No se registró nada inusual."
+  },
+  "protection.partnerSet": {
+    "message": "La aplicación de tu persona de confianza muestra los códigos de esta regla."
+  },
+  "protection.passwordSet": {
+    "message": "Contraseña configurada."
+  },
+  "protection.pending": {
+    "message": "Cambios pendientes"
+  },
+  "protection.pendingHelp": {
+    "message": "Los cambios que relajan tus reglas esperan aquí. Puedes cancelarlos en cualquier momento."
+  },
+  "protection.subtitle": {
+    "message": "Cuánto cuesta relajar tus reglas por impulso, y la vía de salida."
+  },
+  "protection.tamper": {
+    "message": "Eventos"
+  },
+  "protection.title": {
+    "message": "Protección"
+  },
+  "protection.waitCustom": {
+    "message": "Duración de la espera"
+  },
+  "protection.waitHelp": {
+    "message": "Hasta {duration}, esperas en el momento. Una espera más larga sigue en segundo plano y luego confirmas el cambio en Protección."
+  },
+  "protection.waitLabel": {
+    "message": "Cuánto esperar"
+  },
+  "protection.waitOther": {
+    "message": "Otra"
+  },
+  "redirect.url": {
+    "message": "Dirección"
+  },
+  "save.applied": {
+    "message": "{count, plural, one {Cambio aplicado.} other {# cambios aplicados.}}"
+  },
+  "save.appliedAfterCost": {
+    "message": "Listo: tu cambio ya está aplicado."
+  },
+  "save.appliedNow": {
+    "message": "{count, plural, one {Aplicado ahora:} other {# cambios aplicados ahora:}}"
+  },
+  "save.costIntro": {
+    "message": "Esto relaja tus reglas. Tómate un momento antes de seguir."
+  },
+  "save.costTitle": {
+    "message": "¿Relajar tus reglas?"
+  },
+  "save.kept": {
+    "message": "Tus reglas se quedan como están."
+  },
+  "save.nothing": {
+    "message": "No hay cambios."
+  },
+  "save.pendingBody": {
+    "message": "Esto relaja tus reglas, así que el cambio espera {wait}. Confírmalo en Protección a partir del {date}, a las {time}. Hasta entonces, no cambia nada."
+  },
+  "save.pendingEmergencyBody": {
+    "message": "Esto relaja tu protección, así que el cambio espera {wait}, como la salida de emergencia. Confírmalo en Protección a partir del {date}, a las {time}, escribiendo una frase. Hasta entonces, no cambia nada."
+  },
+  "save.pendingTitle": {
+    "message": "Pendiente de confirmación"
+  },
+  "save.refused.locked": {
+    "message": "Una regla que este cambio relaja está sellada, así que ahora no se puede relajar."
+  },
+  "save.refused.lockedUntil": {
+    "message": "Una regla que este cambio relaja está sellada hasta el {date}, a las {time}."
+  },
+  "save.refused.permanent": {
+    "message": "Una regla que este cambio relaja es permanente. Solo la salida de emergencia puede eliminar su protección."
+  },
+  "save.refusedHelp": {
+    "message": "Siempre puedes hacer tus reglas más estrictas. Si no encuentras otra opción, la salida de emergencia de Protección siempre funciona."
+  },
+  "save.refusedTitle": {
+    "message": "Ahora mismo no es posible"
+  },
+  "save.resultTitle": {
+    "message": "Qué ocurrió"
+  },
+  "schedule.addWindow": {
+    "message": "Agregar una franja horaria"
+  },
+  "schedule.days": {
+    "message": "Días"
+  },
+  "schedule.from": {
+    "message": "De"
+  },
+  "schedule.gridHelp": {
+    "message": "Haz clic o arrastra para agregar tiempo. Arrastra sobre las celdas de color para quitarlo."
+  },
+  "schedule.hideGrid": {
+    "message": "Ocultar la cuadrícula semanal"
+  },
+  "schedule.overnight": {
+    "message": "Continúa pasada la medianoche, hasta el día siguiente."
+  },
+  "schedule.preset.allDay": {
+    "message": "Todo el día"
+  },
+  "schedule.preset.evenings": {
+    "message": "Por la noche"
+  },
+  "schedule.preset.nights": {
+    "message": "De madrugada"
+  },
+  "schedule.preset.office": {
+    "message": "Horario de oficina"
+  },
+  "schedule.preset.weekdays": {
+    "message": "Entre semana"
+  },
+  "schedule.presets": {
+    "message": "Opciones rápidas:"
+  },
+  "schedule.removeWindow": {
+    "message": "Quitar esta franja horaria"
+  },
+  "schedule.showGrid": {
+    "message": "Mostrar la cuadrícula semanal"
+  },
+  "schedule.to": {
+    "message": "a"
+  },
+  "session.error.locked": {
+    "message": "Esta sesión no se puede interrumpir. Solo la salida de emergencia puede terminarla antes de tiempo."
+  },
+  "session.error.notFound": {
+    "message": "Esta sesión ya no existe."
+  },
+  "setting.badge.enabled": {
+    "message": "Indicador en el icono"
+  },
+  "setting.badge.thresholdMinutes": {
+    "message": "Umbral del indicador"
+  },
+  "setting.clock.useDateHeaders": {
+    "message": "Detectar un reloj del sistema manipulado"
+  },
+  "setting.contextMenu": {
+    "message": "Menú contextual"
+  },
+  "setting.dateFormat": {
+    "message": "Formato de fecha"
+  },
+  "setting.dayStart": {
+    "message": "Los días empiezan a las"
+  },
+  "setting.diagnostics.decisionLog": {
+    "message": "Registro de decisiones"
+  },
+  "setting.highContrast": {
+    "message": "Alto contraste"
+  },
+  "setting.hour12": {
+    "message": "Reloj"
+  },
+  "setting.interventions.autoReopen": {
+    "message": "Reabrir las páginas cuando vuelvan a estar disponibles"
+  },
+  "setting.interventions.customCss": {
+    "message": "Estilo personalizado para las páginas de bloqueo"
+  },
+  "setting.interventions.graceSeconds": {
+    "message": "Tiempo para terminar de escribir"
+  },
+  "setting.interventions.hideUrl": {
+    "message": "Ocultar la dirección de las páginas bloqueadas"
+  },
+  "setting.language": {
+    "message": "Idioma"
+  },
+  "setting.later.notify": {
+    "message": "Notificaciones de páginas guardadas"
+  },
+  "setting.notifications.enabled": {
+    "message": "Notificaciones"
+  },
+  "setting.notifications.pendingReady": {
+    "message": "Notificaciones de cambios pendientes"
+  },
+  "setting.notifications.sessionEnd": {
+    "message": "Notificaciones de fin de sesión"
+  },
+  "setting.notifications.warning": {
+    "message": "Notificaciones de aviso"
+  },
+  "setting.onboarded": {
+    "message": "Configuración completada"
+  },
+  "setting.pauseLimit": {
+    "message": "Pausas en todas las reglas"
+  },
+  "setting.protection.confirmHours": {
+    "message": "Tiempo para confirmar los cambios pendientes"
+  },
+  "setting.protection.emergencyHours": {
+    "message": "Tiempo de espera de la salida de emergencia"
+  },
+  "setting.protection.internalPages": {
+    "message": "Bloquear las páginas de extensiones y de configuración del navegador"
+  },
+  "setting.protection.internalPagesFollowPause": {
+    "message": "Las pausas también desbloquean las páginas de extensiones y de configuración del navegador"
+  },
+  "setting.sound": {
+    "message": "Sonido al final de una pausa"
+  },
+  "setting.theme": {
+    "message": "Tema"
+  },
+  "setting.timer.corner": {
+    "message": "Posición del temporizador"
+  },
+  "setting.timer.enabled": {
+    "message": "Temporizador en la página"
+  },
+  "setting.timer.opacity": {
+    "message": "Opacidad del temporizador"
+  },
+  "setting.timer.size": {
+    "message": "Tamaño del temporizador"
+  },
+  "setting.timer.thresholdMinutes": {
+    "message": "Umbral del temporizador"
+  },
+  "setting.tracking.allSites": {
+    "message": "Registrar el tiempo en todos los sitios"
+  },
+  "setting.tracking.countAudio": {
+    "message": "Contar el audio y el video en segundo plano"
+  },
+  "setting.tracking.countInactive": {
+    "message": "Contar las pestañas abiertas pero no activas"
+  },
+  "setting.tracking.idleEnabled": {
+    "message": "Dejar de contar si no hay actividad"
+  },
+  "setting.tracking.idleSeconds": {
+    "message": "Inactividad tras"
+  },
+  "setting.tracking.retentionDays": {
+    "message": "Conservar las estadísticas diarias durante"
+  },
+  "setting.tracking.visitGapMinutes": {
+    "message": "Una visita nueva empieza tras"
+  },
+  "setting.warningSeconds": {
+    "message": "Avisar antes de que empiece una restricción"
+  },
+  "setting.weekStart": {
+    "message": "Las semanas empiezan el"
+  },
+  "settings.allSites": {
+    "message": "Registrar el tiempo en todos los sitios"
+  },
+  "settings.allSitesHelp": {
+    "message": "Incluye en Estadísticas los sitios que están fuera de tus reglas. Se queda en este dispositivo."
+  },
+  "settings.appearance": {
+    "message": "Apariencia"
+  },
+  "settings.appearanceLanguage": {
+    "message": "Apariencia e idioma"
+  },
+  "settings.auto": {
+    "message": "Automático"
+  },
+  "settings.autoReopen": {
+    "message": "Reabrir las páginas cuando vuelvan a estar disponibles"
+  },
+  "settings.autoReopenHelp": {
+    "message": "Si no, aparece un botón “Reabrir”."
+  },
+  "settings.badge": {
+    "message": "Indicador en el icono"
+  },
+  "settings.badge.enabled": {
+    "message": "Mostrar el tiempo restante en el icono de la barra de herramientas"
+  },
+  "settings.badge.threshold": {
+    "message": "Mostrarlo cuando queden menos de"
+  },
+  "settings.contextMenu": {
+    "message": "Menú contextual"
+  },
+  "settings.contextMenuHelp": {
+    "message": "“Bloquear este sitio” e “Iniciar una sesión de concentración” en el menú contextual (solo en la versión de escritorio)."
+  },
+  "settings.corner.bottom-left": {
+    "message": "Abajo a la izquierda"
+  },
+  "settings.corner.bottom-right": {
+    "message": "Abajo a la derecha"
+  },
+  "settings.corner.top-left": {
+    "message": "Arriba a la izquierda"
+  },
+  "settings.corner.top-right": {
+    "message": "Arriba a la derecha"
+  },
+  "settings.countAudio": {
+    "message": "Contar el audio y el video en segundo plano"
+  },
+  "settings.countAudioHelp": {
+    "message": "Cuenta también las pestañas que reproducen contenido en segundo plano o en modo imagen en imagen."
+  },
+  "settings.countInactive": {
+    "message": "Contar las pestañas abiertas pero no activas"
+  },
+  "settings.countInactiveHelp": {
+    "message": "Más estricto: el tiempo cuenta mientras una página de la regla esté abierta en cualquier pestaña."
+  },
+  "settings.customCss": {
+    "message": "Estilo personalizado para las páginas de bloqueo"
+  },
+  "settings.customCssHelp": {
+    "message": "CSS para las páginas de bloqueo. Se eliminan los enlaces a archivos externos."
+  },
+  "settings.dateFormat": {
+    "message": "Formato de fecha"
+  },
+  "settings.dateFormat.iso": {
+    "message": "AAAA-MM-DD"
+  },
+  "settings.dateHeaders": {
+    "message": "Detectar un reloj del sistema manipulado"
+  },
+  "settings.dateHeadersHelp": {
+    "message": "Compara tu reloj con la hora que envían los sitios web. Sin solicitudes adicionales. Desactivarlo requiere una espera de {hours, plural, one {# hora} other {# horas}}, como la salida de emergencia."
+  },
+  "settings.dayStart": {
+    "message": "Los días empiezan a las"
+  },
+  "settings.dayStartHelp": {
+    "message": "Para quien trasnocha: si eliges las {time}, lo que pase hasta las {time} cuenta todavía como el día anterior."
+  },
+  "settings.formats": {
+    "message": "Fechas y horas"
+  },
+  "settings.globalBreaks": {
+    "message": "Pausas en todas las reglas"
+  },
+  "settings.globalBreaksHelp": {
+    "message": "Un límite para todas las reglas juntas, además del de cada regla."
+  },
+  "settings.grace": {
+    "message": "Tiempo para terminar de escribir"
+  },
+  "settings.graceHelp": {
+    "message": "Cuando una página está a punto de bloquearse mientras escribes. Con 0 se desactiva."
+  },
+  "settings.hideUrl": {
+    "message": "Ocultar la dirección de las páginas bloqueadas"
+  },
+  "settings.hideUrlHelp": {
+    "message": "Para que no te tiente copiarla."
+  },
+  "settings.highContrast": {
+    "message": "Alto contraste"
+  },
+  "settings.hour12": {
+    "message": "Reloj"
+  },
+  "settings.hour12.12": {
+    "message": "12 horas"
+  },
+  "settings.hour12.24": {
+    "message": "24 horas"
+  },
+  "settings.idle": {
+    "message": "Dejar de contar si no hay actividad"
+  },
+  "settings.idleHelp": {
+    "message": "El tiempo no cuenta mientras no interactúas con el equipo, salvo que se esté reproduciendo contenido multimedia."
+  },
+  "settings.idleSeconds": {
+    "message": "Inactividad tras"
+  },
+  "settings.language": {
+    "message": "Idioma"
+  },
+  "settings.language.auto": {
+    "message": "El mismo que el navegador"
+  },
+  "settings.languageHelp": {
+    "message": "La página se recarga al cambiarlo."
+  },
+  "settings.mode": {
+    "message": "Interfaz"
+  },
+  "settings.notifications": {
+    "message": "Notificaciones del sistema"
+  },
+  "settings.notificationsDenied": {
+    "message": "No se concedió el permiso."
+  },
+  "settings.notificationsHelp": {
+    "message": "El navegador pide permiso primero."
+  },
+  "settings.notify.pendingReady": {
+    "message": "Cambios pendientes listos para confirmar"
+  },
+  "settings.notify.sessionEnd": {
+    "message": "Fin de las sesiones de concentración"
+  },
+  "settings.notify.warning": {
+    "message": "Avisos antes de las restricciones"
+  },
+  "settings.pages": {
+    "message": "Páginas de bloqueo"
+  },
+  "settings.retention": {
+    "message": "Conservar las estadísticas diarias durante"
+  },
+  "settings.retentionHelp": {
+    "message": "Los días más antiguos se eliminan automáticamente. Tus límites no se ven afectados."
+  },
+  "settings.sections": {
+    "message": "Secciones de los ajustes"
+  },
+  "settings.shortcuts": {
+    "message": "Los atajos de teclado están en Ayuda › Atajos de teclado."
+  },
+  "settings.size.large": {
+    "message": "Grande"
+  },
+  "settings.size.medium": {
+    "message": "Mediano"
+  },
+  "settings.size.small": {
+    "message": "Pequeño"
+  },
+  "settings.sound": {
+    "message": "Sonido al final de una pausa"
+  },
+  "settings.soundHelp": {
+    "message": "Un tono suave."
+  },
+  "settings.statistics": {
+    "message": "Estadísticas"
+  },
+  "settings.tab.data": {
+    "message": "Datos"
+  },
+  "settings.tab.diagnostics": {
+    "message": "Diagnóstico"
+  },
+  "settings.tab.feedback": {
+    "message": "Avisos"
+  },
+  "settings.tab.general": {
+    "message": "General"
+  },
+  "settings.tab.interventions": {
+    "message": "Bloqueo"
+  },
+  "settings.tab.privacy": {
+    "message": "Privacidad"
+  },
+  "settings.tab.time": {
+    "message": "Tiempo"
+  },
+  "settings.theme": {
+    "message": "Tema"
+  },
+  "settings.theme.dark": {
+    "message": "Oscuro"
+  },
+  "settings.theme.light": {
+    "message": "Claro"
+  },
+  "settings.theme.system": {
+    "message": "Sistema"
+  },
+  "settings.timer": {
+    "message": "Temporizador en la página"
+  },
+  "settings.timer.corner": {
+    "message": "Posición"
+  },
+  "settings.timer.enabled": {
+    "message": "Mostrar un temporizador en los sitios limitados"
+  },
+  "settings.timer.help": {
+    "message": "Una pequeña cuenta regresiva cuando queda poco tiempo. Puedes moverla."
+  },
+  "settings.timer.opacity": {
+    "message": "Opacidad"
+  },
+  "settings.timer.size": {
+    "message": "Tamaño"
+  },
+  "settings.timer.threshold": {
+    "message": "Mostrarlo cuando queden menos de"
+  },
+  "settings.title": {
+    "message": "Ajustes"
+  },
+  "settings.tracking": {
+    "message": "Recuento del tiempo"
+  },
+  "settings.trackingHelp": {
+    "message": "El tiempo solo cuenta mientras usas una página de una regla."
+  },
+  "settings.visitGap": {
+    "message": "Una visita nueva empieza tras"
+  },
+  "settings.visitGapHelp": {
+    "message": "Tiempo fuera tras el cual volver cuenta como una visita nueva."
+  },
+  "settings.warningSeconds": {
+    "message": "Avisar antes de que empiece una restricción"
+  },
+  "settings.warningSecondsHelp": {
+    "message": "Un breve mensaje en la página (0 para desactivarlo)."
+  },
+  "settings.warnings": {
+    "message": "Avisos y notificaciones"
+  },
+  "settings.weekStart": {
+    "message": "Las semanas empiezan el"
+  },
+  "status.free": {
+    "message": "Permitido"
+  },
+  "status.freeUntil": {
+    "message": "Permitido {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}"
+  },
+  "status.paused": {
+    "message": "En pausa"
+  },
+  "status.pausedUntil": {
+    "message": "En pausa {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}"
+  },
+  "status.session": {
+    "message": "Sesión de concentración"
+  },
+  "status.sessionUntil": {
+    "message": "Sesión de concentración {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}"
+  },
+  "status.site.excepted": {
+    "message": "Permitido por una excepción"
+  },
+  "status.site.exempt": {
+    "message": "WebHandbrake no actúa en esta página"
+  },
+  "status.site.free": {
+    "message": "Permitido"
+  },
+  "status.site.freeUntil": {
+    "message": "Permitido {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}"
+  },
+  "status.site.gentle": {
+    "message": "Permitido · {what}"
+  },
+  "status.site.noRules": {
+    "message": "Ninguna regla en este sitio"
+  },
+  "status.site.passUntil": {
+    "message": "Acceso concedido {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}"
+  },
+  "status.site.passVisit": {
+    "message": "Acceso concedido durante esta visita"
+  },
+  "status.site.session": {
+    "message": "Sesión de concentración {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}"
+  },
+  "status.site.timeLeft": {
+    "message": "Tiempo restante: {duration}"
+  },
+  "status.site.visitsLeft": {
+    "message": "{count, plural, =0 {No quedan visitas} one {Queda # visita} other {Quedan # visitas}}"
+  },
+  "status.type.allow": {
+    "message": "Permitido"
+  },
+  "status.type.ask": {
+    "message": "Pregunta antes"
+  },
+  "status.type.block": {
+    "message": "Bloqueado"
+  },
+  "status.type.challenge": {
+    "message": "Con desafío"
+  },
+  "status.type.close": {
+    "message": "Cierra la pestaña"
+  },
+  "status.type.delay": {
+    "message": "Espera de {seconds} s"
+  },
+  "status.type.filter": {
+    "message": "Filtrado"
+  },
+  "status.type.redirect": {
+    "message": "Redirigido"
+  },
+  "status.type.track": {
+    "message": "Tiempo contado"
+  },
+  "status.until": {
+    "message": "{what} {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}"
+  },
+  "summary.always": {
+    "message": "Siempre"
+  },
+  "summary.condition": {
+    "message": "{schedule}, {budget}"
+  },
+  "summary.noWindows": {
+    "message": "sin horario definido"
+  },
+  "tamper.clock-backward": {
+    "message": "El reloj del sistema retrocedió unos {detail} min. WebHandbrake no lo tuvo en cuenta."
+  },
+  "tamper.clock-realigned": {
+    "message": "La hora de WebHandbrake iba unos {detail} min adelantada. Los sitios web confirmaron la hora correcta, así que volvió a ella."
+  },
+  "tamper.clock-skew": {
+    "message": "El reloj del sistema tiene un desfase de unos {detail} min. WebHandbrake usa la hora correcta."
+  },
+  "tamper.emergency": {
+    "message": "Salida de emergencia: {detail, select, requested {solicitada} cancelled {cancelada} completed {completada} other {{detail}}}."
+  },
+  "tamper.host-permission": {
+    "message": "Se retiró el acceso a todos los sitios."
+  },
+  "tamper.inactive-gap": {
+    "message": "WebHandbrake estuvo inactivo unos {detail} min con el navegador abierto."
+  },
+  "tamper.private-access": {
+    "message": "Se retiró el acceso a las ventanas privadas."
+  },
+  "tamper.rules-mismatch": {
+    "message": "El bloqueo en el navegador no estaba actualizado y se reconstruyó."
+  },
+  "tamper.state-restored": {
+    "message": "Los ajustes estaban dañados y se restauraron desde una copia de seguridad."
+  },
+  "target.exceptionOf": {
+    "message": "excepto {value}"
+  },
+  "targetType.domain": {
+    "message": "Todo el sitio"
+  },
+  "targetType.homepage": {
+    "message": "Página principal"
+  },
+  "targetType.host": {
+    "message": "Sitio sin subdominios"
+  },
+  "targetType.page": {
+    "message": "Página"
+  },
+  "targetType.path": {
+    "message": "Sección"
+  },
+  "targetType.regex": {
+    "message": "Expresión regular"
+  },
+  "targetType.wildcard": {
+    "message": "Comodín"
+  },
+  "targets.add": {
+    "message": "Agregar"
+  },
+  "targets.addPlaceholder": {
+    "message": "Agrega un sitio o pega una lista…"
+  },
+  "targets.address": {
+    "message": "Dirección"
+  },
+  "targets.allSites": {
+    "message": "Todos los sitios web"
+  },
+  "targets.clear": {
+    "message": "Vaciar la lista"
+  },
+  "targets.count": {
+    "message": "{sites, plural, one {# sitio} other {# sitios}}, {exceptions, plural, one {# excepción} other {# excepciones}}"
+  },
+  "targets.discardText": {
+    "message": "Descartar los cambios del texto"
+  },
+  "targets.edit": {
+    "message": "Editar {value}"
+  },
+  "targets.error.empty": {
+    "message": "Entrada vacía."
+  },
+  "targets.error.invalid": {
+    "message": "No es una dirección válida."
+  },
+  "targets.error.noDot": {
+    "message": "No es la dirección de un sitio. Agrega la terminación, por ejemplo youtube.com."
+  },
+  "targets.error.oneAddress": {
+    "message": "Escribe una sola dirección. Para agregar más, usa el cuadro de arriba."
+  },
+  "targets.error.regexBackref": {
+    "message": "Las referencias inversas no se permiten en las expresiones regulares."
+  },
+  "targets.error.regexComplex": {
+    "message": "Esta expresión regular es demasiado compleja para comprobarla rápido. Usa menos *, + o '{n,}'."
+  },
+  "targets.error.regexInvalid": {
+    "message": "Esta expresión regular no es válida."
+  },
+  "targets.error.regexLookaround": {
+    "message": "Las búsquedas hacia delante y hacia atrás (lookahead y lookbehind) no se permiten en las expresiones regulares."
+  },
+  "targets.error.regexNested": {
+    "message": "No se permiten repeticiones anidadas como (a+)+: pueden hacer que el navegador se cuelgue."
+  },
+  "targets.error.regexTooLong": {
+    "message": "Esta expresión regular es demasiado larga."
+  },
+  "targets.error.scheme": {
+    "message": "Solo se pueden agregar páginas web, archivos locales y páginas del navegador."
+  },
+  "targets.errors": {
+    "message": "{count, plural, one {# línea no se agregó:} other {# líneas no se agregaron:}}"
+  },
+  "targets.exception": {
+    "message": "Excepción"
+  },
+  "targets.exceptionAddress": {
+    "message": "Dirección de la excepción"
+  },
+  "targets.guide.allSites": {
+    "message": "Todos los sitios web. Agrega con + excepciones para los sitios que aún necesitas."
+  },
+  "targets.guide.exception": {
+    "message": "Una excepción: + deja abiertas estas páginas."
+  },
+  "targets.guide.more": {
+    "message": "Encontrarás más formas de escribir una dirección en la {help}."
+  },
+  "targets.guide.moreLink": {
+    "message": "Ayuda"
+  },
+  "targets.guide.page": {
+    "message": "Una sola página: $ al final excluye las páginas que contiene."
+  },
+  "targets.guide.site": {
+    "message": "Todo el sitio, subdominios incluidos (m.youtube.com…)."
+  },
+  "targets.guide.title": {
+    "message": "Cómo escribir una dirección"
+  },
+  "targets.guide.use": {
+    "message": "Usar este ejemplo"
+  },
+  "targets.guide.useExample": {
+    "message": "Usar el ejemplo {example}"
+  },
+  "targets.guide.wildcard": {
+    "message": "* equivale a cualquier texto: aquí, cualquier dirección que contenga “news”."
+  },
+  "targets.lineError": {
+    "message": "Línea {line} “{text}”: {error}"
+  },
+  "targets.listMode": {
+    "message": "Editar como lista"
+  },
+  "targets.remove": {
+    "message": "Quitar {value}"
+  },
+  "targets.sites": {
+    "message": "Sitios"
+  },
+  "targets.sort": {
+    "message": "Ordenar"
+  },
+  "targets.textHelp": {
+    "message": "Una entrada por línea. “+” para las excepciones, “#” para los comentarios. Consulta la Ayuda para ver la sintaxis completa."
+  },
+  "targets.textMode": {
+    "message": "Editar como texto"
+  },
+  "template.forums": {
+    "message": "Foros"
+  },
+  "template.games": {
+    "message": "Juegos"
+  },
+  "template.news": {
+    "message": "Noticias"
+  },
+  "template.shopping": {
+    "message": "Compras"
+  },
+  "template.social": {
+    "message": "Redes sociales"
+  },
+  "template.video": {
+    "message": "Video"
+  },
+  "test.private": {
+    "message": "Como en una ventana privada"
+  },
+  "test.run": {
+    "message": "Probar"
+  },
+  "test.title": {
+    "message": "Probar una dirección"
+  },
+  "test.url": {
+    "message": "Dirección para probar"
+  },
+  "ticket.confirm.action": {
+    "message": "Sí, continuar"
+  },
+  "ticket.confirm.body": {
+    "message": "¿Quieres seguir adelante?"
+  },
+  "ticket.continue": {
+    "message": "Continuar"
+  },
+  "ticket.error.changed": {
+    "message": "Algo cambió mientras tanto, así que no se aplicó nada. Inténtalo de nuevo."
+  },
+  "ticket.error.expired": {
+    "message": "Esta solicitud expiró. Vuelve a empezar."
+  },
+  "ticket.error.failed": {
+    "message": "Algo salió mal. Inténtalo de nuevo."
+  },
+  "ticket.error.intentionRequired": {
+    "message": "Escribe en pocas palabras qué quieres hacer."
+  },
+  "ticket.error.intentionShort": {
+    "message": "Tu motivo es demasiado corto: agrega unas palabras."
+  },
+  "ticket.error.minutes": {
+    "message": "Elige durante cuánto tiempo."
+  },
+  "ticket.error.mismatch": {
+    "message": "El texto no coincide. Tómate tu tiempo."
+  },
+  "ticket.error.notYet": {
+    "message": "Todavía no: la espera no ha terminado."
+  },
+  "ticket.error.partnerCode": {
+    "message": "Este código es incorrecto o ya se usó. Pide el actual a tu persona de confianza."
+  },
+  "ticket.error.tooMany": {
+    "message": "Demasiados intentos. Inténtalo de nuevo dentro de unos segundos."
+  },
+  "ticket.error.tooManySecrets": {
+    "message": "Demasiadas contraseñas o códigos incorrectos. Inténtalo de nuevo dentro de un minuto."
+  },
+  "ticket.error.wrongAnswer": {
+    "message": "Esa no es la respuesta correcta."
+  },
+  "ticket.error.wrongPassword": {
+    "message": "Contraseña incorrecta."
+  },
+  "ticket.intention.body": {
+    "message": "Escribe qué quieres hacer y durante cuánto tiempo."
+  },
+  "ticket.keep": {
+    "message": "Mantener mis reglas"
+  },
+  "ticket.math.body": {
+    "message": "Resuelve esto para continuar."
+  },
+  "ticket.math.input": {
+    "message": "Resultado"
+  },
+  "ticket.partner.body": {
+    "message": "{count, plural, one {Pide a la persona de confianza de la regla {names} el código que muestra ahora su aplicación.} other {Pide a la persona de confianza de las reglas {names} el código que muestra ahora su aplicación.}}"
+  },
+  "ticket.partner.input": {
+    "message": "Código de la aplicación de tu persona de confianza"
+  },
+  "ticket.phrase.body": {
+    "message": "Escribe esta frase para continuar."
+  },
+  "ticket.phrase.input": {
+    "message": "Frase"
+  },
+  "ticket.rulePassword.body": {
+    "message": "{count, plural, one {Escribe la contraseña de la regla {names}.} other {Escribe la contraseña que comparten las reglas {names}.}}"
+  },
+  "ticket.rulePassword.input": {
+    "message": "Contraseña de {names}"
+  },
+  "ticket.step": {
+    "message": "Paso {n} de {total}"
+  },
+  "ticket.text.body": {
+    "message": "Escribe {length, plural, one {el carácter que aparece} other {los # caracteres que aparecen}} debajo."
+  },
+  "ticket.text.input": {
+    "message": "Caracteres"
+  },
+  "ticket.wait.body": {
+    "message": "Espera {seconds, plural, one {# segundo} other {# segundos}} para pensarlo."
+  },
+  "ticket.wait.left": {
+    "message": "{seconds, plural, one {Queda # s} other {Quedan # s}}"
+  },
+  "ticket.wait.ready": {
+    "message": "Ya puedes continuar."
+  },
+  "time.allDay": {
+    "message": "todo el día"
+  },
+  "time.tomorrowAt": {
+    "message": "mañana a las {time}"
+  },
+  "today.activePauses": {
+    "message": "Pausas en curso"
+  },
+  "today.allGroups": {
+    "message": "Todas las reglas"
+  },
+  "today.applies.from": {
+    "message": "{what} {day, select, today {a partir de las {time}} tomorrow {a partir de mañana a las {time}} other {a partir del {date} a las {time}}}"
+  },
+  "today.applies.not": {
+    "message": "No se aplica ahora"
+  },
+  "today.applies.now": {
+    "message": "Se aplica ahora"
+  },
+  "today.applies.until": {
+    "message": "Se aplica {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}"
+  },
+  "today.changeEnds": {
+    "message": "{group}: vuelve a la normalidad ({what})"
+  },
+  "today.changeStarts": {
+    "message": "{group}: pasa a {what}"
+  },
+  "today.impulses": {
+    "message": "{count, plural, one {decisión de no entrar} other {decisiones de no entrar}}"
+  },
+  "today.later": {
+    "message": "{count, plural, one {página guardada para más tarde} other {páginas guardadas para más tarde}}"
+  },
+  "today.left": {
+    "message": "Tiempo restante: {duration}"
+  },
+  "today.noGroups": {
+    "message": "Todavía no hay reglas."
+  },
+  "today.noUpcoming": {
+    "message": "Nada previsto."
+  },
+  "today.now": {
+    "message": "Ahora mismo"
+  },
+  "today.numbers": {
+    "message": "Hoy en cifras"
+  },
+  "today.pauses": {
+    "message": "{count, plural, one {pausa realizada} other {pausas realizadas}}"
+  },
+  "today.pending": {
+    "message": "{count, plural, one {cambio pendiente} other {cambios pendientes}}"
+  },
+  "today.reopen": {
+    "message": "Reabrir"
+  },
+  "today.restorable": {
+    "message": "{count, plural, one {Ahora se puede reabrir # pestaña.} other {Ahora se pueden reabrir # pestañas.}}"
+  },
+  "today.sessionEnds": {
+    "message": "Termina la sesión de concentración"
+  },
+  "today.sessionStarts": {
+    "message": "Empieza la sesión de concentración"
+  },
+  "today.setup": {
+    "message": "Terminar la configuración"
+  },
+  "today.setupAction": {
+    "message": "Comprueba si tu protección es sólida"
+  },
+  "today.summary.groups": {
+    "message": "{count, plural, =0 {Ninguna regla activa} one {# regla activa} other {# reglas activas}}"
+  },
+  "today.summary.next": {
+    "message": "próximo cambio {day, select, today {a las {time}} tomorrow {mañana a las {time}} other {el {date} a las {time}}}"
+  },
+  "today.summary.restricted": {
+    "message": "{count, plural, =0 {nada restringido ahora mismo} one {# sitio restringido ahora mismo} other {# sitios restringidos ahora mismo}}"
+  },
+  "today.timeOnLimited": {
+    "message": "hoy en los sitios limitados"
+  },
+  "today.upcoming": {
+    "message": "Próximamente"
+  },
+  "unit.exceptionAdd": {
+    "message": "Permitir {value} en {owner}"
+  },
+  "unit.exceptionRemove": {
+    "message": "Quitar la excepción {value} de {owner}"
+  },
+  "unit.field.archived": {
+    "message": "Archivar o restaurar {name}"
+  },
+  "unit.field.enabled": {
+    "message": "Activar o desactivar {name}"
+  },
+  "unit.field.message": {
+    "message": "Cambiar el mensaje de la página de bloqueo de {name}"
+  },
+  "unit.field.meta": {
+    "message": "Cambiar el nombre o el aspecto de {name}"
+  },
+  "unit.field.note": {
+    "message": "Cambiar el motivo personal de {name}"
+  },
+  "unit.field.options": {
+    "message": "Cambiar las opciones de {name}"
+  },
+  "unit.field.pause": {
+    "message": "Cambiar las condiciones de las pausas de {name}"
+  },
+  "unit.field.policies": {
+    "message": "Cambiar cuándo se aplica {name}"
+  },
+  "unit.field.protection": {
+    "message": "Cambiar la protección de {name}"
+  },
+  "unit.groupAdd": {
+    "message": "Crear la regla {name}"
+  },
+  "unit.groupRemove": {
+    "message": "Eliminar la regla {name}"
+  },
+  "unit.order": {
+    "message": "Reordenar las reglas"
+  },
+  "unit.setting": {
+    "message": "Cambiar el ajuste “{setting}”"
+  },
+  "unit.targetAdd": {
+    "message": "Agregar {value} a {owner}"
+  },
+  "unit.targetRemove": {
+    "message": "Quitar {value} de {owner}"
+  },
+  "validate.allSites": {
+    "message": "Esta regla se aplica a todos los sitios web. Agrega excepciones para los sitios que necesitas."
+  },
+  "validate.emptyWindow": {
+    "message": "Una franja horaria empieza y termina a la misma hora."
+  },
+  "validate.neverReached": {
+    "message": "El tiempo permitido debe ser menor que su periodo; si no, nunca se alcanza."
+  },
+  "validate.noDays": {
+    "message": "Una franja horaria no tiene días seleccionados."
+  },
+  "validate.noName": {
+    "message": "Ponle un nombre a la regla."
+  },
+  "validate.noTargets": {
+    "message": "Agrega al menos un sitio."
+  },
+  "validate.noWindows": {
+    "message": "Agrega al menos una franja horaria."
+  },
+  "validate.pauseDuration": {
+    "message": "Las pausas necesitan una duración."
+  },
+  "validate.phrase": {
+    "message": "Indica la frase que se debe escribir."
+  },
+  "validate.randomWait": {
+    "message": "La espera más larga debe superar a la más corta."
+  },
+  "validate.redirectUrl": {
+    "message": "La dirección de redirección debe empezar por http:// o https://."
+  },
+  "validate.unusedException": {
+    "message": "La excepción {value} no está dentro de ningún sitio de esta regla."
+  },
+  "validate.zeroBudget": {
+    "message": "Un límite de cero se aplica de inmediato."
+  },
+  "validate.zeroVisits": {
+    "message": "Cero visitas significa que se aplica de inmediato."
+  },
+  "warning.clock": {
+    "message": "Parece que el reloj de tu sistema tiene un desfase de {detail, plural, one {# minuto} other {# minutos}}. WebHandbrake usa la hora corregida."
+  },
+  "warning.diagnostics": {
+    "message": "Diagnóstico"
+  },
+  "warning.dnr-error": {
+    "message": "No se pudo configurar el bloqueo para algunos sitios ({detail}). Los demás sitios siguen bloqueados."
+  },
+  "warning.dnr-error.short": {
+    "message": "No se pudo configurar el bloqueo para algunos sitios."
+  },
+  "warning.dnr-overflow": {
+    "message": "{detail, plural, one {# entrada se comprueba más despacio: sus páginas pueden aparecer un momento.} other {# entradas se comprueban más despacio: sus páginas pueden aparecer un momento.}}"
+  },
+  "warning.fix": {
+    "message": "Solucionar"
+  },
+  "warning.host-permission": {
+    "message": "WebHandbrake no tiene acceso a los sitios web: las páginas bloqueadas muestran primero un error del navegador, y los filtros, los temporizadores, los avisos y el tiempo para terminar de escribir no funcionan."
+  },
+  "warning.host-permission.short": {
+    "message": "Sin acceso a los sitios web."
+  },
+  "warning.howTo": {
+    "message": "Cómo hacerlo"
+  },
+  "warning.incognito": {
+    "message": "WebHandbrake no está activo en las ventanas privadas."
+  },
+  "warning.locked-out": {
+    "message": "Ahora mismo algunos ajustes están bloqueados."
+  },
+  "warning.pending-ready": {
+    "message": "{detail, plural, one {Un cambio pendiente está listo para confirmar.} other {# cambios pendientes están listos para confirmar.}}"
+  },
+  "warning.restored": {
+    "message": "Tus ajustes estaban dañados y se restauraron desde la copia de seguridad del {date}, a las {time}. Revisa tus reglas."
+  },
+  "warning.restored.defaults": {
+    "message": "Tus ajustes estaban dañados y no se pudo usar ninguna copia de seguridad, así que se restauraron los valores predeterminados."
+  },
+  "warning.review": {
+    "message": "Revisar"
+  },
+  "warning.soon": {
+    "message": "Los sitios de {group} se restringirán dentro de {seconds} s."
+  },
+  "warning.tamper": {
+    "message": "Hace poco ocurrió algo inusual (por ejemplo, un cambio de reloj). Consulta Protección."
+  },
+  "welcome.begin": {
+    "message": "Configurar en un minuto"
+  },
+  "welcome.done.body": {
+    "message": "“{name}” está activa. WebHandbrake intervendrá según lo previsto."
+  },
+  "welcome.done.go": {
+    "message": "Ir a Hoy"
+  },
+  "welcome.done.next": {
+    "message": "Próximos pasos (opcionales)"
+  },
+  "welcome.done.title": {
+    "message": "Todo listo"
+  },
+  "welcome.firstRule": {
+    "message": "Tu primera regla"
+  },
+  "welcome.installed": {
+    "message": "Instalación"
+  },
+  "welcome.lead": {
+    "message": "Un freno de mano suave para los sitios que te atrapan."
+  },
+  "welcome.perm.body": {
+    "message": "WebHandbrake necesita acceso a los sitios web para comprobar cada página que abres con tus reglas. No se envía nada a ningún sitio."
+  },
+  "welcome.perm.grant": {
+    "message": "Permitir el acceso"
+  },
+  "welcome.perm.title": {
+    "message": "Una cosa más: el acceso a los sitios web"
+  },
+  "welcome.pin.android": {
+    "message": "Abre el menú del navegador y luego Extensiones: ahí aparece WebHandbrake."
+  },
+  "welcome.pin.chrome": {
+    "message": "Haz clic en el icono del rompecabezas, a la derecha de la barra de direcciones, y luego en el icono para fijar que hay junto a WebHandbrake."
+  },
+  "welcome.pin.firefox": {
+    "message": "Haz clic en el botón de extensiones (el rompecabezas) de la barra de herramientas, luego en el engranaje que hay junto a WebHandbrake y en “Fijar a la barra de herramientas”."
+  },
+  "welcome.pin.title": {
+    "message": "Fija WebHandbrake en la barra de herramientas"
+  },
+  "welcome.pin.titleAndroid": {
+    "message": "Busca WebHandbrake en el menú"
+  },
+  "welcome.pin.why": {
+    "message": "Un clic para ver el estado de un sitio, hacer una pausa o bloquear el sitio."
+  },
+  "welcome.private.title": {
+    "message": "También en las ventanas privadas"
+  },
+  "welcome.skip": {
+    "message": "Omitir la configuración"
+  },
+  "welcome.startSmall": {
+    "message": "Empieza con un solo cambio. Puedes agregar más en cualquier momento."
+  },
+  "welcome.title": {
+    "message": "Te damos la bienvenida a WebHandbrake"
+  },
+  "welcome.try.action": {
+    "message": "Probarlo"
+  },
+  "welcome.try.afterLimit": {
+    "message": "Ahora mismo {site} se abre con normalidad. WebHandbrake interviene cuando agotas tu límite."
+  },
+  "welcome.try.body": {
+    "message": "Abre {site} para ver lo que WebHandbrake muestra en su lugar."
+  },
+  "welcome.try.later": {
+    "message": "Ahora mismo {site} se abre con normalidad. WebHandbrake interviene {day, select, today {a partir de las {time}} tomorrow {a partir de mañana a las {time}} other {a partir del {date} a las {time}}}."
+  },
+  "welcome.try.laterTitle": {
+    "message": "Cuándo interviene"
+  },
+  "welcome.try.notNow": {
+    "message": "Ahora mismo {site} se abre con normalidad: la regla no se aplica en este momento."
+  },
+  "welcome.try.title": {
+    "message": "Míralo en acción"
+  },
+  "welcome.value.firm.text": {
+    "message": "Tú decides lo difícil que es cambiar de opinión por impulso."
+  },
+  "welcome.value.firm.title": {
+    "message": "Firme cuando lo necesitas"
+  },
+  "welcome.value.gentle.text": {
+    "message": "Una pregunta o una breve espera antes de entrar. Bloquea solo lo que nunca quieres ver."
+  },
+  "welcome.value.gentle.title": {
+    "message": "Suave de entrada"
+  },
+  "welcome.value.private.text": {
+    "message": "Sin cuenta. Nada sale de este dispositivo."
+  },
+  "welcome.value.private.title": {
+    "message": "Privado"
+  },
+  "why.allowed": {
+    "message": "Permitido."
+  },
+  "why.allowedUntil": {
+    "message": "Permitido {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}."
+  },
+  "why.applies": {
+    "message": "se aplica ahora"
+  },
+  "why.bySession": {
+    "message": "Bloqueado por una sesión de concentración."
+  },
+  "why.excepted": {
+    "message": "Permitido por una excepción."
+  },
+  "why.exceptionIn": {
+    "message": "Excepción en {group}: {value}."
+  },
+  "why.exempt": {
+    "message": "WebHandbrake no actúa en esta página."
+  },
+  "why.matchedBy": {
+    "message": "{type}: {value}"
+  },
+  "why.nextChange": {
+    "message": "Después: {what} {day, select, today {a partir de las {time}} tomorrow {a partir de mañana a las {time}} other {a partir del {date} a las {time}}}."
+  },
+  "why.noEnd": {
+    "message": "Sin fin previsto con las reglas actuales."
+  },
+  "why.noRules": {
+    "message": "Ninguna regla incluye este sitio."
+  },
+  "why.notNow": {
+    "message": "no se aplica ahora"
+  },
+  "why.passUntil": {
+    "message": "Acceso concedido {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}"
+  },
+  "why.passVisit": {
+    "message": "Acceso concedido durante esta visita"
+  },
+  "why.passed": {
+    "message": "Acceso concedido."
+  },
+  "why.pause": {
+    "message": "En pausa {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}."
+  },
+  "why.paused": {
+    "message": "En pausa."
+  },
+  "why.policies": {
+    "message": "Cuándo se aplica la regla"
+  },
+  "why.restricted": {
+    "message": "{what}."
+  },
+  "why.restrictedUntil": {
+    "message": "{what} {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}."
+  },
+  "why.restriction.budget": {
+    "message": "Si sigues usando el sitio: {what} {day, select, today {a partir de las {time}} tomorrow {a partir de mañana a las {time}} other {a partir del {date} a las {time}}}."
+  },
+  "why.restriction.pass": {
+    "message": "Tu acceso dura {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}. Después: {what}."
+  },
+  "why.restriction.pause": {
+    "message": "Tu pausa dura {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}. Después: {what}."
+  },
+  "why.restriction.schedule": {
+    "message": "Después: {what} {day, select, today {a partir de las {time}} tomorrow {a partir de mañana a las {time}} other {a partir del {date} a las {time}}}."
+  },
+  "why.restriction.session": {
+    "message": "Sesión de concentración {day, select, today {a partir de las {time}} tomorrow {a partir de mañana a las {time}} other {a partir del {date} a las {time}}}."
+  },
+  "why.session": {
+    "message": "Sesión de concentración {day, select, today {hasta las {time}} tomorrow {hasta mañana a las {time}} other {hasta el {date} a las {time}}}."
+  },
+  "wizard.back": {
+    "message": "Atrás"
+  },
+  "wizard.cond.always": {
+    "message": "Cada vez que abres {sites}"
+  },
+  "wizard.cond.daily": {
+    "message": "Después de {duration} {period} en {sites}"
+  },
+  "wizard.cond.daily.each": {
+    "message": "Después de {duration} {period} en cada uno de {sites}"
+  },
+  "wizard.cond.daily.shared": {
+    "message": "Después de {duration} {period} en total entre {sites}"
+  },
+  "wizard.cond.schedule": {
+    "message": "Cuando abres {sites} ({windows})"
+  },
+  "wizard.cond.visits": {
+    "message": "Después de {count, plural, one {# visita} other {# visitas}} {period} a {sites}"
+  },
+  "wizard.cond.visits.each": {
+    "message": "Después de {count, plural, one {# visita} other {# visitas}} {period} a cada uno de {sites}"
+  },
+  "wizard.cond.visits.shared": {
+    "message": "Después de {count, plural, one {# visita} other {# visitas}} {period} en total entre {sites}"
+  },
+  "wizard.create": {
+    "message": "Crear regla"
+  },
+  "wizard.created": {
+    "message": "Regla “{name}” creada."
+  },
+  "wizard.done": {
+    "message": "completado, volver a este paso"
+  },
+  "wizard.how.askMax": {
+    "message": "Permitido como máximo durante"
+  },
+  "wizard.how.askMaxFields": {
+    "message": "Permitido como máximo durante {duration}"
+  },
+  "wizard.how.redirectHelp": {
+    "message": "Debe empezar por http:// o https://."
+  },
+  "wizard.how.title": {
+    "message": "¿Qué debe ocurrir?"
+  },
+  "wizard.next.how": {
+    "message": "Siguiente: qué ocurre"
+  },
+  "wizard.next.protection": {
+    "message": "Siguiente: protección"
+  },
+  "wizard.next.when": {
+    "message": "Siguiente: cuándo"
+  },
+  "wizard.open": {
+    "message": "Abrir"
+  },
+  "wizard.period.day": {
+    "message": "al día"
+  },
+  "wizard.period.hour": {
+    "message": "por hora"
+  },
+  "wizard.period.month": {
+    "message": "al mes"
+  },
+  "wizard.period.week": {
+    "message": "a la semana"
+  },
+  "wizard.protection.intro": {
+    "message": "Hacer la regla más estricta siempre funciona al instante. Elige qué hará falta para relajarla."
+  },
+  "wizard.protection.title": {
+    "message": "¿Qué debe hacer falta para relajar esta regla?"
+  },
+  "wizard.resumed": {
+    "message": "Estás retomando la regla que empezaste antes."
+  },
+  "wizard.review.intro": {
+    "message": "Revisa la regla antes de crearla. Elige Cambiar para editar una parte."
+  },
+  "wizard.review.plan": {
+    "message": "{cond}, {outcome}"
+  },
+  "wizard.review.title": {
+    "message": "Revisar y crear"
+  },
+  "wizard.sites.intro": {
+    "message": "Elige una lista ya preparada, agrega tus propios sitios, o ambas cosas."
+  },
+  "wizard.sites.none": {
+    "message": "Agrega al menos un sitio para continuar."
+  },
+  "wizard.sites.templates": {
+    "message": "Listas ya preparadas"
+  },
+  "wizard.sites.title": {
+    "message": "¿Qué sitios?"
+  },
+  "wizard.sites.yours": {
+    "message": "Sitios de esta regla"
+  },
+  "wizard.sitesAll": {
+    "message": "cualquier sitio web"
+  },
+  "wizard.sitesList": {
+    "message": "{first}{count, plural, =0 {} one { y # sitio más} other { y # sitios más}}"
+  },
+  "wizard.startOver": {
+    "message": "Empezar de nuevo"
+  },
+  "wizard.step.how": {
+    "message": "Qué ocurre"
+  },
+  "wizard.step.protection": {
+    "message": "Protección"
+  },
+  "wizard.step.sites": {
+    "message": "Sitios"
+  },
+  "wizard.step.when": {
+    "message": "Cuándo"
+  },
+  "wizard.stepOf": {
+    "message": "Paso {n} de {total}"
+  },
+  "wizard.steps": {
+    "message": "Pasos"
+  },
+  "wizard.then.ask": {
+    "message": "WebHandbrake te pregunta primero qué quieres hacer (durante {max} como máximo) y te deja entrar al cabo de {seconds, plural, one {# segundo} other {# segundos}}."
+  },
+  "wizard.then.block": {
+    "message": "WebHandbrake bloquea la página."
+  },
+  "wizard.then.challenge": {
+    "message": "WebHandbrake te pide que escribas {length, plural, one {# carácter aleatorio} other {# caracteres aleatorios}} antes de entrar."
+  },
+  "wizard.then.challengeMath": {
+    "message": "WebHandbrake te pide que resuelvas un pequeño cálculo antes de entrar."
+  },
+  "wizard.then.challengePhrase": {
+    "message": "WebHandbrake te pide que escribas tu frase antes de entrar."
+  },
+  "wizard.then.close": {
+    "message": "WebHandbrake cierra la pestaña."
+  },
+  "wizard.then.delay": {
+    "message": "WebHandbrake te hace esperar {seconds, plural, one {# segundo} other {# segundos}}."
+  },
+  "wizard.then.delayGrowing": {
+    "message": "WebHandbrake te hace esperar {seconds, plural, one {# segundo} other {# segundos}}, y {increase, plural, one {# segundo} other {# segundos}} más cada vez que entras ese día."
+  },
+  "wizard.then.delayRandom": {
+    "message": "WebHandbrake te hace esperar entre {from} y {to, plural, one {# segundo} other {# segundos}}."
+  },
+  "wizard.then.filter": {
+    "message": "WebHandbrake hace la página menos atractiva ({filter})."
+  },
+  "wizard.then.redirect": {
+    "message": "WebHandbrake abre {url} en su lugar."
+  },
+  "wizard.then.track": {
+    "message": "WebHandbrake solo cuenta el tiempo."
+  },
+  "wizard.then.trackSchedule": {
+    "message": "WebHandbrake solo cuenta el tiempo; fuera de estas horas no cuenta nada."
+  },
+  "wizard.title": {
+    "message": "Nueva regla"
+  },
+  "wizard.when.always": {
+    "message": "Cada vez"
+  },
+  "wizard.when.always.desc": {
+    "message": "Siempre que abras estos sitios."
+  },
+  "wizard.when.daily": {
+    "message": "Después de un tiempo"
+  },
+  "wizard.when.daily.desc": {
+    "message": "Hasta un tiempo fijado y luego lo que elijas a continuación."
+  },
+  "wizard.when.intro": {
+    "message": "Elige el momento que más importa."
+  },
+  "wizard.when.minutes": {
+    "message": "¿Cuánto tiempo?"
+  },
+  "wizard.when.perSiteOff": {
+    "message": "{duration} en total para todos los sitios juntos."
+  },
+  "wizard.when.perSiteOn": {
+    "message": "{duration} para cada sitio."
+  },
+  "wizard.when.schedule": {
+    "message": "A ciertas horas"
+  },
+  "wizard.when.schedule.desc": {
+    "message": "Por ejemplo, entre semana de {start} a {end}."
+  },
+  "wizard.when.title": {
+    "message": "¿Cuándo debe aplicarse?"
+  },
+  "wizard.when.tooLong": {
+    "message": "El tiempo permitido debe ser menor que el periodo; si no, nunca se alcanza."
+  },
+  "wizard.when.visits": {
+    "message": "Después de varias visitas"
+  },
+  "wizard.when.visits.desc": {
+    "message": "Hasta un número fijado de visitas y luego lo que elijas a continuación."
+  },
+  "wizard.when.visitsPerSiteOff": {
+    "message": "{count, plural, one {# visita} other {# visitas}} en total para todos los sitios juntos."
+  },
+  "wizard.when.visitsPerSiteOn": {
+    "message": "{count, plural, one {Una visita} other {# visitas}} para cada sitio."
+  }
+}
