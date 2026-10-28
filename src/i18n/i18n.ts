@@ -14,6 +14,7 @@ export type Messages = Record<string, { message: string; description?: string }>
 export const AVAILABLE_LOCALES: { code: string; name: string; dir: 'ltr' | 'rtl' }[] = [
   { code: 'de', name: 'Deutsch', dir: 'ltr' },
   { code: 'en', name: 'English', dir: 'ltr' },
+  { code: 'es', name: 'Español', dir: 'ltr' },
   { code: 'it', name: 'Italiano', dir: 'ltr' },
 ];
 
