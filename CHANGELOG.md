@@ -76,6 +76,10 @@ All notable changes to WebHandbrake are documented here. The format follows
   they say “If you keep using the site: Block from 17:45”.
 - A change of language or clock format reached the right-click menu, the notifications and the
   sentences to type only after the browser restarted.
+- A site with a query written as the address bar shows it, such as
+  `example.com/search?q=hello%20world` or `?q=hello+world`, now matches that address: it matched
+  only when the query had no space, accent or other encoded character. **Block this site** ›
+  **This page** also matches a page whose query holds an encoded &, # or +.
 
 - A wait that pauses or starts again when you switch to another tab is now timed by WebHandbrake
   itself, not by the block page: switching tabs or minimising the window adds to the wait even if

@@ -14,7 +14,7 @@ import { redirectDestination } from './compile';
 import { activeSessions, decide, type EngineContext, evaluateGroup } from './decide';
 import { type CompiledPattern, compilePattern, dnrRegex, isPlainDomain, representativeUrl } from './patterns';
 import { isNav, NAV_SEVERITY, SEVERITY } from './severity';
-import { type ParsedUrl, parseUrl, stripWww } from './url';
+import { entryQuery, type ParsedUrl, parseUrl, stripWww } from './url';
 
 export type DnrResource = 'main_frame' | 'sub_frame';
 
@@ -57,7 +57,7 @@ interface Region {
 function patternFromUrl(url: string): CompiledPattern | null {
   const p = parseUrl(url);
   if (!p?.web) return null;
-  const q = p.query.map(([k, v]) => `${k}=${v}`).join('&');
+  const q = entryQuery(p.query);
   const value = `${stripWww(p.host)}${p.path.length > 1 ? p.path.replace(/\/+$/, '') : '/'}${q ? `?${q}` : ''}`;
   return compilePattern({ id: 'grant', type: 'page', value });
 }

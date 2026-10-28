@@ -85,9 +85,34 @@ export function stripFragment(url: string): string {
 export function pageKey(url: string): string {
   const p = parseUrl(url);
   if (!p) return stripFragment(url);
-  const q = p.query.map(([k, v]) => `${k}=${v}`).join('&');
+  const q = entryQuery(p.query);
   const path = p.path.length > 1 ? p.path.replace(/\/+$/, '') : p.path;
   return `${p.web ? 'https' : p.scheme}://${stripWww(p.host)}${path}${q ? `?${q}` : ''}`;
+}
+
+/**
+ * A query parameter's name or value as an entry writes it, decoded as the browser decodes those of
+ * an address: "hello%20world" and "hello+world" are "hello world".
+ */
+export function decodeQueryPart(s: string): string {
+  try {
+    return decodeURIComponent(s.replace(/\+/g, ' '));
+  } catch {
+    return s;
+  }
+}
+
+/**
+ * A decoded query parameter's name or value, written for an entry: the characters that the entry
+ * syntax reads (% & # + ; spaces, and = in a name) are percent-encoded, the others stay readable.
+ */
+export function encodeQueryPart(s: string, name = false): string {
+  return s.replace(name ? /[%&#+;=\s]/g : /[%&#+;\s]/g, (c) => encodeURIComponent(c));
+}
+
+/** The query of a parsed URL as an entry writes it ("a=1&b=two%20words"). */
+export function entryQuery(query: [string, string][]): string {
+  return query.map(([k, v]) => `${encodeQueryPart(k, true)}=${encodeQueryPart(v)}`).join('&');
 }
 
 export function stripWww(host: string): string {
