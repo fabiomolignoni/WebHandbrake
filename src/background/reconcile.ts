@@ -9,6 +9,7 @@ import { initI18n, t } from '../i18n/i18n';
 import { api, quiet } from '../platform/api';
 import { formatDuration, setFormatPrefs } from '../shared/format';
 import type { ChangedBroadcast } from '../shared/rpc';
+import { initIdle } from './accounting';
 import { updateActiveBadges } from './badge';
 import { broadcastToPrivate } from './bridge';
 import { updateContentScripts } from './contentscripts';
@@ -52,6 +53,8 @@ async function doReconcile(configChanged: boolean) {
     // sentences to type use them.
     await initI18n(store.config.settings.language);
     setFormatPrefs(store.config.settings);
+    // The time without activity after which the system says the person is idle.
+    initIdle();
     await quiet(updateContentScripts());
     await quiet(rebuildMenus());
   }
