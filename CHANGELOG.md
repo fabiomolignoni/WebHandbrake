@@ -83,6 +83,9 @@ All notable changes to WebHandbrake are documented here. The format follows
 - A rule made stricter while its block page was open, such as a longer wait or a shorter access
   after it, no longer lets that page in on the old terms: the page now asks as the rule does at
   once, and a wait, a question or a challenge answered on the old terms gives no access.
+- In a private window, the block page of a rule for private windows only said the page was
+  available again (or, with **Reopen the page automatically**, went back to it and was blocked
+  again) every time something changed: it looked again with the rules of normal windows.
 
 - A wait that pauses or starts again when you switch to another tab is now timed by WebHandbrake
   itself, not by the block page: switching tabs or minimising the window adds to the wait even if

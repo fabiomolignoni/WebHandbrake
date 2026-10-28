@@ -53,7 +53,9 @@ const handlers: { [M in Method]: Handler<M> } = {
   'overview.get': () => overviewModel(),
   'config.get': () => configModel(),
   'popup.get': (a) => popupModel(a.tabId),
-  explain: (a) => explainDraft(a.url, a.draftGroup, a.incognito ?? false),
+  // The window of the page that asks, unless it says (Test a URL): a block page in a private window
+  // looks again with the rules of the private windows.
+  explain: (a, s) => explainDraft(a.url, a.draftGroup, a.incognito ?? Boolean(s.tab?.incognito)),
   'intervention.get': (a, s) => interventionModel(a.url, s),
   'intervention.left': (_a, s) => interventionLeft(s),
 
